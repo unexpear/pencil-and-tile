@@ -1,0 +1,38 @@
+# Words for Word Meaning by level (0 everyday .. 3 rare). The build script picks each word's most common
+# dictionary sense that has an example sentence using the word; words without one are reported and skipped.
+[0]
+brave ancient enormous fragile hilarious exhausted shallow vanish cautious generous rapid damp gloomy stubborn
+curious feeble polite rude clumsy cozy delicious filthy furious gentle greedy grumpy hollow humid jealous lazy
+lonely loyal messy nervous noisy obvious peculiar proud rough rusty sharp shy silent sleepy slippery sticky
+strict sturdy swift tidy timid tiny tough vast weary wicked wise anxious calm cheerful eager fierce grateful
+honest nasty neat odd patient smooth thick vague whisper wander shiver stumble gather borrow chase scatter
+tremble glare grin mumble giggle wobble drowsy dizzy chilly crisp fluffy courage rumor feast journey harvest
+treasure shelter hazard puzzle
+[1]
+ambitious reluctant frugal vivid tedious cunning humble obsolete pristine bewildered diligent abundant scarce
+agile anonymous arrogant awkward bizarre blunt chaotic cherish compassion considerate cordial cramped defiant
+dense dismal durable elated elegant fickle flimsy fragrant futile gallant gaudy genuine gracious grim gullible
+hasty hostile idle immense impulsive inevitable keen lavish lenient lofty lucid meager modest morose naive
+nimble notorious novel opaque ornate placid plausible potent radiant rigid robust rustic shrewd sluggish solemn
+somber spontaneous sparse stern subtle sullen tactful tense thrifty tranquil trivial turbulent unanimous valiant
+vigilant volatile wary devour linger ponder mimic flourish dwindle hoard lure nudge soothe startle thrive yearn
+scold coax cower flee loathe mend
+[2]
+gregarious ephemeral candid meticulous benevolent lethargic ambiguous eloquent mundane resilient skeptical
+impartial serene frivolous meander affable aloof amiable ardent astute austere belligerent callous cantankerous
+complacent conspicuous copious cryptic cynical deft diffident docile dubious elusive eminent erratic exuberant
+fervent fastidious feasible fortuitous furtive haughty impetuous incessant indolent innate insolent intrepid
+jovial lucrative malleable mercurial nonchalant novice oblivious obstinate ominous opulent pensive placate
+pragmatic prolific prudent rancid reticent sardonic scrutinize spurious stoic succinct superfluous tenuous
+trepidation vehement verbose vindictive wistful zealous abate admonish alleviate appease berate coerce concede
+deter emulate exacerbate hinder mitigate procrastinate relinquish rectify renounce reprimand squander thwart
+[3]
+ubiquitous sanguine obfuscate laconic magnanimous quixotic perfunctory pugnacious ebullient capricious esoteric
+inscrutable loquacious tenacious ostentatious benign abstruse acerbic anachronistic apocryphal assiduous bellicose
+bombastic cacophony circumspect cogent contrite convivial deleterious desultory diaphanous didactic disingenuous
+effervescent egregious enervate equivocal erudite evanescent exculpate fatuous garrulous grandiloquent hapless
+iconoclast idiosyncratic impecunious incorrigible indefatigable ineffable insipid intransigent irascible jejune
+lachrymose lugubrious maudlin mellifluous mendacious munificent nefarious obsequious obstreperous officious
+parsimonious pellucid penurious perspicacious phlegmatic platitude prevaricate propitious puerile querulous
+recalcitrant redolent sagacious salubrious sanctimonious sycophant taciturn temerity torpid truculent unctuous
+vacillate venal vitriolic vociferous winsome zealot

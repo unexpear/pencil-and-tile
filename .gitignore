@@ -1,0 +1,14 @@
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+.DS_Store
+app/build/
+sudoku-engine/build/
+*.jks
+*.keystore
+keystore.properties
+.kotlin/
+*.aab
+*.apk

@@ -1,0 +1,271 @@
+# Hand-written extras for Word Meaning, merged over the WordNet data by build_meaning_bank.py.
+# word|kind|level|sentence|meaning, then + right, ~ close and - wrong phrases (semicolon separated).
+# The sentence and meaning here are only used when WordNet has no example for the word.
+
+brave|adjective|0|The brave firefighter ran back inside to carry out the cat.|ready to face danger or pain without fear
++ not afraid; not scared; fearless; courageous; has courage; bold; faces danger; heroic; unafraid; daring
+~ strong; tough
+- scared; afraid; frightened; coward; timid
+
+ancient|adjective|0|The ancient castle walls were built more than a thousand years ago.|very old; from a long time ago
++ very old; really old; from long ago; from a long time ago; thousands of years; old; prehistoric; historic
+- new; modern; young; recent
+
+enormous|adjective|0|An enormous whale swam right under our little boat.|very large
++ huge; very big; really big; giant; gigantic; massive; very large; immense; big
+- tiny; small; little
+
+fragile|adjective|0|Wrap the fragile glasses in paper so they don't break in the box.|easily broken or damaged
++ breaks easily; easily broken; easy to break; delicate; breakable; can break; could break; weak
+~ glass; careful
+- strong; sturdy; tough; unbreakable
+
+hilarious|adjective|0|The clown's hilarious act made the whole crowd laugh until they cried.|extremely funny
++ very funny; really funny; funny; makes you laugh; hysterical; so funny
+- sad; boring; serious
+
+exhausted|adjective|0|After running the marathon she was too exhausted to climb the stairs.|extremely tired
++ very tired; tired; worn out; no energy; out of energy; drained; wiped out; sleepy; fatigued
+- energetic; full of energy; awake; lively
+
+shallow|adjective|0|The children splashed in the shallow end where the water reached their knees.|not deep
++ not deep; not very deep; low water; little depth
+- deep; wide
+
+vanish|verb|0|The magician waved his cape and made the rabbit vanish.|to disappear suddenly
++ disappear; go away; become invisible; gone; not seen anymore; fade away; poof
+- appear; show up; arrive
+
+cautious|adjective|0|Be cautious on the icy path so you don't slip.|careful to avoid danger or mistakes
++ careful; being careful; avoid risk; avoid danger; wary; not taking risks; watchful
+- reckless; careless; risky; brave
+
+generous|adjective|0|My generous neighbor shared her whole garden harvest with the street.|happy to give more than is expected
++ gives a lot; likes to give; giving; shares; sharing; kind with money; not selfish; charitable; gives away
+~ kind; nice
+- selfish; greedy; stingy; mean
+
+rapid|adjective|0|The river was so rapid that the leaves shot past in seconds.|very fast
++ fast; quick; very fast; speedy; swift; quickly; hurried
+- slow; sluggish
+
+damp|adjective|0|The towel was still damp from this morning's shower.|slightly wet
++ slightly wet; a little wet; wet; moist; not dry; soggy
+- dry; hot
+
+gloomy|adjective|0|The gloomy sky promised rain all afternoon.|dark or sad and without hope
++ dark; dim; sad; dull; depressing; miserable; grey; gray; dreary; unhappy
+- bright; cheerful; happy; sunny
+
+stubborn|adjective|0|The stubborn goat refused to move no matter how hard we pulled.|refusing to change your mind or do what others want
++ won't change their mind; refuses to change; will not change; refuses to move; not willing to change; hard headed; strong willed; obstinate; will not give in; won't listen
+~ difficult; determined
+- flexible; easy going; agreeable
+
+curious|adjective|0|The curious puppy sniffed every box in the new house.|eager to know or learn about something
++ wants to know; want to learn; eager to learn; interested; inquisitive; nosy; asks questions; wonders
+- bored; uninterested
+
+feeble|adjective|0|The kitten gave a feeble cry from inside the drain.|very weak
++ weak; very weak; frail; not strong; faint; no strength
+- strong; powerful; loud
+
+ambitious|adjective|1|The ambitious student planned to learn four languages by the end of school.|having a strong wish to succeed or achieve a lot
++ wants to succeed; want to succeed; wants to achieve; driven; big goals; wants to be successful; determined to succeed; aims high; wants a lot; motivated
+~ determined; hard working; hardworking
+- lazy; content; unmotivated
+
+reluctant|adjective|1|He was reluctant to jump into the cold lake, so he waited on the shore.|not wanting to do something
++ not want to; unwilling; hesitant; does not want; didn't want; not keen; unenthusiastic; holding back
+~ scared; afraid; slow
+- eager; keen; excited; willing
+
+frugal|adjective|1|My frugal grandfather fixed his old shoes instead of buying new ones.|careful not to waste money or resources
++ careful with money; saves money; not spend much; not spending; spends little; doesn't waste; not wasteful; thrifty; economical; tight with money
+~ cheap; poor; stingy
+- spends a lot; wasteful; rich; lavish; extravagant; fruit
+
+vivid|adjective|1|She painted the parrot in vivid reds, blues and yellows.|very bright or clear and strong
++ bright; bold; strong colors; colorful; clear; intense; lively; brilliant; detailed
+- dull; faded; pale; boring
+
+tedious|adjective|1|Counting all the paperclips one by one was a tedious job.|long, slow and boring
++ boring; dull; tiresome; long and boring; monotonous; not interesting; dreary
+~ long; slow; hard; annoying
+- exciting; fun; interesting
+
+cunning|adjective|1|The cunning fox tricked the crow into dropping its cheese.|clever at tricking people to get what you want
++ sly; sneaky; crafty; clever; tricky; tricks people; sneaky and smart; devious; wily; smart
+- stupid; honest; naive
+
+humble|adjective|1|Even after winning the prize, the humble chef thanked her whole team.|not thinking you are better or more important than others
++ modest; not proud; not arrogant; not boastful; doesn't brag; does not show off; down to earth; not full of themselves
+~ kind; nice; quiet
+- proud; arrogant; boastful; show off; vain
+
+obsolete|adjective|1|Once phones had cameras, many small cameras became obsolete.|no longer used because something newer exists
++ outdated; out of date; no longer used; not used anymore; old fashioned; replaced; out of use; old
+- new; modern; popular; brand new
+
+pristine|adjective|1|The snow was still pristine before anyone walked across the field.|clean and fresh as if new; untouched
++ clean; spotless; perfect; untouched; like new; brand new; unspoiled; fresh; pure; perfect condition
+- dirty; ruined; messy; damaged
+
+bewildered|adjective|1|The bewildered tourist turned the map around three times.|very confused
++ confused; puzzled; lost; baffled; perplexed; did not understand; doesn't understand; mixed up
+- sure; certain; clear
+
+anxious|adjective|1|She felt anxious the night before her first day at the new school.|worried and nervous
++ worried; nervous; uneasy; stressed; tense; on edge; afraid; scared; concerned
+- calm; relaxed; confident
+
+diligent|adjective|1|The diligent gardener pulled every weed by hand each morning.|working hard and carefully
++ hard working; hardworking; works hard; careful; thorough; dedicated; industrious; puts in effort
+- lazy; careless; idle
+
+sincere|adjective|1|His apology sounded sincere, so she forgave him right away.|honest and meaning what you say
++ honest; genuine; truthful; means what they say; really means it; heartfelt; not fake
+- fake; lying; dishonest; insincere
+
+abundant|adjective|1|Apples were so abundant that year that we gave boxes away.|more than enough; plentiful
++ plentiful; a lot; lots; plenty; more than enough; many; loads; lots of it; large amount; overflowing
+- scarce; rare; few; not enough
+
+scarce|adjective|1|Water was scarce during the long dry summer.|not enough; hard to find
++ rare; not enough; hard to find; in short supply; few; lacking; limited; little
+- plentiful; abundant; common; lots
+
+gregarious|adjective|2|Our gregarious neighbor knows everybody on the street by name.|fond of company; sociable
++ sociable; social; outgoing; likes people; likes company; being with people; around people; enjoys company; loves parties; people person; extrovert; extroverted; friendly
+~ talkative; chatty; nice
+- shy; alone; solitary; introvert; loner; angry; greedy
+
+ephemeral|adjective|2|The rainbow was ephemeral, gone before anyone found a camera.|lasting only a very short time
++ short lived; short time; brief; temporary; doesn't last; does not last; not last long; fleeting; momentary; passing; quick
+- permanent; forever; lasting; eternal; lasts a long time; ghostly; huge
+
+candid|adjective|2|The coach gave a candid review of our mistakes after the match.|honest and direct, even if it's uncomfortable
++ honest; frank; direct; truthful; straightforward; blunt; open; says what they think; says what they mean; outspoken
+- dishonest; secretive; lying; sweet; candy
+
+meticulous|adjective|2|The meticulous watchmaker checked every tiny gear with a magnifier.|very careful about small details
++ careful about details; small details; attention to detail; precise; thorough; detailed; exact; perfectionist; extremely careful; picky and exact
+~ careful; neat; organized; organised
+- careless; messy; sloppy
+
+benevolent|adjective|2|The benevolent queen opened her gardens to everyone in the city.|kind and wanting to do good for others
++ kind; generous; caring; well meaning; good hearted; charitable; wants to help; does good; helpful; compassionate
+~ nice; good
+- evil; cruel; mean; wicked
+
+lethargic|adjective|2|The heat made everyone lethargic, lying on the sofa all afternoon.|slow and lacking energy
++ no energy; lacking energy; low energy; not much energy; tired; sluggish; slow; sleepy; drowsy; lazy; inactive; listless
+- energetic; full of energy; lively; active; hyper
+
+ambiguous|adjective|2|The ambiguous sign pointed two ways at once, so we got lost.|able to be understood in more than one way; unclear
++ unclear; not clear; could mean two things; more than one meaning; two meanings; different meanings; vague; confusing; uncertain; open to interpretation; could mean different things
+- clear; obvious; certain; both hands
+
+eloquent|adjective|2|Her eloquent speech made the whole hall fall silent.|speaking or writing well and persuasively
++ well spoken; speaks well; good with words; articulate; persuasive; fluent; expressive; good speaker; writes well
+- mumbling; inarticulate; tongue tied
+
+mundane|adjective|2|Washing the dishes felt mundane after our exciting trip.|ordinary and not interesting
++ ordinary; boring; dull; everyday; normal; routine; plain; not interesting; not exciting; common
+- exciting; special; extraordinary; unusual
+
+resilient|adjective|2|The resilient little tree grew back after every storm.|able to recover quickly from difficulties
++ bounces back; recovers quickly; recover; tough; strong; able to recover; comes back; keeps going; does not give up; doesn't give up; hardy
+~ brave; determined
+- fragile; weak; gives up
+
+skeptical|adjective|2|I was skeptical of the ad that promised to make me rich overnight.|doubting that something is true
++ doubtful; doubting; unsure it is true; not believe; doesn't believe; questioning; suspicious; unconvinced; not convinced; distrustful
+~ unsure; careful
+- believing; trusting; convinced; gullible
+
+impartial|adjective|2|A good referee stays impartial and treats both teams the same.|fair and not favoring one side
++ fair; unbiased; not biased; neutral; no favorites; not taking sides; doesn't take sides; treats everyone the same; objective; even handed
+- biased; unfair; one sided; partial
+
+serene|adjective|2|The lake looked serene at dawn with no wind at all.|calm and peaceful
++ calm; peaceful; tranquil; quiet; still; relaxed; untroubled; at peace
+- chaotic; stormy; noisy; angry; stressed
+
+frivolous|adjective|2|Buying a diamond collar for the hamster seemed a little frivolous.|silly and not serious or important
++ silly; not serious; unimportant; not important; trivial; pointless; wasteful; foolish; playful
+- serious; important; essential
+
+meander|verb|2|The stream meanders through the meadow in lazy loops.|to follow a winding, slow course
++ wander; winding; wind; twist and turn; curve; zigzag; ramble; roam; stroll; drift; wandering path; no clear direction
+~ walk; flow; slow
+- straight; rush; direct
+
+ubiquitous|adjective|3|Smartphones have become ubiquitous; you see them on every bus.|found everywhere
++ everywhere; all over; all around; common; widespread; omnipresent; seen everywhere; in every place; universal
+- rare; unique; scarce; nowhere
+
+sanguine|adjective|3|Despite the rain, she stayed sanguine about the picnic.|cheerfully hopeful
++ optimistic; hopeful; positive; cheerful; confident; upbeat; expects the best; looks on the bright side
+- pessimistic; hopeless; gloomy; bloody; negative
+
+obfuscate|verb|3|The report used long words to obfuscate a very simple mistake.|to make something unclear on purpose
++ make unclear; make confusing; confuse; hide; obscure; muddle; cover up; make hard to understand; complicate
+- clarify; explain; make clear; simplify; reveal
+
+laconic|adjective|3|His laconic reply was just one word: "Maybe."|using very few words
++ few words; brief; short; terse; concise; not say much; doesn't talk much; quiet; succinct; to the point
+- talkative; wordy; chatty; long winded; verbose
+
+magnanimous|adjective|3|The magnanimous winner helped her rival up and praised her play.|generous and forgiving, especially toward a rival
++ generous; forgiving; big hearted; noble; gracious; kind to rivals; kind; charitable; not petty; good sport
+- petty; spiteful; mean; selfish; vengeful
+
+quixotic|adjective|3|His quixotic plan was to plant a forest in the desert by hand.|very idealistic and unrealistic
++ idealistic; unrealistic; impractical; dreamy; romantic; foolishly hopeful; unlikely to work; head in the clouds; over ambitious
+~ crazy; brave; ambitious
+- practical; realistic; sensible; quick
+
+perfunctory|adjective|3|He gave the room a perfunctory wipe and called it clean.|done quickly and without care, just as a duty
++ quick and careless; careless; half hearted; without care; without effort; rushed; minimal effort; just to get it done; routine; mechanical; going through the motions
+~ quick; lazy
+- thorough; careful; meticulous; enthusiastic
+
+pugnacious|adjective|3|The pugnacious rooster chased anyone who came near the barn.|eager to argue or fight
++ aggressive; violent; uses force; wants to fight; likes to fight; likes fighting; quarrelsome; combative; argumentative; belligerent; hostile; confrontational
+~ angry; rude; mean
+- peaceful; gentle; calm; timid
+
+ebullient|adjective|3|The ebullient team sang all the way home after the win.|full of cheerful energy and excitement
++ cheerful; enthusiastic; excited; bubbly; lively; energetic; full of energy; exuberant; joyful; very happy
+~ happy; loud
+- gloomy; sad; lethargic; calm
+
+capricious|adjective|3|The capricious weather changed from sun to hail within an hour.|changing suddenly and without reason
++ unpredictable; changes suddenly; changes a lot; changeable; fickle; moody; erratic; random; impulsive; whimsical
+- steady; stable; predictable; consistent
+
+esoteric|adjective|3|The lecture was full of esoteric facts that only a few experts knew.|understood by only a small group of people
++ obscure; specialized; specialised; known by few; only a few people; niche; hard to understand; not well known; mysterious; secret
+~ strange; weird
+- common; popular; well known; simple
+
+inscrutable|adjective|3|The cat stared at us with an inscrutable expression.|impossible to understand or read
++ mysterious; hard to read; impossible to understand; hard to understand; can't tell what they think; unreadable; enigmatic; puzzling; blank
+- obvious; clear; open; readable
+
+loquacious|adjective|3|The loquacious barber told us three stories during one haircut.|talking a lot
++ talkative; talks a lot; chatty; wordy; never stops talking; likes to talk; gabby
+- quiet; silent; laconic; shy
+
+tenacious|adjective|3|The tenacious climber tried the cliff eleven times before reaching the top.|not giving up easily; determined
++ determined; persistent; doesn't give up; does not give up; never gives up; stubborn; keeps trying; relentless; strong willed; dogged
+- weak; gives up; quitter; lazy
+
+ostentatious|adjective|3|He drove an ostentatious gold car to the grocery store.|showy in a way meant to impress others
++ showy; show off; flashy; flamboyant; extravagant; to impress; attention seeking; over the top; gaudy; boastful
+- modest; plain; humble; simple
+
+benign|adjective|3|The doctor said the lump was benign and nothing to worry about.|gentle and not harmful
++ harmless; not harmful; not dangerous; gentle; kind; mild; safe; not cancer; nothing to worry about
+- harmful; dangerous; malignant; deadly
