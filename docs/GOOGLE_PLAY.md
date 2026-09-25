@@ -164,9 +164,10 @@ Post for social media or forums (fill in the group link):
   libraries. Pure Kotlin/Java code needs no native alignment changes, but
   dependencies can introduce native binaries.
 - Store graphics are ready in `docs/store/`: `graphics/icon-512.png` (hi-res icon),
-  `graphics/feature-1024x500.png` (feature graphic, regenerate with `python tools/store_graphics.py`) and six
-  1080×2160 phone screenshots in `screenshots/` (home, Sudoku, Common Threads, Five Letters, Word Meaning,
-  Mahjong). Screenshots in other languages are optional; Play shows the English ones otherwise.
+  `graphics/feature-1024x500.png` (feature graphic, regenerate with `python tools/store_graphics.py`) and
+  9:16 screenshots in `screenshots/` (Play only accepts 16:9 or 9:16): `phone-*` 1080×1920, `tablet7-*`
+  1080×1920 at tablet density and `tablet10-*` 1440×2560 (home, Sudoku, Common Threads, Five Letters, Word
+  Meaning, Mahjong). Play shows these for every language unless localized ones are added.
 - Still needed from you: support email and privacy-policy URL.
 - Complete content rating, target audience, ads/app-access declarations, Data
   safety and any account-specific testing/verification requirements shown by
