@@ -383,6 +383,40 @@ internal object WordTutorials {
         )
     }
 
+    val wordsworn: Tutorial get() {
+        val hand = "CATSRENO"
+        val powers = hand.map { com.simplegamegen.sudoku.wordplay.Wordsworn.powerOf(it) }
+        fun scene(picked: List<Int> = emptyList(), caption: String = ""): Scene = Scene(8f, 1.3f, hand.mapIndexed { i, ch ->
+            Item("t$i", i.toFloat(), 0f, h = 1.3f, look = Cell(text = ch.toString(), sub = powers[i].toString()),
+                tone = if (i in picked) Tone.SELECTED else Tone.PLAIN, describe = "$ch, power ${powers[i]}")
+        }, maxUnit = 44, caption = caption)
+        return Tutorial(
+            GameId.WORDSWORN,
+            "Battle a run of monsters by spelling words from your letter tiles.",
+            rules = listOf(
+                "Tap tiles from your hand to spell a word, then tap Attack.",
+                "Damage is the tiles' power added up. Words longer than three letters get 25% more for each extra letter.",
+                "Common letters have power 1; rarer letters hit harder, up to 10 for Q and Z.",
+                "After your word, the monster does what its sign shows: hit you, guard itself (its guard soaks up damage), or drain your health.",
+                "Shield tiles block, heal tiles mend you, a double tile doubles the damage, and a wild tile can be any letter.",
+                "Swap trades up to three tiles for new ones, but the monster still takes its turn.",
+                "After each win, choose a reward: sharpen a letter, add a special tile, or rest. Beat the Word Eater to finish the run.",
+                "Hint shows the strongest word your hand can make.",
+            ),
+            tips = listOf("A long word of plain letters often beats a short word with one rare letter.",
+                "When the monster is about to guard, strike hard now; when it's about to hit, a shield tile helps."),
+            steps = listOf(
+                Step("This is your hand. The small number on each tile is its power. Spell CAT: tap C.", scene(), tap = setOf("t0"), after = scene(listOf(0))),
+                Step("Now A.", scene(listOf(0)), tap = setOf("t1"), after = scene(listOf(0, 1))),
+                Step("And T.", scene(listOf(0, 1)), tap = setOf("t2"), after = scene(listOf(0, 1, 2), "CAT deals 5"),
+                    then = "CAT deals 3 + 1 + 1 = 5 damage."),
+                Step("Longer words hit harder. How much would CARTONS deal? Its tiles add up to 9, and seven letters give +100%.",
+                    scene(caption = "C3 A1 R1 T1 O1 N1 S1").choices("9", "18", "27"), pick = "18",
+                    then = "18 damage: nine, doubled for four extra letters.", help = "Each letter beyond three adds 25%: four extra letters make +100%."),
+            ),
+        )
+    }
+
     val sprawl: Tutorial get() {
         val grid = listOf("CATS", "ROEN", "IDGL", "PUMB")
         fun scene(picked: Set<String> = emptySet(), found: Set<String> = emptySet()): Scene = Scene(4f, 4f, (0 until 4).flatMap { r ->

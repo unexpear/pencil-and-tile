@@ -384,6 +384,18 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                         }
                         "SPRA".forEachIndexed { i, ch -> letter(ch.toString(), path[i].first, path[i].second, 4, Color.White) }
                     }
+                    GameId.WORDSWORN -> {
+                        // A friendly monster squaring up to a letter tile.
+                        with(com.simplegamegen.sudoku.ui.screens.MonsterArt) {
+                            drawMonsterAt(com.simplegamegen.sudoku.wordplay.Monster.TYPO_IMP,
+                                androidx.compose.ui.geometry.Rect(o + Offset(side * 0.3f, 0f), Size(side * 0.7f, side * 0.7f)))
+                        }
+                        drawRoundRect(Color(0xFFFFF6E0), o + Offset(side * 0.04f, side * 0.52f), Size(side * 0.36f, side * 0.44f), CornerRadius(side * 0.06f))
+                        drawRoundRect(Color(0xFFB8A57E), o + Offset(side * 0.04f, side * 0.52f), Size(side * 0.36f, side * 0.44f), CornerRadius(side * 0.06f),
+                            style = Stroke(side * 0.02f))
+                        drawText(measurer.measure("W", TextStyle(color = Color(0xFF2A2418), fontSize = (side * 0.26f / density).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Black)),
+                            topLeft = o + Offset(side * 0.1f, side * 0.56f))
+                    }
                     GameId.WORD_SEARCH -> {
                         val cell = side / 4
                         drawRoundRect(look.colors.highlight.copy(alpha = 0.55f), o + Offset(cell * 0.12f, cell * 1.12f),

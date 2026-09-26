@@ -152,6 +152,10 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
         com.simplegamegen.sudoku.ui.screens.SprawlScreen(nav, playModel<com.simplegamegen.sudoku.wordplay.Sprawl>(GameId.LETTER_SPRAWL, store,
             codecOf(com.simplegamegen.sudoku.wordplay.SprawlCodec::encode, com.simplegamegen.sudoku.wordplay.SprawlCodec::decode)), factory)
     }
+    composable(GameId.WORDSWORN.route) {
+        com.simplegamegen.sudoku.ui.screens.WordswornScreen(nav, playModel<com.simplegamegen.sudoku.wordplay.Wordsworn>(GameId.WORDSWORN, store,
+            codecOf(com.simplegamegen.sudoku.wordplay.WordswornCodec::encode, com.simplegamegen.sudoku.wordplay.WordswornCodec::decode)), factory, store)
+    }
     composable(GameId.WORD_MEANING.route) {
         MeaningScreen(nav, playModel<MeaningGame>(GameId.WORD_MEANING, store, codecOf(MeaningCodec::encode, MeaningCodec::decode)), factory)
     }

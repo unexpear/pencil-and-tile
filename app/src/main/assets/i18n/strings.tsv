@@ -1782,3 +1782,83 @@ Three points. Six letters make 5, and eight or more make 13!	3 分。六个字�
 Three letters make 1, four make 2, five make 3.	三个字母 1 分，四个 2 分，五个 3 分。	3文字で1点、4文字で2点、5文字で3点。	Tres letras dan 1, cuatro dan 2, cinco dan 3.	Drei Buchstaben bringen 1, vier bringen 2, fünf bringen 3.
 Chain touching letters into words on 4×4 and 5×5 grids × 4 levels; longer words score more.	在 4×4 和 5×5 的格子里把相邻字母连成单词 × 4 个难度；单词越长得分越高。	4×4と5×5の盤でとなり合う文字をつなぐ × 4レベル。長い単語ほど高得点。	Encadena letras en cuadrículas de 4×4 y 5×5 × 4 niveles; las palabras largas puntúan más.	Verbinde Buchstaben auf 4×4- und 5×5-Gittern × 4 Stufen; längere Wörter bringen mehr.
 Grids are drawn from weighted letters and kept only when they hide enough everyday words; 168,297 accepted words.	格子由加权字母随机生成，只保留藏有足够常用词的格子；共收录 168,297 个单词。	文字は重みづけして選び、身近な単語が十分に隠れた盤だけを使います。受け付ける単語は168,297語。	Las cuadrículas salen de letras ponderadas y solo se usan si esconden suficientes palabras comunes; 168.297 palabras aceptadas.	Gitter entstehen aus gewichteten Buchstaben und werden nur genutzt, wenn sie genug Alltagswörter enthalten; 168.297 erlaubte Wörter.
+Wordsworn	词语大作战	ことばバトル	Duelo de palabras	Wortgefecht
+Battle monsters with words	用单词打怪兽	ことばでモンスターと戦う	Lucha contra monstruos con palabras	Kämpfe mit Wörtern gegen Monster
+Battle a run of monsters with words. Tap tiles from your hand to spell a word, then Attack: the tiles' power is added up, and long words get a bonus. Rare letters hit harder. After your word the monster does what its sign shows: hit you, guard itself, or drain your health. Shield tiles block, heal tiles mend, a double tile doubles the damage and a wild tile can be any letter. Swap trades up to three tiles but uses your turn. After each win, choose a reward. Beat the Word Eater at the end to finish the run.	用单词和一连串怪兽战斗。点手中的字母牌拼出单词，然后点“攻击”：字母牌的力量相加，长单词有额外加成，稀有字母威力更大。你出招后，怪兽会按它的标志行动：攻击你、防御，或吸取你的生命。盾牌牌能挡伤害，治疗牌能回血，双倍牌让伤害翻倍，百搭牌可以当任何字母。“换牌”可以换最多三张，但会用掉你的回合。每次获胜后选一个奖励。最后打败“吞词怪”就完成了这一轮。（单词为英文。）	ことばでモンスターと連戦します。手札の文字タイルで英単語を作り「攻撃」。タイルの力の合計がダメージになり、長い単語はボーナス、めずらしい文字ほど強力です。あなたの番のあと、モンスターは表示どおりに行動します（攻撃・防御・体力を吸う）。盾タイルはダメージを防ぎ、回復タイルは体力を回復、ダブルタイルはダメージ2倍、ワイルドタイルは好きな文字になります。「交換」で3枚まで入れ替えられますが、1ターン使います。勝つたびにごほうびを1つ選び、最後の「ことばイーター」を倒せば攻略成功です。	Lucha contra una serie de monstruos con palabras. Toca fichas de tu mano para formar una palabra y luego Atacar: se suma el poder de las fichas y las palabras largas tienen bonificación. Las letras raras golpean más fuerte. Después, el monstruo hace lo que indica su señal: golpearte, protegerse o robarte vida. Las fichas de escudo bloquean, las de curación te curan, la doble duplica el daño y la comodín puede ser cualquier letra. Cambiar sustituye hasta tres fichas, pero gasta tu turno. Tras cada victoria elige una recompensa. Vence al Devorapalabras para terminar. (Las palabras son en inglés.)	Kämpfe mit Wörtern gegen eine Reihe von Monstern. Tippe Steine aus deiner Hand an, um ein Wort zu bilden, dann Angriff: Die Stärke der Steine wird addiert, lange Wörter bekommen einen Bonus, seltene Buchstaben treffen härter. Danach tut das Monster, was sein Zeichen zeigt: dich treffen, sich schützen oder dir Leben entziehen. Schildsteine blocken, Heilsteine heilen, ein Doppelstein verdoppelt den Schaden und ein Jokerstein kann jeder Buchstabe sein. Tauschen ersetzt bis zu drei Steine, kostet aber deinen Zug. Nach jedem Sieg wählst du eine Belohnung. Besiege am Ende den Wortfresser. (Die Wörter sind englisch.)
+{0} fights · start with {1} health	{0} 场战斗 · 初始生命 {1}	{0}戦 · 体力{1}でスタート	{0} combates · empiezas con {1} de vida	{0} Kämpfe · Start mit {1} Leben
+{0} · fight {1} of {2}	{0} · 第 {1}/{2} 场	{0} · {2}戦中{1}戦目	{0} · combate {1} de {2}	{0} · Kampf {1} von {2}
+No word fits. Try Swap.	拼不出单词，试试换牌。	作れる単語がありません。交換してみましょう。	No sale ninguna palabra. Prueba a cambiar.	Kein Wort passt. Versuch zu tauschen.
+Try {0} for {1} damage.	试试 {0}，造成 {1} 点伤害。	{0}で{1}ダメージ。	Prueba {0}: {1} de daño.	Versuch {0} für {1} Schaden.
+Cancel swap	取消换牌	交換をやめる	Cancelar cambio	Tausch abbrechen
+Swap ({0})	换牌（{0}）	交換（{0}）	Cambiar ({0})	Tauschen ({0})
+Blocked	挡住了	防がれた	Bloqueado	Geblockt
+Run complete! The Word Eater is beaten.	通关了！吞词怪被打败了。	攻略成功！ことばイーターを倒しました。	¡Recorrido completado! El Devorapalabras ha caído.	Geschafft! Der Wortfresser ist besiegt.
+Defeated in fight {0}. Try another run!	在第 {0} 场战斗中落败。再来一轮吧！	{0}戦目で敗れました。もう一度挑戦！	Derrota en el combate {0}. ¡Prueba otra vez!	Im Kampf {0} besiegt. Versuch es noch einmal!
+On to fight {0}!	进入第 {0} 场战斗！	{0}戦目へ！	¡Al combate {0}!	Weiter zu Kampf {0}!
+Pick up to 3 tiles to swap	选最多 3 张要换的牌	交換するタイルを3枚まで選択	Elige hasta 3 fichas para cambiar	Wähle bis zu 3 Steine zum Tauschen
+Tap tiles to spell a word	点字母牌拼单词	タイルをタップして単語を作る	Toca fichas para formar una palabra	Tippe Steine an, um ein Wort zu bilden
+Deals {0}	造成 {0}	{0}ダメージ	Hace {0}	Macht {0}
+blocks {0}	抵挡 {0}	{0}ブロック	bloquea {0}	blockt {0}
+heals {0}	治疗 {0}	{0}回復	cura {0}	heilt {0}
+Swap these	换这些	これを交換	Cambiar estas	Diese tauschen
+Attack	攻击	攻撃	Atacar	Angriff
+Swapped {0} tiles.	换了 {0} 张牌。	{0}枚交換しました。	Cambiaste {0} fichas.	{0} Steine getauscht.
+{0}! {1} is beaten.	{0}！{1}被打败了。	{0}！{1}を倒した。	¡{0}! {1} ha caído.	{0}! {1} ist besiegt.
+{0}! You won the run!	{0}！你赢了！	{0}！攻略成功！	¡{0}! ¡Has ganado!	{0}! Du hast gewonnen!
+Wild tile: pick its letter	百搭牌：选一个字母	ワイルドタイル：文字を選ぶ	Ficha comodín: elige su letra	Jokerstein: wähle seinen Buchstaben
+Draw pile {0} · used {1}	牌堆 {0} · 已用 {1}	山札{0} · 使用済み{1}	Mazo {0} · usadas {1}	Stapel {0} · benutzt {1}
+Hits {0}	攻击 {0}	攻撃{0}	Golpea {0}	Trifft {0}
+Guards {0}	防御 {0}	防御{0}	Se protege {0}	Schützt sich {0}
+Drains {0}	吸取 {0}	吸収{0}	Absorbe {0}	Entzieht {0}
+Wild tile	百搭牌	ワイルドタイル	Ficha comodín	Jokerstein
+{0}, power {1}	{0}，力量 {1}	{0}、力{1}	{0}, poder {1}	{0}, Stärke {1}
+{0}, power {1}, {2}	{0}，力量 {1}，{2}	{0}、力{1}、{2}	{0}, poder {1}, {2}	{0}, Stärke {1}, {2}
+Shield	盾牌	盾	Escudo	Schild
+Heal	治疗	回復	Curación	Heilung
+Double	双倍	ダブル	Doble	Doppel
+Wild	百搭	ワイルド	Comodín	Joker
+{0} is beaten! Choose a reward:	{0}被打败了！选择一个奖励：	{0}を倒した！ごほうびを選ぼう：	¡{0} ha caído! Elige una recompensa:	{0} ist besiegt! Wähle eine Belohnung:
+Sharpen {0}	磨利 {0}	{0}を強化	Afilar {0}	{0} schärfen
+Every {0} tile gets +{1} power	每张 {0} 牌力量 +{1}	すべての{0}タイルの力+{1}	Cada ficha {0} gana +{1} de poder	Jeder {0}-Stein bekommt +{1} Stärke
+New {0} tile	新的{0}牌	新しい{0}タイル	Nueva ficha de {0}	Neuer {0}stein
+shield	盾牌	盾	escudo	Schild
+heal	治疗	回復	curación	Heil
+double	双倍	ダブル	doble	Doppel
+wild	百搭	ワイルド	comodín	Joker
+A wild tile: any letter	百搭牌：可当任何字母	ワイルドタイル：どの文字にもなる	Una ficha comodín: cualquier letra	Ein Jokerstein: jeder Buchstabe
+Rest	休息	休む	Descansar	Rasten
+Heal {0} health	恢复 {0} 点生命	体力を{0}回復	Recupera {0} de vida	{0} Leben heilen
+Splatter: blood. Tap for ink.	飞溅：血。点一下换成墨水。	しぶき：血。タップでインクに。	Salpicaduras: sangre. Toca para tinta.	Spritzer: Blut. Tippen für Tinte.
+Splatter: ink. Tap for blood.	飞溅：墨水。点一下换成血。	しぶき：インク。タップで血に。	Salpicaduras: tinta. Toca para sangre.	Spritzer: Tinte. Tippen für Blut.
+Typo Imp	错字小鬼	タイポ小鬼	Diablillo Errata	Tippfehler-Kobold
+Dust Bunny	灰尘兔	ほこりウサギ	Conejo de Polvo	Staubhase
+Inkblot Slime	墨渍史莱姆	インクしみスライム	Babosa de Tinta	Tintenklecks-Schleim
+Spelling Bee	拼写蜂	スペルバチ	Abeja Deletreadora	Buchstabier-Biene
+Grammar Gremlin	语法小妖	文法グレムリン	Duende Gramatical	Grammatik-Gremlin
+Bookworm	书虫	本の虫	Ratón de Biblioteca	Bücherwurm
+Paper Dragon	纸龙	紙のドラゴン	Dragón de Papel	Papierdrache
+Word Eater	吞词怪	ことばイーター	Devorapalabras	Wortfresser
+Use at least two tiles.	至少用两张牌。	2枚以上使いましょう。	Usa al menos dos fichas.	Nimm mindestens zwei Steine.
+Each tile once.	每张牌只能用一次。	各タイルは1回だけ。	Cada ficha una vez.	Jeder Stein nur einmal.
+Pick a letter for each wild tile.	给每张百搭牌选一个字母。	ワイルドタイルごとに文字を選んでください。	Elige una letra para cada comodín.	Wähle für jeden Joker einen Buchstaben.
+Not now.	现在不行。	今はできません。	Ahora no.	Nicht jetzt.
+Battle a run of monsters by spelling words from your letter tiles.	用字母牌拼单词，和一连串怪兽战斗。	文字タイルで単語を作り、モンスターと連戦しよう。	Lucha contra una serie de monstruos formando palabras con tus fichas.	Kämpfe gegen eine Reihe von Monstern, indem du aus deinen Buchstabensteinen Wörter bildest.
+Tap tiles from your hand to spell a word, then tap Attack.	点手中的牌拼出单词，然后点“攻击”。	手札のタイルをタップして単語を作り、「攻撃」をタップ。	Toca fichas de tu mano para formar una palabra y luego Atacar.	Tippe Steine aus deiner Hand an, um ein Wort zu bilden, dann auf Angriff.
+Damage is the tiles' power added up. Words longer than three letters get 25% more for each extra letter.	伤害是字母牌力量之和。超过三个字母的单词，每多一个字母多 25%。	ダメージはタイルの力の合計。3文字より長い単語は、1文字ごとに25%アップ。	El daño es la suma del poder de las fichas. Las palabras de más de tres letras ganan un 25% por cada letra extra.	Der Schaden ist die Summe der Stärke. Wörter mit mehr als drei Buchstaben bekommen pro extra Buchstabe 25% mehr.
+Common letters have power 1; rarer letters hit harder, up to 10 for Q and Z.	常见字母力量为 1，越稀有的字母威力越大，Q 和 Z 高达 10。	よく使う文字は力1、めずらしい文字ほど強く、QとZは10。	Las letras comunes tienen poder 1; las raras golpean más fuerte, hasta 10 para Q y Z.	Häufige Buchstaben haben Stärke 1, seltenere treffen härter, bis 10 für Q und Z.
+After your word, the monster does what its sign shows: hit you, guard itself (its guard soaks up damage), or drain your health.	你出招后，怪兽会按标志行动：攻击你、防御（防御会吸收伤害），或吸取你的生命。	あなたの番のあと、モンスターは表示どおりに行動：攻撃、防御（防御はダメージを吸収）、体力を吸う。	Después de tu palabra, el monstruo hace lo que indica su señal: golpearte, protegerse (su escudo absorbe daño) o robarte vida.	Nach deinem Wort tut das Monster, was sein Zeichen zeigt: dich treffen, sich schützen (der Schutz schluckt Schaden) oder dir Leben entziehen.
+Shield tiles block, heal tiles mend you, a double tile doubles the damage, and a wild tile can be any letter.	盾牌牌能挡伤害，治疗牌能回血，双倍牌让伤害翻倍，百搭牌可以当任何字母。	盾タイルは防御、回復タイルは回復、ダブルタイルはダメージ2倍、ワイルドタイルは好きな文字に。	Las fichas de escudo bloquean, las de curación te curan, la doble duplica el daño y la comodín puede ser cualquier letra.	Schildsteine blocken, Heilsteine heilen, ein Doppelstein verdoppelt den Schaden und ein Joker kann jeder Buchstabe sein.
+Swap trades up to three tiles for new ones, but the monster still takes its turn.	“换牌”可以换最多三张新牌，但怪兽仍会行动。	「交換」で3枚まで新しいタイルに替えられますが、モンスターは行動します。	Cambiar sustituye hasta tres fichas por otras nuevas, pero el monstruo sigue actuando.	Tauschen ersetzt bis zu drei Steine, aber das Monster ist trotzdem dran.
+After each win, choose a reward: sharpen a letter, add a special tile, or rest. Beat the Word Eater to finish the run.	每次获胜后选择奖励：磨利一个字母、加一张特殊牌，或休息。打败吞词怪就通关了。	勝つたびにごほうびを選択：文字を強化、特別なタイルを追加、または休む。ことばイーターを倒せば攻略成功。	Tras cada victoria elige una recompensa: afilar una letra, añadir una ficha especial o descansar. Vence al Devorapalabras para terminar.	Nach jedem Sieg wählst du: einen Buchstaben schärfen, einen Spezialstein oder Rast. Besiege den Wortfresser, um zu gewinnen.
+Hint shows the strongest word your hand can make.	“提示”会显示你手中牌能拼出的最强单词。	ヒントは手札で作れる最強の単語を示します。	Pista muestra la palabra más fuerte que puedes formar.	Tipp zeigt das stärkste Wort, das deine Hand bilden kann.
+A long word of plain letters often beats a short word with one rare letter.	用普通字母拼的长单词，常常比带一个稀有字母的短单词更强。	ふつうの文字の長い単語は、めずらしい文字1つの短い単語より強いことが多いです。	Una palabra larga de letras comunes suele superar a una corta con una letra rara.	Ein langes Wort aus einfachen Buchstaben schlägt oft ein kurzes mit einem seltenen.
+When the monster is about to guard, strike hard now; when it's about to hit, a shield tile helps.	怪兽要防御时，现在就狠狠出击；它要攻击时，盾牌牌很有用。	モンスターが防御しようとしている時は今のうちに強打、攻撃してくる時は盾タイルが役立ちます。	Cuando el monstruo vaya a protegerse, golpea fuerte ya; cuando vaya a golpear, un escudo ayuda.	Will das Monster sich schützen, schlag jetzt hart zu; will es angreifen, hilft ein Schildstein.
+This is your hand. The small number on each tile is its power. Spell CAT: tap C.	这是你的手牌，每张牌上的小数字是它的力量。拼 CAT：点 C。	これが手札。タイルの小さな数字が力です。CATを作ろう：Cをタップ。	Esta es tu mano. El número pequeño de cada ficha es su poder. Forma CAT: toca la C.	Das ist deine Hand. Die kleine Zahl auf jedem Stein ist seine Stärke. Bilde CAT: tippe auf C.
+Now A.	现在点 A。	次にA。	Ahora la A.	Jetzt A.
+CAT deals 3 + 1 + 1 = 5 damage.	CAT 造成 3 + 1 + 1 = 5 点伤害。	CATは3 + 1 + 1 = 5ダメージ。	CAT hace 3 + 1 + 1 = 5 de daño.	CAT macht 3 + 1 + 1 = 5 Schaden.
+Longer words hit harder. How much would CARTONS deal? Its tiles add up to 9, and seven letters give +100%.	长单词威力更大。CARTONS 能造成多少伤害？它的牌加起来是 9，七个字母加成 +100%。	長い単語ほど強力。CARTONSは何ダメージ？タイルの合計は9、7文字で+100%。	Las palabras largas golpean más. ¿Cuánto haría CARTONS? Sus fichas suman 9 y siete letras dan +100%.	Längere Wörter treffen härter. Wie viel macht CARTONS? Die Steine ergeben 9, sieben Buchstaben geben +100%.
+18 damage: nine, doubled for four extra letters.	18 点伤害：9 点，因多出四个字母而翻倍。	18ダメージ：9が、4文字多いぶん2倍に。	18 de daño: nueve, duplicado por cuatro letras extra.	18 Schaden: neun, verdoppelt für vier zusätzliche Buchstaben.
+Each letter beyond three adds 25%: four extra letters make +100%.	超过三个字母后，每个字母加 25%：多四个就是 +100%。	3文字をこえる1文字ごとに25%：4文字多ければ+100%。	Cada letra más allá de tres suma un 25%: cuatro letras extra dan +100%.	Jeder Buchstabe über drei bringt 25%: vier zusätzliche ergeben +100%.
+CAT deals 5	CAT 造成 5	CATで5ダメージ	CAT hace 5	CAT macht 5
+Word battles against a run of 4 to 7 monsters × 4 levels, with tile upgrades, special tiles and a final boss.	和 4 到 7 只怪兽的单词对战 × 4 个难度，有牌强化、特殊牌和最终首领。	4〜7体のモンスターとことばで連戦 × 4レベル。タイル強化、特別なタイル、ラスボス付き。	Batallas de palabras contra 4 a 7 monstruos × 4 niveles, con mejoras, fichas especiales y un jefe final.	Wortkämpfe gegen 4 bis 7 Monster × 4 Stufen, mit Steinverbesserungen, Spezialsteinen und Endgegner.
+Every shuffle comes from the run's seed; any accepted word can be played.	每次洗牌都由本轮的种子决定；任何收录的单词都能打出。	シャッフルはすべて攻略ごとのシードで決まり、受け付ける単語ならどれでも使えます。	Cada barajado sale de la semilla de la partida; se puede jugar cualquier palabra aceptada.	Jedes Mischen kommt aus dem Startwert des Laufs; jedes erlaubte Wort zählt.
