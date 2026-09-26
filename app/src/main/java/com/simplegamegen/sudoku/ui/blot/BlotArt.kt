@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -118,8 +119,13 @@ private fun DrawScope.drawSpreadingInk(area: Rect, c: BlotColors, seed: Int, pro
         path.quadraticTo(pt.x, pt.y, m.x, m.y)
     }
     path.close()
-    drawPath(path, c.mark.copy(alpha = alpha))
     val grownIn = min(1f, progress)
+    // A faint halo where the ink has soaked into the paper around the blot.
+    scale(1.08f, center) { drawPath(path, c.mark.copy(alpha = 0.12f * alpha * grownIn)) }
+    drawPath(path, c.mark.copy(alpha = alpha))
+    // Ink pools a little darker at the edge as it dries.
+    drawPath(path, Color(c.mark.red * 0.6f, c.mark.green * 0.6f, c.mark.blue * 0.6f).copy(alpha = 0.5f * alpha * grownIn),
+        style = Stroke(full * 0.07f, join = StrokeJoin.Round))
     // A soft sheen so the ink looks wet.
     drawCircle(c.detail.copy(alpha = 0.22f * alpha * grownIn), full * 0.28f * grownIn, Offset(center.x - full * 0.32f, center.y - full * 0.34f))
     // Splatter flies out as the blot lands, then stays put.
@@ -130,6 +136,35 @@ private fun DrawScope.drawSpreadingInk(area: Rect, c: BlotColors, seed: Int, pro
         val size = full * (0.05f + 0.06f * r.nextFloat())
         if (fly > 0f) drawCircle(c.mark.copy(alpha = fly * alpha), size, Offset(center.x + (d * cos(a)).toFloat(), center.y + (d * sin(a)).toFloat()))
     }
+    // About one blot in three runs down in a drip once it has landed.
+    val drip = ((progress - 0.7f) / 0.3f).coerceIn(0f, 1f)
+    if (r.nextFloat() < 0.35f && drip > 0f) {
+        val x = center.x + full * (r.nextFloat() - 0.5f) * 0.6f
+        val top = center.y + full * 0.6f
+        val len = full * (0.3f + 0.25f * r.nextFloat()) * drip
+        drawLine(c.mark.copy(alpha = alpha), Offset(x, top), Offset(x, top + len), full * 0.11f, cap = StrokeCap.Round)
+        drawCircle(c.mark.copy(alpha = alpha), full * 0.09f, Offset(x, top + len))
+    }
+}
+
+/**
+ * Paper for the board: a fine grain of specks and fibres and edges that darken like old paper. [seed] keeps
+ * each sheet the same between frames.
+ */
+fun DrawScope.drawPaperGrain(ink: Color, seed: Int) {
+    val r = Random(seed)
+    val w = size.width; val h = size.height
+    val count = (w * h / 700f).toInt().coerceIn(200, 1800)
+    for (tone in listOf(0.035f, 0.06f)) {
+        val specks = List(count / 2) { Offset(r.nextFloat() * w, r.nextFloat() * h) }
+        drawPoints(specks, PointMode.Points, ink.copy(alpha = tone), 1.6f, StrokeCap.Round)
+    }
+    repeat(60) {
+        val x = r.nextFloat() * w; val y = r.nextFloat() * h
+        val len = 6f + 16f * r.nextFloat(); val a = r.nextDouble(0.0, PI)
+        drawLine(ink.copy(alpha = 0.05f), Offset(x, y), Offset(x + (cos(a) * len).toFloat(), y + (sin(a) * len).toFloat()), 1f)
+    }
+    drawRect(Brush.radialGradient(listOf(Color.Transparent, ink.copy(alpha = 0.08f)), Offset(w / 2, h / 2), maxOf(w, h) * 0.72f))
 }
 
 private fun easeOut(t: Float) = if (t >= 1f) t else 1f - (1f - t) * (1f - t)

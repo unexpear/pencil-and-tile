@@ -51,6 +51,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
@@ -208,7 +212,7 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                     Box(Modifier.width(6.dp))
                     IntentSign(g)
                 }
-                Bar(g.monsterHp, g.monsterMax, HurtRed, if (g.monsterGuard > 0) "${g.monsterHp}/${g.monsterMax} · 🛡 ${g.monsterGuard}" else "${g.monsterHp}/${g.monsterMax}")
+                Bar(g.monsterHp, g.monsterMax, HurtRed, heart = false, label = if (g.monsterGuard > 0) "${g.monsterHp}/${g.monsterMax} · 🛡 ${g.monsterGuard}" else "${g.monsterHp}/${g.monsterMax}")
                 Box(Modifier.fillMaxWidth().height(170.dp), contentAlignment = Alignment.Center) {
                     val shake = sin(hurt.value * 30).toFloat() * 10f * hurt.value
                     if (poof.value < 1f) Canvas(Modifier.size(170.dp).graphicsLayer {
@@ -283,7 +287,7 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                         if (b.blocked > 0) InfoChip("🛡 ${b.blocked}")
                     }
                 }
-                Bar(g.hp, g.maxHp, HealGreen, "${g.hp}/${g.maxHp}")
+                Bar(g.hp, g.maxHp, HealGreen, heart = true, label = "${g.hp}/${g.maxHp}")
             }
             // Shield bubble and heal sparkles around the health bar.
             if (glow.value > 0f && ((g.last?.blocked ?: 0) > 0 || (g.last?.healed ?: 0) > 0)) Canvas(Modifier.matchParentSize()) {
@@ -317,14 +321,27 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                 // ---- The word tray ----
                 val word = if (picks.isEmpty()) "" else g.spell(picks, wild.padEnd(picks.count { g.deck[g.hand[it]].kind == TileKind.WILD }, '?')) ?: ""
                 val preview = if (picks.size >= 2 && !swapping) g.preview(picks) else null
-                Surface(color = c.surfaceAlt, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
+                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                    .background(Brush.verticalGradient(listOf(Color(0xFFF7EACB), Color(0xFFEBD6A6))))
+                    .border(1.5.dp, Color(0xFFB08A4E), RoundedCornerShape(14.dp))) {
+                    // Parchment: faint fibres and darker edges.
+                    Canvas(Modifier.matchParentSize()) {
+                        val r = Random(3)
+                        repeat(24) {
+                            val y = size.height * r.nextFloat(); val x = size.width * r.nextFloat()
+                            drawLine(Color(0xFF8B6B3A).copy(alpha = 0.08f), Offset(x, y), Offset(x + size.width * 0.15f * r.nextFloat(), y + 2f), 1.5f)
+                        }
+                        drawRect(Brush.radialGradient(listOf(Color.Transparent, Color(0xFF8B6B3A).copy(alpha = 0.18f)), center, size.maxDimension * 0.7f))
+                    }
                     Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             androidx.compose.material3.Text(if (swapping) say("Pick up to 3 tiles to swap") else word.ifEmpty { say("Tap tiles to spell a word") },
-                                fontSize = if (word.isEmpty() || swapping) 15.sp else 24.sp, fontWeight = FontWeight.Bold,
-                                color = if (word.isEmpty() || swapping) c.muted else c.text, modifier = Modifier.weight(1f))
-                            if (picks.isNotEmpty()) Surface(onClick = { picks = emptyList(); wild = "" }, color = c.surface, shape = RoundedCornerShape(10.dp)) {
-                                Text("Clear", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = c.text)
+                                fontSize = if (word.isEmpty() || swapping) 15.sp else 26.sp, fontWeight = FontWeight.Black,
+                                fontFamily = if (word.isEmpty() || swapping) null else FontFamily.Serif, letterSpacing = if (word.isEmpty()) 0.sp else 2.sp,
+                                color = if (word.isEmpty() || swapping) Color(0xFF7A6547) else Color(0xFF3B2A16), modifier = Modifier.weight(1f))
+                            if (picks.isNotEmpty()) Surface(onClick = { picks = emptyList(); wild = "" }, color = Color(0xFFFFF8E6), shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, Color(0xFFB08A4E))) {
+                                Text("Clear", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color(0xFF3B2A16))
                             }
                         }
                         preview?.let { p ->
@@ -332,7 +349,7 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                                 add(say("Deals ${p.damage}"))
                                 if (p.blocked > 0) add(say("blocks ${p.blocked}"))
                                 if (p.healed > 0) add(say("heals ${p.healed}"))
-                            }.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = c.accent)
+                            }.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color(0xFF9A2A1E))
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (swapping) Surface(onClick = {
@@ -347,8 +364,12 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                                 val next = g.play(picks, wild) ?: return@Surface
                                 val w = g.spell(picks, wild)!!
                                 vm.play(if (next.choosing) "${w}! ${g.monster.label} is beaten." else if (next.won) "${w}! You won the run!" else null) { next }
-                            }, enabled = picks.size >= 2 && !s.busy, color = HurtRed, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f)) {
-                                Text("Attack", Modifier.padding(12.dp), color = Color.White, fontWeight = FontWeight.Bold)
+                            }, enabled = picks.size >= 2 && !s.busy, color = Color.Transparent, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f)) {
+                                // A wax-red button with a bevel.
+                                Box(Modifier.background(Brush.verticalGradient(if (picks.size >= 2) listOf(Color(0xFFE5484D), Color(0xFFA8232B)) else listOf(Color(0xFFB9A58A), Color(0xFF9C876B))))
+                                    .border(1.5.dp, Color(0xFF5E1217).copy(alpha = if (picks.size >= 2) 0.8f else 0.3f), RoundedCornerShape(12.dp))) {
+                                    Text("Attack", Modifier.padding(12.dp), color = Color.White, fontWeight = FontWeight.Black)
+                                }
                             }
                         }
                     }
@@ -365,7 +386,7 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                     }
                 }
                 // ---- The hand ----
-                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 6.dp)) {
                     val side = min((maxWidth - 6.dp * 7) / 8, 56.dp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         g.hand.forEachIndexed { i, idx ->
@@ -414,44 +435,104 @@ private fun IntentSign(g: Wordsworn) {
     }
 }
 
+/** A health bar with a heart (yours) or a skull (the monster's), a glossy fill and a trailing flash when it drops. */
 @Composable
-private fun Bar(value: Int, max: Int, color: Color, label: String) {
+private fun Bar(value: Int, max: Int, color: Color, heart: Boolean, label: String) {
     val shown = remember { Animatable(value.toFloat()) }
-    LaunchedEffect(value) { shown.animateTo(value.toFloat(), tween(450)) }
-    Box(Modifier.fillMaxWidth().height(20.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x22000000))) {
-        Box(Modifier.fillMaxWidth((shown.value / max.coerceAtLeast(1)).coerceIn(0f, 1f)).height(20.dp)
-            .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.75f), color))))
-        androidx.compose.material3.Text(label, Modifier.align(Alignment.Center), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E1A14))
+    // The lost part lingers in white for a moment, so a hit reads at a glance.
+    val trail = remember { Animatable(value.toFloat()) }
+    LaunchedEffect(value) {
+        launch { shown.animateTo(value.toFloat(), tween(300)) }
+        delay(350); trail.animateTo(value.toFloat(), tween(500))
+    }
+    val m = max.coerceAtLeast(1).toFloat()
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Canvas(Modifier.size(22.dp)) {
+            val w = size.width
+            if (heart) {
+                val p = Path()
+                p.moveTo(w * 0.5f, w * 0.9f)
+                p.cubicTo(w * -0.1f, w * 0.45f, w * 0.15f, w * -0.05f, w * 0.5f, w * 0.28f)
+                p.cubicTo(w * 0.85f, w * -0.05f, w * 1.1f, w * 0.45f, w * 0.5f, w * 0.9f)
+                drawPath(p, color); drawPath(p, Color(0xFF1E1526), style = Stroke(w * 0.07f))
+                drawCircle(Color.White.copy(alpha = 0.5f), w * 0.08f, Offset(w * 0.3f, w * 0.3f))
+            } else {
+                drawCircle(Color(0xFFF1EADB), w * 0.36f, Offset(w * 0.5f, w * 0.42f))
+                drawRoundRect(Color(0xFFF1EADB), Offset(w * 0.3f, w * 0.55f), Size(w * 0.4f, w * 0.3f), CornerRadius(w * 0.06f))
+                drawCircle(Color(0xFF1E1526), w * 0.1f, Offset(w * 0.36f, w * 0.44f))
+                drawCircle(Color(0xFF1E1526), w * 0.1f, Offset(w * 0.64f, w * 0.44f))
+                for (k in 0..2) drawLine(Color(0xFF1E1526), Offset(w * (0.38f + k * 0.12f), w * 0.72f), Offset(w * (0.38f + k * 0.12f), w * 0.84f), w * 0.05f)
+            }
+        }
+        Box(Modifier.weight(1f).height(20.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x33000000))
+            .border(1.5.dp, Color(0xFF1E1526).copy(alpha = 0.6f), RoundedCornerShape(10.dp))) {
+            Box(Modifier.fillMaxWidth((trail.value / m).coerceIn(0f, 1f)).height(20.dp).background(Color.White.copy(alpha = 0.7f)))
+            Box(Modifier.fillMaxWidth((shown.value / m).coerceIn(0f, 1f)).height(20.dp)
+                .background(Brush.verticalGradient(listOf(color.copy(alpha = 0.8f), color, color.copy(red = color.red * 0.7f, green = color.green * 0.7f, blue = color.blue * 0.7f)))))
+            // Gloss along the top.
+            Box(Modifier.fillMaxWidth().height(7.dp).padding(horizontal = 6.dp).align(Alignment.TopCenter).offset(y = 2.dp)
+                .background(Color.White.copy(alpha = 0.22f), RoundedCornerShape(4.dp)))
+            androidx.compose.material3.Text(label, Modifier.align(Alignment.Center), fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color(0xFF1E1A14))
+        }
     }
 }
 
 @Composable
 private fun SmallTile(letter: String) {
-    Box(Modifier.size(26.dp).background(Paper, RoundedCornerShape(5.dp)).border(1.dp, Color(0xFFB8A57E), RoundedCornerShape(5.dp)),
+    Box(Modifier.size(26.dp).background(Brush.verticalGradient(listOf(Color(0xFFFFF4DA), Color(0xFFEBD3A0))), RoundedCornerShape(5.dp))
+        .border(1.dp, Color(0xFF8A6A3E), RoundedCornerShape(5.dp)),
         contentAlignment = Alignment.Center) {
-        androidx.compose.material3.Text(letter, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF2A2418))
+        androidx.compose.material3.Text(letter, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif, fontSize = 14.sp, color = Color(0xFF2A2418))
     }
 }
 
-/** A letter tile in the hand: it slides in when drawn, lifts when picked, and glows when hinted. */
+/** A letter tile in the hand: a wooden tile with some depth that slides in when drawn, lifts when picked and glows when hinted. */
 @Composable
 private fun HandTile(tile: Tile, side: androidx.compose.ui.unit.Dp, picked: Boolean, hinted: Boolean, key: String, onTap: () -> Unit) {
     val arrive = remember(key) { Animatable(0f) }
     LaunchedEffect(key) { arrive.animateTo(1f, spring(dampingRatio = 0.6f, stiffness = 300f)) }
     val lift = remember { Animatable(0f) }
     LaunchedEffect(picked) { lift.animateTo(if (picked) 1f else 0f, spring(dampingRatio = 0.5f)) }
-    val edge = kindColor(tile.kind)
+    val gem = kindColor(tile.kind)
     Box(Modifier.size(side, side * 1.2f)
         .graphicsLayer { translationY = ((1f - arrive.value) * 60f - lift.value * 12f) * density; alpha = arrive.value.coerceIn(0f, 1f) }
-        .background(if (picked) Gold.copy(alpha = 0.55f) else if (hinted) Gold.copy(alpha = 0.3f) else Paper, RoundedCornerShape(8.dp))
-        .border(if (tile.kind == TileKind.PLAIN) 1.dp else 2.5.dp, if (tile.kind == TileKind.PLAIN) Color(0xFFB8A57E) else edge, RoundedCornerShape(8.dp))
         .clickable(role = Role.Button) { onTap() }
         .semantics { contentDescription = say(if (tile.kind == TileKind.WILD) "Wild tile" else "${tile.letter}, power ${tile.power}" + if (tile.kind != TileKind.PLAIN) ", ${tile.kind.label}" else "") },
         contentAlignment = Alignment.Center) {
-        androidx.compose.material3.Text(if (tile.kind == TileKind.WILD) "★" else tile.letter.toString(), fontSize = (side.value * 0.5f).sp,
-            fontWeight = FontWeight.Black, color = Color(0xFF2A2418))
-        androidx.compose.material3.Text(tile.power.toString(), Modifier.align(Alignment.BottomEnd).padding(end = 4.dp, bottom = 2.dp), fontSize = (side.value * 0.2f).sp,
-            fontWeight = FontWeight.Bold, color = Color(0xFF7A6A4A))
+        Canvas(Modifier.matchParentSize()) {
+            val depth = size.height * 0.08f
+            val face = Size(size.width, size.height - depth)
+            val r = CornerRadius(size.width * 0.16f)
+            // Glow under a picked or hinted tile.
+            if (picked || hinted) drawRoundRect(Gold.copy(alpha = if (picked) 0.55f else 0.3f), Offset(-4f, -4f), Size(size.width + 8f, size.height + 8f), CornerRadius(size.width * 0.22f))
+            // The tile's side, then its face.
+            drawRoundRect(Color(0xFF8A6A3E), Offset(0f, depth), face, r)
+            drawRoundRect(Brush.verticalGradient(if (picked) listOf(Color(0xFFFFEAB0), Color(0xFFF2C866)) else listOf(Color(0xFFFFF4DA), Color(0xFFEBD3A0)), 0f, face.height),
+                Offset.Zero, face, r)
+            // Wood grain.
+            val grain = Random(tile.letter.code * 31 + tile.power)
+            repeat(4) {
+                val y = face.height * (0.15f + 0.75f * grain.nextFloat())
+                val p = Path(); p.moveTo(face.width * 0.08f, y)
+                p.quadraticTo(face.width * 0.5f, y + face.height * (grain.nextFloat() - 0.5f) * 0.12f, face.width * 0.92f, y)
+                drawPath(p, Color(0xFF9C7A45).copy(alpha = 0.14f), style = Stroke(1.5f))
+            }
+            drawRoundRect(Color(0xFF6B4E2A).copy(alpha = 0.55f), Offset.Zero, face, r, style = Stroke(1.5f))
+            // A coloured gem marks shield, heal, double and wild tiles.
+            if (tile.kind != TileKind.PLAIN) {
+                val at = Offset(face.width * 0.2f, face.height * 0.18f); val gr = face.width * 0.12f
+                drawCircle(gem, gr, at)
+                drawCircle(Color.White.copy(alpha = 0.6f), gr * 0.35f, at + Offset(-gr * 0.3f, -gr * 0.3f))
+                drawCircle(Color(0xFF2A2418).copy(alpha = 0.6f), gr, at, style = Stroke(1.5f))
+                drawRoundRect(gem, Offset(1.5f, 1.5f), Size(face.width - 3f, face.height - 3f), r, style = Stroke(2.5f))
+            }
+        }
+        Box(Modifier.matchParentSize().padding(bottom = side * 0.1f), contentAlignment = Alignment.Center) {
+            androidx.compose.material3.Text(if (tile.kind == TileKind.WILD) "★" else tile.letter.toString(), fontSize = (side.value * 0.52f).sp,
+                fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif, color = Color(0xFF2A2418))
+            androidx.compose.material3.Text(tile.power.toString(), Modifier.align(Alignment.BottomEnd).padding(end = 5.dp, bottom = 1.dp), fontSize = (side.value * 0.2f).sp,
+                fontWeight = FontWeight.Bold, color = Color(0xFF7A5A2E))
+        }
     }
 }
 

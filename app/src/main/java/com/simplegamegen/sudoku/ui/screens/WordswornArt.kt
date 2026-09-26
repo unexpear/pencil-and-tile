@@ -9,7 +9,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import com.simplegamegen.sudoku.wordplay.Monster
 import kotlin.math.PI
 import kotlin.math.cos
@@ -22,10 +24,17 @@ private val Eye = Color(0xFF231A2E)
 val Blood = Color(0xFFB3121E)
 val InkSplat = Color(0xFF2A1F4A)
 
+/** Set while drawing a monster: true for the blink at the end of each idle loop. */
+private var blinking = false
+
 private fun DrawScope.eyes(cx: Float, cy: Float, gap: Float, r: Float, hurt: Boolean) {
     for (side in listOf(-1f, 1f)) {
         val c = Offset(cx + side * gap, cy)
-        if (hurt) {
+        if (blinking && !hurt) {
+            // Shut for a moment: a curved lid line.
+            val lid = Path(); lid.moveTo(c.x - r * 1.2f, c.y); lid.quadraticTo(c.x, c.y + r * 0.8f, c.x + r * 1.2f, c.y)
+            drawPath(lid, Eye, style = Stroke(r * 0.4f, cap = StrokeCap.Round))
+        } else if (hurt) {
             // Squeezed shut: two little crosses.
             drawLine(Eye, Offset(c.x - r, c.y - r), Offset(c.x + r, c.y + r), r * 0.45f, cap = StrokeCap.Round)
             drawLine(Eye, Offset(c.x - r, c.y + r), Offset(c.x + r, c.y - r), r * 0.45f, cap = StrokeCap.Round)
@@ -53,13 +62,39 @@ private fun DrawScope.fangs(cx: Float, cy: Float, w: Float, n: Int) {
     }
 }
 
+/** Ink outline shared by every monster, so they read like drawings in a storybook. */
+private val Outline = Color(0xFF1E1526)
+
+/** A round body with a soft highlight up top, shading round the rim and an ink outline. */
+private fun DrawScope.shadedCircle(color: Color, r: Float, c: Offset) {
+    drawCircle(color, r, c)
+    drawCircle(Brush.radialGradient(listOf(Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.3f)),
+        c + Offset(-r * 0.2f, -r * 0.25f), r * 1.3f), r, c)
+    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.4f), Color.Transparent), c + Offset(-r * 0.35f, -r * 0.42f), r * 0.6f), r, c)
+    drawCircle(Outline, r, c, style = Stroke(r * 0.06f))
+}
+
+/** Fills [path] in [color] with the same highlight, shading and outline as [shadedCircle]. */
+private fun DrawScope.shadedPath(path: Path, color: Color, light: Offset, r: Float) {
+    drawPath(path, color)
+    drawPath(path, Brush.radialGradient(listOf(Color.White.copy(alpha = 0.32f), Color.Transparent, Color.Black.copy(alpha = 0.25f)), light, r * 1.6f))
+    drawPath(path, Outline, style = Stroke(r * 0.05f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+}
+
 /** Draws [monster] in [area]; [hurt] (0..1) squeezes its eyes and tints it; [phase] (0..1) loops for idle motion. */
 fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Float) {
     val s = area.minDimension
     val cx = area.center.x
-    val bob = sin(phase * 2 * PI).toFloat() * s * 0.02f
+    val wave = sin(phase * 2 * PI).toFloat()
+    val bob = wave * s * 0.02f
     val cy = area.center.y + bob
     val ouch = hurt > 0.3f
+    blinking = phase in 0.9f..0.95f
+    // A shadow on the floor that shrinks as the monster bobs up.
+    val shadowW = s * (0.56f - wave * 0.03f)
+    drawOval(Color.Black.copy(alpha = 0.35f), Offset(cx - shadowW / 2, area.center.y + s * 0.25f), Size(shadowW, s * 0.09f))
+    // Breathing: a gentle squash and stretch from the feet up.
+    scale(1f - wave * 0.015f, 1f + wave * 0.025f, Offset(cx, area.center.y + s * 0.35f)) {
     when (monster) {
         Monster.TYPO_IMP -> {
             val body = Color(0xFFE8703A)
@@ -70,9 +105,10 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
             for (side in listOf(-1f, 1f)) {
                 val horn = Path(); horn.moveTo(cx + side * s * 0.12f, cy - s * 0.18f)
                 horn.lineTo(cx + side * s * 0.2f, cy - s * 0.36f); horn.lineTo(cx + side * s * 0.2f, cy - s * 0.14f); horn.close()
-                drawPath(horn, Color(0xFFFFD166))
+                drawPath(horn, Color(0xFFFFD166)); drawPath(horn, Outline, style = Stroke(s * 0.012f))
             }
-            drawCircle(body, s * 0.26f, Offset(cx, cy))
+            shadedCircle(body, s * 0.26f, Offset(cx, cy))
+            for (side in listOf(-1f, 1f)) drawCircle(Color(0xFFFF9E8A).copy(alpha = 0.6f), s * 0.035f, Offset(cx + side * s * 0.16f, cy + s * 0.05f))
             eyes(cx, cy - s * 0.04f, s * 0.1f, s * 0.045f, ouch)
             mouth(cx, cy + s * 0.1f, s * 0.08f, true)
             fangs(cx, cy + s * 0.1f, s * 0.07f, 4)
@@ -84,7 +120,7 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
                 val a = 2 * PI * k / 14
                 drawCircle(fur, s * 0.07f, Offset(cx + (cos(a) * s * 0.24f).toFloat(), cy + (sin(a) * s * 0.24f).toFloat()))
             }
-            drawCircle(fur, s * 0.25f, Offset(cx, cy))
+            shadedCircle(fur, s * 0.25f, Offset(cx, cy))
             eyes(cx, cy - s * 0.03f, s * 0.09f, s * 0.045f, ouch)
             drawCircle(Color(0xFFF48FB1), s * 0.025f, Offset(cx, cy + s * 0.05f))
             // Two big rabbit teeth.
@@ -98,8 +134,8 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
             p.cubicTo(cx - s * 0.36f, cy - s * 0.1f, cx - s * 0.2f, cy - s * 0.34f, cx, cy - s * 0.32f)
             p.cubicTo(cx + s * 0.2f, cy - s * 0.34f, cx + s * 0.36f, cy - s * 0.1f, cx + s * 0.32f, cy + s * 0.26f)
             p.close()
-            drawPath(p, ink)
             for (k in -2..2) drawOval(ink, Offset(cx + k * s * 0.12f - s * 0.04f, cy + s * 0.2f), Size(s * 0.08f, s * (0.1f + 0.04f * ((k + 5) % 3))))
+            shadedPath(p, ink, Offset(cx - s * 0.12f, cy - s * 0.18f), s * 0.34f)
             drawOval(Color.White.copy(alpha = 0.25f), Offset(cx - s * 0.2f, cy - s * 0.24f), Size(s * 0.14f, s * 0.08f))
             eyes(cx, cy - s * 0.04f, s * 0.11f, s * 0.05f, ouch)
             mouth(cx, cy + s * 0.1f, s * 0.1f, true, Color(0xFF12163A))
@@ -108,8 +144,12 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
         Monster.SPELLING_BEE -> {
             val flap = sin(phase * 8 * PI).toFloat() * s * 0.03f
             for (side in listOf(-1f, 1f)) drawOval(Color(0xFFD7F0FF).copy(alpha = 0.85f), Offset(cx + side * s * 0.12f - s * 0.1f, cy - s * 0.34f - flap), Size(s * 0.2f, s * 0.24f))
-            drawOval(Color(0xFFFFC93C), Offset(cx - s * 0.3f, cy - s * 0.2f), Size(s * 0.6f, s * 0.42f))
-            for (k in 0..1) drawRect(Color(0xFF3A2E1E), Offset(cx - s * 0.06f + k * s * 0.14f, cy - s * 0.2f), Size(s * 0.06f, s * 0.42f))
+            val beeBody = Path().apply { addOval(Rect(cx - s * 0.3f, cy - s * 0.2f, cx + s * 0.3f, cy + s * 0.22f)) }
+            drawPath(beeBody, Color(0xFFFFC93C))
+            for (k in 0..1) drawRect(Color(0xFF3A2E1E), Offset(cx - s * 0.06f + k * s * 0.14f, cy - s * 0.19f), Size(s * 0.06f, s * 0.4f))
+            drawPath(beeBody, Brush.radialGradient(listOf(Color.White.copy(alpha = 0.3f), Color.Transparent, Color.Black.copy(alpha = 0.22f)),
+                Offset(cx - s * 0.12f, cy - s * 0.1f), s * 0.45f))
+            drawPath(beeBody, Outline, style = Stroke(s * 0.015f))
             val sting = Path(); sting.moveTo(cx + s * 0.29f, cy - s * 0.03f); sting.lineTo(cx + s * 0.44f, cy + s * 0.01f); sting.lineTo(cx + s * 0.29f, cy + s * 0.05f); sting.close()
             drawPath(sting, Color(0xFF3A2E1E))
             eyes(cx - s * 0.16f, cy - s * 0.04f, s * 0.07f, s * 0.04f, ouch)
@@ -122,9 +162,9 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
             for (side in listOf(-1f, 1f)) {
                 val ear = Path(); ear.moveTo(cx + side * s * 0.18f, cy - s * 0.1f)
                 ear.lineTo(cx + side * s * 0.44f, cy - s * 0.24f); ear.lineTo(cx + side * s * 0.22f, cy + s * 0.04f); ear.close()
-                drawPath(ear, skin)
+                drawPath(ear, skin); drawPath(ear, Outline, style = Stroke(s * 0.012f))
             }
-            drawCircle(skin, s * 0.24f, Offset(cx, cy))
+            shadedCircle(skin, s * 0.24f, Offset(cx, cy))
             eyes(cx, cy - s * 0.04f, s * 0.09f, s * 0.045f, ouch)
             for (side in listOf(-1f, 1f)) drawCircle(Color(0xFF3A3A3A), s * 0.075f, Offset(cx + side * s * 0.09f, cy - s * 0.04f), style = Stroke(s * 0.015f))
             drawLine(Color(0xFF3A3A3A), Offset(cx - s * 0.015f, cy - s * 0.04f), Offset(cx + s * 0.015f, cy - s * 0.04f), s * 0.015f)
@@ -137,7 +177,7 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
             drawRoundRect(Color(0xFFFFF6E0), Offset(cx + s * 0.01f, cy + s * 0.1f), Size(s * 0.32f, s * 0.16f), CornerRadius(s * 0.02f))
             val worm = Color(0xFFE88BB0)
             val wiggle = sin(phase * 2 * PI).toFloat() * s * 0.03f
-            for (k in 0..3) drawCircle(worm, s * (0.1f - k * 0.008f), Offset(cx + wiggle * (k % 2 * 2 - 1), cy + s * 0.08f - k * s * 0.1f))
+            for (k in 0..3) shadedCircle(worm, s * (0.1f - k * 0.008f), Offset(cx + wiggle * (k % 2 * 2 - 1), cy + s * 0.08f - k * s * 0.1f))
             eyes(cx, cy - s * 0.24f, s * 0.05f, s * 0.035f, ouch)
             mouth(cx, cy - s * 0.17f, s * 0.05f, true)
             fangs(cx, cy - s * 0.17f, s * 0.045f, 3)
@@ -148,26 +188,28 @@ fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Floa
             val wing = Path(); wing.moveTo(cx, cy - s * 0.05f); wing.lineTo(cx + s * 0.4f, cy - s * 0.35f); wing.lineTo(cx + s * 0.28f, cy + s * 0.05f); wing.close()
             drawPath(wing, paper); drawPath(wing, red, style = Stroke(s * 0.012f))
             val body = Path(); body.moveTo(cx - s * 0.3f, cy + s * 0.28f); body.lineTo(cx + s * 0.3f, cy + s * 0.28f); body.lineTo(cx, cy - s * 0.1f); body.close()
-            drawPath(body, red)
+            shadedPath(body, red, Offset(cx - s * 0.05f, cy), s * 0.3f)
             val head = Path(); head.moveTo(cx - s * 0.1f, cy - s * 0.02f); head.lineTo(cx - s * 0.36f, cy - s * 0.16f); head.lineTo(cx - s * 0.06f, cy - s * 0.3f); head.close()
-            drawPath(head, red)
+            shadedPath(head, red, Offset(cx - s * 0.2f, cy - s * 0.2f), s * 0.2f)
             fangs(cx - s * 0.26f, cy - s * 0.14f, s * 0.06f, 3)
             eyes(cx - s * 0.18f, cy - s * 0.2f, s * 0.0f, s * 0.04f, ouch)
             drawLine(Color(0xFFFFD166), Offset(cx - s * 0.06f, cy - s * 0.3f), Offset(cx + s * 0.02f, cy - s * 0.4f), s * 0.02f, cap = StrokeCap.Round)
         }
         Monster.WORD_EATER -> {
             val purple = Color(0xFF6B3FA3)
-            drawCircle(purple, s * 0.34f, Offset(cx, cy))
+            for (side in listOf(-1f, 1f)) shadedCircle(purple, s * 0.07f, Offset(cx + side * s * 0.26f, cy - s * 0.3f))
+            shadedCircle(purple, s * 0.34f, Offset(cx, cy))
             val chomp = (sin(phase * 4 * PI).toFloat() + 1f) / 2f
             val mouthRect = Rect(cx - s * 0.22f, cy + s * 0.02f, cx + s * 0.22f, cy + s * (0.12f + 0.12f * chomp))
             drawRoundRect(Color(0xFF2A123D), mouthRect.topLeft, mouthRect.size, CornerRadius(s * 0.08f))
             fangs(cx, mouthRect.top, s * 0.2f, 6)
             eyes(cx, cy - s * 0.12f, s * 0.13f, s * 0.06f, ouch)
-            for (side in listOf(-1f, 1f)) drawCircle(purple, s * 0.07f, Offset(cx + side * s * 0.26f, cy - s * 0.3f))
             val fall = phase * s * 0.3f
             for (k in 0..2) drawCircle(Color(0xFFFFD166).copy(alpha = 0.8f), s * 0.025f, Offset(cx - s * 0.1f + k * s * 0.1f, cy - s * 0.45f + (fall + k * s * 0.1f) % (s * 0.3f)))
         }
     }
+    }
+    blinking = false
     if (hurt > 0f) drawCircle(Color(0xFFFF5252).copy(alpha = 0.25f * hurt), s * 0.4f, Offset(cx, cy))
 }
 
@@ -178,33 +220,61 @@ object MonsterArt {
 
 // ---------------- The dungeon ----------------
 
-/** A dim stone dungeon: brick wall, a flagstone floor and two torches that flicker with [phase]. */
+/** A dim stone dungeon: bevelled bricks with moss, flagstones in perspective, two flickering torches and dust in their light. */
 fun DrawScope.drawDungeon(phase: Float) {
     val w = size.width; val h = size.height
-    drawRect(Brush.verticalGradient(listOf(Color(0xFF2B2530), Color(0xFF1A161E)), 0f, h))
-    // Bricks, offset every other row.
-    val bh = h / 7f; val bw = w / 6f
-    for (row in 0 until 6) for (col in -1..6) {
+    val floorTop = h * 0.74f
+    drawRect(Brush.verticalGradient(listOf(Color(0xFF2E2733), Color(0xFF1A161E)), 0f, floorTop), size = Size(w, floorTop))
+    // Bricks, offset every other row, each a slightly different stone with a lit top and a shadowed base.
+    val rows = 6; val bh = floorTop / rows; val bw = w / 5.5f
+    val rnd = Random(7)
+    for (row in 0 until rows) for (col in -1..6) {
         val x = col * bw + (if (row % 2 == 1) bw / 2 else 0f)
-        drawRoundRect(Color(0xFF3A3340).copy(alpha = 0.85f - row * 0.06f), Offset(x + 2f, row * bh + 2f), Size(bw - 4f, bh - 4f), CornerRadius(4f))
+        val tone = 0.85f + 0.3f * rnd.nextFloat()
+        val base = Color(0xFF3F3845)
+        val stone = Color(base.red * tone, base.green * tone, base.blue * tone).copy(alpha = 0.95f - row * 0.05f)
+        val topLeft = Offset(x + 2f, row * bh + 2f); val sz = Size(bw - 4f, bh - 4f)
+        drawRoundRect(stone, topLeft, sz, CornerRadius(5f))
+        drawLine(Color.White.copy(alpha = 0.07f), topLeft + Offset(4f, 2f), topLeft + Offset(sz.width - 4f, 2f), 3f)
+        drawLine(Color.Black.copy(alpha = 0.3f), topLeft + Offset(4f, sz.height - 1f), topLeft + Offset(sz.width - 4f, sz.height - 1f), 3f)
+        // Moss creeping over the lower bricks.
+        if (row >= rows - 2 && rnd.nextFloat() < 0.45f) repeat(4) {
+            drawCircle(Color(0xFF4F6B3A).copy(alpha = 0.5f), bh * (0.06f + 0.05f * rnd.nextFloat()),
+                topLeft + Offset(sz.width * rnd.nextFloat(), sz.height * (0.1f + 0.3f * rnd.nextFloat())))
+        }
     }
-    // The floor.
-    drawRect(Brush.verticalGradient(listOf(Color(0xFF3B3129), Color(0xFF241D18)), h * 0.78f, h), Offset(0f, h * 0.78f), Size(w, h * 0.22f))
-    // Torches: a bracket, a flame that flickers, and a warm pool of light.
+    // Flagstones: rows grow toward you, seams run to a point in the middle of the wall.
+    drawRect(Brush.verticalGradient(listOf(Color(0xFF41362D), Color(0xFF231C17)), floorTop, h), Offset(0f, floorTop), Size(w, h - floorTop))
+    val seam = Color.Black.copy(alpha = 0.35f)
+    var y = floorTop; var step = (h - floorTop) * 0.18f
+    while (y < h) { drawLine(seam, Offset(0f, y), Offset(w, y), 2f); y += step; step *= 1.45f }
+    for (k in -4..4) drawLine(seam, Offset(w / 2 + k * w * 0.06f, floorTop), Offset(w / 2 + k * w * 0.32f, h), 2f)
+    drawLine(Color.White.copy(alpha = 0.06f), Offset(0f, floorTop + 1f), Offset(w, floorTop + 1f), 2f)
+    // Torches: an iron bracket, a layered flame that flickers, a warm pool of light and dust drifting through it.
     for (x in listOf(w * 0.1f, w * 0.9f)) {
         val flick = 1f + 0.12f * sin(phase * 2 * PI * 5 + x).toFloat() + 0.06f * sin(phase * 2 * PI * 13 + x).toFloat()
-        drawCircle(Brush.radialGradient(listOf(Color(0x66FFB347), Color(0x00FFB347)), Offset(x, h * 0.3f), w * 0.3f * flick), w * 0.3f * flick, Offset(x, h * 0.3f))
-        drawRect(Color(0xFF5A4636), Offset(x - 4f, h * 0.32f), Size(8f, h * 0.14f))
-        val flame = Path()
-        flame.moveTo(x - 9f * flick, h * 0.32f)
-        flame.quadraticTo(x - 6f, h * 0.24f, x, h * 0.32f - 28f * flick)
-        flame.quadraticTo(x + 6f, h * 0.24f, x + 9f * flick, h * 0.32f)
-        flame.close()
-        drawPath(flame, Color(0xFFFF9F1C))
-        drawCircle(Color(0xFFFFE08A), 5f * flick, Offset(x, h * 0.3f))
+        val fy = h * 0.5f
+        drawCircle(Brush.radialGradient(listOf(Color(0x77FFB347), Color(0x00FFB347)), Offset(x, fy), w * 0.32f * flick), w * 0.32f * flick, Offset(x, fy))
+        drawRect(Color(0xFF2B2622), Offset(x - 5f, fy + 6f), Size(10f, h * 0.14f))
+        drawRect(Color(0xFF4A3F36), Offset(x - 11f, fy + 2f), Size(22f, 8f))
+        for ((scale, color) in listOf(1f to Color(0xFFE2531B), 0.72f to Color(0xFFFF9F1C), 0.42f to Color(0xFFFFE08A))) {
+            val fh = 34f * flick * scale; val fw = 12f * flick * scale
+            val flame = Path()
+            flame.moveTo(x - fw, fy + 2f)
+            flame.quadraticTo(x - fw * 0.8f, fy - fh * 0.5f, x + sin(phase * 2 * PI * 3 + x).toFloat() * 3f, fy - fh)
+            flame.quadraticTo(x + fw * 0.8f, fy - fh * 0.5f, x + fw, fy + 2f)
+            flame.close()
+            drawPath(flame, color)
+        }
+        val motes = Random(x.toInt())
+        val dust = List(7) {
+            val drift = (phase + motes.nextFloat()) % 1f
+            Offset(x + (motes.nextFloat() - 0.5f) * w * 0.3f + sin((drift + it) * 2 * PI).toFloat() * 6f, fy + h * 0.25f - drift * h * 0.45f)
+        }
+        drawPoints(dust, PointMode.Points, Color(0xFFFFE3A8).copy(alpha = 0.55f), 3f, StrokeCap.Round)
     }
     // Shadows gathering in the corners.
-    drawRect(Brush.radialGradient(listOf(Color(0x00000000), Color(0x99000000)), Offset(w / 2, h * 0.5f), maxOf(w, h) * 0.75f))
+    drawRect(Brush.radialGradient(listOf(Color(0x00000000), Color(0xAA000000)), Offset(w / 2, h * 0.5f), maxOf(w, h) * 0.75f))
 }
 
 // ---------------- Splatter and bites ----------------

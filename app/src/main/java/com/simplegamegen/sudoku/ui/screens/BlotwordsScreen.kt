@@ -1,5 +1,16 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import com.simplegamegen.sudoku.ui.blot.drawPaperGrain
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -165,7 +176,9 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
 
     PlayShell(nav, vm, GameId.BLOTWORDS, setup, tools = { g, s ->
         ToolButton(GameIcons.Palette, "Themes", enabled = !s.busy) { nav.navigate(BLOT_THEMES_ROUTE) }
-        ToolButton(GameIcons.Restart, "Restart", enabled = !g.solved && !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
+        if (g.solved) ToolButton(GameIcons.Play, if (g.step >= 0) "Next puzzle" else "Next grid", enabled = !s.busy) {
+            vm.start(setup.create(if (g.step >= 0) 0 else g.tier.ordinal))
+        } else ToolButton(GameIcons.Restart, "Restart", enabled = !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
         HintButton(GameId.BLOTWORDS, enabled = !g.solved && !s.busy && !thinking) {
             thinking = true
             scope.launch {
@@ -249,12 +262,18 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             g.words.forEach { w ->
                 val open = w.text in known
+                // Each word is a rubber stamp, set down a little crooked.
+                val tilt = remember(w.text) { (Math.floorMod(w.text.hashCode(), 5) - 2) * 1.3f }
+                val ink = if (open) tc.accent else c.muted
                 Surface(onClick = { detail = if (detail == w.text) null else w.text },
-                    color = when { g.pending == w -> tc.accent.copy(alpha = 0.22f); detail == w.text -> c.surfaceAlt; else -> c.surface },
-                    border = BorderStroke(1.dp, if (detail == w.text) tc.accent else c.outline), shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.semantics { contentDescription = if (open) "${w.text}: ${say(w.effect.effect)}" else say("${w.text}: not found out yet") }) {
-                    androidx.compose.material3.Text(if (open) w.text else "${w.text} ?", Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                        fontWeight = FontWeight.Bold, color = if (open) c.text else c.muted, fontSize = 16.sp)
+                    color = when { g.pending == w -> tc.accent.copy(alpha = 0.22f); detail == w.text -> tc.accent.copy(alpha = 0.1f); else -> tc.paper },
+                    border = BorderStroke(2.dp, ink), shape = RoundedCornerShape(6.dp),
+                    modifier = Modifier.graphicsLayer { rotationZ = tilt }
+                        .semantics { contentDescription = if (open) "${w.text}: ${say(w.effect.effect)}" else say("${w.text}: not found out yet") }) {
+                    Box(Modifier.padding(3.dp).border(1.dp, ink.copy(alpha = 0.6f), RoundedCornerShape(4.dp))) {
+                        androidx.compose.material3.Text(if (open) w.text else "${w.text} ?", Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif, letterSpacing = 2.sp, color = ink, fontSize = 16.sp)
+                    }
                 }
             }
             if (g.hints > 0) InfoChip(if (g.hints == 1) "1 hint" else "${g.hints} hints", icon = GameIcons.Hint)
@@ -289,8 +308,18 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Mascot(theme, tc, happy = g.solved, modifier = Modifier.size(72.dp), bounce = hop.value)
-            Surface(color = if (g.solved) c.success.copy(alpha = 0.16f) else tc.accent.copy(alpha = 0.12f), shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.weight(1f)) {
+            val edge = if (g.solved) c.success else tc.accent
+            Box(Modifier.weight(1f).drawBehind {
+                val tail = 10.dp.toPx()
+                val body = Path().apply { addRoundRect(RoundRect(tail, 0f, size.width, size.height, CornerRadius(16.dp.toPx()))) }
+                val point = Path().apply {
+                    moveTo(tail + 2f, size.height * 0.38f); lineTo(0f, size.height * 0.62f); lineTo(tail + 2f, size.height * 0.66f); close()
+                }
+                val bubble = Path().apply { op(body, point, PathOperation.Union) }
+                drawPath(bubble, tc.paper)
+                drawPath(bubble, edge.copy(alpha = 0.16f))
+                drawPath(bubble, edge, style = Stroke(1.5.dp.toPx(), join = StrokeJoin.Round))
+            }.padding(start = 10.dp)) {
                 Text(saying, Modifier.padding(horizontal = 12.dp, vertical = 10.dp), style = MaterialTheme.typography.bodyMedium,
                     color = if (g.stuck) c.danger else c.text, fontWeight = if (g.solved) FontWeight.Bold else FontWeight.Normal)
             }
@@ -318,8 +347,9 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
         val markPicture = rememberAsset(theme, AssetSlot.MARK)
         val tilePicture = rememberAsset(theme, AssetSlot.TILE)
         val partyPicture = rememberAsset(theme, AssetSlot.PARTICLE)
-        Surface(color = tc.paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+        Surface(color = tc.paper, shape = RoundedCornerShape(20.dp), shadowElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
             Box {
+                if (boardPicture == null) Canvas(Modifier.matchParentSize()) { drawPaperGrain(tc.mark, 11) }
                 if (boardPicture != null) Image(boardPicture, contentDescription = null, contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize(), alpha = 0.9f)
                 BoxWithConstraints(Modifier.fillMaxWidth().padding(10.dp), contentAlignment = Alignment.Center) {
@@ -392,14 +422,24 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
         val tileAlpha = (1f - fill.value).coerceIn(0f, 1f)
         if (tileAlpha > 0f) {
             val bg = when { picked -> tc.accent.copy(alpha = 0.35f); hinted -> c.highlight; else -> tc.tile }
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = tileAlpha }.clip(shape).background(bg, shape),
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = tileAlpha }.clip(shape)
+                .background(Brush.verticalGradient(listOf(bg, Color(bg.red * 0.95f, bg.green * 0.94f, bg.blue * 0.92f, bg.alpha))), shape),
                 contentAlignment = Alignment.Center) {
                 if (tilePicture != null) Image(tilePicture, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                     alpha = if (picked || hinted) 0.55f else 1f)
                 Box(Modifier.fillMaxSize().border(if (picked) 2.5.dp else 1.dp, if (picked) tc.accent else tc.mark.copy(alpha = 0.22f), shape))
                 val shown = if (inked) g.start[i].takeIf { it in 'A'..'Z' } else ch.takeIf { it in 'A'..'Z' }
-                if (shown != null) androidx.compose.material3.Text(shown.toString(), fontSize = (side.value * 0.46f).sp,
-                    fontWeight = FontWeight.Bold, color = tc.letter)
+                if (shown != null) {
+                    // Ink themes set each letter by hand: a serif face, a touch crooked, pressed into the paper.
+                    val press = theme.mark == BlotMark.BLOT
+                    val tilt = if (press) (Math.floorMod(i * 37 + shown.code, 7) - 3) * 1.1f else 0f
+                    Box(Modifier.graphicsLayer { rotationZ = tilt }, contentAlignment = Alignment.Center) {
+                        if (press) androidx.compose.material3.Text(shown.toString(), Modifier.offset(y = 1.dp), fontSize = (side.value * 0.5f).sp,
+                            fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif, color = Color.White.copy(alpha = 0.6f))
+                        androidx.compose.material3.Text(shown.toString(), fontSize = (side.value * (if (press) 0.5f else 0.46f)).sp,
+                            fontWeight = if (press) FontWeight.Black else FontWeight.Bold, fontFamily = if (press) FontFamily.Serif else null, color = tc.letter)
+                    }
+                }
             }
         }
         if (fill.value > 0f) Canvas(Modifier.fillMaxSize()) {
