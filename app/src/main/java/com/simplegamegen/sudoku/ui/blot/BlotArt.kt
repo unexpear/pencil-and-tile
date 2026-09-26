@@ -68,16 +68,19 @@ fun DrawScope.drawPicture(image: ImageBitmap, area: Rect, alpha: Float = 1f) {
  * spring; [fill] says how it arrives; [phase] loops 0..1 for squares that keep moving; [seed] keeps each
  * square's own wobble. A [picture] replaces the drawn mark.
  */
-fun DrawScope.drawMark(mark: BlotMark, fill: FillStyle, area: Rect, c: BlotColors, seed: Int, progress: Float, phase: Float, picture: ImageBitmap? = null) {
+fun DrawScope.drawMark(mark: BlotMark, fill: FillStyle, area: Rect, c: BlotColors, seed: Int, progress: Float, phase: Float, picture: ImageBitmap? = null,
+    depth: Float = 0f) {
     if (progress <= 0f) return
     val p = progress.coerceIn(0f, 1.2f)
     val settled = p.coerceAtMost(1f)
+    // Ink blocks bloom out from the middle whatever the arrival style; the block is the square itself.
+    if (picture == null && mark == BlotMark.BLOCK) { drawInkBlock(area, c, seed, p, depth); return }
     // Ink spreads in its own way; every other arrival is a transform around the settled square.
     if (picture == null && mark == BlotMark.BLOT && fill == FillStyle.SPLASH) { drawSpreadingInk(area, c, seed, p); return }
     fun body(alpha: Float = 1f) {
         when {
             picture != null -> drawPicture(picture, area, alpha)
-            mark == BlotMark.BLOT -> drawSpreadingInk(area, c, seed, 1f, alpha)
+            mark == BlotMark.BLOT || mark == BlotMark.BLOCK -> drawSpreadingInk(area, c, seed, 1f, alpha)
             mark == BlotMark.WAVES -> drawWater(area, c, seed, phase, alpha, level = 1f)
             else -> drawStamp(area, c, alpha)
         }
@@ -90,6 +93,60 @@ fun DrawScope.drawMark(mark: BlotMark, fill: FillStyle, area: Rect, c: BlotColor
         FillStyle.FADE -> body(settled)
         FillStyle.SPIN -> rotate((1f - settled) * 200f, area.center) { scale(p, area.center) { body() } }
         FillStyle.DROP -> translate(top = -(1f - settled) * area.height * 0.9f) { body(settled) }
+    }
+}
+
+/**
+ * A square soaked right through with ink, filling it edge to edge so a word's squares join into one bar. It blooms
+ * from the middle into a softly uneven square; [depth] draws the block's side, hatched like a pen sketch.
+ */
+private fun DrawScope.drawInkBlock(area: Rect, c: BlotColors, seed: Int, progress: Float, depth: Float) {
+    val r = Random(seed * 131 + 7)
+    val face = Rect(area.left, area.top, area.right - depth, area.bottom - depth)
+    val grow = easeOut(progress.coerceAtMost(1f))
+    val over = if (progress > 1f) progress else 1f
+    val ink = c.mark
+    val dark = Color(ink.red * 0.55f, ink.green * 0.55f, ink.blue * 0.55f)
+    if (depth > 0f && grow > 0.85f) {
+        val side = Rect(face.left + depth, face.top + depth, face.right + depth, face.bottom + depth)
+        drawRoundRect(dark, side.topLeft, side.size, CornerRadius(face.width * 0.1f))
+        clipRect(side.left, side.top, side.right, side.bottom) {
+            for (k in 0..5) {
+                val x = face.left + face.width * (0.18f + 0.16f * k)
+                drawLine(ink.copy(alpha = 0.5f), Offset(x, face.bottom), Offset(x + depth, side.bottom), 1.5f)
+                val y = face.top + face.height * (0.18f + 0.16f * k)
+                drawLine(ink.copy(alpha = 0.5f), Offset(face.right, y), Offset(side.right, y + depth), 1.5f)
+            }
+        }
+    }
+    // A squircle whose edge wobbles a little, like ink that stopped at the paper's fibres.
+    val half = face.width / 2 * (0.3f + 0.7f * grow) * over
+    val n = 24
+    val pts = (0 until n).map { k ->
+        val a = 2 * PI * k / n
+        val cx = cos(a); val sy = sin(a)
+        val sx = Math.signum(cx) * Math.pow(abs(cx), 0.25).toFloat()
+        val ty = Math.signum(sy) * Math.pow(abs(sy), 0.25).toFloat()
+        val j = if (grow >= 1f) 0.985f + 0.03f * r.nextFloat() else 0.9f + 0.2f * r.nextFloat()
+        Offset(face.center.x + (sx * half * j).toFloat(), face.center.y + (ty * half * j).toFloat())
+    }
+    val path = Path()
+    fun mid(a: Offset, b: Offset) = Offset((a.x + b.x) / 2, (a.y + b.y) / 2)
+    path.moveTo(mid(pts.last(), pts[0]).x, mid(pts.last(), pts[0]).y)
+    for (k in 0 until n) { val pt = pts[k]; val m = mid(pt, pts[(k + 1) % n]); path.quadraticTo(pt.x, pt.y, m.x, m.y) }
+    path.close()
+    drawPath(path, ink)
+    // Grain: a few paler strokes, so the ink reads as ink rather than flat paint.
+    if (grow >= 1f) repeat(3) {
+        val x = face.left + face.width * (0.2f + 0.6f * r.nextFloat()); val y = face.top + face.height * (0.2f + 0.6f * r.nextFloat())
+        drawLine(c.detail.copy(alpha = 0.25f), Offset(x, y), Offset(x + face.width * 0.08f, y - face.height * 0.05f), 2f, cap = StrokeCap.Round)
+    }
+    // Two specks thrown off as it lands.
+    val fly = ((progress - 0.5f) / 0.5f).coerceIn(0f, 1f)
+    if (fly > 0f) repeat(2) {
+        val a = r.nextDouble(0.0, 2 * PI)
+        val d = face.width * (0.55f + 0.12f * fly)
+        drawCircle(ink.copy(alpha = fly), face.width * 0.035f, Offset(face.center.x + (d * cos(a)).toFloat(), face.center.y + (d * sin(a)).toFloat()))
     }
 }
 
@@ -167,6 +224,27 @@ fun DrawScope.drawPaperGrain(ink: Color, seed: Int) {
     drawRect(Brush.radialGradient(listOf(Color.Transparent, ink.copy(alpha = 0.08f)), Offset(w / 2, h / 2), maxOf(w, h) * 0.72f))
 }
 
+/** Faint speed lines bursting out from the middle of the page, strongest at the edges. */
+fun DrawScope.drawSpeedLines(ink: Color, seed: Int) {
+    val r = Random(seed)
+    val c = Offset(size.width / 2, size.height / 2)
+    val far = maxOf(size.width, size.height)
+    repeat(46) {
+        val a = r.nextDouble(0.0, 2 * PI)
+        val start = far * (0.42f + 0.2f * r.nextFloat())
+        val wide = far * (0.006f + 0.014f * r.nextFloat())
+        val dir = Offset(cos(a).toFloat(), sin(a).toFloat())
+        val side = Offset(-dir.y, dir.x)
+        val p = Path().apply {
+            moveTo(c.x + dir.x * start, c.y + dir.y * start)
+            lineTo(c.x + dir.x * far + side.x * wide, c.y + dir.y * far + side.y * wide)
+            lineTo(c.x + dir.x * far - side.x * wide, c.y + dir.y * far - side.y * wide)
+            close()
+        }
+        drawPath(p, ink.copy(alpha = 0.05f + 0.04f * r.nextFloat()))
+    }
+}
+
 private fun easeOut(t: Float) = if (t >= 1f) t else 1f - (1f - t) * (1f - t)
 
 /**
@@ -232,12 +310,27 @@ private fun DrawScope.drawStamp(area: Rect, c: BlotColors, alpha: Float) {
 // ---------------- Tracing trail ----------------
 
 fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, color: Color) {
+    if (points.isEmpty()) return
+    // A ring round every picked letter, so the word being traced reads as one connected chain.
+    if (style != TrailStyle.NONE) for (p in points) drawCircle(color, width * 1.9f, p, style = Stroke(width * 0.3f))
     if (points.size < 2) return
     when (style) {
         TrailStyle.LINE -> {
             val path = Path()
             points.forEachIndexed { n, o -> if (n == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y) }
-            drawPath(path, color.copy(alpha = 0.55f), style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawPath(path, color.copy(alpha = 0.5f), style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            // An arrowhead at the last letter shows which way the word is going.
+            val a = points[points.size - 2]; val b = points.last()
+            val dx = b.x - a.x; val dy = b.y - a.y; val len = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
+            val ux = dx / len; val uy = dy / len
+            val tip = Offset(b.x + ux * width * 2.6f, b.y + uy * width * 2.6f)
+            val head = Path().apply {
+                moveTo(tip.x, tip.y)
+                lineTo(tip.x - ux * width * 1.4f - uy * width, tip.y - uy * width * 1.4f + ux * width)
+                lineTo(tip.x - ux * width * 1.4f + uy * width, tip.y - uy * width * 1.4f - ux * width)
+                close()
+            }
+            drawPath(head, color)
         }
         TrailStyle.DOTS -> for (i in 1 until points.size) {
             val a = points[i - 1]; val b = points[i]
@@ -247,6 +340,26 @@ fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, c
             }
         }
         TrailStyle.NONE -> {}
+    }
+}
+
+/**
+ * The ink that joins the squares of a written word: drawn behind the marks, it shows in the gaps between them
+ * so each word stays visibly one stroke. [t] (0..1) draws it along the word as the word is written.
+ */
+fun DrawScope.drawInkBridge(style: TrailStyle, points: List<Offset>, t: Float, width: Float, color: Color) {
+    if (points.size < 2 || t <= 0f || style == TrailStyle.NONE) return
+    val reach = t.coerceIn(0f, 1f) * (points.size - 1)
+    for (k in 0 until points.size - 1) {
+        val part = (reach - k).coerceIn(0f, 1f)
+        if (part <= 0f) break
+        val a = points[k]; val b = points[k + 1]
+        val end = Offset(a.x + (b.x - a.x) * part, a.y + (b.y - a.y) * part)
+        if (style == TrailStyle.LINE) drawLine(color, a, end, width, cap = StrokeCap.Round)
+        else for (d in 0..6) {
+            val f = d / 6f * part
+            drawCircle(color, width * 0.4f, Offset(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f))
+        }
     }
 }
 

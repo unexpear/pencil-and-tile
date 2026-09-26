@@ -8,7 +8,7 @@ import org.json.JSONObject
 // ---------------- Blotwords theme engine: the parts a theme is built from ----------------
 
 /** How a filled square is drawn when there is no picture for it. */
-enum class BlotMark(val label: String) { BLOT("Ink blots"), WAVES("Sea water"), STAMP("Stamps") }
+enum class BlotMark(val label: String) { BLOCK("Ink blocks"), BLOT("Ink blots"), WAVES("Sea water"), STAMP("Stamps") }
 
 /** The shape of a letter square. */
 enum class BlotTile(val label: String) { ROUNDED("Rounded"), SQUARE("Square corners"), BUBBLE("Bubbles") }
@@ -116,7 +116,7 @@ data class BlotTheme(
 }
 
 object BlotThemes {
-    val ink = BlotTheme("ink", "Ink", BlotMark.BLOT, BlotTile.ROUNDED, "ink", BlotMascot.OCTOPUS,
+    val ink = BlotTheme("ink", "Ink", BlotMark.BLOCK, BlotTile.SQUARE, "ink", BlotMascot.OCTOPUS,
         BlotMotion(FillStyle.SPLASH, Pace.NORMAL, 75, IdleStyle.BOB, ReactStyle.HOP, PartyStyle.DROPS, 18, TrailStyle.LINE), builtIn = true)
     val sea = BlotTheme("sea", "Mermaids and the Sea", BlotMark.WAVES, BlotTile.BUBBLE, "sea", BlotMascot.MERMAID,
         BlotMotion(FillStyle.RISE, Pace.NORMAL, 90, IdleStyle.SWAY, ReactStyle.HOP, PartyStyle.BUBBLES, 22, TrailStyle.DOTS), builtIn = true)

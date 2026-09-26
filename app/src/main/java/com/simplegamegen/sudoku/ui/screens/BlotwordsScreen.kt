@@ -1,5 +1,12 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.ui.graphics.drawscope.clipRect
+import com.simplegamegen.sudoku.ui.blot.BlotTile
+import com.simplegamegen.sudoku.ui.blot.drawSpeedLines
+import com.simplegamegen.sudoku.ui.blot.TrailStyle
+import com.simplegamegen.sudoku.ui.blot.drawInkBridge
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.platform.LocalDensity
 import com.simplegamegen.sudoku.ui.blot.drawPaperGrain
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.text.font.FontFamily
@@ -349,29 +356,57 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
         val partyPicture = rememberAsset(theme, AssetSlot.PARTICLE)
         Surface(color = tc.paper, shape = RoundedCornerShape(20.dp), shadowElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
             Box {
-                if (boardPicture == null) Canvas(Modifier.matchParentSize()) { drawPaperGrain(tc.mark, 11) }
+                if (boardPicture == null) Canvas(Modifier.matchParentSize()) { drawSpeedLines(tc.mark, 5); drawPaperGrain(tc.mark, 11) }
                 if (boardPicture != null) Image(boardPicture, contentDescription = null, contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize(), alpha = 0.9f)
                 BoxWithConstraints(Modifier.fillMaxWidth().padding(10.dp), contentAlignment = Alignment.Center) {
                     val side = min((maxWidth - 8.dp) / g.width, if (g.height >= 6) 50.dp else 58.dp)
                     val gap = 3.dp
                     key(g.seed, g.step, g.start) {
+                        // A newly written word draws its stroke through its letters; earlier ones stay joined up.
+                        val stroke = remember { Animatable(1f) }
+                        var seen by remember { mutableIntStateOf(g.strokes.size) }
+                        LaunchedEffect(g.strokes.size) {
+                            if (g.strokes.size > seen) {
+                                stroke.snapTo(0f)
+                                stroke.animateTo(1f, tween(((g.strokes.last().size) * theme.motion.stroke * theme.motion.pace.factor + 150).toInt(), easing = LinearEasing))
+                            }
+                            seen = g.strokes.size
+                        }
                         Box {
+                            val stepPx = with(LocalDensity.current) { (side + gap).toPx() }
+                            // Blocks have a side, so their faces are a little smaller than the square.
+                            val depthPx = with(LocalDensity.current) { blockDepth(theme, side).toPx() }
+                            val halfPx = with(LocalDensity.current) { side.toPx() / 2 } - depthPx / 2
+                            fun centre(c: Int) = Offset((c % g.width) * stepPx + halfPx, (c / g.width) * stepPx + halfPx)
+                            val bridge = if (theme.mark == BlotMark.BLOCK && markPicture == null) halfPx * 1.9f else halfPx * 0.62f
+                            Canvas(Modifier.matchParentSize()) {
+                                g.strokes.forEachIndexed { n, word ->
+                                    if (word.any { g.cells[it] != INK }) return@forEachIndexed
+                                    drawInkBridge(if (theme.mark == BlotMark.BLOCK) TrailStyle.LINE else theme.motion.trail, word.map(::centre),
+                                        if (n == g.strokes.lastIndex) stroke.value else 1f, bridge, tc.mark)
+                                }
+                            }
                             Column(verticalArrangement = Arrangement.spacedBy(gap)) {
                                 for (r in 0 until g.height) Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                                     for (k in 0 until g.width) {
                                         val i = r * g.width + k
                                         BlotCell(g, i, side, theme, tc, phase, markPicture, tilePicture,
                                             picked = i in path || i == firstPick || i == fillAt, hinted = i in marked,
-                                            order = inkOrder.indexOf(i).coerceAtLeast(0), shake = if (shake.first == i) shake.second else 0) { tap(i) }
+                                            order = inkOrder.indexOf(i).coerceAtLeast(0), shake = if (shake.first == i) shake.second else 0,
+                                            newest = g.strokes.lastOrNull()?.contains(i) == true) { tap(i) }
                                     }
                                 }
                             }
                             // The trail while tracing a word.
-                            if (path.size >= 2) Canvas(Modifier.matchParentSize()) {
-                                val step = (side + gap).toPx()
-                                val points = path.map { c -> Offset((c % g.width) * step + side.toPx() / 2, (c / g.width) * step + side.toPx() / 2) }
-                                drawTrail(theme.motion.trail, points, side.toPx() * 0.16f, tc.accent)
+                            if (path.isNotEmpty()) Canvas(Modifier.matchParentSize()) {
+                                drawTrail(theme.motion.trail, path.map(::centre), side.toPx() * 0.13f, tc.accent)
+                            }
+                            // The pen passing through the word just written, fading as its ink settles.
+                            if (stroke.value < 1f && g.strokes.isNotEmpty()) Canvas(Modifier.matchParentSize()) {
+                                val t = stroke.value
+                                drawInkBridge(TrailStyle.LINE, g.strokes.last().map(::centre), (t * 1.6f).coerceAtMost(1f), side.toPx() * 0.12f,
+                                    tc.accent.copy(alpha = (1f - t) * 0.9f))
                             }
                             // Solved: the theme's pieces float up off the board.
                             if (party.value in 0.001f..0.999f) Canvas(Modifier.matchParentSize()) {
@@ -385,10 +420,13 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     }
 }
 
+/** How deep a block's side is for [theme]: square and rounded tiles are chunky blocks, bubbles are flat. */
+fun blockDepth(theme: BlotTheme, side: Dp): Dp = if (theme.tile == BlotTile.BUBBLE) 0.dp else side * 0.09f
+
 /** One square: its letter tile, or its mark filling in (in stroke order, after [order] others), a lift when picked and a shake when refused. */
 @Composable
 private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotColors, phase: Float, markPicture: ImageBitmap?, tilePicture: ImageBitmap?,
-    picked: Boolean, hinted: Boolean, order: Int, shake: Int, onTap: () -> Unit) {
+    picked: Boolean, hinted: Boolean, order: Int, shake: Int, newest: Boolean, onTap: () -> Unit) {
     val c = LocalGameLook.current.colors
     val ch = g.cells[i]
     val inked = ch == INK
@@ -420,9 +458,26 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
         contentAlignment = Alignment.Center) {
         // The letter tile fades as the mark takes over.
         val tileAlpha = (1f - fill.value).coerceIn(0f, 1f)
+        val depth = blockDepth(theme, side)
+        if (tileAlpha > 0f && depth > 0.dp) Canvas(Modifier.fillMaxSize().graphicsLayer { alpha = tileAlpha }) {
+            val d = depth.toPx()
+            val face = Size(size.width - d, size.height - d)
+            val sideRect = Rect(Offset(d, d), face)
+            val edge = tc.mark.copy(alpha = 0.55f)
+            drawRoundRect(Color(tc.tile.red * 0.82f, tc.tile.green * 0.8f, tc.tile.blue * 0.78f), sideRect.topLeft, face, CornerRadius(face.width * 0.1f))
+            clipRect(sideRect.left, sideRect.top, sideRect.right, sideRect.bottom) {
+                for (k in 0..5) {
+                    val x = face.width * (0.18f + 0.16f * k)
+                    drawLine(edge, Offset(x, face.height), Offset(x + d, face.height + d), 1.5f)
+                    val y = face.height * (0.18f + 0.16f * k)
+                    drawLine(edge, Offset(face.width, y), Offset(face.width + d, y + d), 1.5f)
+                }
+            }
+            drawRoundRect(edge, sideRect.topLeft, face, CornerRadius(face.width * 0.1f), style = Stroke(1.5f))
+        }
         if (tileAlpha > 0f) {
             val bg = when { picked -> tc.accent.copy(alpha = 0.35f); hinted -> c.highlight; else -> tc.tile }
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = tileAlpha }.clip(shape)
+            Box(Modifier.padding(end = depth, bottom = depth).fillMaxSize().graphicsLayer { alpha = tileAlpha }.clip(shape)
                 .background(Brush.verticalGradient(listOf(bg, Color(bg.red * 0.95f, bg.green * 0.94f, bg.blue * 0.92f, bg.alpha))), shape),
                 contentAlignment = Alignment.Center) {
                 if (tilePicture != null) Image(tilePicture, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
@@ -431,7 +486,7 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
                 val shown = if (inked) g.start[i].takeIf { it in 'A'..'Z' } else ch.takeIf { it in 'A'..'Z' }
                 if (shown != null) {
                     // Ink themes set each letter by hand: a serif face, a touch crooked, pressed into the paper.
-                    val press = theme.mark == BlotMark.BLOT
+                    val press = theme.mark == BlotMark.BLOT || theme.mark == BlotMark.BLOCK
                     val tilt = if (press) (Math.floorMod(i * 37 + shown.code, 7) - 3) * 1.1f else 0f
                     Box(Modifier.graphicsLayer { rotationZ = tilt }, contentAlignment = Alignment.Center) {
                         if (press) androidx.compose.material3.Text(shown.toString(), Modifier.offset(y = 1.dp), fontSize = (side.value * 0.5f).sp,
@@ -443,7 +498,14 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
             }
         }
         if (fill.value > 0f) Canvas(Modifier.fillMaxSize()) {
-            drawMark(theme.mark, motion.fill, Rect(Offset.Zero, size), tc, i, fill.value, phase, markPicture)
+            drawMark(theme.mark, motion.fill, Rect(Offset.Zero, if (depth > 0.dp) size else size), tc, i, fill.value, phase, markPicture, depth.toPx())
         }
+        // On ink blocks the letter still shows through, pale on the ink; the newest word's letters stand out.
+        val under = g.start[i].takeIf { it in 'A'..'Z' }
+        if (inked && under != null && theme.mark == BlotMark.BLOCK && markPicture == null && fill.value > 0.6f)
+            Box(Modifier.padding(end = depth, bottom = depth).fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.Text(under.toString(), fontSize = (side.value * 0.46f).sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif,
+                    color = tc.paper.copy(alpha = (if (newest) 0.95f else 0.4f) * ((fill.value - 0.6f) / 0.4f).coerceIn(0f, 1f)))
+            }
     }
 }

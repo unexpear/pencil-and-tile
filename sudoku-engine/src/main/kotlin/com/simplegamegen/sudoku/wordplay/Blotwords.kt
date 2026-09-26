@@ -72,6 +72,8 @@ data class Blotwords(
     /** A known way to finish from [start], kept so hints are instant while the player follows it. */
     val plan: List<BlotMove> = emptyList(),
     val theme: String = "ink",
+    /** The squares of each word written so far, in reading order, so the board can show them joined up. */
+    val strokes: List<List<Int>> = emptyList(),
 ) {
     init {
         require(width > 0 && start.length % width == 0 && cells.length == start.length)
@@ -97,7 +99,7 @@ data class Blotwords(
     fun write(path: List<Int>): Blotwords? {
         val word = wordAt(path) ?: return null
         val next = Blots.inked(cells, path)
-        return copy(cells = next, pending = if (next.all { it == INK }) null else word, written = written + word)
+        return copy(cells = next, pending = if (next.all { it == INK }) null else word, written = written + word, strokes = strokes + listOf(path))
     }
 
     /** ONE: ink one square. PAIR: ink two touching squares. ALIKE: ink every square with the letter at [a]. */
@@ -117,7 +119,7 @@ data class Blotwords(
         return copy(cells = cells.substring(0, at) + letter + cells.substring(at + 1), pending = null)
     }
 
-    fun restart(): Blotwords = copy(cells = start, pending = null)
+    fun restart(): Blotwords = copy(cells = start, pending = null, strokes = emptyList())
 
     /**
      * The next move toward a finish from here; null when the position can't be finished (or the search ran
@@ -541,10 +543,11 @@ object BlotCodec {
     fun encode(g: Blotwords) = listOf("2", g.tier.name, g.seed.toString(), g.width.toString(), g.words.joinToString(",", transform = ::word),
         g.start, g.cells, g.pending?.let(::word) ?: "", g.written.joinToString(",", transform = ::word), g.hints.toString(), g.step.toString(),
         g.plan.joinToString(";") { m -> "${word(m.word)}:${m.path.joinToString(".")}:${m.targets.joinToString(".")}:${m.letter ?: ""}" },
-        g.theme).joinToString("\n")
+        g.theme, g.strokes.joinToString(";") { it.joinToString(".") }).joinToString("\n")
 
     fun decode(text: String): Blotwords? = try {
-        val l = text.split('\n'); require(l.size == 13 && l[0] == "2")
+        // Saves from before strokes were kept have 13 lines.
+        val l = text.split('\n'); require((l.size == 13 || l.size == 14) && l[0] == "2")
         fun ints(s: String) = if (s.isEmpty()) emptyList() else s.split('.').map { it.toInt() }
         fun words(s: String) = if (s.isEmpty()) emptyList() else s.split(',').map(::wordOf)
         val plan = if (l[11].isEmpty()) emptyList() else l[11].split(';').map { part ->
@@ -552,6 +555,7 @@ object BlotCodec {
             BlotMove(BlotWord(BlotEffect.valueOf(f[0]), f[1]), ints(f[2]), ints(f[3]), f[4].firstOrNull())
         }
         Blotwords(BlotTier.valueOf(l[1]), l[2].toLong(), l[3].toInt(), words(l[4]), l[5], l[6],
-            l[7].takeIf { it.isNotEmpty() }?.let(::wordOf), words(l[8]), l[9].toInt(), l[10].toInt(), plan, l[12])
+            l[7].takeIf { it.isNotEmpty() }?.let(::wordOf), words(l[8]), l[9].toInt(), l[10].toInt(), plan, l[12],
+            if (l.size < 14 || l[13].isEmpty()) emptyList() else l[13].split(';').map(::ints))
     } catch (_: IllegalArgumentException) { null }
 }
