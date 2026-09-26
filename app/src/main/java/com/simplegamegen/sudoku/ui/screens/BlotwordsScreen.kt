@@ -1,5 +1,7 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.simplegamegen.sudoku.ui.blot.BlotMap
 import androidx.compose.ui.graphics.drawscope.clipRect
 import com.simplegamegen.sudoku.ui.blot.BlotTile
 import com.simplegamegen.sudoku.ui.blot.drawSpeedLines
@@ -159,9 +161,14 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     val c = look.colors
     val scope = rememberCoroutineScope()
     var known by remember { mutableStateOf(emptySet<String>()) }
+    // The Discover map: how many trail puzzles are done, whether it's showing, and which one was just solved.
+    var trailDone by remember { mutableIntStateOf(0) }
+    var showMap by rememberSaveable { mutableStateOf(false) }
+    var justSolved by remember { mutableStateOf<Int?>(null) }
     var theme by remember { mutableStateOf(BlotThemes.ink) }
     LaunchedEffect(Unit) {
         known = store.load(KNOWN_KEY)?.split(',')?.filter { it.isNotEmpty() }?.toSet().orEmpty()
+        trailDone = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
         // The chosen theme dresses every game, including one already under way.
         theme = BlotThemes.chosen(store)
     }
@@ -183,10 +190,12 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
 
     PlayShell(nav, vm, GameId.BLOTWORDS, setup, tools = { g, s ->
         ToolButton(GameIcons.Palette, "Themes", enabled = !s.busy) { nav.navigate(BLOT_THEMES_ROUTE) }
-        if (g.solved) ToolButton(GameIcons.Play, if (g.step >= 0) "Next puzzle" else "Next grid", enabled = !s.busy) {
-            vm.start(setup.create(if (g.step >= 0) 0 else g.tier.ordinal))
-        } else ToolButton(GameIcons.Restart, "Restart", enabled = !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
-        HintButton(GameId.BLOTWORDS, enabled = !g.solved && !s.busy && !thinking) {
+        if (g.step >= 0) ToolButton(GameIcons.Grid, if (showMap) "Puzzle" else "Map", enabled = !s.busy) { showMap = !showMap; if (!showMap) justSolved = null }
+        if (g.solved && !showMap) ToolButton(GameIcons.Play, if (g.step >= 0) "Next puzzle" else "Next grid", enabled = !s.busy) {
+            // On the Discover trail, the map shows the solved puzzle's land inking over first.
+            if (g.step >= 0) showMap = true else vm.start(setup.create(g.tier.ordinal))
+        } else if (!showMap) ToolButton(GameIcons.Restart, "Restart", enabled = !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
+        if (!showMap) HintButton(GameId.BLOTWORDS, enabled = !g.solved && !s.busy && !thinking) {
             thinking = true
             scope.launch {
                 val move = withContext(Dispatchers.Default) { g.nextMove() }
@@ -212,8 +221,19 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             learn(g.written)
             if (g.step >= 0) {
                 val done = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
-                if (g.step + 1 > done) store.save(TRAIL_KEY, (g.step + 1).toString())
+                if (g.step + 1 > done) { store.save(TRAIL_KEY, (g.step + 1).toString()); trailDone = g.step + 1; justSolved = g.step }
             }
+        }
+
+        if (showMap && g.step >= 0) {
+            Text("Discover map", style = MaterialTheme.typography.titleMedium, color = c.text)
+            Text(if (trailDone >= BlotTrail.steps.size) "Every puzzle solved. The whole island is inked!" else "Tap a numbered block to play it.",
+                style = MaterialTheme.typography.bodyMedium, color = c.muted)
+            BlotMap(theme, tc, solved = trailDone.coerceAtMost(BlotTrail.steps.size), total = BlotTrail.steps.size, fresh = justSolved) { step ->
+                showMap = false; justSolved = null
+                vm.start { withContext(Dispatchers.Default) { BlotTrail.puzzle(step, theme.id) } }
+            }
+            return@PlayShell
         }
 
         fun tap(i: Int) {
@@ -421,7 +441,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
 }
 
 /** How deep a block's side is for [theme]: square and rounded tiles are chunky blocks, bubbles are flat. */
-fun blockDepth(theme: BlotTheme, side: Dp): Dp = if (theme.tile == BlotTile.BUBBLE) 0.dp else side * 0.09f
+fun blockDepth(theme: BlotTheme, side: Dp): Dp = if (theme.tile == BlotTile.BUBBLE) 0.dp else side * 0.12f
 
 /** One square: its letter tile, or its mark filling in (in stroke order, after [order] others), a lift when picked and a shake when refused. */
 @Composable
