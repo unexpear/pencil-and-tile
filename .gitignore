@@ -12,3 +12,4 @@ keystore.properties
 .kotlin/
 *.aab
 *.apk
+tools/words/laya_labels.tsv

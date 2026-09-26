@@ -156,6 +156,10 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
         com.simplegamegen.sudoku.ui.screens.WordswornScreen(nav, playModel<com.simplegamegen.sudoku.wordplay.Wordsworn>(GameId.WORDSWORN, store,
             codecOf(com.simplegamegen.sudoku.wordplay.WordswornCodec::encode, com.simplegamegen.sudoku.wordplay.WordswornCodec::decode)), factory, store)
     }
+    composable(GameId.LONE_LETTER.route) {
+        com.simplegamegen.sudoku.ui.screens.LoneLetterScreen(nav, playModel<com.simplegamegen.sudoku.wordplay.LoneLetter>(GameId.LONE_LETTER, store,
+            codecOf(com.simplegamegen.sudoku.wordplay.LoneLetterCodec::encode, com.simplegamegen.sudoku.wordplay.LoneLetterCodec::decode)), factory)
+    }
     composable(GameId.WORD_QUILT.route) {
         com.simplegamegen.sudoku.ui.screens.QuiltScreen(nav, playModel<com.simplegamegen.sudoku.wordplay.Quilt>(GameId.WORD_QUILT, store,
             codecOf(com.simplegamegen.sudoku.wordplay.QuiltCodec::encode, com.simplegamegen.sudoku.wordplay.QuiltCodec::decode)), factory)

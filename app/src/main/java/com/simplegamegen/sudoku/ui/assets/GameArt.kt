@@ -396,6 +396,21 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                         drawText(measurer.measure("W", TextStyle(color = Color(0xFF2A2418), fontSize = (side * 0.26f / density).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Black)),
                             topLeft = o + Offset(side * 0.1f, side * 0.56f))
                     }
+                    GameId.LONE_LETTER -> {
+                        // A letter die above a list of answers being written.
+                        val die = side * 0.46f
+                        drawRoundRect(c.accent, o + Offset(side * 0.04f, side * 0.04f), Size(die, die), CornerRadius(die * 0.2f))
+                        val layout = measurer.measure("B", TextStyle(color = Color.White, fontSize = (die * 0.7f / density).sp, fontWeight = FontWeight.Black))
+                        drawText(layout, topLeft = o + Offset(side * 0.04f + die / 2 - layout.size.width / 2, side * 0.04f + die / 2 - layout.size.height / 2))
+                        for (k in 0 until 3) {
+                            val y = side * (0.62f + k * 0.14f)
+                            drawCircle(ink, side * 0.03f, o + Offset(side * 0.1f, y))
+                            drawLine(ink.copy(alpha = if (k == 2) 0.3f else 0.8f), o + Offset(side * 0.2f, y), o + Offset(side * (0.9f - k * 0.12f), y),
+                                strokeWidth = side * 0.035f, cap = StrokeCap.Round)
+                        }
+                        // The pencil.
+                        drawLine(ink, o + Offset(side * 0.62f, side * 0.4f), o + Offset(side * 0.9f, side * 0.1f), strokeWidth = side * 0.07f, cap = StrokeCap.Round)
+                    }
                     GameId.WORD_QUILT -> {
                         // Patches of colour sewn together, each with its letters.
                         val cell = side / 3

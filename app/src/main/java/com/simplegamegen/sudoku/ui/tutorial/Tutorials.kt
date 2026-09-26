@@ -28,6 +28,7 @@ object Tutorials {
         GameId.LETTER_SPRAWL -> WordTutorials.sprawl
         GameId.WORDSWORN -> WordTutorials.wordsworn
         GameId.WORD_QUILT -> WordTutorials.quilt
+        GameId.LONE_LETTER -> WordTutorials.loneLetter
         GameId.MAHJONG -> TableTutorials.mahjong
         GameId.SOLITAIRE -> TableTutorials.solitaire
         GameId.SPIDER -> TableTutorials.spider

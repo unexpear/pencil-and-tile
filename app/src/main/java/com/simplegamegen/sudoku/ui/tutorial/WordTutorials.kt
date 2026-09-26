@@ -417,6 +417,46 @@ internal object WordTutorials {
         )
     }
 
+    val loneLetter: Tutorial get() {
+        // The letter on top, then three categories with their answers.
+        val labels = listOf("Fruit", "Animals", "Colours")
+        fun scene(answers: List<String>, tone: Tone = Tone.ENTERED): Scene = Scene(6f, 4f, listOf(
+            Item("letter", 2.5f, 0f, look = Cell(text = "B"), tone = Tone.SELECTED, describe = "Letter B"),
+        ) + labels.indices.flatMap { k ->
+            listOf(
+                Item("label$k", 0f, k + 1f, w = 3f, look = Cell(text = labels[k]), describe = labels[k]),
+                Item(cellId(k, 1), 3f, k + 1f, w = 3f, look = Cell(text = answers[k]), tone = if (answers[k].isEmpty()) Tone.PLAIN else tone,
+                    describe = answers[k].ifEmpty { "empty" }),
+            )
+        }, maxUnit = 56)
+        return Tutorial(
+            GameId.LONE_LETTER,
+            "One letter, many categories: write an answer for each that starts with the letter.",
+            rules = listOf(
+                "Each round rolls one letter and deals a list of categories.",
+                "Write an answer for each category that starts with the letter. A leading \"the\", \"a\" or \"an\" doesn't count.",
+                "Tap Done when you're ready; on the harder levels a clock ends the round.",
+                "An answer scores 1 point only if no other player wrote the same thing.",
+                "Every further word that starts with the letter, like \"Big Blue Bus\", scores a bonus point.",
+                "If an answer of real words isn't on our list, you can count it yourself. After three rounds, the highest total wins.",
+            ),
+            tips = listOf("The first answer that comes to mind comes to everyone's mind. Go for the second one.",
+                "Answers of two or three words that all start with the letter score extra."),
+            steps = listOf(
+                Step("This round's letter is B. Every answer has to start with B.", scene(listOf("", "", ""))),
+                Step("Which answer fits Fruit?", scene(listOf("", "", "")).choices("Banana", "Apple"), pick = "Banana",
+                    after = scene(listOf("Banana", "", "")), then = "Banana starts with B and it's a fruit: 1 point, if nobody else writes it.",
+                    help = "It has to start with B."),
+                Step("Pip, a computer player, nearly always writes bear for Animals. Which answer is more likely to score?",
+                    scene(listOf("Banana", "", "")).choices("Bear", "Badger"), pick = "Badger", after = scene(listOf("Banana", "Badger", "")),
+                    then = "Badger! If you and Pip both wrote bear, neither of you would score.", help = "Answers that match someone else's score nothing."),
+                Step("Which answer scores the most for Colours?", scene(listOf("Banana", "Badger", "")).choices("Blue", "Baby blue"), pick = "Baby blue",
+                    after = scene(listOf("Banana", "Badger", "Baby blue"), Tone.GOOD),
+                    then = "Baby blue: 1 point, plus 1 for the extra word that starts with B.", help = "Count the words that start with B."),
+            ),
+        )
+    }
+
     val quilt: Tutorial get() {
         // Two patches: the left column holds A and T, the right column T and O.
         fun scene(cells: String, caption: String): Scene = Scene(2f, 2f, (0 until 4).map { i ->

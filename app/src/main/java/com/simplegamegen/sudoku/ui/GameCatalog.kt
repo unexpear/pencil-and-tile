@@ -32,6 +32,7 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     LETTER_SPRAWL("Letter Sprawl", "play_LETTER_SPRAWL", "Chain letters into words", GameGroup.WORDS),
     WORDSWORN("Wordsworn", "play_WORDSWORN", "Battle monsters with words", GameGroup.WORDS),
     WORD_QUILT("Word Quilt", "play_WORD_QUILT", "Stitch letters into words", GameGroup.WORDS),
+    LONE_LETTER("Lone Letter", "play_LONE_LETTER", "One letter, many categories", GameGroup.WORDS),
     MAHJONG("Mahjong", "mahjong", "Match free tiles", GameGroup.TABLE),
     SOLITAIRE("Solitaire", "table_SOLITAIRE", "Klondike, draw 1 or 3", GameGroup.TABLE),
     SPIDER("Spider", "play_SPIDER", "1, 2 or 4 suits", GameGroup.TABLE),

@@ -28,7 +28,7 @@ import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 private data class Credit(val name: String, val use: String, val license: String, val file: String, val notice: String = "")
 
 private val Credits = listOf(
-    Credit("Open English WordNet", "Definitions, example sentences, synonyms and opposites in Word Meaning",
+    Credit("Open English WordNet", "Definitions, example sentences, synonyms and opposites in Word Meaning; the everyday word lists and Lone Letter's categories",
         "CC BY 4.0, based on Princeton WordNet (WordNet licence)", "licenses/open-english-wordnet.txt",
         "Open English WordNet by the Open English WordNet team; WordNet 3.0 © 2006 by Princeton University."),
     Credit("all-MiniLM-L6-v2", "The on-device model that helps judge Word Meaning answers", "Apache License 2.0",

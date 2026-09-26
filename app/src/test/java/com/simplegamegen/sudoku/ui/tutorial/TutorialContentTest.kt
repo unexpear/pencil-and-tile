@@ -214,4 +214,12 @@ class TutorialContentTest {
         assertEquals(18, hand("CARTONS").preview((0 until 7).toList()).damage)
         assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("CARTONS"))
     }
+
+    @Test fun `lone letter tutorial answers are on the lists`() {
+        val c = com.simplegamegen.sudoku.wordplay.LoneCategories
+        assertTrue(c["fruit"].accepts("Banana") && c["animals"].accepts("Badger") && c["animals"].accepts("Bear"))
+        assertTrue(c["colors"].accepts("Baby blue") && c["colors"].accepts("Blue"))
+        assertTrue(!c["fruit"].accepts("Apple") || !com.simplegamegen.sudoku.wordplay.LoneAnswers.startsWith("Apple", 'B'))
+        assertEquals("bear", c["animals"].picksFor('B').first())
+    }
 }

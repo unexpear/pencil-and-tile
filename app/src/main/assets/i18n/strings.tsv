@@ -1892,3 +1892,70 @@ AT across, TO across, AT down and TO down: every run is a word!	横着是 AT 和
 Place each patch's letters so every run across and down is a word × 4 levels, from a 4×3 block to 6×5 lattices.	放好每块拼布的字母，让横竖每段都是单词 × 4 个难度，从 4×3 方块到 6×5 格架。	パッチの文字を置いて縦横の並びを単語に × 4レベル。4×3のブロックから6×5の格子まで。	Coloca las letras de cada parche para que cada tramo sea una palabra × 4 niveles, de un bloque de 4×3 a enrejados de 6×5.	Setze die Buchstaben so, dass jede Folge ein Wort ist × 4 Stufen, vom 4×3-Block bis zu 6×5-Gittern.
 Grids are filled with everyday words each game and kept only when they have one or two ways to finish.	每局都用常用词填满格子，只保留有一两种解法的格子。	毎回身近な単語で盤を埋め、解き方が1〜2通りのものだけを使います。	Cada partida se llena con palabras comunes y solo se usa si tiene una o dos soluciones.	Jedes Gitter wird mit Alltagswörtern gefüllt und nur genutzt, wenn es ein oder zwei Lösungen hat.
 This little quilt has two patches: the left column holds A and T, and the right column holds T and O. Every row and column must end up a word.	这块小拼布有两块：左边一列有 A 和 T，右边一列有 T 和 O。每一行和每一列最后都要是单词。	この小さなキルトには2つのパッチがあります：左の列はAとT、右の列はTとO。すべての行と列を単語にします。	Esta colcha pequeña tiene dos parches: la columna izquierda tiene A y T, y la derecha T y O. Cada fila y columna debe acabar siendo una palabra.	Dieser kleine Quilt hat zwei Flicken: Die linke Spalte hat A und T, die rechte T und O. Jede Reihe und Spalte muss am Ende ein Wort sein.
+Lone Letter	单字母	ひと文字	Letra única	Ein Buchstabe
+One letter, many categories	一个字母，许多类别	ひとつの文字で、いろんなお題	Una letra, muchas categorías	Ein Buchstabe, viele Kategorien
+Each round rolls one letter and deals a list of categories. Write an answer for each category that starts with the letter, then tap Done (or wait for the clock). Answers are in English, and a leading "the", "a" or "an" doesn't count. Your answers are compared with the computer players': an answer scores 1 point only if nobody else wrote the same thing, plus a bonus point for every further word that starts with the letter, like "Big Blue Bus". If an answer of real words isn't on our list, you can count it yourself. Three rounds; the highest total wins.	每轮掷出一个字母，并发一组类别。为每个类别写一个以该字母开头的答案，然后点“完成”（或等计时结束）。答案用英文，开头的 "the"、"a" 或 "an" 不算。你的答案会和电脑玩家的比较：只有没人写出同样答案时才得 1 分；答案中后面每多一个以该字母开头的词，再加 1 分，比如 "Big Blue Bus"。如果答案由真实单词组成但不在我们的列表里，你可以自己决定算分。共三轮，总分最高者获胜。	各ラウンドで文字をひとつ振り、お題のリストが配られます。各お題に、その文字で始まる答えを書いて「完了」をタップ（または時間切れを待つ）。答えは英語で、先頭の "the"・"a"・"an" は数えません。答えはコンピューターの答えと比べられ、誰とも同じでない答えだけが1点。さらに、その文字で始まる語がほかにもあれば1語ごとにボーナス1点（例："Big Blue Bus"）。実在の単語なのにリストにない答えは、自分で得点にできます。3ラウンドで合計がいちばん高い人の勝ちです。	Cada ronda saca una letra y reparte una lista de categorías. Escribe para cada categoría una respuesta que empiece por esa letra y toca Listo (o espera al reloj). Las respuestas son en inglés, y un "the", "a" o "an" inicial no cuenta. Tus respuestas se comparan con las de los jugadores del ordenador: una respuesta vale 1 punto solo si nadie más escribió lo mismo, más un punto extra por cada palabra siguiente que empiece por la letra, como "Big Blue Bus". Si una respuesta de palabras reales no está en nuestra lista, puedes contarla tú. Tres rondas; gana el total más alto.	Jede Runde würfelt einen Buchstaben und teilt eine Liste von Kategorien aus. Schreib zu jeder Kategorie eine Antwort, die mit dem Buchstaben beginnt, und tippe auf Fertig (oder warte auf die Uhr). Die Antworten sind englisch, ein "the", "a" oder "an" am Anfang zählt nicht. Deine Antworten werden mit denen der Computerspieler verglichen: Eine Antwort bringt nur 1 Punkt, wenn niemand sonst dasselbe geschrieben hat, plus einen Bonuspunkt für jedes weitere Wort mit dem Buchstaben, etwa "Big Blue Bus". Steht eine Antwort aus echten Wörtern nicht auf unserer Liste, kannst du sie selbst zählen. Drei Runden; die höchste Summe gewinnt.
+{0} categories	{0} 个类别	お題{0}個	{0} categorías	{0} Kategorien
+{0} rivals	{0} 个对手	ライバル{0}人	{0} rivales	{0} Gegner
+no clock	不计时	時間制限なし	sin reloj	ohne Uhr
+{0} a round	每轮 {0}	1ラウンド{0}	{0} por ronda	{0} pro Runde
+round {0} of {1}	第 {0}/{1} 轮	ラウンド{0}/{1}	ronda {0} de {1}	Runde {0} von {1}
+Round {0} of {1}	第 {0}/{1} 轮	ラウンド{0}/{1}	Ronda {0} de {1}	Runde {0} von {1}
+Done	完成	完了	Listo	Fertig
+Next round	下一轮	次のラウンド	Siguiente ronda	Nächste Runde
+Time's up!	时间到！	時間切れ！	¡Se acabó el tiempo!	Die Zeit ist um!
+No clock: take your time.	不计时：慢慢来。	時間制限なし。ゆっくりどうぞ。	Sin reloj: tómate tu tiempo.	Keine Uhr: Lass dir Zeit.
+A tie at {0} points: you share the win!	{0} 分平局：你们共享胜利！	{0}点で同点：勝ちを分け合いました！	Empate a {0} puntos: ¡compartes la victoria!	Gleichstand bei {0} Punkten: Ihr teilt euch den Sieg!
+You win with {0} points!	你以 {0} 分获胜！	{0}点であなたの勝ち！	¡Ganas con {0} puntos!	Du gewinnst mit {0} Punkten!
+{0} wins with {1} points	{0} 以 {1} 分获胜	{0}が{1}点で勝ち	{0} gana con {1} puntos	{0} gewinnt mit {1} Punkten
+Everything starts with {0}.	所有答案都以 {0} 开头。	答えはすべて{0}で始まります。	Todo empieza por {0}.	Alles beginnt mit {0}.
+Doesn't start with {0}	不是以 {0} 开头	{0}で始まっていません	No empieza por {0}	Beginnt nicht mit {0}
+Try {0}…	试试 {0}…	{0}…はどう？	Prueba {0}…	Versuch's mit {0}…
+Tap Done when you're ready. Answers only score if nobody else wrote them.	准备好就点“完成”。只有没人写过的答案才得分。	できたら「完了」をタップ。誰とも同じでない答えだけが得点になります。	Toca Listo cuando quieras. Solo puntúan las respuestas que nadie más escribió.	Tippe auf Fertig, wenn du so weit bist. Nur Antworten, die sonst niemand hat, zählen.
+Round {0}: you scored {1}	第 {0} 轮：你得了 {1} 分	ラウンド{0}：あなたは{1}点	Ronda {0}: has sacado {1}	Runde {0}: Du hast {1} Punkte
+Counted.	已算分。	得点にしました。	Contada.	Gezählt.
+Same	重复	かぶり	Repetida	Doppelt
+Wrong letter	字母不对	文字ちがい	Letra equivocada	Falscher Buchstabe
+Not on our list	不在列表中	リストにない	No está en la lista	Nicht auf der Liste
+Real words, just not on our list. Would your table count it?	是真实的单词，只是不在我们的列表里。你们桌会算吗？	実在の単語ですが、リストにはありません。あなたの卓なら数えますか？	Son palabras reales, solo que no están en nuestra lista. ¿Tu mesa la contaría?	Echte Wörter, nur nicht auf unserer Liste. Würde eure Runde sie zählen?
+Count it	算分	得点にする	Contarla	Zählen
+Fish and sea creatures	鱼和海洋生物	魚と海の生き物	Peces y animales marinos	Fische und Meerestiere
+Insects and bugs	昆虫和小虫	虫	Insectos y bichos	Insekten und Krabbeltiere
+Kinds of dog	狗的品种	犬の種類	Razas de perro	Hunderassen
+Fruit	水果	果物	Fruta	Obst
+Foods and dishes	食物和菜肴	食べ物と料理	Comidas y platos	Speisen und Gerichte
+Drinks	饮料	飲み物	Bebidas	Getränke
+Desserts and sweets	甜点和糖果	デザートとお菓子	Postres y dulces	Desserts und Süßes
+Cheeses	奶酪	チーズ	Quesos	Käsesorten
+Flowers	花	花	Flores	Blumen
+Games	游戏	ゲーム	Juegos	Spiele
+Toys	玩具	おもちゃ	Juguetes	Spielzeug
+Musical instruments	乐器	楽器	Instrumentos musicales	Musikinstrumente
+Vehicles and boats	车辆和船	乗り物と船	Vehículos y barcos	Fahrzeuge und Boote
+Buildings	建筑	建物	Edificios	Gebäude
+Jobs	职业	職業	Profesiones	Berufe
+Cities	城市	都市	Ciudades	Städte
+Colours	颜色	色	Colores	Farben
+Feelings	感受	気持ち	Sentimientos	Gefühle
+One letter, many categories: write an answer for each that starts with the letter.	一个字母，许多类别：为每个类别写一个以该字母开头的答案。	ひとつの文字で、いろんなお題：その文字で始まる答えをお題ごとに書こう。	Una letra, muchas categorías: escribe para cada una una respuesta que empiece por la letra.	Ein Buchstabe, viele Kategorien: Schreib zu jeder eine Antwort, die mit dem Buchstaben beginnt.
+Each round rolls one letter and deals a list of categories.	每轮掷出一个字母，并发一组类别。	各ラウンドで文字をひとつ振り、お題のリストが配られます。	Cada ronda saca una letra y reparte una lista de categorías.	Jede Runde würfelt einen Buchstaben und teilt eine Liste von Kategorien aus.
+Write an answer for each category that starts with the letter. A leading "the", "a" or "an" doesn't count.	为每个类别写一个以该字母开头的答案。开头的 "the"、"a" 或 "an" 不算。	各お題に、その文字で始まる答えを書きます。先頭の "the"・"a"・"an" は数えません。	Escribe para cada categoría una respuesta que empiece por la letra. Un "the", "a" o "an" inicial no cuenta.	Schreib zu jeder Kategorie eine Antwort, die mit dem Buchstaben beginnt. Ein "the", "a" oder "an" am Anfang zählt nicht.
+Tap Done when you're ready; on the harder levels a clock ends the round.	准备好就点“完成”；较难的级别有计时，时间到就结束本轮。	できたら「完了」をタップ。難しいレベルでは時間切れでラウンドが終わります。	Toca Listo cuando quieras; en los niveles difíciles un reloj termina la ronda.	Tippe auf Fertig, wenn du so weit bist; auf den schweren Stufen beendet eine Uhr die Runde.
+An answer scores 1 point only if no other player wrote the same thing.	只有没有其他玩家写出同样的答案时，才得 1 分。	ほかの誰とも同じでない答えだけが1点になります。	Una respuesta vale 1 punto solo si ningún otro jugador escribió lo mismo.	Eine Antwort bringt nur 1 Punkt, wenn kein anderer Spieler dasselbe geschrieben hat.
+Every further word that starts with the letter, like "Big Blue Bus", scores a bonus point.	答案中后面每多一个以该字母开头的词（比如 "Big Blue Bus"），再加 1 分。	その文字で始まる語がほかにもあれば、1語ごとにボーナス1点（例："Big Blue Bus"）。	Cada palabra siguiente que empiece por la letra, como "Big Blue Bus", suma un punto extra.	Jedes weitere Wort mit dem Buchstaben, etwa "Big Blue Bus", bringt einen Bonuspunkt.
+If an answer of real words isn't on our list, you can count it yourself. After three rounds, the highest total wins.	如果答案由真实单词组成但不在我们的列表里，你可以自己决定算分。三轮后总分最高者获胜。	実在の単語なのにリストにない答えは、自分で得点にできます。3ラウンド後、合計がいちばん高い人の勝ち。	Si una respuesta de palabras reales no está en nuestra lista, puedes contarla tú. Tras tres rondas, gana el total más alto.	Steht eine Antwort aus echten Wörtern nicht auf unserer Liste, kannst du sie selbst zählen. Nach drei Runden gewinnt die höchste Summe.
+The first answer that comes to mind comes to everyone's mind. Go for the second one.	你最先想到的答案，别人也会最先想到。选第二个吧。	最初に思いつく答えは、みんなも思いつきます。2番目を狙おう。	La primera respuesta que se te ocurre se le ocurre a todo el mundo. Ve a por la segunda.	Die erste Antwort, die dir einfällt, fällt allen ein. Nimm die zweite.
+Answers of two or three words that all start with the letter score extra.	由两三个都以该字母开头的词组成的答案得分更多。	すべてその文字で始まる2〜3語の答えは、得点が増えます。	Las respuestas de dos o tres palabras que empiezan todas por la letra puntúan más.	Antworten aus zwei oder drei Wörtern, die alle mit dem Buchstaben beginnen, zählen mehr.
+This round's letter is B. Every answer has to start with B.	本轮的字母是 B。每个答案都必须以 B 开头。	このラウンドの文字はB。答えはすべてBで始めます。	La letra de esta ronda es la B. Todas las respuestas deben empezar por B.	Der Buchstabe dieser Runde ist B. Jede Antwort muss mit B beginnen.
+Which answer fits Fruit?	哪个答案适合“水果”？	「果物」に合う答えはどれ？	¿Qué respuesta vale para Fruta?	Welche Antwort passt zu Obst?
+Banana starts with B and it's a fruit: 1 point, if nobody else writes it.	Banana 以 B 开头，而且是水果：如果没人写同样的答案，就得 1 分。	BananaはBで始まる果物：誰も同じ答えを書かなければ1点。	Banana empieza por B y es una fruta: 1 punto, si nadie más la escribe.	Banana beginnt mit B und ist Obst: 1 Punkt, wenn niemand sonst sie schreibt.
+It has to start with B.	必须以 B 开头。	Bで始まる必要があります。	Tiene que empezar por B.	Sie muss mit B beginnen.
+Pip, a computer player, nearly always writes bear for Animals. Which answer is more likely to score?	电脑玩家 Pip 在“动物”里几乎总是写 bear。哪个答案更可能得分？	コンピューターのPipは「動物」でほぼ必ずbearと書きます。得点になりやすいのはどっち？	Pip, un jugador del ordenador, casi siempre escribe bear en Animales. ¿Qué respuesta tiene más opciones de puntuar?	Pip, ein Computerspieler, schreibt bei Tiere fast immer bear. Welche Antwort punktet eher?
+Badger! If you and Pip both wrote bear, neither of you would score.	Badger！如果你和 Pip 都写 bear，你们俩都不得分。	Badger！あなたとPipが両方bearと書くと、どちらも得点になりません。	¡Badger! Si Pip y tú escribierais bear, ninguno puntuaría.	Badger! Wenn du und Pip beide bear schreibt, punktet keiner von euch.
+Answers that match someone else's score nothing.	和别人相同的答案不得分。	ほかの人と同じ答えは得点になりません。	Las respuestas que coinciden con las de otro no puntúan.	Antworten, die jemand anderes auch hat, zählen nichts.
+Which answer scores the most for Colours?	在“颜色”里哪个答案得分最多？	「色」でいちばん得点が高いのはどれ？	¿Qué respuesta puntúa más en Colores?	Welche Antwort bringt bei Farben am meisten?
+Baby blue: 1 point, plus 1 for the extra word that starts with B.	Baby blue：1 分，再加上另一个以 B 开头的词 1 分。	Baby blue：1点に、Bで始まるもう1語のぶん1点。	Baby blue: 1 punto, más 1 por la otra palabra que empieza por B.	Baby blue: 1 Punkt, plus 1 für das zweite Wort mit B.
+Count the words that start with B.	数一数以 B 开头的词。	Bで始まる語を数えてみよう。	Cuenta las palabras que empiezan por B.	Zähl die Wörter, die mit B beginnen.
+Write an answer starting with the round's letter for each category × 4 levels, from 6 categories with no clock to 12 in two minutes.	为每个类别写一个以本轮字母开头的答案 × 4 个难度，从不计时的 6 个类别到两分钟内 12 个。	各お題にラウンドの文字で始まる答えを書く × 4レベル。時間制限なしのお題6個から、2分で12個まで。	Escribe una respuesta que empiece por la letra de la ronda para cada categoría × 4 niveles, de 6 categorías sin reloj a 12 en dos minutos.	Schreib zu jeder Kategorie eine Antwort mit dem Buchstaben der Runde × 4 Stufen, von 6 Kategorien ohne Uhr bis 12 in zwei Minuten.
+Every game rolls new letters and deals categories from 32 lists built from WordNet, against two or three computer players.	每局都会掷出新的字母，从 32 份基于 WordNet 的列表里发类别，对手是两三个电脑玩家。	毎回新しい文字を振り、WordNetから作った32のリストからお題を配ります。相手はコンピューター2〜3人。	Cada partida saca letras nuevas y reparte categorías de 32 listas creadas a partir de WordNet, contra dos o tres jugadores del ordenador.	Jedes Spiel würfelt neue Buchstaben und teilt Kategorien aus 32 Listen aus WordNet aus, gegen zwei oder drei Computerspieler.
+Definitions, example sentences, synonyms and opposites in Word Meaning; the everyday word lists and Lone Letter's categories	“词义”中的释义、例句、同义词和反义词；常用词列表和“单字母”的类别	「言葉の意味」の定義、例文、類義語、対義語。身近な単語のリストと「ひと文字」のお題	Definiciones, frases de ejemplo, sinónimos y antónimos de Significado; las listas de palabras comunes y las categorías de Letra única	Definitionen, Beispielsätze, Synonyme und Gegenteile in Wortbedeutung; die Alltagswortlisten und die Kategorien von Ein Buchstabe
