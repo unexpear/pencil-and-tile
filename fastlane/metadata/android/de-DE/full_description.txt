@@ -1,0 +1,34 @@
+Pencil & Tile ist eine ruhige Sammlung von 37 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
+
+ZAHLENRÄTSEL
+• Sudoku in 8 Varianten und 4 Größen bis 16×16, dazu Killer-Sudoku und ein Gitter-Editor, der prüft, dass jedes Gitter genau eine Lösung hat
+• Samurai-Sudoku, Calcudoku, Kakuro, Futoshiki, Nonogramme und Hitori
+
+WORTSPIELE
+• Gemeinsame Fäden: Sortiere sechzehn Wörter in vier versteckte Gruppen; jedes Rätsel wird aus Regeln gebaut und hat nachweislich genau eine Lösung
+• Fünf Buchstaben: Finde das versteckte Wort in wenigen Versuchen
+• Wortbedeutung: Erkläre ein Wort aus seinem Satz; deine Antwort wird direkt auf deinem Handy bewertet
+• Wortgefecht: Bilde Wörter aus Buchstabensteinen und kämpfe gegen eine Reihe von Monstern
+• Buchstabennetz: Verbinde benachbarte Buchstaben zu Wörtern; längere Wörter bringen mehr Punkte
+• Wortquilt: Setze die Buchstaben jedes Flickens so, dass jede Reihe und Spalte Wörter ergibt
+• Ein Buchstabe: ein Buchstabe, viele Kategorien, gegen Computerspieler, die vielleicht dasselbe schreiben
+• Tintenwörter: Färbe das Gitter mit rätselhaften Befehlswörtern, deren Wirkung du selbst herausfindest
+• Kreuzworträtsel, Wortsuche, Galgenmännchen, Kryptogramm, Buchstabensalat, Akrostichon, Codewort-Rätsel und Buchstabenfall
+(Die Wortspiele verwenden derzeit englische Wörter.)
+
+KARTEN UND STEINE
+• Mahjong-Solitär, Klondike, Spider, Pyramide, Domino und Memory
+
+BRETT UND ARCADE
+• Minesweeper, Dame, Reversi, Käsekästchen, Sprossen und Magnetsteine gegen den Computer
+• 2048 und Tetras
+
+SO, WIE DU WILLST
+• Jedes Spiel hat ein eigenes kurzes, geführtes Tutorial und vollständige Regeln; Tutorials sind immer freiwillig
+• Vier Schwierigkeitsstufen, mit oder ohne Zeit, Bestzeiten und eine Übersicht deiner Siege
+• Jedes Spiel pausieren und später weiterspielen
+• Tipps gratis oder durch Spielen verdient, wie du magst
+• Designs und Dunkelmodus, Zoomen und Verschieben großer Bretter, Unterstützung für Screenreader
+• Auf English, 简体中文, 日本語, Español und Deutsch
+
+Deine Spiele und Rekorde bleiben auf deinem Gerät.

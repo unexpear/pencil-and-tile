@@ -68,6 +68,9 @@ def main():
     with open(GRADLE, 'w', encoding='utf-8', newline='') as f:
         f.write(gradle)
     git('add', GRADLE)
+    # F-Droid's copy of the store text and this release's changelog.
+    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'store_metadata.py'), str(code)], cwd=ROOT, check=True)
+    git('add', 'fastlane')
     git('commit', '-m', f'Release {tag} (version code {code})')
     git('tag', '-a', tag, '-m', f'Pencil & Tile {name}')
     git('push', '--atomic', 'origin', 'main', tag)

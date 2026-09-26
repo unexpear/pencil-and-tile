@@ -1,0 +1,34 @@
+Pencil & Tile es una colección tranquila de 37 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
+
+PUZZLES NUMÉRICOS
+• Sudoku en 8 variantes y 4 tamaños hasta 16×16, además de Sudoku asesino y un editor de cuadrículas que comprueba que cada una tenga una única solución
+• Sudoku samurái, Calcudoku, Kakuro, Futoshiki, Nonogramas e Hitori
+
+JUEGOS DE PALABRAS
+• Hilos comunes: ordena dieciséis palabras en cuatro grupos ocultos; cada puzzle se crea con reglas y se comprueba que tenga una sola respuesta
+• Cinco letras: encuentra la palabra oculta en pocos intentos
+• Significado: explica una palabra a partir de su frase; tu respuesta se evalúa en tu propio móvil
+• Duelo de palabras: forma palabras con fichas de letras para luchar contra una serie de monstruos
+• Cadena de letras: une letras vecinas para formar palabras; las más largas puntúan más
+• Colcha de letras: coloca las letras de cada parche para que cada fila y columna sean palabras
+• Letra única: una letra, muchas categorías, contra jugadores del ordenador que quizá piensen lo mismo
+• Palabras de tinta: entinta la cuadrícula con misteriosas palabras de orden que descubres tú
+• Crucigrama, Sopa de letras, Ahorcado, Criptograma, Letras revueltas, Acróstico, Crucigrama cifrado y Frase en columnas
+(Por ahora los juegos de palabras usan palabras en inglés.)
+
+CARTAS Y FICHAS
+• Mahjong solitario, Klondike, Spider, Pirámide, Dominó y Parejas
+
+TABLERO Y ARCADE
+• Buscaminas, Damas, Reversi, Puntos y cajas, Brotes e Imanes contra el ordenador
+• 2048 y Tetras
+
+A TU MANERA
+• Cada juego tiene su propio tutorial guiado y sus reglas completas; los tutoriales son opcionales
+• Cuatro niveles de dificultad, partidas con o sin tiempo, mejores tiempos y registro de victorias
+• Pausa cualquier partida y retómala después
+• Pistas gratis o ganadas jugando, como prefieras
+• Temas y modo oscuro, zoom para tableros grandes y compatibilidad con lectores de pantalla
+• En English, 简体中文, 日本語, Español y Deutsch
+
+Tus partidas y registros se guardan en tu dispositivo.

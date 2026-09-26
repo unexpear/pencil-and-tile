@@ -1,17 +1,33 @@
-# SimpleGameGen — Puzzle Collection (Android)
+# Pencil & Tile
 
-Native Kotlin + Jetpack Compose puzzle app with a pure-Kotlin engine.
-Twenty-nine games, all offline with independent local saves:
+A quiet collection of 37 puzzle, word, card and board games for Android. Everything plays offline, with
+no ads, no account and no tracking.
 
-- **Number puzzles:** Sudoku (eight variants, including Killer), Samurai Sudoku,
+**Try it:** join the test on Google Play at
+https://play.google.com/apps/testing/com.simplegamegen.puzzles, then install from
+https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
+
+<p>
+<img src="docs/store/screenshots/phone-1-home.png" width="200" alt="Home screen">
+<img src="docs/store/screenshots/words-1-wordsworn.png" width="200" alt="Wordsworn">
+<img src="docs/store/screenshots/words-3-loneletter.png" width="200" alt="Lone Letter">
+<img src="docs/store/screenshots/phone-2-sudoku.png" width="200" alt="Sudoku">
+</p>
+
+- **Number puzzles:** Sudoku (eight variants and four sizes, with Killer and Samurai Sudoku under it),
   Calcudoku, Kakuro, Futoshiki, Nonograms and Hitori.
-- **Word games:** crossword, word search, Hangman, cryptogram, word scramble,
-  acrostic, code cracker and dropquote.
-- **Cards and tiles:** Mahjong Solitaire, Klondike, Spider and Pyramid
-  Solitaire, Dominoes and Memory.
-- **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes,
-  Sprouts and Magnetic cluster.
+- **Word games:** Wordsworn (battle monsters with words), Letter Sprawl, Word Quilt, Lone Letter,
+  Blotwords, Common Threads, Five Letters, Word Meaning, crossword, word search, Hangman, cryptogram,
+  word scramble, acrostic, code cracker and dropquote.
+- **Cards and tiles:** Mahjong Solitaire, Solitaire (Klondike, with Spider and Pyramid under it), Dominoes
+  and Memory.
+- **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster.
 - **Arcade:** 2048 and Tetras.
+
+Every game has a guided tutorial, four levels, hints, themes and dark mode, screen-reader support, and
+English, 简体中文, 日本語, Español and Deutsch.
+
+Built with Kotlin and Jetpack Compose on a pure-Kotlin engine (`sudoku-engine`); each game saves on its own.
 
 ## Number puzzles
 
