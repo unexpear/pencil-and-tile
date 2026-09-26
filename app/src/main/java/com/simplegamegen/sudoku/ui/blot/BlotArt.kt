@@ -309,7 +309,9 @@ private fun DrawScope.drawStamp(area: Rect, c: BlotColors, alpha: Float) {
 
 // ---------------- Tracing trail ----------------
 
-fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, color: Color) {
+fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, color: Color,
+    /** Segments (by the index of their end point) that run off an edge and come back on the other side. */
+    jumps: Set<Int> = emptySet(), travel: Offset = Offset.Zero, stub: Float = 0f) {
     if (points.isEmpty()) return
     // A ring round every picked letter, so the word being traced reads as one connected chain.
     if (style != TrailStyle.NONE) for (p in points) drawCircle(color, width * 1.9f, p, style = Stroke(width * 0.3f))
@@ -317,10 +319,22 @@ fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, c
     when (style) {
         TrailStyle.LINE -> {
             val path = Path()
-            points.forEachIndexed { n, o -> if (n == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y) }
+            points.forEachIndexed { n, o ->
+                when {
+                    n == 0 -> path.moveTo(o.x, o.y)
+                    // Across the join: out past one edge, then in from the other.
+                    n in jumps -> {
+                        val out = points[n - 1] + travel * stub
+                        path.lineTo(out.x, out.y)
+                        val back = o - travel * stub
+                        path.moveTo(back.x, back.y); path.lineTo(o.x, o.y)
+                    }
+                    else -> path.lineTo(o.x, o.y)
+                }
+            }
             drawPath(path, color.copy(alpha = 0.5f), style = Stroke(width, cap = StrokeCap.Round, join = StrokeJoin.Round))
             // An arrowhead at the last letter shows which way the word is going.
-            val a = points[points.size - 2]; val b = points.last()
+            val a = if (points.lastIndex in jumps) points.last() - travel else points[points.size - 2]; val b = points.last()
             val dx = b.x - a.x; val dy = b.y - a.y; val len = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
             val ux = dx / len; val uy = dy / len
             val tip = Offset(b.x + ux * width * 2.6f, b.y + uy * width * 2.6f)
@@ -333,7 +347,7 @@ fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, c
             drawPath(head, color)
         }
         TrailStyle.DOTS -> for (i in 1 until points.size) {
-            val a = points[i - 1]; val b = points[i]
+            val a = points[i - 1]; val b = if (i in jumps) a + travel * stub else points[i]
             for (k in 0..4) {
                 val t = k / 4f
                 drawCircle(color.copy(alpha = 0.6f), width * 0.32f, Offset(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t))
@@ -347,12 +361,19 @@ fun DrawScope.drawTrail(style: TrailStyle, points: List<Offset>, width: Float, c
  * The ink that joins the squares of a written word: drawn behind the marks, it shows in the gaps between them
  * so each word stays visibly one stroke. [t] (0..1) draws it along the word as the word is written.
  */
-fun DrawScope.drawInkBridge(style: TrailStyle, points: List<Offset>, t: Float, width: Float, color: Color) {
+fun DrawScope.drawInkBridge(style: TrailStyle, points: List<Offset>, t: Float, width: Float, color: Color,
+    jumps: Set<Int> = emptySet(), travel: Offset = Offset.Zero, stub: Float = 0f) {
     if (points.size < 2 || t <= 0f || style == TrailStyle.NONE) return
     val reach = t.coerceIn(0f, 1f) * (points.size - 1)
     for (k in 0 until points.size - 1) {
         val part = (reach - k).coerceIn(0f, 1f)
         if (part <= 0f) break
+        // Across the join the bar runs off the edge, and in again on the other side.
+        if (k + 1 in jumps) {
+            drawLine(color, points[k], points[k] + travel * stub * part, width, cap = StrokeCap.Butt)
+            drawLine(color, points[k + 1] - travel * stub * part, points[k + 1], width, cap = StrokeCap.Butt)
+            continue
+        }
         val a = points[k]; val b = points[k + 1]
         val end = Offset(a.x + (b.x - a.x) * part, a.y + (b.y - a.y) * part)
         if (style == TrailStyle.LINE) drawLine(color, a, end, width, cap = StrokeCap.Round)

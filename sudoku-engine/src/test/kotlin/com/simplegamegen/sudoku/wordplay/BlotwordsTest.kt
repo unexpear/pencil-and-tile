@@ -132,7 +132,7 @@ class BlotwordsTest {
             val g = BlotTrail.puzzle(i)
             val s = BlotTrail.steps[i]
             assertEquals(i, g.step)
-            assertTrue(BlotSolver.solve(g.start, g.width, g.words) is BlotSolver.Result.Solved, "step $i solvable")
+            assertTrue(BlotSolver.solve(g.start, g.width, g.words, start = g.start, wrap = g.wrap) is BlotSolver.Result.Solved, "step $i solvable")
             assertTrue(BlotTrail.needs(s, g.start, g.width, g.words, s.newEffect?.let { lex.word(it) }), "${lex.one} step $i needs ${s.teaches}")
             assertEquals(g.start, BlotTrail.puzzle(i, "sea").start, "step $i is the same every time, in any theme")
             println("${lex.one} step $i (${s.teaches}) ${(System.nanoTime() - t0) / 1_000_000} ms\n" + g.start.chunked(g.width).joinToString("\n"))
@@ -185,8 +185,8 @@ class BlotwordsTest {
         val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
         val g = Blotwords(BlotTier.EASY, 0, 4, words, "V+UM" + "XXXX").write(listOf(0, 2, 3))!!
         assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
-        // Saves from before strokes, holes and daily puzzles were kept end three lines sooner.
-        val old = BlotCodec.encode(g).split('\n').dropLast(3).joinToString("\n")
+        // Saves from before strokes, holes, daily puzzles and joined edges were kept end four lines sooner.
+        val old = BlotCodec.encode(g).split('\n').dropLast(4).joinToString("\n")
         assertEquals(emptyList<List<Int>>(), BlotCodec.decode(old)!!.strokes)
     }
 
@@ -222,5 +222,18 @@ class BlotwordsTest {
         assertEquals('x', g.use(4)!!.cells[4])
         // A square that started inked can't be brought back.
         assertNull(Blotwords(BlotTier.EASY, 0, 4, words, "MIPA" + "#VUX").write(listOf(0, 1, 2, 3))!!.use(4))
+    }
+
+    @Test fun `when the edges join a word runs off one side and back on the other`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE, BlotEffect.PAIR))
+        // U M X V: reading right from V runs off the edge and comes back as U, M.
+        val flat = Blotwords(BlotTier.EASY, 0, 4, words, "UMXV" + "XXXX")
+        assertNull(flat.wordAt(listOf(3, 0, 1)))
+        val round = flat.copy(wrap = true)
+        assertNotNull(round.wordAt(listOf(3, 0, 1)))
+        assertEquals(round, BlotCodec.decode(BlotCodec.encode(round)))
+        // Squares at either end of a row touch across the join.
+        assertTrue(Blots.touching("A##B", 4, 0, 3, wrap = true))
+        assertTrue(!Blots.touching("AC#B", 4, 0, 3, wrap = false))
     }
 }

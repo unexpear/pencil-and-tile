@@ -241,7 +241,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     }) { g, s ->
         val tc = theme.colors.colors(look.dark)
         LaunchedEffect(g.cells, g.pending) { path = emptyList(); firstPick = null; fillAt = null; marked = emptyList() }
-        val routes = remember(g.cells, g.pending) { if (g.pending != null) emptyList() else Blots.routes(g.cells, g.width, g.words) }
+        val routes = remember(g.cells, g.pending) { if (g.pending != null) emptyList() else Blots.routes(g.cells, g.width, g.words, g.wrap) }
         LaunchedEffect(g.solved) {
             if (!g.solved) return@LaunchedEffect
             learn(g.written)
@@ -365,6 +365,8 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             }
             g.stuck -> "No command word can be written now. Undo a few turns, or restart."
             thinking -> "Looking for a way through…"
+            path.isEmpty() && g.wrap && g.written.isEmpty() ->
+                "The edges join! A word can run off one side and come back on the other."
             path.isEmpty() && KNOT in g.start && g.step >= 0 && g.written.isEmpty() ->
                 "New: knots! A word can run through any number of them and turn a corner on one. Writing never inks a knot."
             path.isEmpty() && WILD in g.start && g.step >= 0 && g.written.isEmpty() -> "New: a ? square stands for any letter you need."
@@ -443,6 +445,24 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                             val depthPx = with(LocalDensity.current) { blockDepth(theme, side).toPx() }
                             val halfPx = with(LocalDensity.current) { side.toPx() / 2 } - depthPx / 2
                             fun centre(c: Int) = Offset((c % g.width) * stepPx + halfPx, (c / g.width) * stepPx + halfPx)
+                            // On a board whose edges join: which steps of a route cross the join, and which way it's heading.
+                            fun crossing(route: List<Int>): Pair<Set<Int>, Offset> {
+                                if (!g.wrap || route.size < 2) return emptySet<Int>() to Offset.Zero
+                                val steps = (1 until route.size).map { k ->
+                                    Triple(k, Integer.signum(route[k] / g.width - route[k - 1] / g.width), Integer.signum(route[k] % g.width - route[k - 1] % g.width))
+                                }
+                                // Per axis, the heading that makes the shortest trip round the board; steps against it cross the join.
+                                fun heading(size: Int, deltas: List<Int>): Int {
+                                    val moves = deltas.filter { it != 0 }
+                                    if (moves.isEmpty()) return 0
+                                    fun trip(dir: Int) = moves.sumOf { d -> if (Integer.signum(d) == dir) kotlin.math.abs(d) else size - kotlin.math.abs(d) }
+                                    return if (trip(1) <= trip(-1)) 1 else -1
+                                }
+                                val dr = heading(g.height, (1 until route.size).map { route[it] / g.width - route[it - 1] / g.width })
+                                val dc = heading(g.width, (1 until route.size).map { route[it] % g.width - route[it - 1] % g.width })
+                                val jumps = steps.filter { (_, r, c) -> (r != 0 && r == -dr) || (c != 0 && c == -dc) }.map { it.first }.toSet()
+                                return jumps to Offset(dc.toFloat(), dr.toFloat())
+                            }
                             val bridge = if (theme.mark == BlotMark.BLOCK && markPicture == null) halfPx * 1.9f else halfPx * 0.62f
                             Canvas(Modifier.matchParentSize()) {
                                 g.strokes.forEachIndexed { n, word ->
@@ -450,9 +470,11 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                                     val runs = ArrayList<List<Int>>(); var run = ArrayList<Int>()
                                     for (c in word) if (g.cells[c] == INK || g.cells[c] == KNOT) run.add(c) else { runs += run; run = ArrayList() }
                                     runs += run
-                                    for (r in runs) if (r.size >= 2 && r.any { g.cells[it] == INK })
+                                    for (r in runs) if (r.size >= 2 && r.any { g.cells[it] == INK }) {
+                                        val (jumps, travel) = crossing(r)
                                         drawInkBridge(if (theme.mark == BlotMark.BLOCK) TrailStyle.LINE else theme.motion.trail, r.map(::centre),
-                                            if (n == g.strokes.lastIndex) stroke.value else 1f, bridge, tc.mark)
+                                            if (n == g.strokes.lastIndex) stroke.value else 1f, bridge, tc.mark, jumps, travel, stepPx * 0.75f)
+                                    }
                                 }
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(gap)) {
@@ -478,13 +500,37 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                                         else -> null
                                     }
                                 } ?: path
-                                drawTrail(theme.motion.trail, along.map(::centre), side.toPx() * 0.13f, tc.accent)
+                                val (jumps, travel) = crossing(along)
+                                drawTrail(theme.motion.trail, along.map(::centre), side.toPx() * 0.13f, tc.accent, jumps, travel, stepPx * 0.75f)
                             }
                             // The pen passing through the word just written, fading as its ink settles.
                             if (stroke.value < 1f && g.strokes.isNotEmpty()) Canvas(Modifier.matchParentSize()) {
                                 val t = stroke.value
+                                val (jumps, travel) = crossing(g.strokes.last())
                                 drawInkBridge(TrailStyle.LINE, g.strokes.last().map(::centre), (t * 1.6f).coerceAtMost(1f), side.toPx() * 0.12f,
-                                    tc.accent.copy(alpha = (1f - t) * 0.9f))
+                                    tc.accent.copy(alpha = (1f - t) * 0.9f), jumps, travel, stepPx * 0.75f)
+                            }
+                            // Joined edges: dashed ink round the board with arrows that carry on across.
+                            if (g.wrap) Canvas(Modifier.matchParentSize()) {
+                                val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+                                val inset = -gap.toPx() * 1.5f
+                                drawRoundRect(tc.accent, Offset(inset, inset), Size(size.width - 2 * inset, size.height - 2 * inset),
+                                    androidx.compose.ui.geometry.CornerRadius(12f), style = Stroke(3f, pathEffect = dash))
+                                val a = stepPx * 0.14f
+                                for (k in 0 until g.height) {
+                                    val y = centre(k * g.width).y
+                                    for ((x, dir) in listOf(inset to -1f, size.width - inset to 1f)) {
+                                        val head = Path().apply { moveTo(x + dir * a, y); lineTo(x - dir * a * 0.2f, y - a); lineTo(x - dir * a * 0.2f, y + a); close() }
+                                        drawPath(head, tc.accent)
+                                    }
+                                }
+                                for (k in 0 until g.width) {
+                                    val x = centre(k).x
+                                    for ((y, dir) in listOf(inset to -1f, size.height - inset to 1f)) {
+                                        val head = Path().apply { moveTo(x, y + dir * a); lineTo(x - a, y - dir * a * 0.2f); lineTo(x + a, y - dir * a * 0.2f); close() }
+                                        drawPath(head, tc.accent)
+                                    }
+                                }
                             }
                             // Solved: the theme's pieces float up off the board.
                             if (party.value in 0.001f..0.999f) Canvas(Modifier.matchParentSize()) {
