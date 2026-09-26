@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import com.simplegamegen.sudoku.wordplay.BlotDaily
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.foundation.layout.Spacer
@@ -127,9 +128,13 @@ import kotlinx.coroutines.withContext
 
 private const val TRAIL_KEY = "blotwords:trail"
 private const val KNOWN_KEY = "blotwords:known"
+private const val DAILY_KEY = "blotwords:daily"
 const val BLOT_THEMES_ROUTE = "blot_themes"
 
-val BlotSettings = listOf("Discover") + LevelNames
+val BlotSettings = listOf("Discover") + LevelNames + "Daily"
+private const val DAILY_SETTING = 5
+
+private fun todayKey(d: java.time.LocalDate = java.time.LocalDate.now()) = d.year * 10_000 + d.monthValue * 100 + d.dayOfMonth
 
 fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwords> = PlaySetup(
     rules = "Ink every square. Write a command word by tapping its letters in a straight line, across or down, forwards or " +
@@ -141,12 +146,16 @@ fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwo
         "Discover brings in the words one small puzzle at a time, and every puzzle can be finished.",
     settingTitle = "Mode", settings = BlotSettings,
     describe = { i ->
-        if (i == 0) "Small puzzles, one new word at a time"
-        else BlotTier.entries[i].let { t -> "${t.width}×${t.height} grid · ${t.effects.size} words" }
+        when (i) {
+            0 -> "Small puzzles, one new word at a time"
+            DAILY_SETTING -> "A new puzzle every day, the same for everyone; easy on Mondays, hardest on Sundays"
+            else -> BlotTier.entries[i].let { t -> "${t.width}×${t.height} grid · ${t.effects.size} words" }
+        }
     },
-    settingOf = { it.tier.ordinal }, inProgress = { !it.solved },
+    settingOf = { if (it.daily != 0) DAILY_SETTING else it.tier.ordinal }, inProgress = { !it.solved },
     subtitle = { g ->
-        if (g.step >= 0) "Discover · puzzle ${g.step + 1} of ${BlotTrail.steps.size}"
+        if (g.daily != 0) "Daily · ${g.daily / 100 % 100}/${g.daily % 100} · ${g.tier.label}"
+        else if (g.step >= 0) "Discover · puzzle ${g.step + 1} of ${BlotTrail.steps.size}"
         else if (g.left == 1) "${g.tier.label} · 1 square left" else "${g.tier.label} · ${g.left} squares left"
     },
     create = { i ->
@@ -155,10 +164,13 @@ fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwo
             if (i == 0) {
                 val step = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
                 withContext(Dispatchers.Default) { BlotTrail.puzzle(step % BlotTrail.steps.size, theme) }
+            } else if (i == DAILY_SETTING) {
+                val today = java.time.LocalDate.now()
+                withContext(Dispatchers.Default) { BlotDaily.puzzle(todayKey(today), today.dayOfWeek.value, theme) }
             } else factory.custom("blot:$i", { seed -> BlotGenerator.generate(BlotTier.entries[i], seed, theme) }) { it.start }
         }
     },
-    identity = { if (it.step >= 0) "trail${it.step}" else it.seed.toString() },
+    identity = { if (it.daily != 0) "daily${it.daily}" else if (it.step >= 0) "trail${it.step}" else it.seed.toString() },
     outcome = { g -> if (g.solved) Outcome(Result.WON) else null },
 )
 
@@ -173,10 +185,12 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     var trailDone by remember { mutableIntStateOf(0) }
     var showMap by rememberSaveable { mutableStateOf(false) }
     var justSolved by remember { mutableStateOf<Int?>(null) }
+    var dailyDone by remember { mutableStateOf(emptySet<Int>()) }
     var theme by remember { mutableStateOf(BlotThemes.ink) }
     LaunchedEffect(Unit) {
         known = store.load(KNOWN_KEY)?.split(',')?.filter { it.isNotEmpty() }?.toSet().orEmpty()
         trailDone = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
+        dailyDone = store.load(DAILY_KEY)?.split(',')?.mapNotNull { it.toIntOrNull() }?.toSet().orEmpty()
         // The chosen theme dresses every game, including one already under way.
         theme = BlotThemes.chosen(store)
     }
@@ -201,7 +215,10 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
         if (g.step >= 0) ToolButton(GameIcons.Grid, if (showMap) "Puzzle" else "Map", enabled = !s.busy) { showMap = !showMap; if (!showMap) justSolved = null }
         if (g.solved && !showMap) ToolButton(GameIcons.Play, if (g.step >= 0) "Next puzzle" else "Next grid", enabled = !s.busy) {
             // On the Discover trail, the map shows the solved puzzle's land inking over first.
-            if (g.step >= 0) showMap = true else vm.start(setup.create(g.tier.ordinal))
+            if (g.step >= 0) showMap = true
+            else if (g.daily != 0) vm.say(if (g.daily == todayKey()) "That's today's puzzle done. A new one comes tomorrow!" else "Starting today's puzzle.")
+                .also { if (g.daily != todayKey()) vm.start(setup.create(DAILY_SETTING)) }
+            else vm.start(setup.create(g.tier.ordinal))
         } else if (!showMap) ToolButton(GameIcons.Restart, "Restart", enabled = !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
         if (!showMap) HintButton(GameId.BLOTWORDS, enabled = !g.solved && !s.busy && !thinking) {
             thinking = true
@@ -228,6 +245,10 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
         LaunchedEffect(g.solved) {
             if (!g.solved) return@LaunchedEffect
             learn(g.written)
+            if (g.daily != 0 && g.daily !in dailyDone) {
+                dailyDone = dailyDone + g.daily
+                store.save(DAILY_KEY, dailyDone.sorted().takeLast(400).joinToString(","))
+            }
             if (g.step >= 0) {
                 val done = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
                 if (g.step + 1 > done) { store.save(TRAIL_KEY, (g.step + 1).toString()); trailDone = g.step + 1; justSolved = g.step }
@@ -317,6 +338,9 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                 }
             }
             if (g.hints > 0) InfoChip(if (g.hints == 1) "1 hint" else "${g.hints} hints", icon = GameIcons.Hint)
+            if (g.daily != 0) BlotDaily.streak(dailyDone, java.time.LocalDate.now()).let { n ->
+                if (n > 0) InfoChip(if (n == 1) "1 day in a row" else "$n days in a row", emphasized = true)
+            }
         }
         g.words.firstOrNull { it.text == detail }?.let { w ->
             if (w.text in known) Text("${w.text}: ${say(w.effect.effect)}", style = MaterialTheme.typography.bodyMedium, color = c.text)

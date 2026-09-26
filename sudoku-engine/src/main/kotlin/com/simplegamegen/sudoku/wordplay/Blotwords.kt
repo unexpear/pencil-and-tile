@@ -90,6 +90,8 @@ data class Blotwords(
     val strokes: List<List<Int>> = emptyList(),
     /** Squares that aren't part of the board at all. They count as inked, so words read straight across them. */
     val holes: Set<Int> = emptySet(),
+    /** The day of a daily puzzle as yyyymmdd, or 0. */
+    val daily: Int = 0,
 ) {
     init {
         require(width > 0 && start.length % width == 0 && cells.length == start.length)
@@ -697,6 +699,30 @@ object BlotGenerator {
     }
 }
 
+/** The daily puzzle: the same for everyone on a day, easy on Mondays and hardest on Sundays. */
+object BlotDaily {
+    /** The level for a day of the week, Monday = 1 to Sunday = 7. */
+    fun tierFor(dayOfWeek: Int): BlotTier = when (dayOfWeek) {
+        1, 2 -> BlotTier.EASY
+        3, 4 -> BlotTier.MEDIUM
+        5, 6 -> BlotTier.HARD
+        else -> BlotTier.EXPERT
+    }
+
+    /** The puzzle for [day] (yyyymmdd), which fell on [dayOfWeek]. */
+    fun puzzle(day: Int, dayOfWeek: Int, theme: String = "ink"): Blotwords =
+        BlotGenerator.generate(tierFor(dayOfWeek), day.toLong() * 7_919L + 17, theme).copy(daily = day)
+
+    /** Days in a row ending [today] (or yesterday, if today isn't done yet) found in [solved], given as yyyymmdd. */
+    fun streak(solved: Set<Int>, today: java.time.LocalDate): Int {
+        fun key(d: java.time.LocalDate) = d.year * 10_000 + d.monthValue * 100 + d.dayOfMonth
+        var d = if (key(today) in solved) today else today.minusDays(1)
+        var n = 0
+        while (key(d) in solved) { n++; d = d.minusDays(1) }
+        return n
+    }
+}
+
 /** The Discover trail: small puzzles that each need the newest word, so solving one shows what it does. */
 object BlotTrail {
     /** A trail step: the words in play and the one it teaches, or a square it teaches (knots or wilds). */
@@ -781,11 +807,11 @@ object BlotCodec {
     fun encode(g: Blotwords) = listOf("2", g.tier.name, g.seed.toString(), g.width.toString(), g.words.joinToString(",", transform = ::word),
         g.start, g.cells, g.pending?.let(::word) ?: "", g.written.joinToString(",", transform = ::word), g.hints.toString(), g.step.toString(),
         g.plan.joinToString(";") { m -> "${word(m.word)}:${m.path.joinToString(".")}:${m.targets.joinToString(".")}:${m.letter ?: ""}" },
-        g.theme, g.strokes.joinToString(";") { it.joinToString(".") }, g.holes.sorted().joinToString(".")).joinToString("\n")
+        g.theme, g.strokes.joinToString(";") { it.joinToString(".") }, g.holes.sorted().joinToString("."), g.daily.toString()).joinToString("\n")
 
     fun decode(text: String): Blotwords? = try {
         // Saves from before strokes were kept have 13 lines.
-        val l = text.split('\n'); require(l.size in 13..15 && l[0] == "2")
+        val l = text.split('\n'); require(l.size in 13..16 && l[0] == "2")
         fun ints(s: String) = if (s.isEmpty()) emptyList() else s.split('.').map { it.toInt() }
         fun words(s: String) = if (s.isEmpty()) emptyList() else s.split(',').map(::wordOf)
         val plan = if (l[11].isEmpty()) emptyList() else l[11].split(';').map { part ->
@@ -795,6 +821,7 @@ object BlotCodec {
         Blotwords(BlotTier.valueOf(l[1]), l[2].toLong(), l[3].toInt(), words(l[4]), l[5], l[6],
             l[7].takeIf { it.isNotEmpty() }?.let(::wordOf), words(l[8]), l[9].toInt(), l[10].toInt(), plan, l[12],
             if (l.size < 14 || l[13].isEmpty()) emptyList() else l[13].split(';').map(::ints),
-            if (l.size < 15) emptySet() else ints(l[14]).toSet())
+            if (l.size < 15) emptySet() else ints(l[14]).toSet(),
+            if (l.size < 16) 0 else l[15].toInt())
     } catch (_: IllegalArgumentException) { null }
 }

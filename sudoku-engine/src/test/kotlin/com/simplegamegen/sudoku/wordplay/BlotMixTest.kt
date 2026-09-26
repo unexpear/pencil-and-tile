@@ -16,4 +16,16 @@ class BlotMixTest {
             assertTrue(shaped >= 3, "$tier shapes")
         }
     }
+
+    @Test fun `the daily puzzle is the same for everyone on a day and harder at the weekend`() {
+        val monday = BlotDaily.puzzle(20260928, 1)
+        assertTrue(monday == BlotDaily.puzzle(20260928, 1))
+        assertTrue(monday.daily == 20260928 && monday.tier == BlotTier.EASY)
+        assertTrue(BlotDaily.tierFor(7) == BlotTier.EXPERT)
+        assertTrue(BlotCodec.decode(BlotCodec.encode(monday)) == monday)
+        val today = java.time.LocalDate.of(2026, 9, 26)
+        assertTrue(BlotDaily.streak(setOf(20260924, 20260925, 20260926), today) == 3)
+        assertTrue(BlotDaily.streak(setOf(20260924, 20260925), today) == 2, "today not done yet keeps yesterday's streak")
+        assertTrue(BlotDaily.streak(setOf(20260920), today) == 0)
+    }
 }

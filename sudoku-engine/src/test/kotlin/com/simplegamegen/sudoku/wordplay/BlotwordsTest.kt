@@ -185,8 +185,8 @@ class BlotwordsTest {
         val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
         val g = Blotwords(BlotTier.EASY, 0, 4, words, "V+UM" + "XXXX").write(listOf(0, 2, 3))!!
         assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
-        // Saves from before strokes and holes were kept end two lines sooner.
-        val old = BlotCodec.encode(g).split('\n').dropLast(2).joinToString("\n")
+        // Saves from before strokes, holes and daily puzzles were kept end three lines sooner.
+        val old = BlotCodec.encode(g).split('\n').dropLast(3).joinToString("\n")
         assertEquals(emptyList<List<Int>>(), BlotCodec.decode(old)!!.strokes)
     }
 
