@@ -48,6 +48,16 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     G2048("2048", "play_G2048", "Slide and merge", GameGroup.ARCADE),
     TETRAS("Tetras", "play_TETRAS", "Falling blocks", GameGroup.ARCADE);
 
+    /** The base game this one is a variant of; the home screen shows variants under their base game's tile. */
+    val parent: GameId? get() = when (this) {
+        KILLER, SAMURAI -> SUDOKU
+        SPIDER, PYRAMID -> SOLITAIRE
+        else -> null
+    }
+
+    /** Variants shown under this game's tile, in display order. */
+    val variants: List<GameId> get() = entries.filter { it.parent == this }
+
     companion object {
         fun of(game: TableGame): GameId = when (game) {
             TableGame.SOLITAIRE -> SOLITAIRE
