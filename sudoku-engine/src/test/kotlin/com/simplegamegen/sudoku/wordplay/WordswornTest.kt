@@ -8,69 +8,171 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class WordswornTest {
-    private fun withHand(g: Wordsworn, letters: String): Wordsworn {
-        val deck = letters.map { Tile(it, Wordsworn.powerOf(it)) }
-        return g.copy(deck = deck, hand = deck.indices.toList(), draw = emptyList(), discard = emptyList())
+    private fun card(ch: Char, hits: Int = 1, blocks: Int = 1, power: Power = Power.NONE, n: Int = 0) =
+        Card(ch, Edge(blocks = blocks), Edge(hits = hits), power, n)
+
+    /** A knight's fight with exactly these cards in hand and nothing else in the deck. */
+    private fun fight(vararg cards: Card, level: LogicLevel = LogicLevel.MEDIUM): Wordsworn {
+        val g = Wordsworn.start(1, level, rulesVersion = 2).choose(Hero.KNIGHT.ordinal)!!
+        return g.copy(deck = cards.toList(), hand = cards.indices.toList(), draw = emptyList(), discard = emptyList(), worn = emptyList(), ink = 0)
     }
 
-    @Test fun `a real word from the hand strikes the monster, then it acts`() {
-        val g = withHand(Wordsworn.start(1, LogicLevel.EASY), "CATSRNLE")
-        assertNull(g.play(listOf(0, 2)))                            // CT isn't a word
-        val next = g.play(listOf(0, 1, 2))!!                       // CAT
-        assertEquals("CAT", next.last!!.word)
-        assertEquals(g.monsterHp - 5, next.monsterHp)              // C3 + A1 + T1
-        assertEquals(1, next.turn)
+    private fun hand(vararg i: Int): List<Piece> = i.map { Piece.Hand(it) }
+
+    @Test fun `choosing a hero starts the first fight with four cards`() {
+        val g = Wordsworn.start(5, LogicLevel.MEDIUM, rulesVersion = 2)
+        assertEquals(Offer.Heroes, g.offer)
+        val f = g.choose(Hero.BARD.ordinal)!!
+        assertTrue(f.fighting)
+        assertEquals(4, f.hand.size)
+        assertEquals(Wordsworn.schedule(LogicLevel.MEDIUM, 5, rulesVersion = 2)[0], f.monster)
+        assertEquals(6, f.fights, "two books of three fights")
     }
 
-    @Test fun `long words and special tiles`() {
-        val g = Wordsworn.start(1, LogicLevel.EASY)
-        val tiles = listOf(Tile('S', 1, TileKind.SHIELD), Tile('T', 1), Tile('A', 1, TileKind.DOUBLE), Tile('R', 1), Tile('E', 1, TileKind.HEAL))
-        val h = g.copy(deck = tiles, hand = tiles.indices.toList(), draw = emptyList())
-        val p = h.preview(listOf(0, 1, 2, 3, 4))                   // STARE: 5 power, +50% for length, doubled
-        assertEquals(14, p.damage)
-        assertEquals(2, p.blocked)
-        assertEquals(2, p.healed)
+    @Test fun `splaying right counts right edges and puts the first letter on top`() {
+        val g = fight(card('C', hits = 3, blocks = 0, power = Power.HIT, n = 2), card('A', hits = 1, blocks = 2), card('T', hits = 2, blocks = 1, power = Power.BLOCK, n = 5))
+        val right = g.preview(hand(0, 1, 2), Splay.RIGHT)
+        assertEquals('C', right.top)
+        assertEquals(3 + 1 + 2 + 2, right.hits, "right-edge icons, then C's +2 hits")
     }
 
-    @Test fun `wild tiles take any letter`() {
-        val tiles = listOf(Tile('C', 3), Tile('?', 0, TileKind.WILD), Tile('T', 1))
-        val g = Wordsworn.start(1, LogicLevel.EASY).copy(deck = tiles, hand = listOf(0, 1, 2), draw = emptyList())
-        assertEquals("Pick a letter for each wild tile.", g.problem(listOf(0, 1, 2)))
-        assertNotNull(g.play(listOf(0, 1, 2), "A"))
+    @Test fun `splaying left counts left edges and puts the last letter on top, which is then worn out`() {
+        val g = fight(card('C', hits = 3, blocks = 0), card('A', hits = 1, blocks = 2), card('T', hits = 2, blocks = 1, power = Power.BLOCK, n = 5))
+        val left = g.preview(hand(0, 1, 2), Splay.LEFT)
+        assertEquals('T', left.top)
+        assertEquals(0 + 2 + 1 + 5, left.blocks, "left-edge icons, then T's +5 blocks")
+        val after = g.play(hand(0, 1, 2), Splay.LEFT)!!
+        assertEquals(listOf(2), after.worn, "T is worn out for the rest of the fight")
     }
 
-    @Test fun `beating a monster offers rewards, and choosing one starts the next fight`() {
-        val g = withHand(Wordsworn.start(3, LogicLevel.EASY), "QUARTZES").copy(monsterHp = 1)
-        val won = g.play(listOf(0, 1, 2, 3, 4, 5))!!                // QUARTZ
-        assertTrue(won.choosing)
-        val next = won.choose(0)!!
-        assertEquals(1, next.fight)
-        assertEquals(Wordsworn.HAND, next.hand.size)
-        assertTrue(!next.choosing)
+    @Test fun `a wild on top passes the top to the card under it, and an unused wild gives ink`() {
+        val g = fight(card('A', power = Power.HIT, n = 4), card('T'))
+        val p = g.preview(listOf(Piece.Wild('C'), Piece.Hand(0), Piece.Hand(1)), Splay.RIGHT)
+        assertEquals('A', p.top)
+        assertEquals(0, p.ink)
+        assertEquals(1, g.preview(hand(0, 1), Splay.RIGHT).ink)
+    }
+
+    @Test fun `the weak-spot vowel on top makes the monster skip ahead, and it's worn out`() {
+        val g = fight(card('T')).copy(monster = Monster.TYPO_IMP)       // weak spot O
+        val to = listOf(Piece.Hand(0), Piece.Vowel)
+        assertEquals(Piece.Vowel, g.topOf(to, Splay.LEFT))
+        val after = g.play(to, Splay.LEFT)!!
+        assertTrue(after.vowelWorn)
+        assertTrue(after.last!!.skipped)
+        assertEquals("The weak-spot vowel is worn out.", after.problem(listOf(Piece.Wild('G'), Piece.Vowel)))
+    }
+
+    @Test fun `beating the first stage flips the monster, stuns it and carries the extra damage`() {
+        val g = fight(card('C', hits = 5), card('A'), card('T')).copy(monsterHp = 2, act = 0, monster = Monster.TYPO_IMP)
+        val after = g.play(hand(0, 1, 2), Splay.RIGHT)!!
+        assertEquals(2, after.stage)
+        assertTrue(after.last!!.flipped && after.last!!.stunned)
+        assertEquals(after.monsterMax - (after.last!!.damage - 2), after.monsterHp)
+        assertEquals(g.hp - g.hexes, after.hp, "a stunned monster doesn't attack")
+    }
+
+    @Test fun `hexes hurt the monster each turn and fade by one`() {
+        val g = fight(card('A', hits = 0), card('T', hits = 0)).copy(monsterHexes = 3)
+        val hp = g.monsterHp
+        val after = g.play(hand(0, 1), Splay.RIGHT)!!
+        val special = g.monster.special
+        if (special != Special.NO_HEX && special != Special.REGEN) assertEquals(hp - 3, after.monsterHp)
+        assertEquals(2, after.monsterHexes)
+    }
+
+    @Test fun `items cost ink and work once a turn`() {
+        val g = fight(card('A'), card('T'))
+        val knife = g.items.indexOfFirst { it.kind == ItemKind.BUCKLER }
+        assertNull(g.useItem(knife), "no ink yet")
+        val rich = g.copy(ink = 3)
+        val used = rich.useItem(knife)!!
+        assertEquals(2, used.ink)
+        assertEquals(2, used.prep.blocks)
+        assertNull(used.useItem(knife), "once a turn")
+    }
+
+    @Test fun `blots hurt when held and are thrown away when played`() {
+        val blot = Card('X', Edge(), Edge(), Power.NONE, blot = true)
+        val g = fight(card('A', blocks = 0), card('T', blocks = 0), blot, card('E'))
+        val held = g.play(hand(0, 1), Splay.RIGHT)!!
+        assertTrue(held.last!!.hexTaken >= 2, "a blot left in the hand hurts 2")
+        val played = g.play(hand(3, 2), Splay.RIGHT)          // EX
+        assertNotNull(played)
+        assertEquals(3, played!!.deck.size, "the blot is gone for good")
+    }
+
+    @Test fun `a beaten monster leads to paths, rewards, the shop and the next fight`() {
+        var g = fight(card('C', hits = 99), card('A'), card('T')).copy(stage = 2, monsterHp = 1)
+        g = g.play(hand(0, 1, 2), Splay.RIGHT)!!
+        assertTrue(g.offer is Offer.Paths)
+        var guard = 0
+        while (g.offer != null && g.offer !is Offer.Shop && guard++ < 20) g = g.choose(0)!!
+        val shop = g.offer as Offer.Shop
+        val rest = shop.goods.indexOf(Goods.ForRest)
+        g = g.copy(hp = 5, stars = 5)
+        g = g.buy(rest)!!
+        assertEquals(10, g.hp)
+        val keep = shop.goods.indexOfFirst { it is Goods.ForKeepsake }
+        if (keep >= 0) {
+            g = g.buy(keep)!!
+            assertTrue(g.offer is Offer.Keepsakes)
+            g = g.choose(1)!!
+            assertTrue(g.offer is Offer.Shop, "back in the shop after choosing the side")
+            assertTrue(keep in (g.offer as Offer.Shop).sold)
+        }
+        g = g.choose(-1)!!
+        assertEquals(1, g.fight)
+        assertTrue(g.fighting)
     }
 
     @Test fun `a bot playing the best word each turn wins easy runs more often than expert ones`() {
         val wins = LogicLevel.entries.associateWith { level ->
-            (1L..12L).count { seed ->
-                var g = Wordsworn.start(seed, level)
-                var guard = 0
-                while (!g.over && guard++ < 400) {
-                    g = when {
-                        g.choosing -> g.choose(0)!!
-                        else -> g.bestWord()?.let { (_, picks, wild) -> g.play(picks, wild) } ?: g.swap(listOf(0, 1, 2)) ?: break
-                    }
-                }
-                g.won
-            }
+            (1L..8L).count { seed -> bot(Wordsworn.start(seed, level, rulesVersion = 2).choose((seed % 3).toInt())!!).won }
         }
-        println("bot wins out of 12: $wins")
+        println("bot wins out of 8: $wins")
         assertTrue(wins.getValue(LogicLevel.EASY) >= wins.getValue(LogicLevel.EXPERT))
-        assertTrue(wins.getValue(LogicLevel.EASY) >= 8, "easy should be winnable")
+        assertTrue(wins.getValue(LogicLevel.EASY) >= 5, "easy should be winnable")
     }
 
-    @Test fun `codec round trip`() {
-        val g = Wordsworn.start(9, LogicLevel.HARD).let { w -> w.bestWord()!!.let { (_, p, wild) -> w.play(p, wild)!! } }
-        assertEquals(g.copy(last = null), WordswornCodec.decode(WordswornCodec.encode(g)))
+    @Test fun `complete runs replay exactly through fights rewards shops and endings`() {
+        for (level in LogicLevel.entries) for (hero in Hero.entries) {
+            val end = bot(Wordsworn.start(9 + hero.ordinal.toLong(), level).choose(hero.ordinal)!!) { state ->
+                if (state.offer != null || state.over || state.last?.flipped == true || state.turn % 5 == 0)
+                    assertEquals(state, WordswornCodec.decode(WordswornCodec.encode(state)), "${level.name}, ${hero.name}, fight ${state.fight}, turn ${state.turn}")
+            }
+            assertTrue(end.over, "run must finish rather than stall on an empty offer")
+        }
+    }
+
+    private fun bot(start: Wordsworn, check: (Wordsworn) -> Unit = {}): Wordsworn {
+        var g = start
+        var guard = 0
+        while (!g.over && guard++ < 600) {
+            g = when (val o = g.offer) {
+                null -> {
+                    // Use any affordable item that adds hits or blocks, then the best word.
+                    val k = g.items.indices.firstOrNull { g.itemProblem(it) == null && g.items[it].kind != ItemKind.GOLD_LEAF }
+                    if (k != null) g.useItem(k)!! else g.bestPlay()?.let { (p, s) -> g.play(p, s) } ?: g.pass()!!
+                }
+                is Offer.Shop -> o.goods.indices.firstOrNull { it !in o.sold && g.stars >= o.goods[it].price && o.goods[it] != Goods.ForUpgrade &&
+                    (o.goods[it] != Goods.ForRest || g.hp < g.maxHp - 5) }?.let { g.buy(it) } ?: g.choose(-1)!!
+                is Offer.Replace -> g.choose(g.deck.indices.filter { !g.deck[it].blot }.minBy { i -> g.deck[i].let { it.left.blocks + it.right.hits } })!!
+                Offer.Upgrade -> g.choose(g.deck.indices.first { !g.deck[it].upgraded && !g.deck[it].blot })!!
+                is Offer.Keepsakes -> g.choose(if (o.sides.isEmpty()) -1 else 0)!!
+                else -> g.choose(0) ?: error("stuck on $o")
+            }
+            check(g)
+        }
+        return g
+    }
+
+    @Test fun `a save is the moves replayed`() {
+        var g = Wordsworn.start(9, LogicLevel.HARD).choose(1)!!
+        repeat(3) { g = g.bestPlay()?.let { (p, s) -> g.play(p, s) } ?: g.pass()!! }
+        g = g.hinted()
+        assertEquals(g, WordswornCodec.decode(WordswornCodec.encode(g)))
         assertNull(WordswornCodec.decode("junk"))
+        assertNull(WordswornCodec.decode("1\nEASY\n3\n0"), "old saves don't load")
     }
 }

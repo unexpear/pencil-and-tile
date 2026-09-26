@@ -152,3 +152,66 @@ Additional implementation reference: [Compose filter chips](https://developer.an
   System UI startup ANR cleared with Wait; it was not an app crash. The emulator
   was stopped after verification. Larger-device/font-scale/accessibility and
   signed Play-track checks remain part of the release checklist.
+
+## Wordsworn follow-up — 2026-09-26
+
+- Preserved the current three-hero, three-book overhaul. Fixed the word tray's
+  changing height by reserving space for cards, preview text and Clear. Long
+  previews scroll inside their reserved area. Card letters and edge icons now
+  fit the card geometry, including the crowded M card.
+- Added complete-run replay checks for all 12 hero/difficulty combinations.
+  Each run must reach an ending; replay equality is checked at offers, stage
+  flips, periodic combat turns and endings. This extends the existing short
+  save round-trip test without changing game rules or balance.
+- Full checks passed: **353 distinct tests** (262 engine, 91 app), **444 test
+  executions** including release app tests; no failures or skipped tests.
+  Debug and release lint each report **0 errors, 15 warnings and 2 hints**.
+  The notices concern dependency versions and existing code outside Wordsworn.
+  The debug APK and signed release AAB both built successfully.
+- Android 16 emulator, 1080×1920: selected SOME, switched splay, cleared and
+  reselected the word without moving the remaining hand cards. Playing it
+  reduced the Typo Imp to 1/8 health and left Wren at 17/20 with 1 ink.
+  Force-stop/reopen restored those values and the next monster action.
+  At 1.3× text size, selecting CAR also kept the hand stationary and the preview
+  readable. Restored the original text size afterward. The crash log was empty.
+- Version-1 Wordsworn saves remain incompatible with the new version-2 rules;
+  this pass does not add migration. Automated run completion is not a claim
+  that every difficulty is balanced or every seed is winnable. The bundle was
+  built locally; no Play upload or live-track verification was performed.
+
+Layout references: [Compose modifiers](https://developer.android.com/develop/ui/compose/modifiers-list)
+and [constraints and modifier order](https://developer.android.com/develop/ui/compose/layouts/constraints-modifiers).
+
+## Wordsworn rule-set 3 — September 26, 2026
+
+- Compared the final publisher-authored tabletop rulebook and publisher FAQ;
+  the final structure is three books with two encounters each. See
+  [the rule comparison and implementation scope](WORDSWORN_DIRECTION.md).
+- Added checks for six-fight campaigns, finite supplies, phase order, persistent
+  hexes, both core resources, alternate cores, modifiers, mandatory rewards,
+  shop replacement/refill/refresh, malformed replay input and version-2 saves.
+  Separate app tests verify per-hero unlock persistence.
+- Full suite: **377 distinct tests** (284 engine, 93 app), **470 executions**
+  including release app tests; zero failures. Debug and release lint report
+  **0 errors, 15 warnings and 2 hints**. Debug APK and signed release AAB built.
+- Android 16 emulator, 1080×1920: the version-2 save restored Wren at 17/20,
+  one ink and the Typo Imp at 1/8, with the earlier-rules notice. A new Easy run
+  accepted extra provisions and pocket alphabet: 30 health and three wilds.
+  Inspected the deck, both enemy stages, the upcoming boss and read-only shop.
+- Played through the first encounter using words and the hex core. Completed
+  the required reward replacement; purchased an item for two stars and observed
+  immediate refill. Refreshed the letter row once, then force-stopped/reopened:
+  health 29/30, one star, four items, replacement letter, shop stock and used
+  refresh all restored. A paid letter required replacement and refilled its
+  shop slot. Leaving the shop reached encounter two, the book boss.
+- The inspection dialog remained readable and scrollable at 1.3× text size;
+  restored 1.0× afterward. Hints now show a waiting label and discard results
+  if the game changes while calculation is in progress. Pass feedback no longer
+  promises one ink when a run can have several wilds.
+- After rebuilding, a normal hint selected AORTA; starting another hint and
+  immediately passing left the new hand unselected. The crash log was empty.
+- These checks establish the tested solo framework, not card-for-card source
+  equivalence, universal seed solvability, statistical balance, or Play approval.
+  Version-1 saves remain unsupported. No upload or store publication performed.
+
+Async UI reference: [Compose side effects](https://developer.android.com/develop/ui/compose/side-effects).

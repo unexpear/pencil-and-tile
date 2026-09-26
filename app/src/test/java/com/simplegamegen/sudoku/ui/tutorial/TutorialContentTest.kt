@@ -205,14 +205,15 @@ class TutorialContentTest {
     }
 
     @Test fun `wordsworn tutorial numbers match the engine`() {
-        val start = com.simplegamegen.sudoku.wordplay.Wordsworn.start(1, com.simplegamegen.sudoku.logic.LogicLevel.EASY)
-        fun hand(letters: String): com.simplegamegen.sudoku.wordplay.Wordsworn {
-            val deck = letters.map { com.simplegamegen.sudoku.wordplay.Tile(it, com.simplegamegen.sudoku.wordplay.Wordsworn.powerOf(it)) }
-            return start.copy(deck = deck, hand = deck.indices.toList(), draw = emptyList())
-        }
-        assertEquals(5, hand("CAT").preview(listOf(0, 1, 2)).damage)
-        assertEquals(18, hand("CARTONS").preview((0 until 7).toList()).damage)
-        assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("CARTONS"))
+        val start = com.simplegamegen.sudoku.wordplay.Wordsworn.start(1, com.simplegamegen.sudoku.logic.LogicLevel.EASY).choose(0)!!
+        val deck = listOf(com.simplegamegen.sudoku.wordplay.Card('C', com.simplegamegen.sudoku.wordplay.Edge(), com.simplegamegen.sudoku.wordplay.Edge(hits = 3), com.simplegamegen.sudoku.wordplay.Power.NONE), com.simplegamegen.sudoku.wordplay.Card('T', com.simplegamegen.sudoku.wordplay.Edge(blocks = 2), com.simplegamegen.sudoku.wordplay.Edge(hits = 2), com.simplegamegen.sudoku.wordplay.Power.NONE))
+        val g = start.copy(deck = deck, hand = listOf(0, 1), draw = emptyList(), monster = com.simplegamegen.sudoku.wordplay.Monster.PAGE_MITE)
+        val cat = listOf(com.simplegamegen.sudoku.wordplay.Piece.Hand(0), com.simplegamegen.sudoku.wordplay.Piece.Vowel, com.simplegamegen.sudoku.wordplay.Piece.Hand(1))
+        assertEquals('A', g.monster.weak)
+        assertEquals(com.simplegamegen.sudoku.wordplay.Piece.Hand(0), g.topOf(cat, com.simplegamegen.sudoku.wordplay.Splay.RIGHT))
+        assertEquals(5, g.preview(cat, com.simplegamegen.sudoku.wordplay.Splay.RIGHT).hits)
+        assertEquals(2, g.preview(cat, com.simplegamegen.sudoku.wordplay.Splay.LEFT).blocks)
+        assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("CAT"))
     }
 
     @Test fun `lone letter tutorial answers are on the lists`() {

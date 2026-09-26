@@ -384,35 +384,41 @@ internal object WordTutorials {
     }
 
     val wordsworn: Tutorial get() {
-        val hand = "CATSRENO"
-        val powers = hand.map { com.simplegamegen.sudoku.wordplay.Wordsworn.powerOf(it) }
-        fun scene(picked: List<Int> = emptyList(), caption: String = ""): Scene = Scene(8f, 1.3f, hand.mapIndexed { i, ch ->
-            Item("t$i", i.toFloat(), 0f, h = 1.3f, look = Cell(text = ch.toString(), sub = powers[i].toString()),
-                tone = if (i in picked) Tone.SELECTED else Tone.PLAIN, describe = "$ch, power ${powers[i]}")
-        }, maxUnit = 44, caption = caption)
+        // Four letter cards, the wild card and the monster's weak-spot vowel A. Each card's sub shows its edges: left | right.
+        val hand = listOf("C" to "0 | 3 hits", "T" to "2 blocks | 2 hits", "R" to "2 blocks | 1 hit", "S" to "1 block | 2 hits", "?" to "wild", "A" to "weak spot")
+        fun scene(picked: List<Int> = emptyList(), caption: String = ""): Scene = Scene(6f, 1.5f, hand.mapIndexed { i, (ch, sub) ->
+            Item("t$i", i.toFloat(), 0f, h = 1.5f, look = Cell(text = ch, sub = sub),
+                tone = if (i in picked) Tone.SELECTED else Tone.PLAIN, describe = "$ch, $sub")
+        }, maxUnit = 56, caption = caption)
         return Tutorial(
             GameId.WORDSWORN,
-            "Battle a run of monsters by spelling words from your letter tiles.",
+            "Fight through three books of monsters by spelling words with letter cards.",
             rules = listOf(
-                "Tap tiles from your hand to spell a word, then tap Attack.",
-                "Damage is the tiles' power added up. Words longer than three letters get 25% more for each extra letter.",
-                "Common letters have power 1; rarer letters hit harder, up to 10 for Q and Z.",
-                "After your word, the monster does what its sign shows: hit you, guard itself (its guard soaks up damage), or drain your health.",
-                "Shield tiles block, heal tiles mend you, a double tile doubles the damage, and a wild tile can be any letter.",
-                "Swap trades up to three tiles for new ones, but the monster still takes its turn.",
-                "After each win, choose a reward: sharpen a letter, add a special tile, or rest. Beat the Word Eater to finish the run.",
-                "Hint shows the strongest word your hand can make.",
+                "Choose a hero. Each has their own deck, two core abilities and a starting item. Every difficulty visits three books: a guardian and a boss in each.",
+                "Each turn you get four letter cards, a wild card that can be any letter, and the monster's weak-spot vowel.",
+                "Spell a word, then splay it left or right. Only the icons on that edge of each card count: hits, blocks and ink.",
+                "Splayed right, the first letter is on top; splayed left, the last. The top card also does what it says, then it's worn out for the rest of the fight.",
+                "If the weak-spot vowel is on top, the monster skips ahead to its next action. A wild letter on top passes the top to the card under it. An unused wild gives 1 ink.",
+                "Your hits minus the monster's block hurt it; your blocks stop its attack. Every monster shows its actions in order and has two stages.",
+                "Hexes do nothing by themselves. Your core abilities and the enemy's displayed rules explain how they work. Hexes persist until spent or cleared, and disappear after a fight.",
+                "Stars power core abilities and buy shop goods. Ink pays for items, once a turn each. Stars persist between fights; ink resets.",
+                "Blots hurt if left out of your word. A blot on top passes the ability and fatigue to the next letter. Played blots return to their supply.",
+                "After a guardian, rewards replace letters; after a boss, they add letters. The shop sells letters, items, keepsakes and upgrades. Purchases refill immediately; refresh one row or column free per visit.",
             ),
-            tips = listOf("A long word of plain letters often beats a short word with one rare letter.",
-                "When the monster is about to guard, strike hard now; when it's about to hit, a shield tile helps."),
+            tips = listOf("Look at the monster's next action: block when it attacks, hit hard when it doesn't.",
+                "Put the card with the ability you want on top by choosing which way to splay.",
+                "Worn-out cards are gone until the fight ends, so save strong abilities for when they matter."),
             steps = listOf(
-                Step("This is your hand. The small number on each tile is its power. Spell CAT: tap C.", scene(), tap = setOf("t0"), after = scene(listOf(0))),
-                Step("Now A.", scene(listOf(0)), tap = setOf("t1"), after = scene(listOf(0, 1))),
-                Step("And T.", scene(listOf(0, 1)), tap = setOf("t2"), after = scene(listOf(0, 1, 2), "CAT deals 5"),
-                    then = "CAT deals 3 + 1 + 1 = 5 damage."),
-                Step("Longer words hit harder. How much would CARTONS deal? Its tiles add up to 9, and seven letters give +100%.",
-                    scene(caption = "C3 A1 R1 T1 O1 N1 S1").choices("9", "18", "27"), pick = "18",
-                    then = "18 damage: nine, doubled for four extra letters.", help = "Each letter beyond three adds 25%: four extra letters make +100%."),
+                Step("This is your hand: four letter cards, the wild card and the monster's weak-spot vowel A. Spell CAT: tap C.",
+                    scene(), tap = setOf("t0"), after = scene(listOf(0))),
+                Step("Now the vowel A.", scene(listOf(0)), tap = setOf("t5"), after = scene(listOf(0, 5))),
+                Step("And T.", scene(listOf(0, 5)), tap = setOf("t1"), after = scene(listOf(0, 5, 1), "CAT")),
+                Step("Splayed right, which card of CAT is on top?", scene(listOf(0, 5, 1), "CAT").choices("C", "A", "T"), pick = "C",
+                    then = "The first letter is on top when a word is splayed right. Its ability happens, then it's worn out.",
+                    help = "Right puts the first letter on top; left puts the last letter on top."),
+                Step("Splayed right, only right edges count. How many hits does CAT make? C has 3, the vowel has none, T has 2.",
+                    scene(listOf(0, 5, 1), "CAT").choices("3", "5", "7"), pick = "5",
+                    then = "5 hits: 3 from C and 2 from T. Splayed left, T's 2 blocks would count instead.", help = "Add the right-edge hits: the weak-spot vowel has no icons."),
             ),
         )
     }

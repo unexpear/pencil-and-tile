@@ -32,10 +32,10 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
 
-      - name: Unit tests
+      - name: Unit tests and Android lint
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon :sudoku-engine:test :app:testDebugUnitTest
+          ./gradlew --no-daemon :sudoku-engine:test :app:testDebugUnitTest :app:testReleaseUnitTest :app:lintDebug :app:lintRelease
 
       - name: Build signed release bundle
         if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY == 'true'

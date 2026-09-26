@@ -47,7 +47,8 @@ repository. The build optionally reads these four environment variables:
 
 Set all four in your local environment or CI secret store, then run
 `:app:bundleRelease`. Partial configuration fails rather than silently producing
-an unsigned artifact. No upload key has been generated or selected for you.
+an unsigned artifact. Local upload signing is configured and the four GitHub
+signing secrets were verified on September 26, 2026.
 Enroll in Play App Signing and retain the upload key securely. Never use a debug
 key for a Play release. Release shrinking is currently disabled; enabling it
 should be accompanied by installed-release regression testing.
@@ -93,9 +94,11 @@ accounts, advertising or external content services.
 - **Data safety form:** "Does your app collect or share any of the required user data types?" → **No**.
   The app has no internet permission, SDKs, accounts, ads or analytics; typed Word Meaning answers are judged
   on the device. Android backup is handled by the platform, not collected by the developer.
-- **Content rating (IARC questionnaire):** category *Game* (puzzle); no violence, fear, sexuality, profanity,
-  gambling or simulated gambling (solitaire has no betting), no user-to-user interaction, no sharing of
-  location or personal information, no purchases. Expected result: Everyone / PEGI 3 / USK 0.
+- **Content rating (IARC questionnaire):** reassess before the next update. Wordsworn includes fantasy
+  combat and a blood/ink splatter setting, so the earlier blanket "no violence" answer is no longer
+  accurate. Describe the actual available content, including optional settings; do not assume an
+  Everyone / PEGI 3 / USK 0 result. Google requires a new questionnaire when content changes affect
+  its answers: [official rating guidance](https://support.google.com/googleplay/android-developer/answer/9859655?hl=en).
 - **Target audience:** simplest is 13 and over. Including under-13 ages is possible (the app has no ads or
   data collection) but brings the Families policy and extra review; choose it only if you want to market
   to children.
@@ -151,9 +154,9 @@ Post for social media or forums (fill in the group link):
 
 ## Remaining release work
 
-- Fill in the developer contact in the privacy policy and publish it.
-- Configure upload signing, then test a Play internal-track installation of the
-  signed bundle. A successful unsigned local build is not a publishable release.
+- Privacy policy and developer contact are published. Local upload signing and
+  GitHub signing secrets are configured; the Play service-account secret still
+  needs to be supplied. Test a Play internal-track installation of the signed bundle.
 - Test phones and tablets on Android 8, 15 and 16, including narrow/landscape
   layouts, font scaling, screen readers and navigation with system bars.
 - Test cold-start Continue, rotation, background/foreground, abrupt process
@@ -168,7 +171,7 @@ Post for social media or forums (fill in the group link):
   9:16 screenshots in `screenshots/` (Play only accepts 16:9 or 9:16): `phone-*` 1080×1920, `tablet7-*`
   1080×1920 at tablet density and `tablet10-*` 1440×2560 (home, Sudoku, Common Threads, Five Letters, Word
   Meaning, Mahjong). Play shows these for every language unless localized ones are added.
-- Still needed from you: support email and privacy-policy URL.
+- Support email and privacy-policy URL are recorded in PRIVACY.md and the app.
 - Complete content rating, target audience, ads/app-access declarations, Data
   safety and any account-specific testing/verification requirements shown by
   Play Console. No Play Console declarations or uploads were made by this task.
@@ -179,7 +182,7 @@ Releases after 1.0.0 go out from GitHub, the same way StandardTune's do. `python
 bumps `versionCode`, sets `versionName`, commits, tags `v1.1.0` and pushes. The tag starts
 `.github/workflows/release.yml`, which:
 
-1. runs the engine and app tests;
+1. runs the engine tests, debug/release app tests and debug/release Android lint;
 2. builds the release bundle, signed with the upload key from GitHub secrets;
 3. checks that the bundle carries the registered upload certificate (SHA-256 `BE:42:70:FE:…:22:8B`);
 4. uploads it to the **Closed testing - Alpha** track with the notes in `distribution/whatsnew/`
@@ -192,7 +195,8 @@ or with missing or overlong release notes. `--dry-run` shows what it would do.
 
 The Play account already lets the upload service account
 `play-ci-upload@standardtune-play.iam.gserviceaccount.com` view Pencil & Tile and release it to testing
-tracks (granted 26 Sep 2026). Two things are left, and both handle secrets, so run them yourself:
+tracks (granted 26 Sep 2026). The four signing secrets are configured. The remaining
+credential is the Play service-account JSON key:
 
 1. **A key for the service account.** In Google Cloud (project `standardtune-play`): IAM & Admin → Service
    Accounts → `play-ci-upload` → Keys → Add key → Create new key → JSON. A `.json` file downloads.
