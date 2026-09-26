@@ -6,10 +6,15 @@ import kotlin.random.Random
 //
 // Ink every square of a letter grid. Writing a command word (read in a straight row or column,
 // forwards or backwards) inks its letters, then its effect happens straight away. Inked squares
-// drop out of the way, so the letters on either side of them become neighbours.
+// drop out of the way, so the letters on either side of them become neighbours. Knot squares join
+// letters (a word may run through them and turn a corner on one) and wild squares stand for any letter.
 
 const val INK = '#'
 const val BLANK = '.'
+/** A knot: a word may pass through any number of them, and turn a corner on one. Writing never inks it. */
+const val KNOT = '+'
+/** A wild square: it stands for any letter in a word. */
+const val WILD = '?'
 
 /** What a command word lets you do once it's written. */
 enum class BlotEffect(val effect: String) {
@@ -17,6 +22,7 @@ enum class BlotEffect(val effect: String) {
     PAIR("Ink two squares that touch."),
     ALIKE("Pick a letter: every square showing it is inked."),
     WRITE("Write any letter in a blank square."),
+    DIAG("Pick a square: it and every square on its rising diagonal are inked."),
 }
 
 /** A command word and what it does. */
@@ -27,10 +33,10 @@ data class BlotWord(val effect: BlotEffect, val text: String) {
     }
 }
 
-/** The four command words, one per effect. */
-data class BlotLexicon(val one: String, val pair: String, val alike: String, val write: String) {
+/** The command words, one per effect. */
+data class BlotLexicon(val one: String, val pair: String, val alike: String, val write: String, val diag: String = "GOBA") {
     fun text(e: BlotEffect): String = when (e) {
-        BlotEffect.ONE -> one; BlotEffect.PAIR -> pair; BlotEffect.ALIKE -> alike; BlotEffect.WRITE -> write
+        BlotEffect.ONE -> one; BlotEffect.PAIR -> pair; BlotEffect.ALIKE -> alike; BlotEffect.WRITE -> write; BlotEffect.DIAG -> diag
     }
 
     fun word(e: BlotEffect) = BlotWord(e, text(e))
@@ -41,14 +47,17 @@ data class BlotLexicon(val one: String, val pair: String, val alike: String, val
     }
 }
 
-/** The ways to play: a trail of small puzzles that introduce the words one by one, then four levels. */
+/**
+ * The ways to play: a trail of small puzzles that introduce the words one by one, then four levels. [knots] and
+ * [wilds] are how often filler squares are knots and word letters are wild.
+ */
 enum class BlotTier(val label: String, val width: Int, val height: Int, val effects: List<BlotEffect>, val blankChance: Double,
-    val maxPreInked: Int, val decoy: Double) {
+    val maxPreInked: Int, val decoy: Double, val knots: Double = 0.0, val wilds: Double = 0.0) {
     DISCOVER("Discover", 4, 4, BlotEffect.entries, 0.0, 0, 0.0),
     EASY("Easy", 5, 5, listOf(BlotEffect.ONE), 0.0, 5, 0.35),
     MEDIUM("Medium", 5, 5, listOf(BlotEffect.ONE, BlotEffect.PAIR), 0.06, 5, 0.5),
-    HARD("Hard", 6, 6, listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE), 0.08, 6, 0.6),
-    EXPERT("Expert", 6, 6, BlotEffect.entries, 0.1, 6, 0.7),
+    HARD("Hard", 6, 6, listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.DIAG), 0.08, 6, 0.6, knots = 0.08),
+    EXPERT("Expert", 6, 6, BlotEffect.entries, 0.1, 6, 0.7, knots = 0.1, wilds = 0.06),
 }
 
 /** One whole turn: write [word] along [path] (in reading order), then use its effect. */
@@ -77,7 +86,7 @@ data class Blotwords(
 ) {
     init {
         require(width > 0 && start.length % width == 0 && cells.length == start.length)
-        require(cells.all { it == INK || it == BLANK || it in 'A'..'Z' } && words.isNotEmpty() && hints >= 0)
+        require(cells.all { it == INK || it == BLANK || it == KNOT || it == WILD || it in 'A'..'Z' } && words.isNotEmpty() && hints >= 0)
         require(theme.none { it == '\n' })
     }
 
@@ -88,18 +97,25 @@ data class Blotwords(
     val over: Boolean get() = solved
     val left: Int get() = cells.count { it != INK }
 
-    /** The word [path] spells, if it is a legal place to write one right now. */
-    fun wordAt(path: List<Int>): BlotWord? {
+    /** Where a word can be written along [path] (its letters in reading order) right now, with the knots it runs through. */
+    fun placementAt(path: List<Int>): Blots.Placement? {
         if (pending != null || path.size < 2) return null
-        val word = words.firstOrNull { w -> w.text.length == path.size && path.indices.all { cells[path[it]] == w.text[it] } } ?: return null
-        return if (Blots.inLine(cells, width, path) && Blots.effectPossible(Blots.inked(cells, path), width, word)) word else null
+        val all = Blots.routes(cells, width, words)
+        all.firstOrNull { it.path == path }?.let { return it }
+        // A word that reads the same both ways is kept once; written from the other end it's the same writing.
+        return all.firstOrNull { it.word.text == it.word.text.reversed() && it.path == path.reversed() }
+            ?.let { it.copy(path = path, route = it.route.reversed()) }
     }
+
+    /** The word [path] spells, if it is a legal place to write one right now. */
+    fun wordAt(path: List<Int>): BlotWord? = placementAt(path)?.word
 
     /** Writes the word along [path]; its effect then waits unless the grid is already full. */
     fun write(path: List<Int>): Blotwords? {
-        val word = wordAt(path) ?: return null
+        val placed = placementAt(path) ?: return null
         val next = Blots.inked(cells, path)
-        return copy(cells = next, pending = if (next.all { it == INK }) null else word, written = written + word, strokes = strokes + listOf(path))
+        return copy(cells = next, pending = if (next.all { it == INK }) null else placed.word, written = written + placed.word,
+            strokes = strokes + listOf(placed.route))
     }
 
     /** ONE: ink one square. PAIR: ink two touching squares. ALIKE: ink every square with the letter at [a]. */
@@ -107,7 +123,8 @@ data class Blotwords(
         val next = when (pending?.effect) {
             BlotEffect.ONE -> if (b == null && cells[a] != INK) Blots.inked(cells, listOf(a)) else null
             BlotEffect.PAIR -> if (b != null && Blots.touching(cells, width, a, b)) Blots.inked(cells, listOf(a, b)) else null
-            BlotEffect.ALIKE -> if (b == null && cells[a] in 'A'..'Z') Blots.alike(cells, cells[a]) else null
+            BlotEffect.ALIKE -> if (b == null && Blots.alikeable(cells[a])) Blots.alike(cells, cells[a]) else null
+            BlotEffect.DIAG -> if (b == null && cells[a] != INK) Blots.diagonal(cells, width, a) else null
             else -> null
         } ?: return null
         return copy(cells = next, pending = null)
@@ -141,7 +158,7 @@ data class Blotwords(
             val written = Blots.inked(c, m.path)
             if (pending == null && cells == c) return m
             if (pending == m.word && cells == written) return m.copy(path = emptyList())
-            c = Blots.applyEffect(written, m.word, m.targets, m.letter)
+            c = Blots.applyEffect(written, width, m.word, m.targets, m.letter)
         }
         return null
     }
@@ -159,6 +176,69 @@ object Blots {
     }
 
     fun alike(cells: String, letter: Char): String = cells.map { if (it == letter) INK else it }.joinToString("")
+
+    /** Squares ALIKE can pick: letters, and knots or wilds (which all go together). */
+    fun alikeable(ch: Char): Boolean = ch in 'A'..'Z' || ch == KNOT || ch == WILD
+
+    /** The squares on [at]'s rising diagonal (running from bottom left to top right). */
+    fun diagonalOf(width: Int, height: Int, at: Int): List<Int> {
+        val sum = at / width + at % width
+        return (0 until height).mapNotNull { r -> (sum - r).takeIf { it in 0 until width }?.let { r * width + it } }
+    }
+
+    fun diagonal(cells: String, width: Int, at: Int): String = inked(cells, diagonalOf(width, cells.length / width, at))
+
+    /** A command word written along [path] (its letters, in reading order), running through the squares of [route]. */
+    data class Placement(val word: BlotWord, val path: List<Int>, val route: List<Int>)
+
+    private fun spells(ch: Char, want: Char) = ch == want || (ch == WILD && want in 'A'..'Z')
+
+    /**
+     * Every place a command word can be written now. A word runs straight across inked squares; knots join its
+     * letters too, and on a knot it may turn a corner. It can't turn on a letter or run through one it doesn't use.
+     */
+    fun routes(cells: String, width: Int, words: List<BlotWord>): List<Placement> {
+        val h = cells.length / width
+        val out = ArrayList<Placement>()
+        val left = cells.count { it != INK }
+        val hasBlank = cells.indexOf(BLANK) >= 0
+        val dirs = listOf(0 to 1, 1 to 0, 0 to -1, -1 to 0)
+        for (w in words) {
+            val t = w.text
+            val seen = HashSet<List<Int>>()
+            fun walk(at: Int, d: Int, idx: Int, path: List<Int>, route: List<Int>) {
+                var r = at / width; var c = at % width
+                while (true) {
+                    r += dirs[d].first; c += dirs[d].second
+                    if (r !in 0 until h || c !in 0 until width) return
+                    val i = r * width + c
+                    val ch = cells[i]
+                    when {
+                        ch == INK -> continue
+                        ch == KNOT -> {
+                            if (i in route) return
+                            val via = route + i
+                            // Carry straight on, or turn a corner here.
+                            walk(i, d, idx, path, via)
+                            walk(i, (d + 1) % 4, idx, path, via); walk(i, (d + 3) % 4, idx, path, via)
+                            return
+                        }
+                        spells(ch, t[idx]) -> {
+                            val p = path + i; val rt = route + i
+                            if (idx + 1 == t.length) {
+                                // A palindrome is the same writing read either way: keep it once.
+                                if (seen.add(p) && seen.add(p.reversed()) && usable(cells, width, w, p, left, hasBlank)) out += Placement(w, p, rt)
+                            } else walk(i, d, idx + 1, p, rt)
+                            return
+                        }
+                        else -> return
+                    }
+                }
+            }
+            for (s in cells.indices) if (spells(cells[s], t[0])) for (d in 0..3) walk(s, d, 1, listOf(s), listOf(s))
+        }
+        return out
+    }
 
     /** Squares still showing, row by row and column by column, so inked squares drop out of the way. */
     fun lines(cells: String, width: Int): List<IntArray> {
@@ -198,39 +278,20 @@ object Blots {
         return when (word.effect) {
             BlotEffect.ONE -> true
             BlotEffect.PAIR -> lines(after, width).any { it.size >= 2 }
-            BlotEffect.ALIKE -> after.any { it in 'A'..'Z' }
+            BlotEffect.ALIKE -> after.any { alikeable(it) }
             BlotEffect.WRITE -> after.any { it == BLANK }
+            BlotEffect.DIAG -> true
         }
     }
 
     /** Every place a command word can be written now, as paths in reading order. */
-    fun placements(cells: String, width: Int, words: List<BlotWord>): List<Pair<BlotWord, List<Int>>> {
-        val out = ArrayList<Pair<BlotWord, List<Int>>>()
-        val left = cells.count { it != INK }
-        val hasBlank = cells.indexOf(BLANK) >= 0
-        for (line in lines(cells, width)) for (w in words) {
-            val t = w.text; val k = t.length
-            if (line.size < k) continue
-            val palindrome = t == t.reversed()
-            for (s in 0..line.size - k) {
-                var fwd = true; var back = !palindrome
-                for (i in 0 until k) {
-                    val ch = cells[line[s + i]]
-                    if (ch != t[i]) fwd = false
-                    if (ch != t[k - 1 - i]) back = false
-                    if (!fwd && !back) break
-                }
-                if (fwd) { val path = (0 until k).map { line[s + it] }; if (usable(cells, width, w, path, left, hasBlank)) out += w to path }
-                if (back) { val path = (0 until k).map { line[s + k - 1 - it] }; if (usable(cells, width, w, path, left, hasBlank)) out += w to path }
-            }
-        }
-        return out
-    }
+    fun placements(cells: String, width: Int, words: List<BlotWord>): List<Pair<BlotWord, List<Int>>> =
+        routes(cells, width, words).map { it.word to it.path }
 
     /** [effectPossible] without rebuilding the grid in the common cases. */
     private fun usable(cells: String, width: Int, w: BlotWord, path: List<Int>, left: Int, hasBlank: Boolean): Boolean = when {
         left == path.size -> true
-        w.effect == BlotEffect.ONE -> true
+        w.effect == BlotEffect.ONE || w.effect == BlotEffect.DIAG -> true
         w.effect == BlotEffect.WRITE -> hasBlank
         w.effect == BlotEffect.PAIR && left - path.size > 4 -> true
         else -> effectPossible(inked(cells, path), width, w)
@@ -242,19 +303,22 @@ object Blots {
         return when (word.effect) {
             BlotEffect.ONE -> cells.indices.filter { cells[it] != INK }.map { listOf(it) to null }
             BlotEffect.PAIR -> lines(cells, width).flatMap { l -> (1 until l.size).map { listOf(l[it - 1], l[it]) to null } }
-            BlotEffect.ALIKE -> cells.filter { it in 'A'..'Z' }.toSet().sorted().map { ch -> listOf(cells.indexOf(ch)) to null }
+            BlotEffect.ALIKE -> cells.filter { alikeable(it) }.toSet().sorted().map { ch -> listOf(cells.indexOf(ch)) to null }
             BlotEffect.WRITE -> cells.indices.filter { cells[it] == BLANK }.flatMap { i -> BlotWord.lettersOf(words).map { listOf(i) to it } }
+            // One choice per diagonal that still has something showing.
+            BlotEffect.DIAG -> cells.indices.filter { cells[it] != INK }.distinctBy { it / width + it % width }.map { listOf(it) to null }
         }
     }
 
-    fun applyEffect(cells: String, word: BlotWord, targets: List<Int>, letter: Char?): String = when {
+    fun applyEffect(cells: String, width: Int, word: BlotWord, targets: List<Int>, letter: Char?): String = when {
         targets.isEmpty() -> cells
         word.effect == BlotEffect.ALIKE -> alike(cells, cells[targets[0]])
+        word.effect == BlotEffect.DIAG -> diagonal(cells, width, targets[0])
         word.effect == BlotEffect.WRITE -> cells.substring(0, targets[0]) + letter!! + cells.substring(targets[0] + 1)
         else -> inked(cells, targets)
     }
 
-    fun play(cells: String, move: BlotMove): String = applyEffect(inked(cells, move.path), move.word, move.targets, move.letter)
+    fun play(cells: String, width: Int, move: BlotMove): String = applyEffect(inked(cells, move.path), width, move.word, move.targets, move.letter)
 }
 
 /** Depth-first search over whole turns, remembering positions already shown to be dead ends. */
@@ -277,7 +341,7 @@ object BlotSolver {
             for ((w, path) in Blots.placements(c, width, words)) {
                 val after = Blots.inked(c, path)
                 for ((targets, letter) in ordered(after, width, w, words)) {
-                    val rest = dfs(Blots.applyEffect(after, w, targets, letter))
+                    val rest = dfs(Blots.applyEffect(after, width, w, targets, letter))
                     if (rest != null) return listOf(BlotMove(w, path, targets, letter)) + rest
                 }
             }
@@ -288,7 +352,7 @@ object BlotSolver {
             if (pending != null) {
                 // The word is already written: only its effect's choices are open.
                 for ((targets, letter) in ordered(cells, width, pending, words)) {
-                    val rest = dfs(Blots.applyEffect(cells, pending, targets, letter))
+                    val rest = dfs(Blots.applyEffect(cells, width, pending, targets, letter))
                     if (rest != null) return Result.Solved(listOf(BlotMove(pending, emptyList(), targets, letter)) + rest)
                 }
                 Result.Dead
@@ -310,7 +374,7 @@ object BlotSolver {
         fun appeal(i: Int) = (if (i in inWords) 2 else 0) + (if (after[i] in commandLetters) 1 else 0)
         return Blots.effects(after, width, w, words).groupBy { (t, letter) ->
             when (w.effect) {
-                BlotEffect.WRITE -> if (Blots.placements(Blots.applyEffect(after, w, t, letter), width, words).size > now.size) 0 else 1
+                BlotEffect.WRITE -> if (Blots.placements(Blots.applyEffect(after, width, w, t, letter), width, words).size > now.size) 0 else 1
                 BlotEffect.ALIKE -> if (t.isNotEmpty() && after[t[0]] in commandLetters) 1 else 0
                 else -> t.sumOf { appeal(it) }
             }
@@ -333,7 +397,7 @@ object BlotSolver {
                 val after = Blots.inked(c, path)
                 // The most appealing kind of effect, picked at random within that kind.
                 val (targets, letter) = rank(after, width, w, words).values.first().random(random)
-                c = Blots.applyEffect(after, w, targets, letter)
+                c = Blots.applyEffect(after, width, w, targets, letter)
             }
         }
         return wins.toDouble() / tries
@@ -381,9 +445,9 @@ object BlotGenerator {
 
     /** One backwards build: the start grid and the moves that finish it. */
     fun build(width: Int, height: Int, words: List<BlotWord>, tier: BlotTier, random: Random,
-        mustUse: Collection<BlotWord> = words, maxPreInked: Int = tier.maxPreInked): Pair<String, List<BlotMove>>? {
+        mustUse: Collection<BlotWord> = words, maxPreInked: Int = tier.maxPreInked, knots: Double = tier.knots, wilds: Double = tier.wilds): Pair<String, List<BlotMove>>? {
         repeat(30) {
-            val d = Draft(width, height, plainFiller(words))
+            val d = Draft(width, height, plainFiller(words), knots, wilds)
             val moves = ArrayList<BlotMove>()
             var guard = 0
             while (guard++ < 60) {
@@ -413,9 +477,9 @@ object BlotGenerator {
         return g.solved
     }
 
-    private class Draft(val width: Int, val height: Int, val plain: List<Char>) {
+    private class Draft(val width: Int, val height: Int, val plain: List<Char>, val knots: Double = 0.0, val wilds: Double = 0.0) {
         val size = width * height
-        val content = CharArray(size) { '?' }
+        val content = CharArray(size) { '\u0000' }
         val inked = BooleanArray(size) { true }
         val fromWord = BooleanArray(size)
 
@@ -424,6 +488,7 @@ object BlotGenerator {
         fun startGrid(): String = String(CharArray(size) { if (inked[it]) INK else content[it] })
 
         private fun filler(tier: BlotTier, words: List<BlotWord>, random: Random): Char {
+            if (random.nextDouble() < knots) return KNOT
             if (random.nextDouble() < tier.blankChance) return BLANK
             return if (random.nextDouble() < tier.decoy) BlotWord.lettersOf(words).random(random) else plain.random(random)
         }
@@ -471,22 +536,34 @@ object BlotGenerator {
                     val t = (0 until size).filter { !inked[it] && fromWord[it] && content[it] in 'A'..'Z' }.randomOrNull(random) ?: return null
                     letter = content[t]; content[t] = BLANK; listOf(t)
                 }
+                BlotEffect.DIAG -> {
+                    // Going forward the whole diagonal is inked, so every square on it must be inked now.
+                    val diagonals = (0 until width + height - 1).map { sum -> (0 until size).filter { it / width + it % width == sum } }
+                        .filter { d -> d.isNotEmpty() && d.all { inked[it] } && inkedCells.size - d.size >= k }
+                    val line = diagonals.randomOrNull(random) ?: return null
+                    val picks = line.shuffled(random).take(1 + random.nextInt(minOf(3, line.size)))
+                    picks.forEach { inked[it] = false; content[it] = filler(tier, words, random) }
+                    listOf(picks.first())
+                }
             }
-            // The word's letters: any cells along one row or column with nothing showing between them.
+            // The word's letters: inked squares along one row or column with nothing showing between them but knots.
             val spans = lineCells().flatMap { line ->
                 val runs = ArrayList<List<Int>>(); var cur = ArrayList<Int>()
-                for (i in line) if (inked[i]) cur.add(i) else { if (cur.size >= k) runs += cur; cur = ArrayList() }
-                if (cur.size >= k) runs += cur
+                for (i in line) if (inked[i] || content[i] == KNOT) cur.add(i) else { if (cur.count { inked[it] } >= k) runs += cur; cur = ArrayList() }
+                if (cur.count { inked[it] } >= k) runs += cur
                 runs
             }
             if (spans.isEmpty()) return restore()
-            val span = spans.random(random)
+            val span = spans.random(random).filter { inked[it] }
             // Mostly close together, sometimes with gaps the player must ink first.
             val startAt = random.nextInt(span.size - k + 1)
             val chosen = if (random.nextDouble() < 0.6 || span.size == k) span.subList(startAt, startAt + k)
                 else span.shuffled(random).take(k).sortedBy { span.indexOf(it) }
             val path = if (random.nextBoolean()) chosen else chosen.reversed()
-            path.forEachIndexed { i, cell -> inked[cell] = false; content[cell] = word.text[i]; fromWord[cell] = true }
+            path.forEachIndexed { i, cell ->
+                inked[cell] = false; fromWord[cell] = true
+                content[cell] = if (random.nextDouble() < wilds) WILD else word.text[i]
+            }
             return BlotMove(word, path, targets, letter)
         }
     }
@@ -494,7 +571,12 @@ object BlotGenerator {
 
 /** The Discover trail: small puzzles that each need the newest word, so solving one shows what it does. */
 object BlotTrail {
-    data class Step(val effects: List<BlotEffect>, val newEffect: BlotEffect, val width: Int, val height: Int)
+    /** A trail step: the words in play and the one it teaches, or a square it teaches (knots or wilds). */
+    data class Step(val effects: List<BlotEffect>, val newEffect: BlotEffect?, val width: Int, val height: Int,
+        val knots: Double = 0.0, val wilds: Double = 0.0) {
+        /** What the step is about: an effect's name, or KNOT / WILD. */
+        val teaches: String get() = newEffect?.name ?: if (knots > 0) "KNOT" else "WILD"
+    }
 
     val steps: List<Step> = listOf(
         Step(listOf(BlotEffect.ONE), BlotEffect.ONE, 4, 1),
@@ -508,7 +590,13 @@ object BlotTrail {
         Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE), BlotEffect.ALIKE, 5, 4),
         Step(listOf(BlotEffect.ONE, BlotEffect.WRITE), BlotEffect.WRITE, 4, 3),
         Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.WRITE), BlotEffect.WRITE, 4, 4),
-        Step(BlotEffect.entries, BlotEffect.WRITE, 5, 5),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.WRITE), BlotEffect.WRITE, 5, 5),
+        Step(listOf(BlotEffect.ONE, BlotEffect.DIAG), BlotEffect.DIAG, 4, 4),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.DIAG), BlotEffect.DIAG, 5, 4),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR), null, 5, 4, knots = 0.35),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE), null, 5, 5, knots = 0.3),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR), null, 5, 4, wilds = 0.35),
+        Step(BlotEffect.entries, null, 6, 5, knots = 0.15, wilds = 0.12),
     )
 
     /** The same puzzle every time for a step: the first build that can't be finished without the new word. */
@@ -516,23 +604,38 @@ object BlotTrail {
         val i = index.coerceIn(steps.indices)
         val s = steps[i]
         val words = lexicon.words(s.effects)
-        val newWord = lexicon.word(s.newEffect)
+        val newWord = s.newEffect?.let { lexicon.word(it) }
         val longest = words.maxOf { it.text.length }
         // A one-row step keeps one row but gains room for the word plus what its effect needs.
-        val width = if (s.height == 1) maxOf(s.width, newWord.text.length + if (s.newEffect == BlotEffect.PAIR) 2 else 1) else maxOf(s.width, longest)
+        val width = if (s.height == 1) maxOf(s.width, newWord!!.text.length + if (s.newEffect == BlotEffect.PAIR) 2 else 1) else maxOf(s.width, longest)
         val height = if (s.height == 1) 1 else maxOf(s.height, minOf(longest, s.height + 1))
         val tier = BlotTier.DISCOVER
         for (attempt in 0 until 400) {
             val random = Random(7_919L * (i + 1) + attempt)
-            val built = BlotGenerator.build(width, height, words, tier, random, mustUse = setOf(newWord), maxPreInked = width * height / 5)
-                ?: continue
+            val built = BlotGenerator.build(width, height, words, tier, random, mustUse = setOfNotNull(newWord), maxPreInked = width * height / 5,
+                knots = s.knots, wilds = s.wilds) ?: continue
             val start = built.first
             if (start.count { it != INK } < 3) continue
-            val without = words - newWord
-            val needsIt = without.isEmpty() || BlotSolver.solve(start, width, without, 50_000) is BlotSolver.Result.Dead
+            val needsIt = needs(s, start, width, words, newWord)
             if (needsIt || attempt > 300) return Blotwords(tier, attempt.toLong(), width, words, start, step = i, plan = built.second, theme = theme)
         }
         error("No trail puzzle for step $i")
+    }
+
+    /**
+     * True when [start] can't be finished without what the step teaches: its new word, or its knots joining
+     * letters (as plain blanks they'd join nothing), or its wild squares standing in for letters.
+     */
+    fun needs(s: Step, start: String, width: Int, words: List<BlotWord>, newWord: BlotWord?): Boolean {
+        if (newWord != null) {
+            val without = words - newWord
+            return without.isEmpty() || BlotSolver.solve(start, width, without, 50_000) is BlotSolver.Result.Dead
+        }
+        val square = if (s.knots > 0) KNOT else WILD
+        if (square !in start) return false
+        // Blanks stand for squares that do nothing for words; WRITE is left out so they can't be filled.
+        val plain = words.filter { it.effect != BlotEffect.WRITE }
+        return BlotSolver.solve(start.replace(square, BLANK), width, plain, 50_000) is BlotSolver.Result.Dead
     }
 }
 

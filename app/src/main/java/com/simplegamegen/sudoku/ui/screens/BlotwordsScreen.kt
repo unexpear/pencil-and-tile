@@ -1,5 +1,8 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.ui.graphics.drawscope.rotate
+import com.simplegamegen.sudoku.wordplay.WILD
+import com.simplegamegen.sudoku.wordplay.KNOT
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.simplegamegen.sudoku.ui.blot.BlotMap
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -129,8 +132,9 @@ fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwo
     rules = "Ink every square. Write a command word by tapping its letters in a straight line, across or down, forwards or " +
         "backwards. Inked squares are skipped, so the letters on either side of them count as neighbours. The word's letters " +
         "are inked, and then the word does something. Each word does something different: find out by trying, or peek in the " +
-        "word list. A word can only be written when what it does can then be used. Discover brings in the words one small " +
-        "puzzle at a time, and every puzzle can be finished.",
+        "word list. A word can only be written when what it does can then be used. Knot squares join letters: a word can run " +
+        "through any number of them and turn a corner on one, and writing never inks a knot. A ? square stands for any letter. " +
+        "Discover brings in the words one small puzzle at a time, and every puzzle can be finished.",
     settingTitle = "Mode", settings = BlotSettings,
     describe = { i ->
         if (i == 0) "Small puzzles, one new word at a time"
@@ -216,6 +220,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     }) { g, s ->
         val tc = theme.colors.colors(look.dark)
         LaunchedEffect(g.cells, g.pending) { path = emptyList(); firstPick = null; fillAt = null; marked = emptyList() }
+        val routes = remember(g.cells, g.pending) { if (g.pending != null) emptyList() else Blots.routes(g.cells, g.width, g.words) }
         LaunchedEffect(g.solved) {
             if (!g.solved) return@LaunchedEffect
             learn(g.written)
@@ -240,19 +245,21 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             if (g.solved || s.busy) return
             val pending = g.pending
             if (pending == null) {
-                if (g.cells[i] == INK) return
+                // Knots only join letters; a word is traced by its letters.
+                if (g.cells[i] == INK || g.cells[i] == KNOT) return
                 marked = emptyList()
                 val grown = if (i in path) path.subList(0, path.indexOf(i)) else path + i
-                // A square off the line starts a new word from there.
-                val next = if (grown.size >= 2 && !Blots.inLine(g.cells, g.width, grown)) listOf(i) else grown
                 // Either end may come first: the word is read whichever way spells it.
-                val reading = if (g.wordAt(next) != null) next else next.reversed()
-                val word = g.wordAt(reading)
+                fun fits(p: List<Int>) = routes.any { r -> r.path.size >= p.size && (r.path.subList(0, p.size) == p || r.path.takeLast(p.size) == p.reversed()) }
+                // A square that can't carry on any word starts a new one from there.
+                val next = if (grown.size >= 2 && !fits(grown)) listOf(i) else grown
+                val placed = routes.firstOrNull { it.path == next } ?: routes.firstOrNull { it.path == next.reversed() }
                 when {
-                    word != null -> {
+                    placed != null -> {
                         path = emptyList()
-                        inkOrder = reading
-                        vm.play(if (word.text in known) "${word.text}: ${say(word.effect.effect)}" else "${word.text} is written. What does it do?") { it.write(reading) }
+                        inkOrder = placed.route
+                        val word = placed.word
+                        vm.play(if (word.text in known) "${word.text}: ${say(word.effect.effect)}" else "${word.text} is written. What does it do?") { it.write(placed.path) }
                     }
                     listOf(next, next.reversed()).any { p -> g.words.any { w -> w.text.length == p.size && p.indices.all { k -> g.cells[p[k]] == w.text[k] } } } -> {
                         path = emptyList()
@@ -272,6 +279,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             when (pending.effect) {
                 BlotEffect.ONE -> apply(g.use(i), listOf(i))
                 BlotEffect.ALIKE -> apply(g.use(i), g.cells.indices.filter { g.cells[it] == g.cells[i] })
+                BlotEffect.DIAG -> apply(g.use(i), Blots.diagonalOf(g.width, g.height, i).filter { g.cells[it] != INK })
                 BlotEffect.PAIR -> {
                     val a = firstPick
                     when {
@@ -322,10 +330,14 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                     BlotEffect.PAIR -> if (firstPick == null) "${w.text}: tap two squares that touch." else "${w.text}: now tap a square touching the first."
                     BlotEffect.ALIKE -> "${w.text}: tap a letter to ink every square showing it."
                     BlotEffect.WRITE -> "${w.text}: tap a blank square, then pick a letter."
+                    BlotEffect.DIAG -> "${w.text}: tap a square to ink its whole rising diagonal."
                 } else "${w.text} is waiting. Tap squares to find out what it does."
             }
             g.stuck -> "No command word can be written now. Undo a few turns, or restart."
             thinking -> "Looking for a way through…"
+            path.isEmpty() && KNOT in g.start && g.step >= 0 && g.written.isEmpty() ->
+                "New: knots! A word can run through any number of them and turn a corner on one. Writing never inks a knot."
+            path.isEmpty() && WILD in g.start && g.step >= 0 && g.written.isEmpty() -> "New: a ? square stands for any letter you need."
             else -> "Tap a word's letters in order, in a straight line."
         }
         val hop = remember { Animatable(0f) }
@@ -402,7 +414,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                             val bridge = if (theme.mark == BlotMark.BLOCK && markPicture == null) halfPx * 1.9f else halfPx * 0.62f
                             Canvas(Modifier.matchParentSize()) {
                                 g.strokes.forEachIndexed { n, word ->
-                                    if (word.any { g.cells[it] != INK }) return@forEachIndexed
+                                    if (word.any { g.cells[it] != INK && g.cells[it] != KNOT }) return@forEachIndexed
                                     drawInkBridge(if (theme.mark == BlotMark.BLOCK) TrailStyle.LINE else theme.motion.trail, word.map(::centre),
                                         if (n == g.strokes.lastIndex) stroke.value else 1f, bridge, tc.mark)
                                 }
@@ -420,7 +432,16 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                             }
                             // The trail while tracing a word.
                             if (path.isNotEmpty()) Canvas(Modifier.matchParentSize()) {
-                                drawTrail(theme.motion.trail, path.map(::centre), side.toPx() * 0.13f, tc.accent)
+                                // The route of a word this could become, up to the last letter picked.
+                                val along = routes.firstNotNullOfOrNull { r ->
+                                    when {
+                                        r.path.size >= path.size && r.path.subList(0, path.size) == path -> r.route.subList(0, r.route.indexOf(path.last()) + 1)
+                                        r.path.size >= path.size && r.path.takeLast(path.size) == path.reversed() ->
+                                            r.route.subList(r.route.indexOf(path.last()), r.route.size).reversed()
+                                        else -> null
+                                    }
+                                } ?: path
+                                drawTrail(theme.motion.trail, along.map(::centre), side.toPx() * 0.13f, tc.accent)
                             }
                             // The pen passing through the word just written, fading as its ink settles.
                             if (stroke.value < 1f && g.strokes.isNotEmpty()) Canvas(Modifier.matchParentSize()) {
@@ -503,7 +524,15 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
                 if (tilePicture != null) Image(tilePicture, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                     alpha = if (picked || hinted) 0.55f else 1f)
                 Box(Modifier.fillMaxSize().border(if (picked) 2.5.dp else 1.dp, if (picked) tc.accent else tc.mark.copy(alpha = 0.22f), shape))
-                val shown = if (inked) g.start[i].takeIf { it in 'A'..'Z' } else ch.takeIf { it in 'A'..'Z' }
+                val shown = (if (inked) g.start[i] else ch).takeIf { it in 'A'..'Z' || it == WILD }
+                // A knot: two loops of ink tied in the middle.
+                if (ch == KNOT) Canvas(Modifier.fillMaxSize(0.62f)) {
+                    val w = size.width
+                    drawCircle(tc.mark, w * 0.12f, center)
+                    for (a in listOf(45f, 135f)) rotate(a, center) {
+                        drawOval(tc.mark, Offset(w * 0.08f, w * 0.34f), Size(w * 0.84f, w * 0.32f), style = Stroke(w * 0.09f))
+                    }
+                }
                 if (shown != null) {
                     // Ink themes set each letter by hand: a serif face, a touch crooked, pressed into the paper.
                     val press = theme.mark == BlotMark.BLOT || theme.mark == BlotMark.BLOCK

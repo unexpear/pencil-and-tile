@@ -133,10 +133,9 @@ class BlotwordsTest {
             val s = BlotTrail.steps[i]
             assertEquals(i, g.step)
             assertTrue(BlotSolver.solve(g.start, g.width, g.words) is BlotSolver.Result.Solved, "step $i solvable")
-            val without = g.words - lex.word(s.newEffect)
-            if (without.isNotEmpty()) assertTrue(BlotSolver.solve(g.start, g.width, without) is BlotSolver.Result.Dead, "${lex.one} step $i needs ${s.newEffect}")
+            assertTrue(BlotTrail.needs(s, g.start, g.width, g.words, s.newEffect?.let { lex.word(it) }), "${lex.one} step $i needs ${s.teaches}")
             assertEquals(g.start, BlotTrail.puzzle(i, "sea").start, "step $i is the same every time, in any theme")
-            println("${lex.one} step $i (${s.newEffect}) ${(System.nanoTime() - t0) / 1_000_000} ms\n" + g.start.chunked(g.width).joinToString("\n"))
+            println("${lex.one} step $i (${s.teaches}) ${(System.nanoTime() - t0) / 1_000_000} ms\n" + g.start.chunked(g.width).joinToString("\n"))
         }
     }
 
@@ -145,5 +144,48 @@ class BlotwordsTest {
             .let { it.write(Blots.placements(it.cells, it.width, it.words).first().second)!! }.hinted()
         assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
         assertNull(BlotCodec.decode("nonsense"))
+    }
+
+    @Test fun `DIAG inks a square and its whole rising diagonal`() {
+        // G O B A on the top row; the rest are X, so a square's rising diagonal is easy to see.
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.DIAG))
+        val g = Blotwords(BlotTier.EASY, 0, 4, words, "GOBA" + "XXXX" + "XXXX" + "XXXX").write(listOf(0, 1, 2, 3))!!
+        assertEquals(BlotEffect.DIAG, g.pending!!.effect)
+        // Row 2, column 1 (index 9) sits on the diagonal with sum 3: (0,3) (1,2) (2,1) (3,0).
+        val next = g.use(9)!!
+        assertEquals(listOf(3, 6, 9, 12), Blots.diagonalOf(4, 4, 9))
+        for (i in listOf(6, 9, 12)) assertEquals(INK, next.cells[i])
+        assertEquals('X', next.cells[5])
+    }
+
+    @Test fun `knots join letters, let a word turn a corner and are never inked by writing`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
+        // V + U on the top row: the knot joins V and U; M sits below the knot in the second row... no, below U.
+        val straight = Blotwords(BlotTier.EASY, 0, 4, words, "V+UM" + "XXXX")
+        assertNotNull(straight.wordAt(listOf(0, 2, 3)))
+        val after = straight.write(listOf(0, 2, 3))!!
+        assertEquals(KNOT, after.cells[1], "the knot stays")
+        assertEquals(listOf(0, 1, 2, 3), after.strokes.single(), "the stroke runs through the knot")
+        // A corner: V then a knot, turning down to U and M.
+        val corner = Blotwords(BlotTier.EASY, 0, 3, words, "V+X" + "XUX" + "XMX")
+        assertNotNull(corner.wordAt(listOf(0, 4, 7)))
+        // No corner on a letter.
+        val bent = Blotwords(BlotTier.EASY, 0, 3, words, "VUX" + "XMX" + "XXX")
+        assertNull(bent.wordAt(listOf(0, 1, 4)))
+    }
+
+    @Test fun `a wild square stands for any letter`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
+        val g = Blotwords(BlotTier.EASY, 0, 4, words, "V?MX" + "XXXX")
+        assertNotNull(g.wordAt(listOf(0, 1, 2)))
+        assertNull(Blotwords(BlotTier.EASY, 0, 4, words, "V.MX" + "XXXX").wordAt(listOf(0, 1, 2)))
+    }
+
+    @Test fun `strokes survive the codec, and old saves without them still load`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
+        val g = Blotwords(BlotTier.EASY, 0, 4, words, "V+UM" + "XXXX").write(listOf(0, 2, 3))!!
+        assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
+        val old = BlotCodec.encode(g).split('\n').dropLast(1).joinToString("\n")
+        assertEquals(emptyList<List<Int>>(), BlotCodec.decode(old)!!.strokes)
     }
 }

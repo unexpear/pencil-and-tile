@@ -47,14 +47,16 @@ import kotlin.math.sin
 // The Discover puzzles sit on one patch of land as numbered blocks. Solving a puzzle inks its block and the land
 // around it, a creature moves in, and every few puzzles the settlement gains something new.
 
-/** The land, row by row: a digit or letter is a puzzle (1-9, then a-c for 10-12), '#' is land, '.' is sea. */
+/** The land, row by row: a digit or letter is a puzzle (1-9, then a-i for 10-18), '#' is land, '.' is sea. */
 private val LAND = listOf(
-    ".1##2#.",
-    "##3##4#",
-    "#5###6.",
-    ".##7##8",
-    "9###a#.",
-    ".#b##c#",
+    ".1##2##.",
+    "##3##4##",
+    "#5###6#.",
+    ".##7##8#",
+    "9##a###.",
+    "#b##c#d#",
+    ".##e##f#",
+    "#g##h#i.",
 )
 
 private data class MapTile(val col: Int, val row: Int, val puzzle: Int, val owner: Int)
@@ -62,7 +64,7 @@ private data class MapTile(val col: Int, val row: Int, val puzzle: Int, val owne
 /** Every land tile, with the puzzle it is (or -1) and the puzzle whose land it belongs to (the nearest one). */
 private val TILES: List<MapTile> by lazy {
     val puzzles = LAND.flatMapIndexed { r, line -> line.mapIndexedNotNull { c, ch ->
-        val n = when (ch) { in '1'..'9' -> ch - '1'; in 'a'..'c' -> 9 + (ch - 'a'); else -> -1 }
+        val n = when (ch) { in '1'..'9' -> ch - '1'; in 'a'..'i' -> 9 + (ch - 'a'); else -> -1 }
         if (n >= 0) Triple(c, r, n) else null
     } }
     LAND.flatMapIndexed { r, line -> line.mapIndexedNotNull { c, ch ->
@@ -138,7 +140,7 @@ fun BlotMap(theme: BlotTheme, tc: BlotColors, solved: Int, total: Int, fresh: In
             // The settlement grows every three puzzles, then its creatures.
             val land = TILES.filter { it.owner < solved && (it.owner != fresh || arrive.value >= 1f) }
             if (land.isNotEmpty()) {
-                val props = listOf(3, 6, 9, 12).filter { solved >= it }
+                val props = listOf(3, 6, 9, 12, 15, 18).filter { solved >= it }
                 props.forEachIndexed { k, _ ->
                     val spot = land.filter { it.puzzle < 0 }.let { plain -> plain.getOrNull((k * 5 + 2) % plain.size.coerceAtLeast(1)) } ?: return@forEachIndexed
                     val face = rectOf(spot).let { Rect(it.left, it.top, it.right - depth, it.bottom - depth) }
@@ -272,6 +274,17 @@ private fun DrawScope.drawLandmark(k: Int, theme: BlotTheme, face: Rect, tc: Blo
         } else { // a round little tree
             drawLine(paper, Offset(c.x, c.y + s * 0.26f), Offset(c.x, c.y), s * 0.06f)
             drawCircle(paper, s * 0.2f, Offset(c.x, c.y - s * 0.08f), style = Stroke(s * 0.05f))
+        }
+        4 -> if (sea) { // a starfish
+            for (a in 0 until 5) {
+                val ang = a * 72.0 * PI / 180 - PI / 2
+                drawLine(Color(0xFFFF8A65), c, Offset(c.x + (kotlin.math.cos(ang) * s * 0.26f).toFloat(), c.y + (kotlin.math.sin(ang) * s * 0.26f).toFloat()), s * 0.09f, cap = StrokeCap.Round)
+            }
+        } else { // a little well
+            drawRoundRect(paper, Offset(c.x - s * 0.2f, c.y - s * 0.02f), Size(s * 0.4f, s * 0.24f), CornerRadius(s * 0.05f), style = Stroke(s * 0.05f))
+            drawLine(paper, Offset(c.x - s * 0.2f, c.y - s * 0.02f), Offset(c.x - s * 0.2f, c.y - s * 0.28f), s * 0.04f)
+            drawLine(paper, Offset(c.x + s * 0.2f, c.y - s * 0.02f), Offset(c.x + s * 0.2f, c.y - s * 0.28f), s * 0.04f)
+            drawLine(paper, Offset(c.x - s * 0.26f, c.y - s * 0.28f), Offset(c.x + s * 0.26f, c.y - s * 0.28f), s * 0.05f, cap = StrokeCap.Round)
         }
         else -> { // a flag, or a sandcastle's flag, fluttering on top
             if (sea) drawRect(paper, Offset(c.x - s * 0.22f, c.y), Size(s * 0.44f, s * 0.22f), style = Stroke(s * 0.04f))
