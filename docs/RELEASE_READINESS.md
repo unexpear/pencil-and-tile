@@ -2,9 +2,11 @@
 
 Verdict: signed local release candidate with Android 8/15/16 smoke checks;
 version 1.1.0 (code 2) is built for closed testing. Public Google Play launch
-is blocked by the account's production-access testing requirement. An Alpha draft
-is open; its bundle upload is awaiting manual file selection after Edge rejected
-automated selection with a protocol "Not allowed" error. It is not published.
+is blocked by the account's production-access testing requirement. The signed
+code-2 bundle was uploaded through the native Windows file picker, release notes
+were entered in all five languages, and the Alpha update was submitted. Console
+now lists it under "Changes in review"; quick checks are still running and must
+pass before Google review proceeds. The update is not yet approved or published.
 
 ## Verified locally
 
@@ -52,9 +54,13 @@ automated selection with a protocol "Not allowed" error. It is not published.
 1. Production access is locked. The authenticated Console dashboard reports one
    opted-in tester; it requires at least 12 testers opted in continuously for
    14 days before applying for production access.
-2. Complete the code-2 Alpha draft upload and review its release checks. The
-   existing code-1 / 1.0.0 Alpha release is available to testers. Code 2 was
-   selected after confirming code 1 is already used. No code-2 rollout occurred.
+2. Await Google quick checks and review for the submitted code-2 Alpha update.
+   Console accepted the bundle with no blocking validation errors and two
+   warnings: no deobfuscation mapping and no native debug symbols. Release
+   shrinking/obfuscation is disabled; native crash symbolication remains limited.
+   The submitted change targets 100% of the existing closed Alpha track only.
+   Managed publishing is off, so approval can release it to those testers. The
+   prior code-1 / 1.0.0 Alpha release remains the last confirmed available build.
 3. Test the signed, Play-delivered build and review its pre-launch report.
    Physical arm64 hardware, screen-reader use, system backup/restore and a
    complete all-game regression remain unverified. The emulator smoke checks
