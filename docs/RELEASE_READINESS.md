@@ -1,8 +1,10 @@
 # Release readiness — 26 September 2026
 
 Verdict: signed local release candidate with Android 8/15/16 smoke checks;
-public Google Play launch is still blocked on account access and release setup.
-This is a verification report, not an upload or publication approval.
+version 1.1.0 (code 2) is built for closed testing. Public Google Play launch
+is blocked by the account's production-access testing requirement. An Alpha draft
+is open; its bundle upload is awaiting manual file selection after Edge rejected
+automated selection with a protocol "Not allowed" error. It is not published.
 
 ## Verified locally
 
@@ -13,7 +15,7 @@ This is a verification report, not an upload or publication approval.
   app tests, zero failures/errors/skips. Lint: zero errors, 15 warnings and two
   hints per variant. Warnings are dependency update notices and two KTX suggestions.
 - Application ID `com.simplegamegen.puzzles`, minimum API 26, target API 36,
-  version 1.0.0, version code 1. Target meets the current Play submission rule.
+  version 1.1.0, version code 2. Target meets the current Play submission rule.
 - Release merged manifest has no internet or dangerous permissions and no
   debuggable flag. Its only requested permission is an app-owned signature permission.
 - AAB signature integrity verified. APK signature verifies using v2 signing.
@@ -29,7 +31,7 @@ This is a verification report, not an upload or publication approval.
   and five release-note files pass their applicable character limits.
 - The preceding Android 16 debug-device checks cover Wordsworn combat, rewards,
   shops, old/new save restoration and larger text; see VERIFICATION.md.
-- Signed release APK installed on separate Android 8 (API 26), Android 16
+- The preceding code-1 signed release APK installed on separate Android 8 (API 26), Android 16
   (API 36), and Android 15 16 KB (API 35) emulators. Android 8 generated a
   playable Sudoku. Android 16 restored a manually entered 6 in row 1/column 1
   after backgrounding, force-stop and relaunch through Continue.
@@ -47,37 +49,35 @@ This is a verification report, not an upload or publication approval.
 
 ## Outstanding before release
 
-1. Confirm the content-rating questionnaire reflects fantasy combat and the
-   optional blood setting. Play requires updated answers when content changes
-   affect the rating. Other Play declarations and review status were not inspected.
-2. Test the signed, Play-delivered build and review the pre-launch report.
-   Local signed smoke checks now cover API 26/35/36, one tablet-size layout and
-   x86_64 16 KB native loading. Physical arm64 hardware, screen-reader use,
-   system backup/restore, all-game regression and Play-installed delivery remain
-   unverified. The smoke checks do not cover this entire release gate.
-3. If version code 1 has already been uploaded, select a higher code before the
-   next upload. Current Play version codes and production/testing eligibility
-   were not available to this audit.
-4. For automated publishing: signing secrets are configured, but
-   `PLAY_SERVICE_ACCOUNT_JSON` is still missing. Its local file path has been
-   requested; no unrelated credential locations were searched.
-5. The prepared changes are being committed with this report. No version tag or
-   release push was made. The last inspected successful remote CI run was for
-   commit `8ab9e09`, not the current changes.
-6. Confirm the final content/branding rights review. Gameplay test results do
-   not establish legal clearance for the reference-inspired game.
+1. Production access is locked. The authenticated Console dashboard reports one
+   opted-in tester; it requires at least 12 testers opted in continuously for
+   14 days before applying for production access.
+2. Complete the code-2 Alpha draft upload and review its release checks. The
+   existing code-1 / 1.0.0 Alpha release is available to testers. Code 2 was
+   selected after confirming code 1 is already used. No code-2 rollout occurred.
+3. Test the signed, Play-delivered build and review its pre-launch report.
+   Physical arm64 hardware, screen-reader use, system backup/restore and a
+   complete all-game regression remain unverified. The emulator smoke checks
+   above preceded the version-only bump; code 2 passed the build/test/lint gates.
+4. Console's App content page reports no outstanding tasks. IARC is completed,
+   with ESRB Teen and PEGI 12 among its regional ratings. Exact questionnaire
+   answers and rating descriptors were not verified; confirm that they reflect
+   fantasy combat and optional blood/ink effects before submission.
+5. Automated publishing still needs PLAY_SERVICE_ACCOUNT_JSON. Four signing
+   secrets are configured. The browser upload does not require that credential.
+6. Gameplay test results do not establish legal clearance for the
+   reference-inspired game. Final content/branding rights review is outstanding.
 
-Console access: the supplied developer-account URL redirects to Google sign-in
-in the Codex browser. Playwright attachment was attempted for Chrome and the
-open Edge browser; both lack the Playwright extension and no running debugging
-connection was found. The user's browser was not restarted or its profile copied.
-Console ratings, uploaded version codes and release eligibility remain unknown.
+Console was inspected through the owner's authenticated Edge session on
+26 September 2026. No browser profile was copied. The extension connection
+credential is not stored in repository files. Code changes are on `more-games`;
+no release tag or push was made. The prior implementation is commit `7024813`.
 
 ## Artifact
 
 `app/build/outputs/bundle/release/app-release.aab`
 
-SHA-256: `455B714342BD0F14B57B9734C74FA9347BF93C3995D54CF15ED31A37B0A203D1`
+SHA-256: `50E2755959ED7426E17BD987A7F3613844C470312E7727161AFF58F1EBB764B9`
 
 ## References checked
 

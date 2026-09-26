@@ -13,7 +13,7 @@ preparation guide, not confirmation that Google has approved the app.
 - App name **Pencil & Tile**; application ID **`com.simplegamegen.puzzles`** (chosen by the owner on
   2026-09-25; it can never change after the first upload). The code namespace stays
   `com.simplegamegen.sudoku`, which Play never sees.
-- Version code 1, version name 1.0.0. Increase the version code for every upload.
+- Version code 2, version name 1.1.0. Increase the version code for every upload.
 - No permissions that reach outside the device: the merged release manifest requests no INTERNET or
   other dangerous permission.
 - Native libraries (ONNX Runtime for Word Meaning): the 64-bit libraries are 16 KB page aligned, as Play
@@ -94,7 +94,7 @@ accounts, advertising or external content services.
 - **Data safety form:** "Does your app collect or share any of the required user data types?" → **No**.
   The app has no internet permission, SDKs, accounts, ads or analytics; typed Word Meaning answers are judged
   on the device. Android backup is handled by the platform, not collected by the developer.
-- **Content rating (IARC questionnaire):** reassess before the next update. Wordsworn includes fantasy
+- **Content rating (IARC questionnaire):** Console showed completed ESRB Teen / PEGI 12 ratings on September 26, 2026. Exact questionnaire answers were not verified; reassess when content changes affect those answers. Wordsworn includes fantasy
   combat and a blood/ink splatter setting, so the earlier blanket "no violence" answer is no longer
   accurate. Describe the actual available content, including optional settings; do not assume an
   Everyone / PEGI 3 / USK 0 result. Google requires a new questionnaire when content changes affect
