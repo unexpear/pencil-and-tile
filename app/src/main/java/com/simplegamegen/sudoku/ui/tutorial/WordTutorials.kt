@@ -548,7 +548,7 @@ internal object WordTutorials {
                 "Writing a word inks its letters. Then the word does something, straight away.",
                 "Each command word does something different. Try it and see, or tap Show what it does in the word list.",
                 "A word can only be written when what it does can then be used.",
-                "Discover brings in the words and special squares one small puzzle at a time. Easy uses VUM; Medium adds DRIF; Hard adds ZUV and GOBA; Expert adds KEL. Daily is a new puzzle every day.",
+                "Discover brings in the words and special squares one small puzzle at a time. Easy uses VUM; Medium adds DRIF; Hard adds ZUV and GOBA; Expert adds KEL and KOPA. Medium and up can have loose pieces. Daily is a new puzzle every day.",
                 "Knots join letters, and a word can turn a corner on one. A ? square is any letter, a sealed square needs inking twice, inking one echo inks them all, gaps count as ink, and some boards' edges join.",
                 "Some words push an arrow square one space, shoving the squares ahead of it into a gap. Loose pieces go into the gaps before play, and then stay put.",
                 "Hint shows the next word to write, or where to use it. Undo steps back and Restart goes back to the start.",

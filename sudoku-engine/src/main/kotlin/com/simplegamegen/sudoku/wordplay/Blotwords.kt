@@ -66,12 +66,16 @@ data class BlotLexicon(val one: String, val pair: String, val alike: String, val
 enum class BlotTier(val label: String, val width: Int, val height: Int, val effects: List<BlotEffect>, val blankChance: Double,
     val maxPreInked: Int, val decoy: Double, val knots: Double = 0.0, val wilds: Double = 0.0, val seals: Double = 0.0, val echoes: Double = 0.0,
     /** Boards with an uneven outline and holes, rather than full rectangles. */
-    val shaped: Boolean = false) {
+    val shaped: Boolean = false,
+    /** How often a grid is built around pushing an arrow (when the level has PUSH), and how often it has loose pieces. */
+    val arrows: Double = 0.0, val pieces: Double = 0.0, val maxPieces: Int = 1) {
     DISCOVER("Discover", 4, 4, BlotEffect.entries, 0.0, 0, 0.0),
     EASY("Easy", 5, 5, listOf(BlotEffect.ONE), 0.0, 5, 0.35),
-    MEDIUM("Medium", 5, 5, listOf(BlotEffect.ONE, BlotEffect.PAIR), 0.06, 5, 0.5, shaped = true),
-    HARD("Hard", 6, 6, listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.DIAG), 0.08, 6, 0.6, knots = 0.14, seals = 0.3, echoes = 0.12, shaped = true),
-    EXPERT("Expert", 6, 6, BlotEffect.entries - BlotEffect.MEND - BlotEffect.PUSH, 0.1, 6, 0.7, knots = 0.16, wilds = 0.06, seals = 0.35, echoes = 0.15, shaped = true),
+    MEDIUM("Medium", 5, 5, listOf(BlotEffect.ONE, BlotEffect.PAIR), 0.06, 5, 0.5, shaped = true, pieces = 0.15),
+    HARD("Hard", 6, 6, listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.DIAG), 0.08, 6, 0.6, knots = 0.14, seals = 0.3, echoes = 0.12, shaped = true,
+        pieces = 0.25),
+    EXPERT("Expert", 6, 6, BlotEffect.entries - BlotEffect.MEND, 0.1, 6, 0.7, knots = 0.16, wilds = 0.06, seals = 0.35, echoes = 0.15, shaped = true,
+        arrows = 0.4, pieces = 0.3, maxPieces = 2),
 }
 
 /**
@@ -633,10 +637,17 @@ object BlotGenerator {
             // Now and then an expert board's edges join; those stay whole, as holes would read oddly across a join.
             val wrap = tier == BlotTier.EXPERT && random.nextDouble() < 0.2
             val holes = if (tier.shaped && !wrap) Blots.shape(tier.width, tier.height, random) else emptySet()
-            val built = build(tier.width, tier.height, words, tier, random, holes = holes, wrap = wrap) ?: return@repeat
+            // Arrows need gaps to push into, so only boards with holes get one. Without an arrow, PUSH is a word that
+            // can't be written here; with one, the grid is built around pushing it.
+            val arrows = holes.isNotEmpty() && random.nextDouble() < tier.arrows
+            val usable = if (arrows) words else words.filter { it.effect != BlotEffect.PUSH }
+            val built = build(tier.width, tier.height, words, tier, random, mustUse = usable, holes = holes, wrap = wrap, allow = usable) ?: return@repeat
             val luck = BlotSolver.luck(built.first, tier.width, words, 120, random, wrap)
             val (lo, hi) = band(tier)
-            val game = Blotwords(tier, seed, tier.width, words, built.first, plan = built.second, theme = theme, wrap = wrap)
+            // Loose pieces are cut out once the grid is chosen: they don't change the words, only where the squares go.
+            val cut = if (!wrap && random.nextDouble() < tier.pieces) BlotPieces.cut(built.first, tier.width, 1 + random.nextInt(tier.maxPieces), random) else null
+            val game = Blotwords(tier, seed, tier.width, words, cut?.first ?: built.first, plan = built.second, theme = theme, wrap = wrap,
+                pieces = cut?.second ?: emptyList())
             if (luck in lo..hi) return game
             val miss = if (luck < lo) lo - luck else luck - hi
             if (best == null || miss < best!!.second) best = game to miss
@@ -656,13 +667,15 @@ object BlotGenerator {
     /** One backwards build: the start grid and the moves that finish it. */
     fun build(width: Int, height: Int, words: List<BlotWord>, tier: BlotTier, random: Random,
         mustUse: Collection<BlotWord> = words, maxPreInked: Int = tier.maxPreInked, knots: Double = tier.knots, wilds: Double = tier.wilds,
-        seals: Double = tier.seals, holes: Set<Int> = emptySet(), wrap: Boolean = false, echoes: Double = tier.echoes): Pair<String, List<BlotMove>>? {
+        seals: Double = tier.seals, holes: Set<Int> = emptySet(), wrap: Boolean = false, echoes: Double = tier.echoes,
+        /** The words the build may use; the others are in play but never needed. */
+        allow: Collection<BlotWord> = words): Pair<String, List<BlotMove>>? {
         repeat(30) {
             val d = Draft(width, height, plainFiller(words), knots, wilds, seals, holes, wrap, echoes)
             val moves = ArrayList<BlotMove>()
             var guard = 0
             while (guard++ < 60) {
-                val order = words.shuffled(random).sortedByDescending { w -> if (w in mustUse && moves.none { it.word == w }) 1 else 0 }
+                val order = allow.shuffled(random).sortedByDescending { w -> if (w in mustUse && moves.none { it.word == w }) 1 else 0 }
                 val move = order.firstNotNullOfOrNull { w -> d.unwind(w, tier, words, random) } ?: break
                 moves += move
                 if (d.inkedCount() <= maxPreInked && mustUse.all { w -> moves.any { it.word == w } } && (d.inkedCount() == 0 || random.nextDouble() < 0.35)) break

@@ -78,11 +78,13 @@ class BlotwordsTest {
             repeat(3) { s ->
                 val t0 = System.nanoTime()
                 val words = lex.words(tier.effects)
-                val built = BlotGenerator.build(tier.width, tier.height, words, tier, Random(s * 31L + tier.ordinal))
+                // Whole rectangles have no gaps to push an arrow into, so PUSH isn't needed on them.
+                val usable = words.filter { it.effect != BlotEffect.PUSH }
+                val built = BlotGenerator.build(tier.width, tier.height, words, tier, Random(s * 31L + tier.ordinal), mustUse = usable, allow = usable)
                 assertNotNull(built, "$lex $tier $s")
                 val (start, moves) = built!!
                 assertTrue(BlotGenerator.replays(start, tier.width, words, moves), "$tier replay")
-                assertTrue(words.all { w -> moves.any { it.word == w } }, "$tier uses every word")
+                assertTrue(usable.all { w -> moves.any { it.word == w } }, "$tier uses every word")
                 assertTrue(start.count { it == INK } <= tier.maxPreInked)
                 println("${lex.one} $tier seed $s: ${start.count { it != INK }} squares, ${moves.size} turns, ${(System.nanoTime() - t0) / 1_000_000} ms")
             }
