@@ -1594,3 +1594,147 @@ Zoom out	缩小	縮小	Alejar	Verkleinern
 ◀ Left	◀ 左	◀ 左	◀ Izquierda	◀ Links
 ⟳ Rotate	⟳ 旋转	⟳ 回転	⟳ Girar	⟳ Drehen
 ⤓ Drop	⤓ 落下	⤓ 落とす	⤓ Soltar	⤓ Fallen lassen
+Blotwords	墨字格	インクワード	Palabras de tinta	Tintenwörter
+Ink the grid with words	用词语把格子涂黑	言葉でマスを塗りつぶす	Entinta la cuadrícula con palabras	Färbe das Gitter mit Wörtern
+Discover	探索	発見	Descubrir	Entdecken
+Mode	模式	モード	Modo	Modus
+Small puzzles, one new word at a time	小谜题，每次认识一个新词	小さなパズルで、新しい言葉をひとつずつ	Puzzles pequeños, una palabra nueva cada vez	Kleine Rätsel, jedes Mal ein neues Wort
+Discover · puzzle {0} of {1}	探索 · 第 {0}/{1} 题	発見 · {1}問中{0}問目	Descubrir · puzzle {0} de {1}	Entdecken · Rätsel {0} von {1}
+{0} · {1} squares left	{0} · 还剩 {1} 格	{0} · 残り{1}マス	{0} · quedan {1} casillas	{0} · noch {1} Felder
+{0} squares left	还剩 {0} 格	残り{0}マス	Quedan {0} casillas	Noch {0} Felder
+Ink every square. Write a command word by tapping its letters in a straight line, across or down, forwards or backwards. Inked squares are skipped, so the letters on either side of them count as neighbours. The word's letters are inked, and then the word does something. Each word does something different: find out by trying, or peek in the word list. A word can only be written when what it does can then be used. Discover brings in the words one small puzzle at a time, and every puzzle can be finished.	把每个格子都涂黑。点一个命令词的字母来写下它：字母要在一条直线上，横着或竖着，正读或倒读都可以。涂黑的格子会被跳过，所以它两边的字母算作相邻。写下的词的字母会被涂黑，然后这个词会产生作用。每个词的作用都不一样：自己试试看，或者在词表里偷看一下。只有当词的作用能用上时，才能写这个词。“探索”用一个个小谜题逐一引入新词，而且每道题都能完成。	すべてのマスを塗りつぶしましょう。命令語は、その文字をまっすぐ一列にタップして書きます。横でも縦でも、前からでも後ろからでもかまいません。塗りつぶしたマスは飛ばされるので、その両側の文字はとなり合っているとみなされます。書いた言葉の文字は塗りつぶされ、そのあと言葉の効果が起こります。効果は言葉ごとにちがいます。試して見つけるか、言葉リストでのぞいてみましょう。効果を使える場面でなければ、その言葉は書けません。「発見」では小さなパズルで言葉をひとつずつ覚えられ、どのパズルも必ず解けます。	Entinta todas las casillas. Escribe una palabra de orden tocando sus letras en línea recta, en horizontal o en vertical, hacia delante o hacia atrás. Las casillas entintadas se saltan, así que las letras a cada lado cuentan como vecinas. Las letras de la palabra se entintan y luego la palabra hace algo. Cada palabra hace algo distinto: descúbrelo probando o echa un vistazo en la lista de palabras. Solo puedes escribir una palabra si luego se puede usar lo que hace. Descubrir presenta las palabras de una en una con puzzles pequeños, y todos los puzzles se pueden terminar.	Färbe jedes Feld ein. Schreibe ein Befehlswort, indem du seine Buchstaben in einer geraden Linie antippst: waagerecht oder senkrecht, vorwärts oder rückwärts. Eingefärbte Felder werden übersprungen, die Buchstaben zu beiden Seiten gelten also als Nachbarn. Die Buchstaben des Wortes werden eingefärbt, dann bewirkt das Wort etwas. Jedes Wort bewirkt etwas anderes: Probiere es aus oder schau in der Wortliste nach. Ein Wort lässt sich nur schreiben, wenn seine Wirkung danach auch nutzbar ist. Entdecken führt die Wörter mit kleinen Rätseln nacheinander ein, und jedes Rätsel ist lösbar.
+Back to the start.	回到开头。	最初に戻りました。	De vuelta al principio.	Zurück zum Anfang.
+There's no way to finish from here. Undo a few turns, or restart.	从这里无法完成。撤销几步，或者重来。	ここからは解けません。何手か元に戻すか、やり直してください。	Desde aquí no se puede terminar. Deshaz unos turnos o reinicia.	Von hier aus geht es nicht mehr. Nimm ein paar Züge zurück oder beginne neu.
+Write {0} on the marked squares.	在标出的格子上写 {0}。	印のついたマスで{0}を書きましょう。	Escribe {0} en las casillas marcadas.	Schreibe {0} auf die markierten Felder.
+Write {0} in the marked blank.	在标出的空格里写 {0}。	印のついた空白に{0}を書きましょう。	Escribe {0} en la casilla vacía marcada.	Schreibe {0} in das markierte leere Feld.
+Use {0} on the marked squares.	对标出的格子使用 {0}。	印のついたマスに{0}を使いましょう。	Usa {0} en las casillas marcadas.	Wende {0} auf die markierten Felder an.
+{0} is written. What does it do?	{0} 写好了。它有什么作用？	{0}を書きました。何が起こるでしょう？	{0} está escrita. ¿Qué hará?	{0} ist geschrieben. Was bewirkt es?
+That word has nothing to work on right now.	这个词现在没有可以作用的地方。	その言葉は今は使えるところがありません。	Esa palabra ahora no tiene sobre qué actuar.	Dieses Wort hat gerade nichts, worauf es wirken kann.
+{0} doesn't work on that.	{0} 对那里不起作用。	{0}はそこには使えません。	{0} no funciona ahí.	{0} wirkt dort nicht.
+Trail complete! Every word is yours.	探索完成！所有的词你都认识了。	発見の旅は完了！すべての言葉があなたのものです。	¡Recorrido completo! Ya conoces todas las palabras.	Pfad geschafft! Jetzt kennst du alle Wörter.
+All inked!	全部涂黑了！	すべて塗りつぶしました！	¡Todo entintado!	Alles eingefärbt!
+{0}: not found out yet	{0}：还没发现	{0}：まだわかっていません	{0}: aún sin descubrir	{0}: noch nicht herausgefunden
+Show what it does	显示作用	効果を見る	Mostrar qué hace	Zeigen, was es tut
+{0} is waiting. Tap squares to find out what it does.	{0} 正在等待。点格子来发现它的作用。	{0}が待っています。マスをタップして効果を見つけましょう。	{0} está esperando. Toca casillas para descubrir qué hace.	{0} wartet. Tippe auf Felder, um herauszufinden, was es tut.
+inked	已涂黑	塗りつぶし済み	entintada	eingefärbt
+picked	已选	選択中	elegida	gewählt
+hinted	提示	ヒント	con pista	Tipp
+Pick the letter to write:	选择要写的字母：	書く文字を選んでください：	Elige la letra que quieres escribir:	Wähle den Buchstaben zum Schreiben:
+Write {0}	写 {0}	{0}を書く	Escribir {0}	{0} schreiben
+No command word can be written now. Undo a few turns, or restart.	现在写不出任何命令词。撤销几步，或者重来。	今は命令語をひとつも書けません。何手か元に戻すか、やり直してください。	Ahora no se puede escribir ninguna palabra de orden. Deshaz unos turnos o reinicia.	Jetzt lässt sich kein Befehlswort schreiben. Nimm ein paar Züge zurück oder beginne neu.
+Looking for a way through…	正在找出路…	道を探しています…	Buscando una salida…	Suche einen Weg…
+Tap a word's letters in order, in a straight line.	按顺序在一条直线上点一个词的字母。	言葉の文字を、まっすぐ一列に順番にタップします。	Toca las letras de una palabra en orden y en línea recta.	Tippe die Buchstaben eines Wortes der Reihe nach in einer geraden Linie an.
+Ink any one more square.	再涂黑任意一个格子。	好きなマスをもう1つ塗りつぶす。	Entinta una casilla más, la que quieras.	Färbe ein beliebiges weiteres Feld ein.
+Ink two squares that touch.	涂黑两个相邻的格子。	となり合う2つのマスを塗りつぶす。	Entinta dos casillas que se toquen.	Färbe zwei Felder ein, die sich berühren.
+Pick a letter: every square showing it is inked.	选一个字母：显示它的格子全部涂黑。	文字を1つ選ぶと、その文字のマスがすべて塗りつぶされる。	Elige una letra: se entintan todas las casillas que la muestran.	Wähle einen Buchstaben: Jedes Feld mit ihm wird eingefärbt.
+Write any letter in a blank square.	在空格里写任意一个字母。	空白のマスに好きな文字を書く。	Escribe cualquier letra en una casilla vacía.	Schreibe einen beliebigen Buchstaben in ein leeres Feld.
+Ink every square by writing invented command words, and find out what each word does.	写下自创的命令词把每个格子涂黑，并找出每个词的作用。	作り出された命令語を書いてすべてのマスを塗りつぶし、それぞれの言葉の効果を見つけましょう。	Entinta todas las casillas escribiendo palabras de orden inventadas y descubre qué hace cada una.	Färbe jedes Feld ein, indem du erfundene Befehlswörter schreibst, und finde heraus, was jedes Wort bewirkt.
+Ink every square to win.	把每个格子都涂黑就赢了。	すべてのマスを塗りつぶせばクリアです。	Entinta todas las casillas para ganar.	Färbe jedes Feld ein, um zu gewinnen.
+Write a command word by tapping its letters in order in a straight line: across or down, forwards or backwards.	按顺序在一条直线上点字母来写命令词：横着或竖着，正读或倒读都行。	命令語は、文字をまっすぐ一列に順番にタップして書きます。横でも縦でも、前からでも後ろからでもかまいません。	Escribe una palabra de orden tocando sus letras en orden y en línea recta: en horizontal o vertical, hacia delante o hacia atrás.	Schreibe ein Befehlswort, indem du seine Buchstaben der Reihe nach in einer geraden Linie antippst: waagerecht oder senkrecht, vorwärts oder rückwärts.
+Inked squares are skipped, so the letters on either side of an inked square count as neighbours.	涂黑的格子会被跳过，所以它两边的字母算作相邻。	塗りつぶしたマスは飛ばされるので、その両側の文字はとなり合っているとみなされます。	Las casillas entintadas se saltan, así que las letras a cada lado de una casilla entintada cuentan como vecinas.	Eingefärbte Felder werden übersprungen, die Buchstaben zu beiden Seiten eines eingefärbten Feldes gelten also als Nachbarn.
+Writing a word inks its letters. Then the word does something, straight away.	写下一个词会把它的字母涂黑。然后这个词立刻产生作用。	言葉を書くと、その文字が塗りつぶされます。そのあとすぐに言葉の効果が起こります。	Al escribir una palabra se entintan sus letras. Después, la palabra hace algo en el acto.	Beim Schreiben eines Wortes werden seine Buchstaben eingefärbt. Dann bewirkt das Wort sofort etwas.
+Each command word does something different. Try it and see, or tap Show what it does in the word list.	每个命令词的作用都不一样。试试看，或者在词表里点“显示作用”。	命令語ごとに効果がちがいます。試してみるか、言葉リストの「効果を見る」をタップしましょう。	Cada palabra de orden hace algo distinto. Pruébala y verás, o toca Mostrar qué hace en la lista de palabras.	Jedes Befehlswort bewirkt etwas anderes. Probiere es aus oder tippe in der Wortliste auf Zeigen, was es tut.
+A word can only be written when what it does can then be used.	只有当词的作用能用上时，才能写这个词。	効果を使える場面でなければ、その言葉は書けません。	Solo puedes escribir una palabra si luego se puede usar lo que hace.	Ein Wort lässt sich nur schreiben, wenn seine Wirkung danach auch nutzbar ist.
+Discover starts with one word and brings in the others one small puzzle at a time. Easy uses VUM; Medium adds DRIF, Hard adds ZUV and Expert adds KEL.	“探索”从一个词开始，用一个个小谜题逐一引入其他词。简单只用 VUM；中等加入 DRIF，困难加入 ZUV，专家加入 KEL。	「発見」はひとつの言葉から始まり、小さなパズルでほかの言葉をひとつずつ紹介します。かんたんはVUMだけ、ふつうでDRIF、むずかしいでZUV、エキスパートでKELが加わります。	Descubrir empieza con una palabra y presenta las demás de una en una con puzzles pequeños. Fácil usa VUM; Media añade DRIF, Difícil añade ZUV y Experto añade KEL.	Entdecken beginnt mit einem Wort und führt die anderen mit kleinen Rätseln nacheinander ein. Leicht nutzt VUM; Mittel fügt DRIF hinzu, Schwer ZUV und Experte KEL.
+Hint shows the next word to write, or where to use it. Undo steps back and Restart goes back to the start.	“提示”会显示下一个要写的词，或者它该用在哪里。“撤销”退回一步，“重来”回到开头。	ヒントは次に書く言葉や、効果を使う場所を示します。「元に戻す」で1手戻り、「やり直し」で最初に戻ります。	Pista muestra la siguiente palabra que escribir o dónde usarla. Deshacer vuelve un paso atrás y Reiniciar vuelve al principio.	Tipp zeigt das nächste Wort zum Schreiben oder wo es wirken soll. Rückgängig geht einen Schritt zurück, Neu beginnen zurück zum Anfang.
+Squares that no word can ever reach have to be inked by a word's effect, so save effects for them.	没有任何词能碰到的格子，只能靠词的作用涂黑，所以把作用留给它们。	どの言葉にも使われないマスは、言葉の効果で塗りつぶすしかありません。効果はそういうマスのためにとっておきましょう。	Las casillas que ninguna palabra puede alcanzar tienen que entintarse con el efecto de una palabra, así que guarda los efectos para ellas.	Felder, die kein Wort je erreicht, lassen sich nur durch die Wirkung eines Wortes einfärben. Heb dir die Wirkungen für sie auf.
+Inking a square can join letters into a new word, or break one apart. Look a turn ahead.	涂黑一个格子可能把字母连成新词，也可能把词拆开。多往前想一步。	マスを塗りつぶすと、文字がつながって新しい言葉になったり、言葉がばらばらになったりします。一手先を読みましょう。	Entintar una casilla puede unir letras en una palabra nueva o separar otra. Piensa un turno por delante.	Ein Feld einzufärben kann Buchstaben zu einem neuen Wort verbinden oder eines auseinanderreißen. Denk einen Zug voraus.
+The only way to ink squares is to write a command word. VUM reads across the top row. Tap its first letter, V.	涂黑格子的唯一办法是写命令词。VUM 在第一行横着读。点它的第一个字母 V。	マスを塗りつぶす方法は、命令語を書くことだけです。VUMはいちばん上の行に横に並んでいます。最初の文字のVをタップしましょう。	La única forma de entintar casillas es escribir una palabra de orden. VUM se lee en la fila de arriba. Toca su primera letra, la V.	Felder färbst du nur ein, indem du ein Befehlswort schreibst. VUM steht waagerecht in der obersten Reihe. Tippe auf seinen ersten Buchstaben, das V.
+Now tap U.	现在点 U。	次にUをタップ。	Ahora toca la U.	Tippe jetzt auf U.
+And M to finish the word.	再点 M 写完这个词。	Mで言葉を書き終えます。	Y la M para terminar la palabra.	Und auf M, um das Wort fertig zu schreiben.
+VUM is written, so its letters are inked.	VUM 写好了，所以它的字母被涂黑了。	VUMを書いたので、その文字が塗りつぶされました。	VUM está escrita, así que sus letras se entintan.	VUM ist geschrieben, also sind seine Buchstaben eingefärbt.
+Then the word does something. Working that out is part of the game, but just this once: VUM lets you ink one more square. Tap T.	然后这个词会产生作用。找出作用本来是游戏的一部分，但这次先告诉你：VUM 让你再涂黑一个格子。点 T。	次に言葉の効果が起こります。効果を見つけるのもゲームのうちですが、今回だけ教えます。VUMでもう1つマスを塗りつぶせます。Tをタップしましょう。	Luego la palabra hace algo. Descubrirlo es parte del juego, pero por esta vez: VUM te deja entintar una casilla más. Toca la T.	Dann bewirkt das Wort etwas. Das herauszufinden gehört zum Spiel, aber nur dieses eine Mal: Mit VUM färbst du ein weiteres Feld ein. Tippe auf T.
+Words also read backwards, and inked squares are skipped. In the bottom row, VUM reads from right to left, over the inked square. Tap its V.	词也可以倒着读，涂黑的格子会被跳过。在最下面一行，VUM 从右往左读，越过涂黑的格子。点它的 V。	言葉は後ろからも読め、塗りつぶしたマスは飛ばされます。いちばん下の行では、VUMが右から左へ、塗りつぶしたマスをまたいで並んでいます。そのVをタップしましょう。	Las palabras también se leen al revés y las casillas entintadas se saltan. En la fila de abajo, VUM se lee de derecha a izquierda, por encima de la casilla entintada. Toca su V.	Wörter lassen sich auch rückwärts lesen, und eingefärbte Felder werden übersprungen. In der untersten Reihe steht VUM von rechts nach links, über das eingefärbte Feld hinweg. Tippe auf sein V.
+Start from the right-hand end of the bottom row.	从最下面一行的右端开始。	いちばん下の行の右はしから始めましょう。	Empieza por el extremo derecho de la fila de abajo.	Fang am rechten Ende der untersten Reihe an.
+Writing it inks V, U and M, and nothing is left, so VUM has nothing more to do. Every square is inked: solved! Other words do other things. Find out by playing Discover.	写下它会涂黑 V、U 和 M，什么都不剩了，所以 VUM 不再有作用。每个格子都涂黑了：完成！其他词有其他作用，去“探索”里发现吧。	書くとV、U、Mが塗りつぶされ、何も残らないので、VUMの効果はありません。すべてのマスが塗りつぶされてクリアです！ほかの言葉にはほかの効果があります。「発見」で見つけましょう。	Al escribirla se entintan la V, la U y la M, y no queda nada, así que VUM ya no tiene nada que hacer. Todas las casillas están entintadas: ¡resuelto! Otras palabras hacen otras cosas. Descúbrelas jugando a Descubrir.	Beim Schreiben werden V, U und M eingefärbt, und es bleibt nichts übrig, also hat VUM nichts mehr zu tun. Jedes Feld ist eingefärbt: gelöst! Andere Wörter bewirken anderes. Finde es in Entdecken heraus.
+Ink a letter grid with invented command words: a 12-step Discover trail, then 4 levels adding VUM, DRIF, ZUV and KEL.	用自创的命令词涂黑字母格：先是 12 步的探索之旅，再是依次加入 VUM、DRIF、ZUV 和 KEL 的 4 个难度。	作り出された命令語で文字のマスを塗りつぶします。12段階の「発見」のあと、VUM、DRIF、ZUV、KELが加わる4つのレベルがあります。	Entinta una cuadrícula de letras con palabras de orden inventadas: un recorrido de 12 pasos en Descubrir y luego 4 niveles que añaden VUM, DRIF, ZUV y KEL.	Färbe ein Buchstabengitter mit erfundenen Befehlswörtern ein: ein Entdecken-Pfad mit 12 Schritten, dann 4 Stufen, die VUM, DRIF, ZUV und KEL hinzufügen.
+Built backwards from a fully inked grid each game, so every puzzle can be finished; the hint follows a known solution.	每局都从全部涂黑的格子倒推生成，所以每道题都能完成；提示会沿着已知的解法。	毎回、すべて塗りつぶしたマスから逆向きに作るので、どのパズルも必ず解けます。ヒントは既知の解き方に沿って出ます。	Cada partida se construye hacia atrás desde una cuadrícula entintada del todo, así que todos los puzzles se pueden terminar; la pista sigue una solución conocida.	Jedes Spiel wird rückwärts aus einem ganz eingefärbten Gitter gebaut, daher ist jedes Rätsel lösbar; der Tipp folgt einer bekannten Lösung.
+{0} · 1 square left	{0} · 还剩 1 格	{0} · 残り1マス	{0} · queda 1 casilla	{0} · noch 1 Feld
+{0}×{1} grid · {2} words	{0}×{1} 格 · {2} 个词	{0}×{1}マス · {2}語	Cuadrícula de {0}×{1} · {2} palabras	{0}×{1}-Gitter · {2} Wörter
+{0}: tap any square to ink it.	{0}：点任意一个格子把它涂黑。	{0}：好きなマスをタップして塗りつぶします。	{0}: toca cualquier casilla para entintarla.	{0}: Tippe auf ein beliebiges Feld, um es einzufärben.
+{0}: tap two squares that touch.	{0}：点两个相邻的格子。	{0}：となり合う2つのマスをタップします。	{0}: toca dos casillas que se toquen.	{0}: Tippe auf zwei Felder, die sich berühren.
+{0}: now tap a square touching the first.	{0}：再点一个和第一个相邻的格子。	{0}：次に、1つ目ととなり合うマスをタップします。	{0}: ahora toca una casilla que toque la primera.	{0}: Tippe jetzt auf ein Feld neben dem ersten.
+{0}: tap a letter to ink every square showing it.	{0}：点一个字母，所有显示这个字母的格子都会涂黑。	{0}：文字をタップすると、その文字のマスがすべて塗りつぶされます。	{0}: toca una letra para entintar todas las casillas que la muestran.	{0}: Tippe auf einen Buchstaben, um jedes Feld mit ihm einzufärben.
+{0}: tap a blank square, then pick a letter.	{0}：点一个空格，再选一个字母。	{0}：空白のマスをタップしてから文字を選びます。	{0}: toca una casilla vacía y elige una letra.	{0}: Tippe auf ein leeres Feld und wähle dann einen Buchstaben.
+Blotwords themes	墨字格主题	インクワードのテーマ	Temas de Palabras de tinta	Tintenwörter-Designs
+New theme	新主题	新しいテーマ	Tema nuevo	Neues Design
+In use	使用中	使用中	En uso	Aktiv
+{0}, in use	{0}，使用中	{0}、使用中	{0}, en uso	{0}, aktiv
+{0}, tap to use	{0}，点一下使用	{0}、タップして使う	{0}, toca para usarlo	{0}, tippen zum Verwenden
+Copy and change	复制并修改	コピーして変更	Copiar y cambiar	Kopieren und ändern
+Make a new theme	制作新主题	新しいテーマを作る	Crear un tema nuevo	Neues Design erstellen
+{0}, chosen	{0}，已选	{0}、選択中	{0}, elegido	{0}, gewählt
+Filled squares	涂黑的格子	塗りつぶしたマス	Casillas entintadas	Eingefärbte Felder
+Letter squares	字母格子	文字のマス	Casillas con letra	Buchstabenfelder
+Creature	小动物	キャラクター	Criatura	Tierchen
+Save and use this theme	保存并使用这个主题	保存してこのテーマを使う	Guardar y usar este tema	Speichern und dieses Design verwenden
+Delete this theme	删除这个主题	このテーマを削除	Eliminar este tema	Dieses Design löschen
+My {0}	我的{0}	わたしの{0}	Mi {0}	Mein {0}
+Give the theme a name, up to {0} characters.	给主题起个名字，最多 {0} 个字符。	テーマに名前をつけてください（{0}文字まで）。	Ponle un nombre al tema, de hasta {0} caracteres.	Gib dem Design einen Namen mit bis zu {0} Zeichen.
+Ink	墨水	インク	Tinta	Tinte
+Mermaids and the Sea	美人鱼与大海	人魚と海	Sirenas y el mar	Meerjungfrauen und das Meer
+Paper and ink	纸和墨	紙とインク	Papel y tinta	Papier und Tinte
+Sand and sea	沙滩和大海	砂浜と海	Arena y mar	Sand und Meer
+Coral reef	珊瑚礁	サンゴ礁	Arrecife de coral	Korallenriff
+Night sky	夜空	夜空	Cielo nocturno	Nachthimmel
+Meadow	草地	草原	Pradera	Wiese
+Berry	浆果	ベリー	Frutos rojos	Beere
+Ink blots	墨点	インクのしみ	Manchas de tinta	Tintenkleckse
+Sea water	海水	海の水	Agua de mar	Meerwasser
+Stamps	印章	スタンプ	Sellos	Stempel
+Rounded	圆角	角丸	Redondeadas	Abgerundet
+Square corners	直角	角ばった形	Esquinas rectas	Eckig
+Bubbles	泡泡	泡	Burbujas	Blasen
+Purple octopus	紫色章鱼	むらさきのタコ	Pulpo morado	Lila Krake
+Mermaid	美人鱼	人魚	Sirena	Meerjungfrau
+No creature	不要小动物	キャラクターなし	Sin criatura	Kein Tierchen
+Splash	溅开	しぶき	Salpicar	Spritzen
+Rise	升起	わき上がる	Subir	Steigen
+Stamp	盖章	スタンプ	Sellar	Stempeln
+Fade	淡入	フェード	Aparecer	Einblenden
+Spin	旋转	くるっと回る	Girar	Drehen
+Drop	落下	落ちる	Caer	Fallen
+Slow	慢	ゆっくり	Lento	Langsam
+Normal	正常	ふつう	Normal	Normal
+Fast	快	はやい	Rápido	Schnell
+Bob	上下浮动	ぷかぷか	Flotar	Schaukeln
+Sway	左右摇摆	ゆらゆら	Balancearse	Wiegen
+Bounce	蹦跳	ぴょんぴょん	Botar	Hüpfen
+Still	不动	じっとする	Quieto	Still
+Hop	跳一下	ジャンプ	Saltar	Hopsen
+Wiggle	扭一扭	くねくね	Menearse	Wackeln
+Nothing	无	なし	Nada	Nichts
+Ink drops	墨滴	インクのしずく	Gotas de tinta	Tintentropfen
+Confetti	彩纸	紙吹雪	Confeti	Konfetti
+Stars	星星	星	Estrellas	Sterne
+Hearts	爱心	ハート	Corazones	Herzen
+My picture	我的图片	わたしの画像	Mi imagen	Mein Bild
+Ink line	墨线	インクの線	Línea de tinta	Tintenlinie
+Dots	圆点	点	Puntos	Punkte
+None	无	なし	Ninguno	Keine
+Creature when happy	开心时的小动物	よろこぶキャラクター	Criatura contenta	Tierchen, wenn es sich freut
+Filled square	涂黑的格子	塗りつぶしたマス	Casilla entintada	Eingefärbtes Feld
+Letter square	字母格子	文字のマス	Casilla con letra	Buchstabenfeld
+Board background	棋盘背景	盤の背景	Fondo del tablero	Brett-Hintergrund
+Celebration piece	庆祝图案	お祝いのかけら	Pieza de celebración	Feier-Teilchen
+A theme changes how Blotwords looks and moves: the board, the squares, the creature and the celebrations, with your own pictures if you like. The words and rules stay the same.	主题会改变墨字格的外观和动画：棋盘、格子、小动物和庆祝效果，还可以用你自己的图片。词语和规则保持不变。	テーマを変えると、インクワードの見た目と動き（盤、マス、キャラクター、お祝い）が変わります。自分の画像も使えます。言葉とルールは同じままです。	Un tema cambia cómo se ve y se mueve Palabras de tinta: el tablero, las casillas, la criatura y las celebraciones, incluso con tus propias imágenes. Las palabras y las reglas no cambian.	Ein Design ändert, wie Tintenwörter aussieht und sich bewegt: Brett, Felder, Tierchen und Feiern, auf Wunsch mit eigenen Bildern. Wörter und Regeln bleiben gleich.
+Play the animation	播放动画	アニメーションを再生	Ver la animación	Animation abspielen
+Drawn parts	绘制的部分	描かれたパーツ	Partes dibujadas	Gezeichnete Teile
+Your pictures	你的图片	あなたの画像	Tus imágenes	Deine Bilder
+Pictures from your phone replace the drawn parts. They stay on this device.	手机里的图片会替换绘制的部分，图片只保存在这台设备上。	スマートフォンの画像で、描かれたパーツを置きかえられます。画像はこの端末の中だけに保存されます。	Las imágenes de tu móvil sustituyen a las partes dibujadas. Se quedan en este dispositivo.	Bilder von deinem Handy ersetzen die gezeichneten Teile. Sie bleiben auf diesem Gerät.
+That picture couldn't be opened. Try another one.	无法打开这张图片，请换一张试试。	その画像は開けませんでした。別の画像を試してください。	No se pudo abrir esa imagen. Prueba con otra.	Dieses Bild ließ sich nicht öffnen. Versuch ein anderes.
+Your picture	你的图片	あなたの画像	Tu imagen	Dein Bild
+Drawn by the theme	由主题绘制	テーマが描きます	Dibujada por el tema	Vom Design gezeichnet
+Add picture	添加图片	画像を追加	Añadir imagen	Bild hinzufügen
+Remove	移除	削除	Quitar	Entfernen
+Animation	动画	アニメーション	Animación	Animation
+How squares fill in	格子怎样被填上	マスの塗られ方	Cómo se llenan las casillas	Wie sich Felder füllen
+Speed	速度	速さ	Velocidad	Tempo
+Pause between letters: {0} ms	字母之间的停顿：{0} 毫秒	文字の間の間隔：{0}ミリ秒	Pausa entre letras: {0} ms	Pause zwischen Buchstaben: {0} ms
+Pause between letters	字母之间的停顿	文字の間の間隔	Pausa entre letras	Pause zwischen Buchstaben
+Creature while waiting	等待时的小动物	待っているときのキャラクター	Criatura mientras espera	Tierchen beim Warten
+Creature when a word is written	写下词语时的小动物	言葉を書いたときのキャラクター	Criatura al escribir una palabra	Tierchen, wenn ein Wort geschrieben wird
+Celebration	庆祝	お祝い	Celebración	Feier
+Celebration pieces: {0}	庆祝图案数量：{0}	お祝いのかけら：{0}個	Piezas de celebración: {0}	Feier-Teilchen: {0}
+Celebration pieces	庆祝图案数量	お祝いのかけらの数	Piezas de celebración	Feier-Teilchen
+Tracing a word	描出词语时	言葉をなぞるとき	Al trazar una palabra	Beim Nachfahren eines Wortes

@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **32 games, 42 rule variants, 313 selectable setting
+Current implementation: **33 games, 43 rule variants, 318 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
@@ -27,6 +27,10 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Acrostic | 1 | 4 | Hidden words and clues from the bundled vocabulary |
 | Code cracker | 1 | 4 | Grids packed from the bundled vocabulary with a fresh number code |
 | Dropquote | 1 | 4 | Public-domain sayings; the same sayings as Cryptogram, laid out in columns |
+| Common Threads | 1 | 4 | Built from rules each game; checked to have exactly one way to sort the sixteen words |
+| Word Meaning | 1 | 4 | 337 words with sentences from Open English WordNet; answers judged on the device |
+| Five Letters | 1 | 4 | Hidden five-letter words from a curated answer list; guesses checked against a larger list |
+| Blotwords | 1 | 5 | A fixed 12-step Discover trail, then grids built backwards per game (5×5 to 6×6); every grid can be finished |
 | Spider Solitaire | 3 | 3 | 1, 2 or 4 suits; shuffled two-deck deals, not certified winnable |
 | Pyramid Solitaire | 1 | 4 | 52! theoretical deck orders, sampled; not every deal clears |
 | Memory | 1 | 4 | 6–15 pairs of Mahjong pictures, shuffled per game |

@@ -354,6 +354,18 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                         drawCircle(ink.copy(alpha = 0.14f), u * 0.6f, o + Offset(u * 2.4f, u * 8.9f))
                         for (k in 0..2) drawLine(ink.copy(alpha = 0.5f), o + Offset(u * 2, u * (5.9f + k * 0.8f)), o + Offset(u * (8 - k * 1.5f), u * (5.9f + k * 0.8f)), strokeWidth = u * 0.3f)
                     }
+                    GameId.BLOTWORDS -> {
+                        // A letter grid half inked: rounded blots where words were written, a word still waiting.
+                        val cell = side / 4
+                        val pad = cell * 0.08f
+                        val blots = setOf(0, 1, 2, 5, 9, 15)
+                        val letters = "   KD RIU ZEVUM "
+                        for (i in 0 until 16) {
+                            val x = i % 4; val y = i / 4
+                            if (i in blots) drawRoundRect(ink, o + Offset(x * cell + pad, y * cell + pad), Size(cell - pad * 2, cell - pad * 2), CornerRadius(cell * 0.32f))
+                            else if (letters[i] != ' ') letter(letters[i].toString(), x, y, 4, if (y == 3) c.accent else ink)
+                        }
+                    }
                     GameId.WORD_SEARCH -> {
                         val cell = side / 4
                         drawRoundRect(look.colors.highlight.copy(alpha = 0.55f), o + Offset(cell * 0.12f, cell * 1.12f),

@@ -383,6 +383,50 @@ internal object WordTutorials {
         )
     }
 
+    val blotwords: Tutorial get() {
+        val grid = listOf("VUMT", "M#UV")
+        fun scene(inked: Set<String> = emptySet(), picked: Set<String> = emptySet()): Scene = Scene(4f, 2f, (0 until 2).flatMap { r ->
+            (0 until 4).map { c ->
+                val id = cellId(r, c)
+                val ch = grid[r][c]
+                val ink = ch == '#' || id in inked
+                Item(id, c.toFloat(), r.toFloat(), look = Cell(text = if (ink) "" else ch.toString(), fill = if (ink) Fill.BLOCK else Fill.PAPER),
+                    tone = if (id in picked) Tone.SELECTED else Tone.PLAIN, describe = if (ink) "inked" else ch.toString())
+            }
+        }, maxUnit = 60)
+        val top = setOf("r0c0", "r0c1", "r0c2")
+        return Tutorial(
+            GameId.BLOTWORDS,
+            "Ink every square by writing invented command words, and find out what each word does.",
+            rules = listOf(
+                "Ink every square to win.",
+                "Write a command word by tapping its letters in order in a straight line: across or down, forwards or backwards.",
+                "Inked squares are skipped, so the letters on either side of an inked square count as neighbours.",
+                "Writing a word inks its letters. Then the word does something, straight away.",
+                "Each command word does something different. Try it and see, or tap Show what it does in the word list.",
+                "A word can only be written when what it does can then be used.",
+                "Discover starts with one word and brings in the others one small puzzle at a time. Easy uses VUM; Medium adds DRIF, Hard adds ZUV and Expert adds KEL.",
+                "Hint shows the next word to write, or where to use it. Undo steps back and Restart goes back to the start.",
+            ),
+            tips = listOf("Squares that no word can ever reach have to be inked by a word's effect, so save effects for them.",
+                "Inking a square can join letters into a new word, or break one apart. Look a turn ahead."),
+            steps = listOf(
+                Step("The only way to ink squares is to write a command word. VUM reads across the top row. Tap its first letter, V.",
+                    scene(), tap = setOf("r0c0"), after = scene(picked = setOf("r0c0"))),
+                Step("Now tap U.", scene(picked = setOf("r0c0")), tap = setOf("r0c1"), after = scene(picked = setOf("r0c0", "r0c1"))),
+                Step("And M to finish the word.", scene(picked = setOf("r0c0", "r0c1")), tap = setOf("r0c2"), after = scene(inked = top),
+                    then = "VUM is written, so its letters are inked."),
+                Step("Then the word does something. Working that out is part of the game, but just this once: VUM lets you ink one more square. Tap T.",
+                    scene(inked = top), tap = setOf("r0c3"), after = scene(inked = top + "r0c3")),
+                Step("Words also read backwards, and inked squares are skipped. In the bottom row, VUM reads from right to left, over the inked square. Tap its V.",
+                    scene(inked = top + "r0c3"), tap = setOf("r1c3"), after = scene(inked = top + "r0c3", picked = setOf("r1c3")),
+                    help = "Start from the right-hand end of the bottom row."),
+                Step("Writing it inks V, U and M, and nothing is left, so VUM has nothing more to do. Every square is inked: solved! Other words do other things. Find out by playing Discover.",
+                    scene(inked = setOf("r0c0", "r0c1", "r0c2", "r0c3", "r1c0", "r1c2", "r1c3"))),
+            ),
+        )
+    }
+
     val wordMeaning: Tutorial get() {
         fun scene(verdict: String = "", tone: Tone = Tone.PLAIN): Scene {
             val items = mutableListOf(

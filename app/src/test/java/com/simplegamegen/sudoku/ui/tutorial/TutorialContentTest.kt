@@ -1,6 +1,10 @@
 package com.simplegamegen.sudoku.ui.tutorial
 
 import com.simplegamegen.sudoku.ui.GameId
+import com.simplegamegen.sudoku.wordplay.BlotTier
+import com.simplegamegen.sudoku.wordplay.BlotEffect
+import com.simplegamegen.sudoku.wordplay.BlotLexicon
+import com.simplegamegen.sudoku.wordplay.Blotwords
 import com.simplegamegen.sudoku.wordplay.EnglishThreads
 import com.simplegamegen.sudoku.wordplay.FiveLetters
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -171,5 +175,20 @@ class TutorialContentTest {
         val balls = listOf("EYE", "FOOT", "HAND", "SNOW")
         fruits.forEach { assertTrue(fruit.fits(it) && !ball.fits(it), it) }
         balls.forEach { assertTrue(ball.fits(it) && !fruit.fits(it), it) }
+    }
+
+    @Test fun `blotwords tutorial plays out under the real rules`() {
+        val steps = Tutorials.of(GameId.BLOTWORDS).steps
+        val start = steps.first().scene
+        val grid = (0 until 2).joinToString("") { r -> (0 until 4).joinToString("") { c ->
+            val cell = start.item(cellId(r, c))!!.look as Cell
+            if (cell.fill == Fill.BLOCK) "#" else cell.text } }
+        var g = Blotwords(BlotTier.EASY, 0, 4, BlotLexicon.INK.words(listOf(BlotEffect.ONE)), grid)
+        g = g.write(listOf(0, 1, 2))!!                         // VUM across the top
+        assertEquals(BlotEffect.ONE, g.pending!!.effect)
+        g = g.use(3)!!                                         // its effect inks T
+        g = g.write(listOf(7, 6, 4))!!                         // VUM right to left over the inked square
+        assertTrue(g.solved)
+        assertTrue(steps.last().result.items.all { (it.look as Cell).fill == Fill.BLOCK })
     }
 }

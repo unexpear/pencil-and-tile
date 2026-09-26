@@ -1,0 +1,409 @@
+package com.simplegamegen.sudoku.ui.screens
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.key
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
+import com.simplegamegen.sudoku.ui.blot.BlotColors
+import com.simplegamegen.sudoku.ui.blot.BlotMark
+import com.simplegamegen.sudoku.ui.blot.BlotTheme
+import kotlinx.coroutines.delay
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.simplegamegen.sudoku.data.ArcadeStore
+import com.simplegamegen.sudoku.data.Outcome
+import com.simplegamegen.sudoku.data.PuzzleFactory
+import com.simplegamegen.sudoku.data.Result
+import com.simplegamegen.sudoku.ui.GameId
+import com.simplegamegen.sudoku.ui.HintButton
+import com.simplegamegen.sudoku.ui.PlayViewModel
+import com.simplegamegen.sudoku.ui.assets.GameIcons
+import com.simplegamegen.sudoku.ui.blot.BlotThemes
+import com.simplegamegen.sudoku.ui.blot.Mascot
+import com.simplegamegen.sudoku.ui.blot.drawMark
+import com.simplegamegen.sudoku.ui.blot.AssetSlot
+import com.simplegamegen.sudoku.ui.blot.FillStyle
+import com.simplegamegen.sudoku.ui.blot.drawParty
+import com.simplegamegen.sudoku.ui.blot.drawTrail
+import com.simplegamegen.sudoku.ui.blot.markMovesWhileIdle
+import com.simplegamegen.sudoku.ui.blot.rememberAsset
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import com.simplegamegen.sudoku.ui.blot.tileShape
+import com.simplegamegen.sudoku.ui.components.InfoChip
+import com.simplegamegen.sudoku.ui.components.ToolButton
+import com.simplegamegen.sudoku.ui.i18n.Text
+import com.simplegamegen.sudoku.ui.i18n.say
+import com.simplegamegen.sudoku.ui.theme.LocalGameLook
+import com.simplegamegen.sudoku.wordplay.BLANK
+import com.simplegamegen.sudoku.wordplay.BlotEffect
+import com.simplegamegen.sudoku.wordplay.BlotGenerator
+import com.simplegamegen.sudoku.wordplay.BlotTier
+import com.simplegamegen.sudoku.wordplay.BlotTrail
+import com.simplegamegen.sudoku.wordplay.BlotWord
+import com.simplegamegen.sudoku.wordplay.Blots
+import com.simplegamegen.sudoku.wordplay.Blotwords
+import com.simplegamegen.sudoku.wordplay.INK
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+private const val TRAIL_KEY = "blotwords:trail"
+private const val KNOWN_KEY = "blotwords:known"
+const val BLOT_THEMES_ROUTE = "blot_themes"
+
+val BlotSettings = listOf("Discover") + LevelNames
+
+fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwords> = PlaySetup(
+    rules = "Ink every square. Write a command word by tapping its letters in a straight line, across or down, forwards or " +
+        "backwards. Inked squares are skipped, so the letters on either side of them count as neighbours. The word's letters " +
+        "are inked, and then the word does something. Each word does something different: find out by trying, or peek in the " +
+        "word list. A word can only be written when what it does can then be used. Discover brings in the words one small " +
+        "puzzle at a time, and every puzzle can be finished.",
+    settingTitle = "Mode", settings = BlotSettings,
+    describe = { i ->
+        if (i == 0) "Small puzzles, one new word at a time"
+        else BlotTier.entries[i].let { t -> "${t.width}×${t.height} grid · ${t.effects.size} words" }
+    },
+    settingOf = { it.tier.ordinal }, inProgress = { !it.solved },
+    subtitle = { g ->
+        if (g.step >= 0) "Discover · puzzle ${g.step + 1} of ${BlotTrail.steps.size}"
+        else if (g.left == 1) "${g.tier.label} · 1 square left" else "${g.tier.label} · ${g.left} squares left"
+    },
+    create = { i ->
+        {
+            val theme = BlotThemes.chosen(store).id
+            if (i == 0) {
+                val step = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
+                withContext(Dispatchers.Default) { BlotTrail.puzzle(step % BlotTrail.steps.size, theme) }
+            } else factory.custom("blot:$i", { seed -> BlotGenerator.generate(BlotTier.entries[i], seed, theme) }) { it.start }
+        }
+    },
+    identity = { if (it.step >= 0) "trail${it.step}" else it.seed.toString() },
+    outcome = { g -> if (g.solved) Outcome(Result.WON) else null },
+)
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: PuzzleFactory, store: ArcadeStore) {
+    val look = LocalGameLook.current
+    val c = look.colors
+    val scope = rememberCoroutineScope()
+    var known by remember { mutableStateOf(emptySet<String>()) }
+    var theme by remember { mutableStateOf(BlotThemes.ink) }
+    LaunchedEffect(Unit) {
+        known = store.load(KNOWN_KEY)?.split(',')?.filter { it.isNotEmpty() }?.toSet().orEmpty()
+        // The chosen theme dresses every game, including one already under way.
+        theme = BlotThemes.chosen(store)
+    }
+    fun learn(words: Collection<BlotWord>) {
+        val next = known + words.map { it.text }
+        if (next != known) { known = next; scope.launch { store.save(KNOWN_KEY, next.joinToString(",")) } }
+    }
+    var path by remember { mutableStateOf(listOf<Int>()) }
+    var firstPick by remember { mutableStateOf<Int?>(null) }
+    var fillAt by remember { mutableStateOf<Int?>(null) }
+    var marked by remember { mutableStateOf(listOf<Int>()) }
+    var thinking by remember { mutableStateOf(false) }
+    var detail by remember { mutableStateOf<String?>(null) }
+    // The order squares were last inked in, so they fill like a pen stroke; and which square to shake.
+    var inkOrder by remember { mutableStateOf(listOf<Int>()) }
+    var shake by remember { mutableStateOf(-1 to 0) }
+    fun nope(i: Int, message: String) { shake = i to shake.second + 1; vm.say(message) }
+    val setup = remember(factory, store) { blotwordsSetup(factory, store) }
+
+    PlayShell(nav, vm, GameId.BLOTWORDS, setup, tools = { g, s ->
+        ToolButton(GameIcons.Palette, "Themes", enabled = !s.busy) { nav.navigate(BLOT_THEMES_ROUTE) }
+        ToolButton(GameIcons.Restart, "Restart", enabled = !g.solved && !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
+        HintButton(GameId.BLOTWORDS, enabled = !g.solved && !s.busy && !thinking) {
+            thinking = true
+            scope.launch {
+                val move = withContext(Dispatchers.Default) { g.nextMove() }
+                thinking = false
+                when {
+                    move == null -> vm.say("There's no way to finish from here. Undo a few turns, or restart.")
+                    g.pending == null -> {
+                        marked = move.path
+                        vm.play("Write ${move.word.text} on the marked squares.") { it.hinted() }
+                    }
+                    else -> {
+                        marked = move.targets
+                        vm.play(if (move.letter != null) "Write ${move.letter} in the marked blank." else "Use ${move.word.text} on the marked squares.") { it.hinted() }
+                    }
+                }
+            }
+        }
+    }) { g, s ->
+        val tc = theme.colors.colors(look.dark)
+        LaunchedEffect(g.cells, g.pending) { path = emptyList(); firstPick = null; fillAt = null; marked = emptyList() }
+        LaunchedEffect(g.solved) {
+            if (!g.solved) return@LaunchedEffect
+            learn(g.written)
+            if (g.step >= 0) {
+                val done = store.load(TRAIL_KEY)?.toIntOrNull() ?: 0
+                if (g.step + 1 > done) store.save(TRAIL_KEY, (g.step + 1).toString())
+            }
+        }
+
+        fun tap(i: Int) {
+            if (g.solved || s.busy) return
+            val pending = g.pending
+            if (pending == null) {
+                if (g.cells[i] == INK) return
+                marked = emptyList()
+                val grown = if (i in path) path.subList(0, path.indexOf(i)) else path + i
+                // A square off the line starts a new word from there.
+                val next = if (grown.size >= 2 && !Blots.inLine(g.cells, g.width, grown)) listOf(i) else grown
+                // Either end may come first: the word is read whichever way spells it.
+                val reading = if (g.wordAt(next) != null) next else next.reversed()
+                val word = g.wordAt(reading)
+                when {
+                    word != null -> {
+                        path = emptyList()
+                        inkOrder = reading
+                        vm.play(if (word.text in known) "${word.text}: ${say(word.effect.effect)}" else "${word.text} is written. What does it do?") { it.write(reading) }
+                    }
+                    listOf(next, next.reversed()).any { p -> g.words.any { w -> w.text.length == p.size && p.indices.all { k -> g.cells[p[k]] == w.text[k] } } } -> {
+                        path = emptyList()
+                        nope(i, "That word has nothing to work on right now.")
+                    }
+                    else -> path = next
+                }
+                return
+            }
+            val refusal = "${pending.text} doesn't work on that."
+            fun apply(next: Blotwords?, order: List<Int>) {
+                if (next == null) { nope(i, refusal); return }
+                // Spreads out from the tapped square.
+                inkOrder = order.sortedBy { kotlin.math.abs(it / g.width - i / g.width) + kotlin.math.abs(it % g.width - i % g.width) }
+                vm.play { next }
+            }
+            when (pending.effect) {
+                BlotEffect.ONE -> apply(g.use(i), listOf(i))
+                BlotEffect.ALIKE -> apply(g.use(i), g.cells.indices.filter { g.cells[it] == g.cells[i] })
+                BlotEffect.PAIR -> {
+                    val a = firstPick
+                    when {
+                        g.cells[i] == INK -> nope(i, refusal)
+                        a == null -> firstPick = i
+                        a == i -> firstPick = null
+                        else -> { firstPick = null; apply(g.use(a, i), listOf(a, i)) }
+                    }
+                }
+                BlotEffect.WRITE -> if (g.cells[i] == BLANK) fillAt = i else nope(i, refusal)
+            }
+        }
+
+        // The words: a chip each; tap one to see what it does, or to peek if it's still a mystery.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            g.words.forEach { w ->
+                val open = w.text in known
+                Surface(onClick = { detail = if (detail == w.text) null else w.text },
+                    color = when { g.pending == w -> tc.accent.copy(alpha = 0.22f); detail == w.text -> c.surfaceAlt; else -> c.surface },
+                    border = BorderStroke(1.dp, if (detail == w.text) tc.accent else c.outline), shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.semantics { contentDescription = if (open) "${w.text}: ${say(w.effect.effect)}" else say("${w.text}: not found out yet") }) {
+                    androidx.compose.material3.Text(if (open) w.text else "${w.text} ?", Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                        fontWeight = FontWeight.Bold, color = if (open) c.text else c.muted, fontSize = 16.sp)
+                }
+            }
+            if (g.hints > 0) InfoChip(if (g.hints == 1) "1 hint" else "${g.hints} hints", icon = GameIcons.Hint)
+        }
+        g.words.firstOrNull { it.text == detail }?.let { w ->
+            if (w.text in known) Text("${w.text}: ${say(w.effect.effect)}", style = MaterialTheme.typography.bodyMedium, color = c.text)
+            else Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${w.text}: not found out yet", style = MaterialTheme.typography.bodyMedium, color = c.muted)
+                TextButton(onClick = { learn(listOf(w)) }) { Text("Show what it does") }
+            }
+        }
+
+        // The creature talks you through it.
+        val saying = when {
+            g.solved -> if (g.step >= 0 && g.step == BlotTrail.steps.lastIndex) "Trail complete! Every word is yours." else "All inked!"
+            g.pending != null -> g.pending!!.let { w ->
+                if (w.text in known) when (w.effect) {
+                    BlotEffect.ONE -> "${w.text}: tap any square to ink it."
+                    BlotEffect.PAIR -> if (firstPick == null) "${w.text}: tap two squares that touch." else "${w.text}: now tap a square touching the first."
+                    BlotEffect.ALIKE -> "${w.text}: tap a letter to ink every square showing it."
+                    BlotEffect.WRITE -> "${w.text}: tap a blank square, then pick a letter."
+                } else "${w.text} is waiting. Tap squares to find out what it does."
+            }
+            g.stuck -> "No command word can be written now. Undo a few turns, or restart."
+            thinking -> "Looking for a way through…"
+            else -> "Tap a word's letters in order, in a straight line."
+        }
+        val hop = remember { Animatable(0f) }
+        LaunchedEffect(g.written.size) {
+            if (g.written.isEmpty()) return@LaunchedEffect
+            hop.animateTo(1f, tween(130)); hop.animateTo(0f, spring(dampingRatio = 0.35f, stiffness = 420f))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Mascot(theme, tc, happy = g.solved, modifier = Modifier.size(72.dp), bounce = hop.value)
+            Surface(color = if (g.solved) c.success.copy(alpha = 0.16f) else tc.accent.copy(alpha = 0.12f), shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.weight(1f)) {
+                Text(saying, Modifier.padding(horizontal = 12.dp, vertical = 10.dp), style = MaterialTheme.typography.bodyMedium,
+                    color = if (g.stuck) c.danger else c.text, fontWeight = if (g.solved) FontWeight.Bold else FontWeight.Normal)
+            }
+        }
+        fillAt?.let { at ->
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                BlotWord.lettersOf(g.words).forEach { ch ->
+                    Surface(onClick = { g.fill(at, ch)?.let { next -> vm.play { next } } }, color = c.surfaceAlt, shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.size(44.dp).semantics { contentDescription = say("Write $ch") }) {
+                        Box(contentAlignment = Alignment.Center) { androidx.compose.material3.Text(ch.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = c.text) }
+                    }
+                }
+            }
+        }
+
+        // The board, on the theme's paper (or picture).
+        val loop = rememberInfiniteTransition(label = "board")
+        val phase by if (theme.markMovesWhileIdle()) loop.animateFloat(0f, 1f, infiniteRepeatable(tween((3200 * theme.motion.pace.factor).toInt(), easing = LinearEasing)), label = "sea")
+            else remember { mutableStateOf(0f) }
+        val party = remember { Animatable(0f) }
+        LaunchedEffect(g.solved) {
+            if (g.solved) { party.snapTo(0f); party.animateTo(1f, tween((2400 * theme.motion.pace.factor).toInt(), easing = LinearEasing)) } else party.snapTo(0f)
+        }
+        val boardPicture = rememberAsset(theme, AssetSlot.BOARD)
+        val markPicture = rememberAsset(theme, AssetSlot.MARK)
+        val tilePicture = rememberAsset(theme, AssetSlot.TILE)
+        val partyPicture = rememberAsset(theme, AssetSlot.PARTICLE)
+        Surface(color = tc.paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+            Box {
+                if (boardPicture != null) Image(boardPicture, contentDescription = null, contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize(), alpha = 0.9f)
+                BoxWithConstraints(Modifier.fillMaxWidth().padding(10.dp), contentAlignment = Alignment.Center) {
+                    val side = min((maxWidth - 8.dp) / g.width, if (g.height >= 6) 50.dp else 58.dp)
+                    val gap = 3.dp
+                    key(g.seed, g.step, g.start) {
+                        Box {
+                            Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+                                for (r in 0 until g.height) Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                                    for (k in 0 until g.width) {
+                                        val i = r * g.width + k
+                                        BlotCell(g, i, side, theme, tc, phase, markPicture, tilePicture,
+                                            picked = i in path || i == firstPick || i == fillAt, hinted = i in marked,
+                                            order = inkOrder.indexOf(i).coerceAtLeast(0), shake = if (shake.first == i) shake.second else 0) { tap(i) }
+                                    }
+                                }
+                            }
+                            // The trail while tracing a word.
+                            if (path.size >= 2) Canvas(Modifier.matchParentSize()) {
+                                val step = (side + gap).toPx()
+                                val points = path.map { c -> Offset((c % g.width) * step + side.toPx() / 2, (c / g.width) * step + side.toPx() / 2) }
+                                drawTrail(theme.motion.trail, points, side.toPx() * 0.16f, tc.accent)
+                            }
+                            // Solved: the theme's pieces float up off the board.
+                            if (party.value in 0.001f..0.999f) Canvas(Modifier.matchParentSize()) {
+                                drawParty(theme.motion.party, theme.motion.partyAmount, party.value, g.seed.toInt() + g.step, side.toPx(), tc, partyPicture)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** One square: its letter tile, or its mark filling in (in stroke order, after [order] others), a lift when picked and a shake when refused. */
+@Composable
+private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotColors, phase: Float, markPicture: ImageBitmap?, tilePicture: ImageBitmap?,
+    picked: Boolean, hinted: Boolean, order: Int, shake: Int, onTap: () -> Unit) {
+    val c = LocalGameLook.current.colors
+    val ch = g.cells[i]
+    val inked = ch == INK
+    val motion = theme.motion
+    val fill = remember { Animatable(if (inked) 1f else 0f) }
+    LaunchedEffect(inked) {
+        if (!inked) { fill.snapTo(0f); return@LaunchedEffect }
+        if (fill.value >= 1f) return@LaunchedEffect
+        delay((order * motion.stroke * motion.pace.factor).toLong())
+        // Splashes and spins land on a spring; the rest glide in.
+        if (motion.fill == FillStyle.SPLASH || motion.fill == FillStyle.SPIN)
+            fill.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = 320f / (motion.pace.factor * motion.pace.factor)))
+        else fill.animateTo(1f, tween((420 * motion.pace.factor).toInt(), easing = FastOutSlowInEasing))
+    }
+    val lift by animateFloatAsState(if (picked) 1.1f else 1f, spring(dampingRatio = 0.5f, stiffness = 500f), label = "lift")
+    val jiggle = remember { Animatable(0f) }
+    LaunchedEffect(shake) {
+        if (shake == 0) return@LaunchedEffect
+        for (x in listOf(8f, -7f, 5f, -3f, 0f)) jiggle.animateTo(x, tween(45))
+    }
+    val shape = tileShape(theme.tile, side)
+    val spoken = "Row ${i / g.width + 1}, column ${i % g.width + 1}, " + when (ch) { INK -> "inked"; BLANK -> "blank"; else -> ch.toString() } +
+        (if (picked) ", picked" else "") + (if (hinted) ", hinted" else "")
+    Box(Modifier.size(side)
+        .graphicsLayer { scaleX = lift; scaleY = lift; translationX = jiggle.value * density }
+        // No ripple: the lift is the press feedback, and a ripple would square off round tiles.
+        .clickable(remember { MutableInteractionSource() }, indication = null, role = Role.Button, enabled = !g.solved && !inked) { onTap() }
+        .semantics { contentDescription = say(spoken) },
+        contentAlignment = Alignment.Center) {
+        // The letter tile fades as the mark takes over.
+        val tileAlpha = (1f - fill.value).coerceIn(0f, 1f)
+        if (tileAlpha > 0f) {
+            val bg = when { picked -> tc.accent.copy(alpha = 0.35f); hinted -> c.highlight; else -> tc.tile }
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = tileAlpha }.clip(shape).background(bg, shape),
+                contentAlignment = Alignment.Center) {
+                if (tilePicture != null) Image(tilePicture, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
+                    alpha = if (picked || hinted) 0.55f else 1f)
+                Box(Modifier.fillMaxSize().border(if (picked) 2.5.dp else 1.dp, if (picked) tc.accent else tc.mark.copy(alpha = 0.22f), shape))
+                val shown = if (inked) g.start[i].takeIf { it in 'A'..'Z' } else ch.takeIf { it in 'A'..'Z' }
+                if (shown != null) androidx.compose.material3.Text(shown.toString(), fontSize = (side.value * 0.46f).sp,
+                    fontWeight = FontWeight.Bold, color = tc.letter)
+            }
+        }
+        if (fill.value > 0f) Canvas(Modifier.fillMaxSize()) {
+            drawMark(theme.mark, motion.fill, Rect(Offset.Zero, size), tc, i, fill.value, phase, markPicture)
+        }
+    }
+}

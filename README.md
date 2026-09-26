@@ -65,6 +65,18 @@ Twenty-nine games, all offline with independent local saves:
   square fills. 5/3/2/1 letters are given by level.
 - **Dropquote:** a public-domain saying hidden in a grid; each column's letters
   sit above it in alphabetical order. Tap a square, then a letter from its column.
+- **Blotwords:** ink every square of a letter grid by writing invented command
+  words (VUM, DRIF, ZUV, KEL) in straight lines, forwards or backwards; inked
+  squares drop out of the way. What each word does is found out by playing: the
+  Discover trail brings them in one small puzzle at a time, each of which can't
+  be finished without its new word. Grids are built backwards from a fully
+  inked grid, so every one can be finished, and Hint follows that solution.
+  Themes change only the look and motion: the built-in **Ink** theme (a purple
+  octopus, ink that bleeds into the paper) and **Mermaids and the Sea** (a
+  cartoon mermaid, squares of moving water), plus a theme studio where players
+  mix colors, drawn parts, their own pictures (creature, squares, board,
+  celebration pieces) and animations (how squares fill, speed, stroke timing,
+  creature moves, celebrations, tracing trail), with a live preview.
 
 ## Word games
 
@@ -154,7 +166,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**32 games, 42 rule variants, 313 setting combinations**. These are not unique
+**33 games, 43 rule variants, 318 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
@@ -194,7 +206,7 @@ corner roundness and home layout, and share or import it as a text code. See
   games' rules, generators, computer players and versioned saves.
 - `sudoku-engine/.../logic/` — Samurai Sudoku, Calcudoku, Kakuro and Futoshiki: shared model,
   counting solver, seeded generators, uniqueness verifier and save format.
-- `app/` — Compose UI for all 32 games and Sudoku statistics, backed by the
+- `app/` — Compose UI for all 33 games and Sudoku statistics, backed by the
   engine. `ui/theme/` holds the theme model, storage and Compose theme;
   `ui/assets/` the drawn game pieces and icons; `ui/components/` shared chrome.
 

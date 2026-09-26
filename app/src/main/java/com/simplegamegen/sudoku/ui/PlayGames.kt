@@ -36,6 +36,9 @@ import com.simplegamegen.sudoku.duels.SproutsAi
 import com.simplegamegen.sudoku.duels.SproutsCodec
 import com.simplegamegen.sudoku.duels.SproutsGame
 import com.simplegamegen.sudoku.ui.screens.AcrosticScreen
+import com.simplegamegen.sudoku.ui.screens.BlotwordsScreen
+import com.simplegamegen.sudoku.wordplay.BlotCodec
+import com.simplegamegen.sudoku.wordplay.Blotwords
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
 import com.simplegamegen.sudoku.ui.screens.MagnetScreen
 import com.simplegamegen.sudoku.ui.screens.SproutsScreen
@@ -131,6 +134,19 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.FIVE_LETTERS.route) {
         FiveLettersScreen(nav, playModel<FiveLetters>(GameId.FIVE_LETTERS, store, codecOf(FiveLettersCodec::encode, FiveLettersCodec::decode)), factory)
+    }
+    composable(GameId.BLOTWORDS.route) {
+        BlotwordsScreen(nav, playModel<Blotwords>(GameId.BLOTWORDS, store, codecOf(BlotCodec::encode, BlotCodec::decode)), factory, store)
+    }
+    composable(com.simplegamegen.sudoku.ui.screens.BLOT_THEMES_ROUTE) {
+        com.simplegamegen.sudoku.ui.blot.BlotThemesScreen(nav, store)
+    }
+    composable(com.simplegamegen.sudoku.ui.blot.BLOT_THEME_EDIT_ROUTE, arguments = listOf(
+        navArgument("id") { type = NavType.StringType; defaultValue = "" },
+        navArgument("from") { type = NavType.StringType; defaultValue = "" },
+    )) { entry ->
+        com.simplegamegen.sudoku.ui.blot.BlotThemeEditor(nav, store,
+            entry.arguments?.getString("id")?.takeIf { it.isNotEmpty() }, entry.arguments?.getString("from")?.takeIf { it.isNotEmpty() })
     }
     composable(GameId.WORD_MEANING.route) {
         MeaningScreen(nav, playModel<MeaningGame>(GameId.WORD_MEANING, store, codecOf(MeaningCodec::encode, MeaningCodec::decode)), factory)

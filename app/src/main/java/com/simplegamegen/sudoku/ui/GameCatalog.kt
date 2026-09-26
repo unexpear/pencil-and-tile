@@ -28,6 +28,7 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     THREADS("Common Threads", "play_THREADS", "Four groups of four", GameGroup.WORDS),
     FIVE_LETTERS("Five Letters", "play_FIVE_LETTERS", "Guess the hidden word", GameGroup.WORDS),
     WORD_MEANING("Word Meaning", "play_WORD_MEANING", "Say what it means", GameGroup.WORDS),
+    BLOTWORDS("Blotwords", "play_BLOTWORDS", "Ink the grid with words", GameGroup.WORDS),
     MAHJONG("Mahjong", "mahjong", "Match free tiles", GameGroup.TABLE),
     SOLITAIRE("Solitaire", "table_SOLITAIRE", "Klondike, draw 1 or 3", GameGroup.TABLE),
     SPIDER("Spider", "play_SPIDER", "1, 2 or 4 suits", GameGroup.TABLE),
