@@ -1,0 +1,1 @@
+Klarere Kreuzworträtsel-Hinweise, verbesserte Antworteingabe und neue Grafik. Bessere Bewegung des Spielfelds in beide Richtungen. Bei Käsekästchen lassen sich zwei Punkte oder optional Linien antippen; Spielstände sind besser lesbar. Wortbedeutung bietet längere Kontextsätze passend zur jeweiligen Definition. Gespeicherte Spiele bleiben erhalten.

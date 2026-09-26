@@ -13,7 +13,7 @@ preparation guide, not confirmation that Google has approved the app.
 - App name **Pencil & Tile**; application ID **`com.simplegamegen.puzzles`** (chosen by the owner on
   2026-09-25; it can never change after the first upload). The code namespace stays
   `com.simplegamegen.sudoku`, which Play never sees.
-- Version code 2, version name 1.1.0. Increase the version code for every upload.
+- Version code 3, version name 1.1.1. Increase the version code for every upload.
 - No permissions that reach outside the device: the merged release manifest requests no INTERNET or
   other dangerous permission.
 - Native libraries (ONNX Runtime for Word Meaning): the 64-bit libraries are 16 KB page aligned, as Play

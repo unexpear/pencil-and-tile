@@ -1,7 +1,8 @@
 # Puzzle interaction and word-context fixes
 
-Verified September 26, 2026. These changes follow the version-code-2 Alpha upload;
-they have not been uploaded to Google Play.
+Verified September 26, 2026. These changes were subsequently uploaded as version
+1.1.1 (code 3) to the existing Alpha track and submitted for review. Google quick
+checks and approval were still pending; see `RELEASE_READINESS.md`.
 
 ## Findings and scope
 

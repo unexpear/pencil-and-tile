@@ -1,5 +1,38 @@
 # Release readiness — 26 September 2026
 
+## Latest update: 1.1.1 (version code 3)
+
+Uploaded and submitted to the existing closed Alpha track on September 26, 2026.
+Console lists **Changes in review**, with quick checks still running. The pending
+change is `1.1.1 / Start full rollout` at 100% of the existing Alpha audience.
+Managed publishing is off; successful checks and Google approval are still
+required before this update reaches testers. No production rollout was requested.
+
+Before this upload, Console confirmed 1.1.0 was **Available to selected testers**.
+That is the last confirmed available version; the code-2 review status recorded
+below is historical.
+
+- Includes the Crossword UI/artwork, board movement, Dots controls/scores and
+  Word Meaning context repairs in commit `d09b283`.
+- Engine tests (286), release app tests (96), release lint and signed release
+  bundle passed. Three context-importer checks also passed. Debug/emulator
+  evidence is in [PUZZLE_UI_VERIFICATION.md](PUZZLE_UI_VERIFICATION.md).
+- `jarsigner -verify` verified bundle integrity. Expected self-signed certificate
+  and missing timestamp warnings remain; Google accepted the upload certificate.
+- Inspected merged release manifest: package `com.simplegamegen.puzzles`, version
+  code 3, name 1.1.1, minimum API 26 and target API 36.
+- Bundle contains the exact updated context resource and translated UI strings.
+- Release notes supplied in all five listing languages, each under 500 characters.
+- Google validation: no blocking errors; warnings for missing deobfuscation and
+  native debug-symbol files. Code obfuscation remains disabled.
+- Google estimates 33.6 MB for a new install on its displayed reference device.
+
+Uploaded artifact: `app/build/outputs/bundle/release/app-release.aab`
+
+SHA-256: `357129AD66E77BB53C42BF8F94F670B18A86059F8DDCBD4CFC220333A766D8B4`
+
+## Earlier code-2 release record
+
 Verdict: signed local release candidate with Android 8/15/16 smoke checks;
 version 1.1.0 (code 2) is built for closed testing. Public Google Play launch
 is blocked by the account's production-access testing requirement. The signed

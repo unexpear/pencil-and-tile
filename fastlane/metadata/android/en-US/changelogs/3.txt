@@ -1,0 +1,1 @@
+Clearer Crossword clues, answer entry and new artwork. Improved vertical and horizontal board movement with Move board mode. Dots and Boxes now lets you tap two dots, with an optional line-tap mode and clearer scores. Word Meaning has longer context sentences matched to the intended definitions. Existing saved games are preserved.

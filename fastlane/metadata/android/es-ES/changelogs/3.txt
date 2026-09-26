@@ -1,0 +1,1 @@
+Pistas, entrada de respuestas e ilustraciones mejoradas en Crucigrama. Mejor desplazamiento vertical y horizontal con el modo Mover tablero. En Puntos y cajas puedes tocar dos puntos o activar el modo de tocar líneas; las puntuaciones son más claras. Significado de palabras incluye frases más completas ajustadas a cada definición. Se conservan las partidas guardadas.
