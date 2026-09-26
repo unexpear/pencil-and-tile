@@ -185,7 +185,29 @@ class BlotwordsTest {
         val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
         val g = Blotwords(BlotTier.EASY, 0, 4, words, "V+UM" + "XXXX").write(listOf(0, 2, 3))!!
         assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
-        val old = BlotCodec.encode(g).split('\n').dropLast(1).joinToString("\n")
+        // Saves from before strokes and holes were kept end two lines sooner.
+        val old = BlotCodec.encode(g).split('\n').dropLast(2).joinToString("\n")
         assertEquals(emptyList<List<Int>>(), BlotCodec.decode(old)!!.strokes)
+    }
+
+    @Test fun `a sealed square loses its seal the first time it is inked`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE, BlotEffect.ALIKE))
+        // VUM reads through the sealed u; writing it breaks that seal, and VUM's own extra square does the same to the sealed x.
+        var g = Blotwords(BlotTier.EASY, 0, 4, words, "VuMx" + "XXXX").write(listOf(0, 1, 2))!!
+        assertEquals("#U#x", g.cells.take(4))
+        g = g.use(3)!!
+        assertEquals('X', g.cells[3])
+        // ALIKE breaks every seal on its letter and inks the rest.
+        assertEquals("#X", Blots.alike("Xx", 'X'))
+    }
+
+    @Test fun `shaped boards keep holes inked and in one piece`() {
+        repeat(20) { seed ->
+            val holes = Blots.shape(6, 6, Random(seed.toLong()))
+            assertTrue(holes.size <= 9)
+            val g = BlotGenerator.generate(BlotTier.EXPERT, seed.toLong())
+            assertTrue(g.holes.all { g.start[it] == INK })
+            assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
+        }
     }
 }

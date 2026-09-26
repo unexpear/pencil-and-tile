@@ -47,7 +47,7 @@ import kotlin.math.sin
 // The Discover puzzles sit on one patch of land as numbered blocks. Solving a puzzle inks its block and the land
 // around it, a creature moves in, and every few puzzles the settlement gains something new.
 
-/** The land, row by row: a digit or letter is a puzzle (1-9, then a-i for 10-18), '#' is land, '.' is sea. */
+/** The land, row by row: a digit or letter is a puzzle (1-9, then a-k for 10-20), '#' is land, '.' is sea. */
 private val LAND = listOf(
     ".1##2##.",
     "##3##4##",
@@ -57,6 +57,7 @@ private val LAND = listOf(
     "#b##c#d#",
     ".##e##f#",
     "#g##h#i.",
+    ".#j##k#.",
 )
 
 private data class MapTile(val col: Int, val row: Int, val puzzle: Int, val owner: Int)
@@ -64,7 +65,7 @@ private data class MapTile(val col: Int, val row: Int, val puzzle: Int, val owne
 /** Every land tile, with the puzzle it is (or -1) and the puzzle whose land it belongs to (the nearest one). */
 private val TILES: List<MapTile> by lazy {
     val puzzles = LAND.flatMapIndexed { r, line -> line.mapIndexedNotNull { c, ch ->
-        val n = when (ch) { in '1'..'9' -> ch - '1'; in 'a'..'i' -> 9 + (ch - 'a'); else -> -1 }
+        val n = when (ch) { in '1'..'9' -> ch - '1'; in 'a'..'k' -> 9 + (ch - 'a'); else -> -1 }
         if (n >= 0) Triple(c, r, n) else null
     } }
     LAND.flatMapIndexed { r, line -> line.mapIndexedNotNull { c, ch ->

@@ -1,5 +1,8 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.graphics.drawscope.rotate
 import com.simplegamegen.sudoku.wordplay.WILD
 import com.simplegamegen.sudoku.wordplay.KNOT
@@ -134,6 +137,7 @@ fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwo
         "are inked, and then the word does something. Each word does something different: find out by trying, or peek in the " +
         "word list. A word can only be written when what it does can then be used. Knot squares join letters: a word can run " +
         "through any number of them and turn a corner on one, and writing never inks a knot. A ? square stands for any letter. " +
+        "A sealed square loses its seal the first time it's inked and needs inking again. Gaps in the board count as ink. " +
         "Discover brings in the words one small puzzle at a time, and every puzzle can be finished.",
     settingTitle = "Mode", settings = BlotSettings,
     describe = { i ->
@@ -338,6 +342,8 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             path.isEmpty() && KNOT in g.start && g.step >= 0 && g.written.isEmpty() ->
                 "New: knots! A word can run through any number of them and turn a corner on one. Writing never inks a knot."
             path.isEmpty() && WILD in g.start && g.step >= 0 && g.written.isEmpty() -> "New: a ? square stands for any letter you need."
+            path.isEmpty() && g.start.any { it in 'a'..'z' } && g.step >= 0 && g.written.isEmpty() ->
+                "New: sealed squares! The first time one is inked its seal breaks instead. Ink it again to finish it."
             else -> "Tap a word's letters in order, in a straight line."
         }
         val hop = remember { Animatable(0f) }
@@ -423,6 +429,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                                 for (r in 0 until g.height) Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                                     for (k in 0 until g.width) {
                                         val i = r * g.width + k
+                                        if (i in g.holes) { Spacer(Modifier.size(side)); continue }
                                         BlotCell(g, i, side, theme, tc, phase, markPicture, tilePicture,
                                             picked = i in path || i == firstPick || i == fillAt, hinted = i in marked,
                                             order = inkOrder.indexOf(i).coerceAtLeast(0), shake = if (shake.first == i) shake.second else 0,
@@ -461,6 +468,31 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     }
 }
 
+/** A wax seal over a square: a scalloped disc with a ring pressed in it. [crack] (0..1) splits it and drops the halves. */
+private fun DrawScope.drawWaxSeal(color: Color, alpha: Float, crack: Float) {
+    val r = size.minDimension / 2
+    val scallop = Path()
+    for (k in 0 until 24) {
+        val a = 2 * Math.PI * k / 24
+        val rr = r * (if (k % 2 == 0) 1f else 0.9f)
+        val p = Offset(center.x + (kotlin.math.cos(a) * rr).toFloat(), center.y + (kotlin.math.sin(a) * rr).toFloat())
+        if (k == 0) scallop.moveTo(p.x, p.y) else scallop.lineTo(p.x, p.y)
+    }
+    scallop.close()
+    for (half in listOf(-1f, 1f)) {
+        val dx = half * crack * r * 0.6f; val dy = crack * crack * r * 1.4f
+        translate(dx, dy) {
+            rotate(half * crack * 25f, center) {
+                clipRect(if (half < 0) 0f else center.x, 0f, if (half < 0) center.x else size.width, size.height) {
+                    drawPath(scallop, color.copy(alpha = 0.28f * alpha * (1f - crack)))
+                    drawPath(scallop, color.copy(alpha = 0.9f * alpha * (1f - crack)), style = Stroke(r * 0.07f))
+                    drawCircle(color.copy(alpha = 0.7f * alpha * (1f - crack)), r * 0.72f, center, style = Stroke(r * 0.05f))
+                }
+            }
+        }
+    }
+}
+
 /** How deep a block's side is for [theme]: square and rounded tiles are chunky blocks, bubbles are flat. */
 fun blockDepth(theme: BlotTheme, side: Dp): Dp = if (theme.tile == BlotTile.BUBBLE) 0.dp else side * 0.12f
 
@@ -488,8 +520,17 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
         if (shake == 0) return@LaunchedEffect
         for (x in listOf(8f, -7f, 5f, -3f, 0f)) jiggle.animateTo(x, tween(45))
     }
+    // A seal: shown while the square is sealed; when it breaks it cracks apart and falls away.
+    val sealedNow = Blots.sealed(ch)
+    val seal = remember { Animatable(if (sealedNow) 1f else 0f) }
+    val crack = remember { Animatable(0f) }
+    LaunchedEffect(sealedNow) {
+        if (sealedNow) { crack.snapTo(0f); seal.snapTo(1f) }
+        else if (seal.value > 0f) { crack.animateTo(1f, tween(450)); seal.snapTo(0f); crack.snapTo(0f) }
+    }
     val shape = tileShape(theme.tile, side)
-    val spoken = "Row ${i / g.width + 1}, column ${i % g.width + 1}, " + when (ch) { INK -> "inked"; BLANK -> "blank"; else -> ch.toString() } +
+    val spoken = "Row ${i / g.width + 1}, column ${i % g.width + 1}, " + when (ch) { INK -> "inked"; BLANK -> "blank"; KNOT -> "knot"; WILD -> "any letter"
+        else -> if (sealedNow) "${ch.uppercaseChar()}, sealed" else ch.toString() } +
         (if (picked) ", picked" else "") + (if (hinted) ", hinted" else "")
     Box(Modifier.size(side)
         .graphicsLayer { scaleX = lift; scaleY = lift; translationX = jiggle.value * density }
@@ -524,14 +565,13 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
                 if (tilePicture != null) Image(tilePicture, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                     alpha = if (picked || hinted) 0.55f else 1f)
                 Box(Modifier.fillMaxSize().border(if (picked) 2.5.dp else 1.dp, if (picked) tc.accent else tc.mark.copy(alpha = 0.22f), shape))
-                val shown = (if (inked) g.start[i] else ch).takeIf { it in 'A'..'Z' || it == WILD }
-                // A knot: two loops of ink tied in the middle.
-                if (ch == KNOT) Canvas(Modifier.fillMaxSize(0.62f)) {
+                val shown = (if (inked) g.start[i] else ch).uppercaseChar().takeIf { it in 'A'..'Z' || it == WILD }
+                if (seal.value > 0f) Canvas(Modifier.fillMaxSize(0.84f)) { drawWaxSeal(tc.accent, seal.value, crack.value) }
+                // A knot: a figure-of-eight loop of ink, tied in the middle.
+                if (ch == KNOT) Canvas(Modifier.fillMaxSize(0.66f)) {
                     val w = size.width
-                    drawCircle(tc.mark, w * 0.12f, center)
-                    for (a in listOf(45f, 135f)) rotate(a, center) {
-                        drawOval(tc.mark, Offset(w * 0.08f, w * 0.34f), Size(w * 0.84f, w * 0.32f), style = Stroke(w * 0.09f))
-                    }
+                    for (side in listOf(-1f, 1f)) drawCircle(tc.mark, w * 0.22f, Offset(center.x + side * w * 0.22f, center.y), style = Stroke(w * 0.1f))
+                    drawCircle(tc.mark, w * 0.1f, center)
                 }
                 if (shown != null) {
                     // Ink themes set each letter by hand: a serif face, a touch crooked, pressed into the paper.
@@ -550,7 +590,7 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
             drawMark(theme.mark, motion.fill, Rect(Offset.Zero, if (depth > 0.dp) size else size), tc, i, fill.value, phase, markPicture, depth.toPx())
         }
         // On ink blocks the letter still shows through, pale on the ink; the newest word's letters stand out.
-        val under = g.start[i].takeIf { it in 'A'..'Z' }
+        val under = g.start[i].uppercaseChar().takeIf { it in 'A'..'Z' }
         if (inked && under != null && theme.mark == BlotMark.BLOCK && markPicture == null && fill.value > 0.6f)
             Box(Modifier.padding(end = depth, bottom = depth).fillMaxSize(), contentAlignment = Alignment.Center) {
                 androidx.compose.material3.Text(under.toString(), fontSize = (side.value * 0.46f).sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Serif,
