@@ -24,18 +24,18 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
 2. **Word content for each language** (es, de, ja, zh): word lists, clues, sayings, Five Letters
    and Common Threads word banks, and per-language word-game tutorials.
 
-## Researched, waiting their turn
-- **Word combat deck-builder** (inspired by Paperback Adventures): spell words from letter tiles to
-  fight enemies, upgrade tiles between fights. Working names: Wordsworn, Vowelbreaker.
-- **Letter-region crossword** (inspired by Knotwords): place each region's letters so every row and
-  column reads as words; generator proves one solution. Working names: Word Quilt, Letter Parcels.
-- **Category game** (inspired by Scattergories, whose roots are the public-domain parlour game
-  "Categories"): a letter and a list of categories; computer rivals make matching answers score zero.
-  Answers checked against curated lists, with the embedding model only for "plausible?" cases.
-  Working names: Off the List, Lone Letter.
-- **Letter-grid word hunt** (inspired by Boggle): chain neighbouring letters into words; grids come
-  from our own letter frequencies and are solved before play so each has enough words. Needs a large
-  public-domain dictionary (ENABLE) with a common-word tier. Working names: Kingstep, Letter Sprawl.
+## Built for 1.1.0
+- **Letter Sprawl** (inspired by Boggle): chain touching letters into words; ENABLE dictionary with an
+  everyday tier from WordNet.
+- **Wordsworn** (inspired by Paperback Adventures): spell words from letter tiles to fight a run of monsters.
+- **Word Quilt** (inspired by Knotwords): place each patch's letters so every run across and down is a word.
+- **Lone Letter** (inspired by Scattergories, from the public-domain parlour game "Categories"): one letter,
+  many categories, computer rivals whose matching answers score zero. Lists in
+  `sudoku-engine/src/main/resources/categories/en.tsv` from `tools/words/build_categories.py`.
+
+## Support
+- A separate support Discord, set up by the owner from `docs/community/DISCORD.md`; its invite link then
+  goes in Settings → About, the Play listing and the README.
 
 ## Shared word data
 - **Open English WordNet** (CC BY 4.0, from Princeton WordNet) now feeds Word Meaning through
@@ -45,3 +45,5 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
 
 ## Ideas
 - Chess, a honeycomb word builder, Word Ladder.
+- Grouping game families under one tile (Klondike, Spider and Pyramid under Solitaire; Samurai under
+  Sudoku), waiting on the owner's decision.
