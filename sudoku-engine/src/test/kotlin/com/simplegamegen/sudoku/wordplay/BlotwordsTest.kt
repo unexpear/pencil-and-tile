@@ -210,4 +210,17 @@ class BlotwordsTest {
             assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
         }
     }
+
+    @Test fun `MEND brings an inked square back as it started, or seals a letter`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE, BlotEffect.MEND))
+        // MIPA across the top; writing it inks M I P A, then MEND brings the P back.
+        var g = Blotwords(BlotTier.EASY, 0, 4, words, "MIPA" + "XVUX").write(listOf(0, 1, 2, 3))!!
+        assertEquals(BlotEffect.MEND, g.pending!!.effect)
+        val back = g.use(2)!!
+        assertEquals('P', back.cells[2])
+        // Or a plain letter gets a seal.
+        assertEquals('x', g.use(4)!!.cells[4])
+        // A square that started inked can't be brought back.
+        assertNull(Blotwords(BlotTier.EASY, 0, 4, words, "MIPA" + "#VUX").write(listOf(0, 1, 2, 3))!!.use(4))
+    }
 }

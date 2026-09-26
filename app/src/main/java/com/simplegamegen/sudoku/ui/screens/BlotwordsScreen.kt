@@ -284,6 +284,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                 BlotEffect.ONE -> apply(g.use(i), listOf(i))
                 BlotEffect.ALIKE -> apply(g.use(i), g.cells.indices.filter { g.cells[it] == g.cells[i] })
                 BlotEffect.DIAG -> apply(g.use(i), Blots.diagonalOf(g.width, g.height, i).filter { g.cells[it] != INK })
+                BlotEffect.MEND -> apply(g.use(i), listOf(i))
                 BlotEffect.PAIR -> {
                     val a = firstPick
                     when {
@@ -335,6 +336,7 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                     BlotEffect.ALIKE -> "${w.text}: tap a letter to ink every square showing it."
                     BlotEffect.WRITE -> "${w.text}: tap a blank square, then pick a letter."
                     BlotEffect.DIAG -> "${w.text}: tap a square to ink its whole rising diagonal."
+                    BlotEffect.MEND -> "${w.text}: tap an inked square to bring it back, or a letter to seal it."
                 } else "${w.text} is waiting. Tap squares to find out what it does."
             }
             g.stuck -> "No command word can be written now. Undo a few turns, or restart."
@@ -506,7 +508,8 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
     val motion = theme.motion
     val fill = remember { Animatable(if (inked) 1f else 0f) }
     LaunchedEffect(inked) {
-        if (!inked) { fill.snapTo(0f); return@LaunchedEffect }
+        // Brought back by MEND: the ink lifts off the square.
+        if (!inked) { if (fill.value > 0f) fill.animateTo(0f, tween((500 * motion.pace.factor).toInt())) else fill.snapTo(0f); return@LaunchedEffect }
         if (fill.value >= 1f) return@LaunchedEffect
         delay((order * motion.stroke * motion.pace.factor).toLong())
         // Splashes and spins land on a spring; the rest glide in.
@@ -535,7 +538,7 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
     Box(Modifier.size(side)
         .graphicsLayer { scaleX = lift; scaleY = lift; translationX = jiggle.value * density }
         // No ripple: the lift is the press feedback, and a ripple would square off round tiles.
-        .clickable(remember { MutableInteractionSource() }, indication = null, role = Role.Button, enabled = !g.solved && !inked) { onTap() }
+        .clickable(remember { MutableInteractionSource() }, indication = null, role = Role.Button, enabled = !g.solved && (!inked || g.pending?.effect == BlotEffect.MEND)) { onTap() }
         .semantics { contentDescription = say(spoken) },
         contentAlignment = Alignment.Center) {
         // The letter tile fades as the mark takes over.
