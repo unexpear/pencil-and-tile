@@ -259,13 +259,28 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                         listOf("SUN", "TREE", "AIR", "RAIN").forEachIndexed { r, w -> w.forEachIndexed { k, ch -> letter(ch.toString(), k, r, 4, if (k == 0) c.accent else ink) } }
                     }
                     GameId.CROSSWORD -> {
-                        val cell = side / 4
-                        for ((x, y) in listOf(0 to 0, 3 to 0, 2 to 2, 0 to 3)) drawRect(ink, o + Offset(x * cell, y * cell), Size(cell, cell))
-                        for (k in 1 until 4) {
-                            drawLine(ink, o + Offset(cell * k, 0f), o + Offset(cell * k, side), strokeWidth = 1.5f)
-                            drawLine(ink, o + Offset(0f, cell * k), o + Offset(side, cell * k), strokeWidth = 1.5f)
+                        val cell = side / 5
+                        drawRect(c.accent.copy(alpha = 0.24f), o + Offset(0f, cell), Size(side, cell))
+                        for ((x, y) in listOf(0 to 0, 1 to 0, 4 to 0, 0 to 2, 4 to 2, 0 to 4, 3 to 4, 4 to 4))
+                            drawRect(ink, o + Offset(x * cell, y * cell), Size(cell, cell))
+                        for (k in 1 until 5) {
+                            drawLine(ink.copy(alpha = 0.55f), o + Offset(cell * k, 0f), o + Offset(cell * k, side), strokeWidth = side * 0.015f)
+                            drawLine(ink.copy(alpha = 0.55f), o + Offset(0f, cell * k), o + Offset(side, cell * k), strokeWidth = side * 0.015f)
                         }
-                        letter("S", 1, 1, 4); letter("U", 2, 1, 4); letter("N", 3, 1, 4); letter("A", 1, 2, 4)
+                        "WORDS".forEachIndexed { x, ch -> letter(ch.toString(), x, 1, 5) }
+                        letter("T", 2, 0, 5); letter("E", 2, 2, 5); letter("E", 2, 3, 5)
+                        for ((x, y, number) in listOf(Triple(2, 0, "1"), Triple(0, 1, "2"), Triple(1, 2, "3"))) {
+                            val label = measurer.measure(number, TextStyle(color = ink, fontSize = (cell * 0.28f / density).sp))
+                            drawText(label, topLeft = o + Offset(x * cell + cell * 0.08f, y * cell))
+                        }
+                        // A pencil rests across the unfinished lower corner.
+                        fun p(x: Float, y: Float) = o + Offset(side * x, side * y)
+                        drawLine(ink.copy(alpha = 0.2f), p(.57f, .94f), p(.98f, .51f), side * .14f, StrokeCap.Round)
+                        drawLine(Color(0xFFE8B54B), p(.57f, .90f), p(.96f, .49f), side * .12f)
+                        drawLine(Color(0xFFFFD77A), p(.57f, .88f), p(.94f, .49f), side * .035f)
+                        drawLine(Color(0xFFC97472), p(.91f, .54f), p(.98f, .47f), side * .12f, StrokeCap.Round)
+                        drawLine(Color(0xFFE5C99B), p(.57f, .90f), p(.50f, .97f), side * .08f)
+                        drawLine(ink, p(.52f, .95f), p(.49f, .98f), side * .04f, StrokeCap.Round)
                     }
                     GameId.NONOGRAM -> {
                         // A small heart painted from clues.

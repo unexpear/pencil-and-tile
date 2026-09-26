@@ -13,6 +13,25 @@ import org.junit.jupiter.api.Test
 class MeaningTest {
     private fun judge(word: String, guess: String) = MeaningJudge.judge(MeaningBank.entry(word)!!, guess)
 
+    @Test fun `every prompt is a complete context clue rather than a dictionary fragment`() {
+        MeaningBank.entries.forEach { e ->
+            assertTrue(Regex("[A-Za-z]+").findAll(e.sentence).count() >= 12, e.word)
+            assertTrue(e.sentence.last() in ".!?", e.word)
+            assertTrue(Regex("\\b${Regex.escape(e.word)}\\b", RegexOption.IGNORE_CASE).containsMatchIn(e.sentence), e.word)
+        }
+    }
+
+    @Test fun `multiple definitions are judged against the meaning used in the context`() {
+        assertEquals(RIGHT, judge("sharp", "clearly defined"))
+        assertEquals(RIGHT, judge("sharp", "distinct"))
+        assertEquals(RIGHT, judge("shy", "insufficient"))
+        assertEquals(CLOSE, judge("shy", "lacking self-confidence"))
+        assertEquals(RIGHT, judge("patient", "uncomplaining"))
+        assertEquals(CLOSE, judge("patient", "a person who requires medical care"))
+        assertEquals(RIGHT, judge("novel", "original"))
+        assertEquals(CLOSE, judge("novel", "an extended fictional work in prose"))
+    }
+
     @Test fun `plain answers in the player's own words`() {
         val cases = listOf(
             Triple("gregarious", "likes being around other people", RIGHT),

@@ -145,7 +145,7 @@ internal object BoardTutorials {
                 "Take turns drawing one line between two neighbouring dots.",
                 "Drawing the fourth side of a box claims it, and you move again.",
                 "When every line is drawn, the player with more boxes wins.",
-                "Tap between two dots to draw a line.",
+                "In a game, tap one dot and then its neighbor. Turn off Tap two dots to tap lines instead. In this tutorial, tap the missing line.",
             ),
             tips = listOf(
                 "Avoid drawing the third side of a box: your opponent will take it.",

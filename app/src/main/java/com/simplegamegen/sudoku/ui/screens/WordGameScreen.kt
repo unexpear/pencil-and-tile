@@ -10,7 +10,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,7 +24,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -34,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Surface
 import com.simplegamegen.sudoku.ui.i18n.Text
 import androidx.compose.runtime.Composable
@@ -175,15 +174,17 @@ private fun WordOptions(crossword: Boolean, difficulty: WordDifficulty, theme: I
     if (!crossword) OptionGroup("Theme", WordPuzzles.themes.indices.toList(), theme, { WordPuzzles.themes[it] }, onSelect = onTheme)
 }
 
-/** Square letter grid that fits the width when it can and scrolls sideways when it can't. */
+/** Fitted letter grid; shared zoom and pan controls reveal enlarged cells on either axis. */
 @Composable
 private fun LetterGrid(size: Int, cell: @Composable (index: Int, side: androidx.compose.ui.unit.Dp) -> Unit) {
     val look = LocalGameLook.current
     ZoomBox(Modifier.fillMaxWidth()) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val fit = maxWidth / size
-            val side = if (fit >= 30.dp) min(fit, 48.dp) else 40.dp
-            Box(Modifier.fillMaxWidth().then(if (fit < 30.dp) Modifier.horizontalScroll(rememberScrollState()) else Modifier), contentAlignment = Alignment.Center) {
+            // Start fitted on both axes. ZoomBox owns all board movement, rather than
+            // nesting a horizontal scroller around a board taller than its visible viewport.
+            val side = min(fit, 48.dp)
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Column(Modifier.clip(MaterialTheme.shapes.small).border(2.dp, look.colors.text.copy(alpha = 0.7f), MaterialTheme.shapes.small)) {
                     for (row in 0 until size) Row { for (col in 0 until size) cell(row * size + col, side) }
                 }
@@ -202,9 +203,27 @@ private fun CrosswordPlay(progress: WordProgress, state: WordGameState, vm: Word
     val solved = puzzle.entries.count { e -> e.cells.all { progress.current[it] == puzzle.letters[it] } }
     val paper = if (look.dark) c.surfaceAlt else Color(0xFFFFFEFA)
     val block = if (look.dark) Color(0xFF0B0B0D) else Color(0xFF1E1E22)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         InfoChip("$solved / ${puzzle.entries.size} answers")
         if (progress.hints > 0) InfoChip("${progress.hints} revealed", icon = GameIcons.Hint)
+    }
+    // Keep the active clue before the board so changing squares does not require
+    // scrolling past the grid to discover what was selected.
+    Surface(color = c.surface, shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, c.accent), modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { vm.selectEntry((state.selectedEntry - 1 + puzzle.entries.size) % puzzle.entries.size) }) {
+                Icon(GameIcons.Chevron, contentDescription = tr("Previous clue"), modifier = Modifier.rotate(180f))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("${puzzle.number(selected)} ${puzzle.direction(selected)} · ${selected.answer.length} letters",
+                    style = MaterialTheme.typography.labelLarge, color = c.accent)
+                Text(selected.clue, style = MaterialTheme.typography.titleMedium)
+            }
+            IconButton(onClick = { vm.selectEntry((state.selectedEntry + 1) % puzzle.entries.size) }) {
+                Icon(GameIcons.Chevron, contentDescription = tr("Next clue"))
+            }
+        }
     }
     LetterGrid(puzzle.size) { cell, side ->
         val blocked = puzzle.letters[cell] == '#'
@@ -213,73 +232,75 @@ private fun CrosswordPlay(progress: WordProgress, state: WordGameState, vm: Word
         val inSelected = cell in selected.cells
         Box(Modifier.size(side).background(when { blocked -> block; inSelected -> c.accent.copy(alpha = 0.22f).compositeOver(paper); else -> paper })
             .border(0.5.dp, if (blocked) block else c.outline)
+            .then(if (cell == selected.cells.first()) Modifier.border(2.dp, c.accent) else Modifier)
             .then(if (!blocked) Modifier.clickable(role = Role.Button) { vm.tapCell(cell) }
                 .semantics(mergeDescendants = true) {
                     contentDescription = say("Row ${cell / puzzle.size + 1}, column ${cell % puzzle.size + 1}, " +
                         (if (letter == '_') "empty" else letter.toString()) + (number?.let { ", clue $it" } ?: "") + if (inSelected) ", selected answer" else "")
                 } else Modifier)) {
             if (!blocked) {
-                if (number != null) Text(number.toString(), Modifier.align(Alignment.TopStart).padding(start = 2.dp), fontSize = 9.sp, color = c.muted)
+                if (number != null) Text(number.toString(), Modifier.align(Alignment.TopStart).padding(start = 1.dp),
+                    fontSize = (side.value * 0.23f).coerceIn(5.5f, 10f).sp, color = c.muted)
                 if (letter != '_') Text(letter.toString(), Modifier.align(Alignment.Center), fontSize = (side.value * 0.5f).sp, fontWeight = FontWeight.SemiBold,
                     color = if (look.dark) c.text else Color(0xFF1E1E22))
             }
         }
     }
-    // Active clue card.
-    val entryIndex = state.selectedEntry
+    // Answer slots fit even the longest word instead of overflowing a fixed 30dp row.
     Surface(color = c.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, c.accent), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { vm.selectEntry((entryIndex - 1 + puzzle.entries.size) % puzzle.entries.size) }) {
-                    Icon(GameIcons.Chevron, contentDescription = tr("Previous clue"), modifier = Modifier.rotate(180f))
-                }
-                Column(Modifier.weight(1f)) {
-                    Text("${puzzle.number(selected)} ${puzzle.direction(selected)} · ${selected.answer.length} letters",
-                        style = MaterialTheme.typography.labelLarge, color = c.accent)
-                    Text(selected.clue, style = MaterialTheme.typography.titleMedium)
-                }
-                IconButton(onClick = { vm.selectEntry((entryIndex + 1) % puzzle.entries.size) }) { Icon(GameIcons.Chevron, contentDescription = tr("Next clue")) }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                selected.cells.forEach { cell ->
-                    val ch = progress.current[cell]
-                    Box(Modifier.size(30.dp).background(c.surfaceAlt, MaterialTheme.shapes.extraSmall), contentAlignment = Alignment.Center) {
-                        Text(if (ch == '_') "" else ch.toString(), fontWeight = FontWeight.Bold)
+            Text("${puzzle.number(selected)} ${puzzle.direction(selected)} · ${selected.answer.length} letters",
+                style = MaterialTheme.typography.labelLarge, color = c.accent)
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val slot = min(36.dp, (maxWidth - 3.dp * (selected.cells.size - 1)) / selected.cells.size)
+                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    selected.cells.forEach { cell ->
+                        val ch = progress.current[cell]
+                        Box(Modifier.size(slot).background(c.surfaceAlt, MaterialTheme.shapes.extraSmall)
+                            .border(1.dp, c.outline, MaterialTheme.shapes.extraSmall), contentAlignment = Alignment.Center) {
+                            Text(if (ch == '_') "" else ch.toString(), fontWeight = FontWeight.Bold, fontSize = (slot.value * 0.48f).sp)
+                        }
                     }
                 }
             }
             if (!progress.complete) {
                 var draft by rememberSaveable(puzzle.letters, state.selectedEntry) { mutableStateOf("") }
                 fun submit() { if (draft.length == selected.answer.length) { vm.answer(draft); draft = "" } }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
-                        value = draft, singleLine = true, modifier = Modifier.weight(1f),
+                        value = draft, singleLine = true, modifier = Modifier.fillMaxWidth(),
                         onValueChange = { draft = it.uppercase(Locale.ROOT).filter { ch -> ch in 'A'..'Z' }.take(selected.answer.length) },
                         label = { Text("Type the answer") },
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { submit() }),
                     )
-                    Button(enabled = draft.length == selected.answer.length, onClick = ::submit, modifier = Modifier.heightIn(min = 52.dp)) { Text("Enter") }
+                    Button(enabled = draft.length == selected.answer.length, onClick = ::submit,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Enter") }
                 }
             }
             MessageLine(state.message)
         }
     }
-    for (direction in listOf("Across", "Down")) {
-        SectionTitle(direction)
-        Surface(color = c.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, c.outline)) {
-            Column {
-                puzzle.entries.withIndex().filter { puzzle.direction(it.value) == direction }.sortedBy { puzzle.number(it.value) }.forEach { (index, entry) ->
-                    val done = entry.cells.all { progress.current[it] == puzzle.letters[it] }
-                    val active = index == state.selectedEntry
-                    Row(Modifier.fillMaxWidth().background(if (active) c.accentSoft else Color.Transparent)
-                        .clickable { vm.selectEntry(index) }.padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(puzzle.number(entry).toString(), Modifier.width(24.dp), fontWeight = FontWeight.Bold, color = c.accent)
-                        Text("${entry.clue} (${entry.answer.length})", Modifier.weight(1f), color = if (done) c.muted else c.text,
-                            textDecoration = if (done) TextDecoration.LineThrough else null)
-                        if (done) Icon(GameIcons.Check, contentDescription = tr("Solved"), tint = c.success, modifier = Modifier.size(20.dp))
-                    }
+    var clueDirection by rememberSaveable(puzzle.letters) { mutableStateOf(puzzle.direction(selected)) }
+    LaunchedEffect(state.selectedEntry) { clueDirection = puzzle.direction(selected) }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf("Across", "Down").forEach { direction ->
+            FilterChip(selected = clueDirection == direction, onClick = { clueDirection = direction }, label = { Text(direction) })
+        }
+    }
+    val direction = clueDirection
+    Surface(color = c.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, c.outline)) {
+        Column {
+            puzzle.entries.withIndex().filter { puzzle.direction(it.value) == direction }.sortedBy { puzzle.number(it.value) }.forEach { (index, entry) ->
+                val done = entry.cells.all { progress.current[it] == puzzle.letters[it] }
+                val active = index == state.selectedEntry
+                Row(Modifier.fillMaxWidth().background(if (active) c.accentSoft else Color.Transparent)
+                    .clickable { vm.selectEntry(index) }.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(puzzle.number(entry).toString(), Modifier.width(24.dp), fontWeight = FontWeight.Bold, color = c.accent)
+                    Text("${entry.clue} (${entry.answer.length})", Modifier.weight(1f), color = if (done) c.muted else c.text,
+                        textDecoration = if (done) TextDecoration.LineThrough else null)
+                    if (done) Icon(GameIcons.Check, contentDescription = tr("Solved"), tint = c.success, modifier = Modifier.size(20.dp))
                 }
             }
         }

@@ -1,8 +1,9 @@
 package com.simplegamegen.sudoku.wordplay
 
 /**
- * English words for Word Meaning. Definitions, example sentences, synonyms and antonyms come from
- * Open English WordNet (CC BY 4.0, derived from Princeton WordNet), joined with hand-written extras by
+ * English words for Word Meaning. Definitions, synonyms and antonyms come from
+ * Open English WordNet (CC BY 4.0, derived from Princeton WordNet), joined with original context clues
+ * pinned to specific dictionary senses in contexts_en.tsv and hand-written answer extras by
  * tools/meaning/build_meaning_bank.py into resources/meaning/en.tsv. Levels run 0 (everyday) to 3 (rare).
  */
 object MeaningBank {

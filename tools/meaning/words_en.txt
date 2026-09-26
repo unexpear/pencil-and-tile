@@ -1,5 +1,5 @@
-# Words for Word Meaning by level (0 everyday .. 3 rare). The build script picks each word's most common
-# dictionary sense that has an example sentence using the word; words without one are reported and skipped.
+# Words for Word Meaning by level (0 everyday .. 3 rare). The build script uses the reviewed
+# sense and clue in contexts_en.tsv; words without one are reported and skipped.
 [0]
 brave ancient enormous fragile hilarious exhausted shallow vanish cautious generous rapid damp gloomy stubborn
 curious feeble polite rude clumsy cozy delicious filthy furious gentle greedy grumpy hollow humid jealous lazy

@@ -58,9 +58,9 @@ import com.simplegamegen.sudoku.wordplay.MeaningVerdict
 
 val MeaningSetup: (PuzzleFactory) -> PlaySetup<MeaningGame> = { factory ->
     PlaySetup(
-        rules = "Each round shows eight words, each used in a sentence. Type what you think the word means, in your own words. " +
+        rules = "Each round shows eight words, each used in a sentence. Words can have several meanings: explain the meaning used in this sentence, in your own words. " +
             "A right answer scores 2 (1 if you used a hint); a close one gets a second try and scores 1. After each word you see " +
-            "its real meaning. If the judge got it wrong, tap I was right.",
+            "the meaning used here. If the judge got it wrong, tap I was right.",
         settingTitle = "Difficulty", settings = LevelNames,
         describe = { level -> listOf("everyday words", "less common words", "harder words", "rare words")[level] + " · ${MeaningGame.ROUND} per round" },
         settingOf = { it.level.ordinal }, inProgress = { !it.complete },
@@ -178,7 +178,7 @@ private fun Verdict(g: MeaningGame, e: MeaningEntry) {
             Text(when (v) { MeaningVerdict.RIGHT -> "Right!"; MeaningVerdict.CLOSE -> "Close"; else -> if (g.answers.last().isBlank()) "Here it is" else "Not quite" },
                 style = MaterialTheme.typography.titleMedium, color = if (v == MeaningVerdict.WRONG) c.text else tint)
             if (g.answers.last().isNotBlank()) Text("You said: ${g.answers.last()}", style = MaterialTheme.typography.bodyMedium, color = c.muted)
-            Text("It means: ${e.meaning}", style = MaterialTheme.typography.bodyLarge, color = c.text)
+            Text("In this sentence: ${e.meaning}", style = MaterialTheme.typography.bodyLarge, color = c.text)
         }
     }
 }

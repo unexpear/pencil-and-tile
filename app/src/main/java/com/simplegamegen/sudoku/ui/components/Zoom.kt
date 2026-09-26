@@ -8,12 +8,14 @@ import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.FilterChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.i18n.tr
+import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 
 /** Zoom and pan state for one board. [scale] 1 means fitted to the screen. */
@@ -79,41 +82,49 @@ fun rememberZoomState(key: Any? = null): ZoomState = rememberSaveable(key, saver
 
 /**
  * Lets any board be zoomed and moved: pinch to zoom, drag with two fingers to move, or use the
- * buttons above it. Single-finger touches still reach the board, so play works as usual.
+ * buttons above it. Move board mode reserves single-finger gestures for panning;
+ * otherwise they still reach the board for play.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ZoomBox(modifier: Modifier = Modifier, state: ZoomState = rememberZoomState(), controls: Boolean = true, content: @Composable () -> Unit) {
+    var moveBoard by rememberSaveable { mutableStateOf(false) }
+    val dragToPan = moveBoard && state.zoomed
     Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (controls) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (controls) FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (state.zoomed) {
+                FilterChip(selected = moveBoard, onClick = { moveBoard = !moveBoard }, label = { Text("Move board") })
                 // Arrow buttons move a third of the view, for when a two-finger drag is awkward.
-                val step = { state.size.width / 3f }
-                ZoomButton(GameIcons.Chevron, tr("Move left"), rotation = 180f) { state.panBy(Offset(step(), 0f)) }
-                ZoomButton(GameIcons.Chevron, tr("Move up"), rotation = -90f) { state.panBy(Offset(0f, step())) }
-                ZoomButton(GameIcons.Chevron, tr("Move down"), rotation = 90f) { state.panBy(Offset(0f, -step())) }
-                ZoomButton(GameIcons.Chevron, tr("Move right")) { state.panBy(Offset(-step(), 0f)) }
+                ZoomButton(GameIcons.Chevron, tr("Move left"), rotation = 180f) { state.panBy(Offset(state.size.width / 3f, 0f)) }
+                ZoomButton(GameIcons.Chevron, tr("Move up"), rotation = -90f) { state.panBy(Offset(0f, state.size.height / 3f)) }
+                ZoomButton(GameIcons.Chevron, tr("Move down"), rotation = 90f) { state.panBy(Offset(0f, -state.size.height / 3f)) }
+                ZoomButton(GameIcons.Chevron, tr("Move right")) { state.panBy(Offset(-state.size.width / 3f, 0f)) }
                 Box(Modifier.size(6.dp))
-                ZoomButton(GameIcons.Fit, tr("Fit the board")) { state.reset() }
+                ZoomButton(GameIcons.Fit, tr("Fit the board")) { state.reset(); moveBoard = false }
                 ZoomButton(GameIcons.Minus, tr("Zoom out")) { state.zoomBy(1 / 1.5f) }
             }
             ZoomButton(GameIcons.Plus, tr("Zoom in"), enabled = state.scale < ZoomState.MAX) { state.zoomBy(1.5f) }
         }
+        if (dragToPan) Text("Drag to move the board. Turn off Move board to play.")
         Box(Modifier.clipToBounds().onSizeChanged { state.size = it }
-            .pointerInput(state) {
+            .pointerInput(state, dragToPan) {
                 awaitEachGesture {
-                    // Watch every touch before the board does; take over only while two or more fingers are down.
+                    var claimed = dragToPan
+                    // Consume in Initial so the page's vertical scroller and board taps cannot
+                    // steal a pan. Keep ownership until all fingers lift after a pinch.
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
                         val down = event.changes.filter { it.pressed }
-                        if (down.isEmpty()) break
-                        if (down.size >= 2) {
+                        if (down.size >= 2) claimed = true
+                        if (claimed) {
                             val zoom = event.calculateZoom()
                             val pan = event.calculatePan()
                             val centroid = event.calculateCentroid(useCurrent = true)
-                            if (zoom != 1f) state.zoomBy(zoom, centroid)
-                            if (pan != Offset.Zero) state.panBy(pan)
+                            if (down.size >= 2 && zoom != 1f) state.zoomBy(zoom, centroid)
+                            if (down.isNotEmpty() && pan != Offset.Zero) state.panBy(pan)
                             event.changes.forEach { it.consume() }
                         }
+                        if (down.isEmpty()) break
                     }
                 }
             }) {

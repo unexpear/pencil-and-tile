@@ -1,0 +1,339 @@
+# Original context clues. Word, part of speech, exact WordNet definition, sentence.
+# Keep the selected sense fixed: do not reuse a sentence with another definition.
+brave	adjective	possessing or displaying courage; able to face and deal with danger or fear without flinching	The brave firefighter entered the burning house despite the danger and carried a child to safety.
+ancient	adjective	belonging to times long past especially of the historical period before the fall of the Western Roman Empire	We visited ancient ruins built by the Romans nearly two thousand years before our trip.
+enormous	adjective	extraordinarily large in size or extent or amount or power or degree	The enormous pumpkin was so large that four people had to lift it onto the truck.
+fragile	adjective	easily broken or damaged or destroyed	These fragile glass ornaments can break if dropped, so wrap each one before packing them.
+hilarious	adjective	marked by or causing boisterous merriment or convulsive laughter	The clown's hilarious routine made the audience laugh so hard that some people cried.
+exhausted	adjective	drained of energy or effectiveness; extremely tired; completely exhausted	After hiking all day, Maya was exhausted and could barely keep her eyes open at dinner.
+shallow	adjective	lacking physical depth; having little spatial extension downward or inward from an outer surface or backward or outward from a center	The shallow water reached only our ankles, so we could walk across without swimming.
+vanish	verb	become invisible or unnoticeable	Watch the stars vanish as daylight grows brighter and you can no longer see them.
+cautious	adjective	showing careful forethought	The cautious driver checked both directions twice before slowly pulling into the busy road.
+generous	adjective	willing to give and share unstintingly	Our generous neighbor shared her vegetables with every family and asked for nothing in return.
+rapid	adjective	characterized by speed; moving with or capable of moving with high speed	The river's rapid current swept the little boat downstream before we could catch it.
+damp	adjective	slightly wet	My shirt was still damp after drying for an hour, but it was no longer dripping.
+gloomy	adjective	depressingly dark	Little sunlight reached the gloomy forest floor beneath the thick branches that blocked the sky overhead.
+stubborn	adjective	tenaciously unwilling or marked by tenacious unwillingness to yield	The stubborn goat refused to leave the path even when we offered food and gently pulled its rope.
+curious	adjective	eager to investigate and learn or learn more (sometimes about others' concerns)	The curious child kept asking how the telescope worked and wanted to examine every part.
+feeble	adjective	lacking strength or vigor	After weeks in bed, his feeble arms could barely lift a glass of water.
+polite	adjective	marked by refinement in taste and manners	She admired the polite manners at dinner, where everyone waited their turn and spoke respectfully.
+rude	adjective	(used especially of commodities) being unprocessed or manufactured using only simple or minimal processes	The old mill received rude cotton straight from the fields, before it had been cleaned or processed.
+clumsy	adjective	lacking grace in movement or posture	My clumsy attempt to carry three plates ended with me tripping and dropping them all.
+cozy	adjective	enjoying or affording comforting warmth and shelter especially in a small space	We settled into a cozy corner beside the fire, warm and sheltered from the winter wind.
+delicious	adjective	greatly pleasing or entertaining	The storyteller shared a delicious joke that delighted the guests and kept them smiling all evening.
+filthy	adjective	disgustingly dirty; filled or smeared with offensive matter	The dog rolled in the mud and left filthy paw prints all over the clean carpet.
+furious	adjective	marked by extreme and violent energy	A furious battle shook the fortress as powerful attacks struck its walls without a pause.
+gentle	adjective	soft and mild; not harsh or stern or severe	Instead of shouting, the teacher gave a gentle reminder in a soft voice that hurt nobody's feelings.
+greedy	adjective	immoderately desirous of acquiring e.g. wealth	The greedy merchant demanded more money even though he already had far more than he needed.
+hollow	adjective	not solid; having a space or gap or cavity	We knocked on the hollow log and heard an echo from the empty space inside.
+humid	adjective	containing or characterized by a great deal of water vapor	The humid air felt heavy with moisture, and our towels stayed wet all afternoon.
+jealous	adjective	showing extreme cupidity; painfully desirous of another's advantages	She felt jealous of her brother's new bicycle and wished she had one just as good.
+lazy	adjective	moving slowly and gently	We floated down the lazy river, moving so slowly that we could watch every passing dragonfly.
+lonely	adjective	lacking companions or companionship	He felt lonely after moving away from his friends and having nobody to talk to after school.
+loyal	adjective	steadfast in allegiance or duty	The loyal crew stood by their captain through years of hardship and never abandoned her.
+messy	adjective	dirty and disorderly	His messy desk was covered in loose papers, dirty cups, and pencils scattered everywhere.
+nervous	adjective	easily agitated	The nervous performer jumped at every sound and kept twisting her hands before going onstage.
+noisy	adjective	full of or characterized by loud and nonmusical sounds	The noisy cafeteria rang with shouting, clattering trays, and dozens of conversations at once.
+obvious	adjective	easily perceived and understood	The mistake was obvious because the sign said the shop opened at twenty-five o'clock.
+peculiar	adjective	beyond or deviating from the usual or expected	A peculiar smell came from the kitchen, unlike anything we had ever smelled before.
+proud	adjective	feeling self-respect or pleasure in something by which you measure your self-worth; or being a reason for pride	Her proud parents beamed as she accepted the award for the project she had worked hard to finish.
+rough	adjective	having or caused by an irregular surface	The rough bark scratched my hand as I ran my fingers over its bumps and ridges.
+rusty	adjective	covered with or consisting of rust	The rusty gate was covered in reddish flakes after years of standing outside in the rain.
+sharp	adjective	(of something seen or heard) clearly defined	The sharp photograph showed every tiny thread in the fabric without a single blurry edge.
+shy	adjective	short	We needed twelve chairs but had only eleven, leaving us one shy of the number required.
+silent	adjective	marked by absence of sound	The house was silent after everyone left, with no voices, music, or footsteps to be heard.
+sleepy	adjective	ready to fall asleep	The sleepy puppy yawned repeatedly and struggled to keep its eyes open beside the fire.
+slippery	adjective	causing or tending to cause things to slip or slide	The slippery pavement was covered in ice, and my feet slid whenever I tried to walk.
+sticky	adjective	moist as with undried perspiration and with clothing sticking to the body	After running in the heat, I felt sticky with sweat and my shirt clung to my back.
+strict	adjective	rigidly accurate; allowing no deviation from a standard	As a strict vegetarian, she never ate meat and checked every ingredient before choosing a meal.
+sturdy	adjective	having rugged physical strength; inured to fatigue or hardships	The sturdy athlete carried the heavy equipment uphill without tiring or asking for help.
+swift	adjective	moving very fast	The swift runner crossed the field so quickly that the defenders could not catch him.
+tidy	adjective	marked by order and cleanliness in appearance or habits	Her tidy room had books lined up on shelves and every toy put in its place.
+timid	adjective	lacking self-confidence	The timid student knew the answer but hesitated to speak because she doubted herself.
+tiny	adjective	very small	The tiny seed was so small that three of them could fit on my fingernail.
+tough	adjective	not given to gentleness or sentimentality	The tough coach showed no sympathy for complaints and insisted that everyone finish the difficult drill.
+vast	adjective	unusually great in size or amount or degree or especially extent or scope	The vast desert stretched to the horizon in every direction, far beyond what we could cross in a day.
+wicked	adjective	intensely or extremely bad or unpleasant in degree or quality	The sailors endured a wicked storm that battered their ship and made every hour miserable.
+wise	adjective	having or prompted by wisdom or discernment	The wise leader considered the risks and learned from past mistakes before choosing a careful solution.
+anxious	adjective	causing or fraught with or showing anxiety	She felt anxious while waiting for news of the missing dog and could not stop worrying.
+calm	adjective	not agitated; without losing self-possession	Even when the alarm sounded, he remained calm and explained what to do without panicking.
+cheerful	adjective	being full of or promoting cheer; having or showing good spirits	Her cheerful smile and happy greetings lifted everyone's spirits on the dark and rainy morning.
+eager	adjective	having or showing keen interest or intense desire or impatient expectancy	The eager students arrived early and could hardly wait to begin their first science experiment.
+fierce	adjective	marked by extreme and violent energy	The fierce fighting continued through the night, with powerful attacks coming from both sides.
+grateful	adjective	feeling or showing gratitude	I felt grateful for her help and wrote a note thanking her for everything she had done.
+honest	adjective	not disposed to cheat or defraud; not deceptive or fraudulent; marked by truth	The honest shopkeeper returned the extra money instead of keeping it when I paid too much.
+nasty	adjective	offensive or even (of persons) malicious	In a nasty mood, he insulted his friends and deliberately said things that would upset them.
+neat	adjective	clean or organized	Her neat desk had clean surfaces and papers arranged in carefully labeled folders.
+odd	adjective	not easily explained	It seemed odd that the locked room was wet even though the ceiling and windows were dry.
+patient	adjective	enduring trying circumstances with even temper or characterized by such endurance	The patient teacher explained the problem again without getting angry when we still did not understand.
+smooth	adjective	having a surface free from roughness or bumps or ridges or irregularities	The smooth stone had no bumps or sharp edges when I rubbed it between my fingers.
+thick	adjective	not thin; of a specific thickness or of relatively great extent from one surface to the opposite usually in the smallest of the three solid dimensions	The thick wooden door was several inches from front to back and took two people to lift.
+vague	adjective	not clearly expressed or understood	His vague directions mentioned somewhere near a tree but never explained which road to take.
+wander	verb	move about aimlessly or without any destination, often in search of food or employment	With no destination in mind, we decided to wander through the park and see where the paths led.
+shiver	verb	shake, as from cold	The cold wind made me shiver, and my shoulders shook until I put on a warm coat.
+stumble	verb	walk unsteadily, tripping repeatedly	Loose stones made me stumble along the path, losing my balance and nearly falling several times.
+gather	verb	assemble or get together	Please gather the scattered pencils into one box so we can put them away together.
+borrow	verb	get temporarily	May I borrow your bicycle this afternoon and return it to you before dinner?
+chase	verb	go after with the intent to catch	The dog began to chase the bouncing ball, running after it and trying to catch it.
+scatter	verb	to cause to separate and go in different directions	The sudden noise made the birds scatter from the tree, flying away in different directions.
+tremble	verb	move or jerk quickly and involuntarily up and down or sideways	Her hands began to tremble before the speech, shaking so much that the paper rattled.
+glare	verb	look at with a fixed gaze	He turned to glare at the person who had pushed him, fixing them with an angry stare.
+mumble	verb	grind with the gums; chew without teeth and with great difficulty	Without his dentures, the old man had to mumble the soft bread, working it slowly with his gums.
+giggle	verb	laugh nervously	I began to giggle during my introduction, laughing nervously even though nobody had told a joke.
+wobble	verb	move unsteadily	The loose wheel made the cart wobble from side to side instead of rolling steadily.
+drowsy	adjective	half asleep	The warm room made me drowsy, and I kept drifting halfway into sleep during the film.
+dizzy	adjective	having or causing a whirling sensation; liable to falling	After spinning around, I felt dizzy and grabbed the wall because the room seemed to whirl.
+chilly	adjective	not characterized by emotion	Her chilly reply contained no warmth or sympathy, even after I told her how upset I was.
+crisp	adjective	(of something seen or heard) clearly defined	We heard the crisp snap of a twig, a clear sound that stood out from the quiet forest.
+rumor	verb	tell or spread rumors	People began to rumor that the empty shop would become a bakery, although nobody had confirmed it.
+feast	noun	something experienced with great delight	The garden was a feast for the eyes, with beautiful flowers that delighted us at every turn.
+harvest	verb	gather, as of natural products	The farmers will harvest the ripe grapes this week, picking them from the vines and filling baskets.
+treasure	noun	accumulated wealth in the form of money or jewels etc.	The pirates buried their treasure in a chest filled with gold coins and sparkling jewels.
+hazard	noun	a source of danger; a possibility of incurring loss or misfortune	The broken glass was a hazard because anyone walking barefoot could cut their feet on it.
+puzzle	verb	be uncertain about; think about without fully understanding or being able to decide	We continued to puzzle over the strange message, unable to work out what it meant.
+ambitious	adjective	having a strong desire for success or achievement	The ambitious student planned to master four languages and win a scholarship before finishing school.
+reluctant	adjective	unwillingness to do something contrary to your custom	Usually unwilling to sing in public, he gave a reluctant performance only after his friends insisted.
+frugal	adjective	avoiding waste	My frugal uncle repairs his old coat and saves leftover food instead of wasting money or supplies.
+vivid	adjective	having strong or striking color	The bird's vivid red feathers stood out brightly against the dull gray rocks behind it.
+tedious	adjective	so lacking in interest as to cause mental weariness	Copying the same numbers for hours was tedious, and I struggled to stay interested in the task.
+cunning	adjective	marked by skill in deception	The cunning thief distracted the guard with a false story while a partner slipped through the door.
+humble	adjective	marked by meekness or modesty; not arrogant or prideful	Despite winning the prize, she remained humble and credited her teammates instead of boasting about herself.
+obsolete	adjective	old; no longer valid or fashionable	The shop stopped selling the obsolete machine because newer models had replaced it years ago.
+pristine	adjective	immaculately clean and unused	The pristine white shirt had never been worn and had no stains, wrinkles, or marks.
+bewildered	adjective	perplexed by many conflicting situations or statements; filled with bewilderment	Faced with three conflicting maps, we were bewildered and could not decide which direction to follow.
+diligent	adjective	quietly and steadily persevering especially in detail or exactness	The diligent worker checked each measurement and kept working carefully until every part was finished.
+abundant	adjective	present in great quantity	Rain was abundant that spring, filling every pond and giving the gardens more water than they needed.
+scarce	adjective	deficient in quantity or number compared with the demand	Fresh vegetables became scarce during the drought, and the shop rarely had enough for everyone.
+agile	adjective	moving quickly and lightly	The agile gymnast sprang between the bars and landed lightly without losing her balance.
+anonymous	adjective	having no known name or identity or known source	An anonymous donor left money at the shelter without giving a name or any clue to their identity.
+arrogant	adjective	having or showing feelings of unwarranted importance out of overbearing pride	The arrogant player claimed he was better than everyone else and refused to listen to advice.
+awkward	adjective	causing inconvenience	The delivery arrived at an awkward time, blocking the doorway just as the guests were leaving.
+bizarre	adjective	conspicuously or grossly unconventional or unusual	The bizarre house was shaped like a giant teapot, unlike any other building on the street.
+blunt	adjective	having a broad or rounded end	The blunt pencil made wide marks because its tip was rounded instead of coming to a point.
+considerate	adjective	showing concern for the rights and feelings of others	Our considerate neighbor turned down the music when she learned that the baby was sleeping.
+cordial	adjective	diffusing warmth and friendliness	The host gave us a cordial welcome, smiling warmly and making everyone feel at home.
+cramped	adjective	constricted in size	The cramped cabin was so small that we could barely turn around without bumping into furniture.
+defiant	adjective	boldly resisting authority or an opposing force	The defiant student folded his arms and refused to follow the rule despite repeated warnings.
+dense	adjective	permitting little if any light to pass through because of denseness of matter	The dense smoke blocked so much light that we could barely see the doorway ahead.
+dismal	adjective	causing dejection	The dismal room had leaking walls and broken furniture, making everyone feel discouraged as they entered.
+durable	adjective	existing for a long time	They hoped for a durable peace that would continue for generations rather than end after a few months.
+elated	adjective	exultantly proud and joyful; in high spirits	She was elated when her team won, jumping up and cheering with a huge smile.
+elegant	adjective	refined and tasteful in appearance or behavior or style	The elegant lettering flowed gracefully across the invitation, with carefully balanced shapes and tasteful decoration.
+fickle	adjective	marked by erratic changeableness in affections or attachments	His fickle friend praised the team one day and abandoned it for a rival the next.
+flimsy	adjective	lacking solidity or strength	The flimsy table shook under a single plate, and one thin leg bent when we leaned on it.
+futile	adjective	producing no result or effect	Trying to dry the floor while the pipe was still leaking proved futile; it stayed wet.
+gallant	adjective	unflinching in battle or action	The gallant defender held his position under attack and did not retreat when the danger increased.
+gaudy	adjective	tastelessly showy	The gaudy jacket mixed flashing lights, huge sequins, and clashing colors that overwhelmed the whole outfit.
+genuine	adjective	not fake or counterfeit	An expert confirmed that the painting was genuine, created by the artist rather than copied by someone else.
+gracious	adjective	characterized by charm, good taste, and generosity of spirit	Although we arrived without warning, our gracious host welcomed us warmly and offered everyone refreshments.
+grim	adjective	not to be placated or appeased or moved by entreaty	With grim determination, she refused every plea to stop and continued the difficult search all night.
+gullible	adjective	naive and easily deceived or tricked	The gullible traveler believed a stranger's impossible promise and handed over money without checking the story.
+hasty	adjective	excessively quick	In his hasty departure, he rushed out so quickly that he forgot his coat and keys.
+hostile	adjective	characterized by enmity or ill will	The hostile crowd shouted threats and made it clear that the visitors were not welcome.
+idle	adjective	not in action or at work	The machines stood idle during the power cut, and no work could be done until electricity returned.
+immense	adjective	unusually great in size or amount or degree or especially extent or scope	The immense ship towered above the dock and stretched farther than several football fields placed together.
+impulsive	adjective	proceeding from natural feeling or impulse without external stimulus	In an impulsive burst of affection, she hugged her friend before she had time to think about it.
+inevitable	adjective	incapable of being avoided or prevented	With no fuel left and no station nearby, stopping the car became inevitable despite our efforts.
+keen	adjective	painful as if caused by a sharp instrument	The keen wind cut painfully through our thin coats and stung our faces as we crossed the field.
+lavish	adjective	very generous	The lavish donor bought new equipment for every classroom and funded repairs throughout the school.
+lenient	adjective	not strict	The lenient teacher accepted our late work without punishment and gave us extra time to finish.
+lofty	adjective	of high moral or intellectual value; elevated in nature or style	Her lofty ideal was a world where every child could learn, regardless of wealth or background.
+lucid	adjective	(of language) transparently clear; easily understandable	His lucid directions explained each turn so clearly that we found the house without any confusion.
+meager	adjective	deficient in amount or quality or extent	Their meager food supply was barely enough for one meal, although the journey would last several days.
+modest	adjective	marked by simplicity; having a humble opinion of yourself	Their modest apartment had simple furniture and only the essentials, with no expensive decorations or luxuries.
+morose	adjective	showing a brooding ill humor	He sat in morose silence all evening, dwelling on his disappointment and refusing friendly conversation.
+naive	adjective	marked by or showing unaffected simplicity and lack of guile or worldly experience	The naive newcomer trusted every promise in the advertisement because she had little experience of dishonest sellers.
+nimble	adjective	moving quickly and lightly	The nimble dancer changed direction quickly and lightly without missing a step or losing balance.
+notorious	adjective	known widely and usually unfavorably	The notorious swindler was widely known for cheating customers, so the villagers refused to trust him.
+novel	adjective	original and of a kind not seen before	Her novel solution used a method nobody on the team had ever seen before.
+opaque	adjective	not transmitting or reflecting light or radiant energy; impenetrable to sight	The opaque curtain blocked the light completely, so we could not see anything through it.
+ornate	adjective	marked by elaborate rhetoric and elaborated with decorative details	His ornate speech piled elaborate phrases and decorative comparisons onto a message that could have been simple.
+placid	adjective	(of a body of water) free from disturbance by heavy waves	The placid bay had no breaking waves, and its smooth surface reflected the boats almost perfectly.
+plausible	adjective	apparently reasonable and credible, and therefore convincing	Her explanation seemed plausible because it fit the evidence and could reasonably account for the missing keys.
+potent	adjective	having or wielding force or authority	The potent ruler could command armies and change laws, exercising authority across the entire region.
+radiant	adjective	radiating or as if radiating light	The radiant sunrise filled the clouds with glowing light and brightened the whole valley.
+rigid	adjective	incapable of or resistant to bending	The rigid metal bar would not bend even when we pressed hard against both ends.
+robust	adjective	sturdy and strong in form, constitution, or construction	The robust bridge had thick supports and a strong frame that withstood years of heavy traffic.
+rustic	adjective	characteristic of rural life	The rustic cottage reminded us of country life, with handmade stools and baskets beside the hearth.
+shrewd	adjective	marked by practical hardheaded intelligence	The shrewd buyer checked prices elsewhere and noticed the hidden charges before agreeing to the deal.
+sluggish	adjective	slow or slothful	The sluggish stream moved so slowly that floating leaves seemed almost motionless beside the bank.
+solemn	adjective	dignified and somber in manner or character and committed to keeping promises	She made a solemn promise to protect the secret, speaking seriously and fully intending to keep her word.
+somber	adjective	lacking brightness or color; dull	The somber brown curtains and dull gray walls gave the room little brightness or color.
+spontaneous	adjective	happening or arising without apparent external cause	Their spontaneous laughter burst out naturally at the surprise, without anyone planning or prompting it.
+sparse	adjective	not dense	The trees were sparse on the hillside, with large stretches of empty ground between them.
+stern	adjective	of a stern or strict bearing or demeanor; forbidding in aspect	The guard's stern expression and unsmiling stare made us stop joking and stand quietly.
+subtle	adjective	difficult to detect or grasp by the mind or analyze	The color change was subtle, and we had to place the pictures side by side to notice it.
+sullen	adjective	showing a brooding ill humor	He gave a sullen reply and spent the evening brooding angrily instead of joining the conversation.
+tactful	adjective	having or showing a sense of what is fitting and considerate in dealing with others	Her tactful criticism mentioned what worked well before gently explaining how the painting could improve.
+tense	adjective	taut or rigid; stretched tight	The tense wire stretched tightly between the posts and barely moved when we pressed against it.
+tranquil	adjective	(of a body of water) free from disturbance by heavy waves	The tranquil lake lay still beneath the sky, without rough waves to disturb its surface.
+trivial	adjective	of little substance or significance	The report focused on trivial details, such as the color of the folders, while ignoring the main problem.
+turbulent	adjective	characterized by unrest or disorder or insubordination	During those turbulent years, repeated rebellions and unrest prevented the country from settling into peace.
+unanimous	adjective	in complete agreement	The decision was unanimous: every member voted for the plan, and nobody opposed it.
+valiant	adjective	having or showing valor	The valiant rescuer entered the dangerous floodwater and kept trying to reach the stranded family.
+vigilant	adjective	carefully observant or attentive; on the lookout for possible danger	The vigilant watchkeeper scanned the horizon all night, ready to spot the first sign of danger.
+volatile	adjective	evaporating readily at normal temperatures and pressures	The volatile liquid disappeared quickly from the open dish as it evaporated at room temperature.
+wary	adjective	marked by keen caution and watchful prudence	The wary hikers examined the unstable bridge carefully before deciding whether it was safe to cross.
+devour	verb	to consume	The flames began to devour the wooden shed, consuming its walls and roof within minutes.
+linger	verb	remain present although waning or gradually dying	The smell of fresh bread continued to linger in the kitchen long after the oven was switched off.
+mimic	adjective	constituting an imitation	The actors staged a mimic battle with painted shields, pretending to fight without hurting anyone.
+flourish	noun	a showy gesture	With a dramatic flourish, the magician swept his arm in a wide arc before revealing the card.
+dwindle	verb	become smaller or lose substance	Our savings began to dwindle as we paid each bill, leaving less money in the account every week.
+lure	verb	provoke someone to do something through (often false or exaggerated) promises or persuasion	The false advertisement tried to lure customers into paying by promising prizes that did not exist.
+nudge	verb	to push against gently	Give my elbow a gentle nudge when the bus arrives so I notice without disturbing the other passengers.
+soothe	verb	cause to feel better	The cool cloth helped soothe her aching forehead, easing the discomfort until she could rest.
+startle	verb	to stimulate to action	A sudden crash can startle a sleeping cat into leaping up and running across the room.
+thrive	verb	grow vigorously	The seedlings began to thrive in the sunny window, growing taller and producing new leaves every week.
+scold	verb	censure severely or angrily	The coach began to scold the players, angrily criticizing them for deliberately ignoring the safety rules.
+flee	verb	run away quickly	When the fire spread toward the tents, we had to flee the campsite as quickly as possible.
+loathe	verb	find repugnant	I loathe the smell of spoiled milk so much that even a small whiff makes me recoil.
+mend	verb	heal or recover	The doctor said my broken wrist would mend over time as the damaged bone healed.
+gregarious	adjective	instinctively or temperamentally seeking and enjoying the company of others	My gregarious cousin seeks out company at every gathering and enjoys talking with people she has just met.
+ephemeral	adjective	lasting a very short time	The ephemeral rainbow lasted only a few moments before the clouds shifted and it disappeared.
+candid	adjective	characterized by directness in manner or speech; without subtlety or evasion	Her candid reply described exactly what she thought of the plan, without hiding her doubts behind polite excuses.
+meticulous	adjective	marked by precise accordance with details	The meticulous researcher checked every date and measurement twice, making sure no tiny detail was overlooked.
+benevolent	adjective	showing or motivated by sympathy and understanding and generosity	The benevolent neighbor noticed our hardship and quietly brought food and blankets without expecting a reward.
+lethargic	adjective	deficient in alertness or activity	After the illness, he felt lethargic and moved slowly, lacking the energy even to join his favorite game.
+ambiguous	adjective	open to two or more interpretations; or of uncertain nature or significance; or (often) intended to mislead	The ambiguous note said to meet by the bank, but we could not tell whether it meant the river or the building.
+eloquent	adjective	expressing yourself readily, clearly, effectively	Her eloquent speech expressed the villagers' hopes so clearly and powerfully that the whole hall listened in silence.
+mundane	adjective	found in the ordinary course of events	After the exciting expedition, mundane chores like washing dishes and folding clothes seemed completely ordinary.
+resilient	adjective	recovering readily from adversity, depression, or the like	The resilient plant grew new shoots after the storm broke its branches and soon looked healthy again.
+skeptical	adjective	marked by or given to doubt	The skeptical customer doubted the extraordinary claim and asked to see evidence before believing it.
+impartial	adjective	showing lack of favoritism	The impartial referee applied the same rules to both teams, even though her brother played for one of them.
+serene	adjective	not agitated; without losing self-possession	She remained serene during the noisy argument, breathing steadily and speaking without anger or agitation.
+frivolous	adjective	not serious in content or attitude or behavior	The frivolous story focused on silly party mishaps instead of exploring any serious issue.
+meander	verb	to move or cause to move in a sinuous, spiral, or circular course	The river began to meander across the plain, curving one way and then another instead of flowing straight.
+affable	adjective	diffusing warmth and friendliness	The affable shopkeeper greeted strangers warmly and chatted with everyone as though they were old friends.
+aloof	adjective	remote in manner	He remained aloof at the party, standing apart and showing little interest in speaking with the other guests.
+amiable	adjective	disposed to please	The amiable guest willingly helped everyone and tried to make each person feel comfortable and welcome.
+ardent	adjective	characterized by intense emotion	Her ardent love of music filled her conversations with passion and led her to practice for hours.
+astute	adjective	marked by practical hardheaded intelligence	The astute tenant noticed a costly condition hidden in the lease and negotiated it before signing.
+austere	adjective	of a stern or strict bearing or demeanor; forbidding in aspect	The judge's austere expression and unsmiling manner made the room feel strict and forbidding.
+belligerent	adjective	characteristic of an enemy or one eager to fight	His belligerent tone turned a simple disagreement into a confrontation, as though he wanted a fight.
+callous	adjective	emotionally hardened	The callous landlord laughed at the family's distress and showed no sympathy when they asked for help.
+cantankerous	adjective	having a difficult and contrary disposition	The cantankerous passenger argued about every seat and complained angrily whenever anyone tried to help.
+complacent	adjective	contented to a fault with oneself or one's actions	After years of success, the complacent team stopped preparing carefully because they assumed they could never lose.
+conspicuous	adjective	obvious to the eye or mind	The bright orange tent was conspicuous against the white snow and could be seen from far away.
+copious	adjective	large in number or quantity (especially of discourse)	She took copious notes during the lecture, filling page after page with examples and explanations.
+cryptic	adjective	of an obscure nature	His cryptic message referred to a sleeping moon, leaving us unable to understand what he wanted.
+deft	adjective	skillful in physical movements; especially of the hands	With deft movements, the craftsperson repaired the tiny watch without dropping or damaging any delicate parts.
+diffident	adjective	showing modest reserve	The diffident student offered her suggestion quietly, hesitating to draw attention to herself despite her good idea.
+docile	adjective	willing to be taught or led or supervised or directed	The docile pony followed the trainer's directions calmly and readily learned each new exercise.
+dubious	adjective	fraught with uncertainty or doubt	The outcome remained dubious because the evidence was incomplete and nobody could say which side would win.
+elusive	adjective	difficult to describe	The poem created an elusive feeling that I recognized but could not put into clear words.
+eminent	adjective	standing above others in quality or position	The eminent scientist was respected above her peers and invited to lead the country's most important research institute.
+erratic	adjective	liable to sudden unpredictable change	The erratic signal jumped unpredictably from strong to weak, making a steady connection impossible.
+exuberant	adjective	unrestrained, especially with regard to feelings	The exuberant children shouted, danced, and hugged each other, unable to contain their excitement.
+fervent	adjective	characterized by intense emotion	Her fervent appeal carried such intense emotion that her voice shook as she begged the council to act.
+fastidious	adjective	giving careful attention to detail; hard to please; excessively concerned with cleanliness	The fastidious guest inspected every glass for marks and sent back a plate with one tiny spot.
+fortuitous	adjective	having no cause or apparent cause	Our fortuitous meeting happened entirely by chance when we both missed our trains and entered the same cafe.
+furtive	adjective	marked by quiet and caution and secrecy; taking pains to avoid being observed	He cast a furtive glance at the hidden parcel, moving carefully so nobody would notice his interest.
+haughty	adjective	having or showing arrogant superiority to and disdain of those one views as unworthy	The haughty noble treated the servants as beneath her and would not even acknowledge their greetings.
+impetuous	adjective	characterized by undue haste and lack of thought or deliberation	His impetuous decision sent him racing into the river without first checking how deep or fast it was.
+incessant	adjective	uninterrupted in time and indefinitely long continuing	The incessant tapping continued through the entire night without a single quiet break.
+indolent	adjective	disinclined to work or exertion	The indolent worker avoided every task that required effort and spent the afternoon lounging in a chair.
+innate	adjective	being talented through inherited qualities	Her innate musical gift appeared before any lessons; she could reproduce tunes accurately as a very young child.
+insolent	adjective	unrestrained by convention or propriety	His insolent behavior shocked the formal gathering as he ignored every convention and spoke without restraint.
+intrepid	adjective	invulnerable to fear or intimidation	The intrepid explorer entered the dangerous cave without being frightened by the warnings or the darkness.
+jovial	adjective	full of or showing high-spirited merriment	Our jovial host laughed heartily, told cheerful stories, and kept the whole table in high spirits.
+malleable	adjective	capable of being shaped or bent or drawn out	The malleable metal could be bent and shaped into a bracelet without cracking or breaking.
+mercurial	adjective	relating to or under the (astrological) influence of the planet Mercury	In the old astrology book, a mercurial temperament was described as being under the influence of the planet Mercury.
+nonchalant	adjective	marked by blithe unconcern	She gave a nonchalant shrug when the plans changed, acting unconcerned while everyone else worried.
+oblivious	adjective	(followed by ‘to’ or ‘of’) lacking conscious awareness of	Absorbed in his book, he was oblivious to the rain and did not notice his clothes getting wet.
+obstinate	adjective	resistant to guidance or discipline	The obstinate pupil refused every instruction and would not change course even after patient guidance.
+ominous	adjective	threatening or foreshadowing evil or tragic developments	The ominous cracking sound above us suggested that the damaged roof might collapse at any moment.
+pragmatic	adjective	concerned with practical matters	Her pragmatic plan focused on the tools and money we actually had instead of imagining a perfect solution.
+prolific	adjective	intellectually productive	The prolific novelist completed several books each year and continued producing new stories throughout her long career.
+prudent	adjective	careful and sensible; marked by sound judgment	It was prudent to save some water for the return journey rather than drink it all at once.
+rancid	adjective	(used of decomposing oils or fats) having a rank smell or taste usually due to a chemical change or decomposition	The old butter smelled rancid after sitting in the heat, with an unpleasant odor that made us discard it.
+sardonic	adjective	disdainfully or ironically humorous; scornful and mocking	After the machine failed again, he gave a sardonic smile and called it another triumph of modern engineering.
+scrutinize	verb	to look at critically or searchingly, or in minute detail	The inspector will scrutinize every seam, looking closely for tiny flaws that a quick glance might miss.
+spurious	adjective	ostensibly valid, but not actually valid	The seller's spurious certificate looked official, but the museum confirmed that it was a fake.
+stoic	adjective	seeming unaffected by pleasure or pain; impassive	She remained stoic through the painful treatment, showing no outward reaction even when it hurt.
+succinct	adjective	briefly giving the gist of something	His succinct report explained the main result in three short sentences without unnecessary details.
+superfluous	adjective	more than is needed, desired, or required	A second set of identical instructions was superfluous because everyone already had all the information they needed.
+tenuous	adjective	having thin consistency	At that height, the tenuous air was so thin that each breath provided much less oxygen.
+vehement	adjective	marked by extreme intensity of emotions or convictions; inclined to react violently; fervid	Her vehement objection was delivered with such intense feeling that she slammed her hand on the table.
+verbose	adjective	using or containing too many words	The verbose speaker took twenty minutes to explain a simple point that needed only a few words.
+vindictive	adjective	disposed to seek revenge or intended for revenge	The vindictive rival spread rumors to get revenge after losing the competition, hoping to hurt the winner.
+wistful	adjective	showing pensive sadness	She gave a wistful smile at the old photograph, quietly saddened by memories of friends she missed.
+abate	verb	become less in amount or intensity	By evening the storm began to abate, with weaker winds and much lighter rain than before.
+admonish	verb	take to task	The supervisor had to admonish the worker, speaking firmly about the repeated mistakes and careless behavior.
+concede	verb	acknowledge defeat	Seeing that his opponent had an unbeatable lead, he decided to concede and acknowledge that he had lost.
+emulate	verb	strive to equal or match, especially by imitating	The young painter tried to emulate her teacher by studying his technique and striving to match his skill.
+hinder	adjective	located at or near the back of an animal	In the old anatomy text, the animal's hinder legs were the pair at the back of its body.
+mitigate	verb	to temper	The trees helped mitigate the summer heat, reducing its severity by shading the courtyard.
+procrastinate	verb	postpone doing what one should be doing	I tend to procrastinate on difficult assignments, putting them off even when I know I should start now.
+relinquish	verb	part with a possession or right	She agreed to relinquish her claim to the land, giving up the right she had previously held.
+rectify	verb	determine the length of	In geometry class, we learned to rectify a curve by determining the length along its curved path.
+renounce	verb	cast off	He chose to renounce his former beliefs, openly casting aside the ideas he had once defended.
+squander	verb	spend thoughtlessly; throw away	He began to squander his savings on things he never used, wasting money that had taken years to earn.
+ubiquitous	adjective	being present everywhere at once	The company's logo seemed ubiquitous in the town, appearing on buses, bags, signs, and shop windows everywhere.
+sanguine	adjective	confidently optimistic and cheerful	Despite the setback, she remained sanguine about their chances and cheerfully expected the next attempt to succeed.
+obfuscate	verb	make obscure or unclear	The report used confusing jargon to obfuscate the mistake, making it harder for readers to understand what happened.
+laconic	adjective	brief and to the point; effectively cut short	His laconic reply consisted of just two words, giving the answer directly without any extra explanation.
+magnanimous	adjective	noble and generous in spirit	The magnanimous winner praised her defeated rival and offered support instead of taking the chance to gloat.
+quixotic	adjective	not sensible about practical matters; idealistic and unrealistic	His quixotic plan to end every disagreement in a single afternoon was noble but hopelessly unrealistic.
+perfunctory	adjective	hasty and without attention to detail; not thorough	She gave the report a perfunctory glance, rushing through it without checking the details or doing a thorough job.
+pugnacious	adjective	ready and able to resort to force or violence	The pugnacious player answered every disagreement with threats and seemed ready to use his fists.
+ebullient	adjective	joyously unrestrained	The ebullient crowd burst into joyful cheers and dancing when the long-awaited rescue boat appeared.
+capricious	adjective	determined by chance or impulse or whim rather than by necessity or reason	The capricious director changed the plan on a sudden whim, giving no reason for abandoning yesterday's instructions.
+esoteric	adjective	confined to and understandable by only an enlightened inner circle	The discussion was full of esoteric terms understood only by the small group of specialists in that field.
+inscrutable	adjective	of an obscure nature	His inscrutable expression gave us no clue whether he was pleased, worried, or angry about the news.
+loquacious	adjective	full of trivial conversation	Our loquacious companion talked endlessly about small daily details throughout the journey, barely pausing for breath.
+tenacious	adjective	stubbornly unyielding	The tenacious campaigner refused to abandon her cause despite years of opposition and repeated setbacks.
+ostentatious	adjective	intended to attract notice and impress others	His ostentatious entrance featured a jeweled coat and a procession of attendants meant to impress everyone watching.
+benign	adjective	not dangerous to health; not recurrent or progressive (especially of a tumor)	The specialist described the growth as benign because it was not cancerous and posed no danger to her health.
+abstruse	adjective	difficult to penetrate; incomprehensible to one of ordinary understanding or knowledge	The abstruse proof was so difficult to follow that even experienced students struggled to understand its reasoning.
+acerbic	adjective	harsh or corrosive in tone	Her acerbic review mocked the performers with biting remarks that left them hurt and discouraged.
+anachronistic	adjective	chronologically misplaced	The wristwatch looked anachronistic in the film because the story took place centuries before watches were invented.
+assiduous	adjective	marked by care and persistent effort	Through assiduous practice, she worked carefully every day and kept improving even when progress was slow.
+bellicose	adjective	having or showing a ready disposition to fight	The bellicose leader threatened war at every disagreement and showed little interest in peaceful discussion.
+circumspect	adjective	heedful of potential consequences	The circumspect traveler considered the possible consequences and checked the route before agreeing to go.
+cogent	adjective	powerfully persuasive	Her cogent argument used strong evidence and clear reasoning that persuaded even the most doubtful listeners.
+convivial	adjective	occupied with or fond of the pleasures of good company	The convivial gathering centered on shared food, lively conversation, and the pleasure of spending time with friends.
+deleterious	adjective	harmful to living things	The chemical had a deleterious effect on the pond, damaging plants and killing the fish that lived there.
+desultory	adjective	marked by lack of definite plan or regularity or purpose; jumping from one thing to another	Our desultory conversation jumped from weather to books to gardening without any clear plan or purpose.
+diaphanous	adjective	so thin as to transmit light	The diaphanous curtain was so thin that sunlight passed through it and we could see the garden beyond.
+disingenuous	adjective	not straightforward or candid; giving a false appearance of frankness	His disingenuous question pretended innocent curiosity, although he already knew the answer and wanted to embarrass her.
+effervescent	adjective	marked by high spirits or excitement	Her effervescent personality filled the room with excitement, lively stories, and infectious enthusiasm.
+egregious	adjective	conspicuously and outrageously bad or reprehensible	Falsifying every result was an egregious breach of trust, far worse than an ordinary careless mistake.
+equivocal	adjective	open to two or more interpretations; or of uncertain nature or significance; or (often) intended to mislead	Her equivocal reply could mean either agreement or refusal, leaving us uncertain which she intended.
+erudite	adjective	having or showing profound knowledge	The erudite professor drew on a deep knowledge of history and could explain obscure events in detail.
+evanescent	adjective	tending to vanish like vapor	The evanescent mist faded like breath on a mirror, disappearing almost as soon as the sun reached it.
+grandiloquent	adjective	puffed up with vanity	In a grandiloquent speech, he boasted of his unmatched greatness and described himself as the savior of the city.
+hapless	adjective	deserving or inciting pity	The hapless traveler lost his ticket, missed the last bus, and then found that his wallet was gone.
+idiosyncratic	adjective	peculiar to the individual	Her idiosyncratic way of greeting people, with three taps on her hat, was a habit nobody else shared.
+incorrigible	adjective	difficult or impossible to manage or control	The incorrigible troublemaker ignored every warning and continued disrupting the class despite repeated attempts to guide him.
+indefatigable	adjective	showing sustained enthusiastic action with unflagging vitality	The indefatigable volunteer kept working enthusiastically long after the rest of us had become too tired to continue.
+ineffable	adjective	defying expression or description	The music filled her with an ineffable joy that she could feel deeply but could not express in words.
+insipid	adjective	lacking taste or flavor or tang	The insipid soup tasted almost like warm water, with no herbs, salt, or other noticeable flavor.
+intransigent	adjective	impervious to pleas, persuasion, requests, reason	The intransigent negotiator refused to change a single demand despite evidence, reasoned arguments, and repeated pleas.
+irascible	adjective	characterized by anger	His irascible response to a simple question was an angry outburst that startled everyone nearby.
+jejune	adjective	of insufficient quantity to meet a need	The families survived on a jejune diet of tiny portions that did not provide enough food for their needs.
+maudlin	adjective	effusively or insincerely emotional	His maudlin speech overflowed with exaggerated tears and sentimental declarations that sounded more theatrical than sincere.
+mendacious	adjective	given to lying	The mendacious witness repeatedly told lies, inventing events that the recordings showed had never happened.
+munificent	adjective	very generous	The munificent gift paid for the entire new library and left enough money to buy thousands of books.
+nefarious	adjective	extremely wicked	The villains devised a nefarious scheme to poison the wells and force the villagers from their homes.
+obsequious	adjective	attentive in an ingratiating or servile manner	The obsequious assistant praised every remark the manager made and eagerly agreed with even the most foolish suggestions.
+obstreperous	adjective	noisily and stubbornly defiant	The obstreperous children shouted over every instruction and stubbornly refused to quiet down when the teacher asked.
+officious	adjective	intrusive in a meddling or offensive manner	The officious guest kept interrupting the organizers with unwanted orders about tasks that were none of his business.
+parsimonious	adjective	excessively unwilling to spend	The parsimonious owner refused to spend money on heating even though the business could easily afford it.
+pellucid	adjective	transmitting light; able to be seen through with clarity	The pellucid stream was so clear that we could see every pebble resting on its bed.
+penurious	adjective	excessively unwilling to spend	Despite his wealth, he lived in a penurious manner and refused to spend even a little on comfort.
+perspicacious	adjective	acutely insightful and wise	The perspicacious investigator noticed the hidden connection between the clues and understood what everyone else had missed.
+phlegmatic	adjective	showing little emotion	His phlegmatic response showed little emotion; even the surprising news barely changed his expression or voice.
+propitious	adjective	presenting favorable circumstances; likely to result in or show signs of success	Clear weather and steady winds made the morning propitious for sailing, giving the voyage a good chance of success.
+puerile	adjective	of or characteristic of a child	The medical history described a puerile breathing pattern, referring to the kind normally heard in a child.
+recalcitrant	adjective	marked by stubborn resistance to authority	The recalcitrant workers openly resisted the supervisor's orders and stubbornly refused to follow the new rules.
+redolent	adjective	serving to bring to mind	The old song was redolent of summer holidays, bringing childhood afternoons vividly back to her mind.
+sagacious	adjective	acutely insightful and wise	The sagacious adviser saw the risks others had overlooked and offered a wise solution grounded in experience.
+salubrious	adjective	promoting health; healthful	The village was known for its salubrious surroundings, where clean air and fresh water supported good health.
+sanctimonious	adjective	excessively or hypocritically pious	His sanctimonious speeches condemned everyone else's faults while he secretly committed the same acts he claimed to despise.
+torpid	adjective	slow and apathetic	After hours in the stifling heat, my torpid mind struggled to respond and showed little interest in anything.
+truculent	adjective	defiantly aggressive	Her truculent speech challenged every opponent aggressively and made clear that she was ready for a confrontation.
+unctuous	adjective	unpleasantly and excessively suave or ingratiating in manner or speech	The salesperson's unctuous compliments sounded so exaggerated and insincere that we distrusted every flattering word.
+vacillate	verb	move or sway in a rising and falling or wavelike pattern	The line on the monitor began to vacillate, rising and falling in a repeating wave instead of staying level.
+venal	adjective	capable of being corrupted	The venal official accepted bribes and changed his decisions whenever someone offered him enough money.
+vitriolic	adjective	harsh or corrosive in tone	His vitriolic critique attacked the writer with bitter insults instead of offering a calm discussion of the book.
+vociferous	adjective	conspicuously and offensively loud; given to vehement outcry	The vociferous crowd shouted its demands so loudly and insistently that the speaker could not be heard.

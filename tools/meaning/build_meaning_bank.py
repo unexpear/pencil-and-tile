@@ -2,8 +2,8 @@
 
 usage: python tools/meaning/build_meaning_bank.py path/to/english-wordnet-2025.xml.gz
 
-For each word in words_en.txt it picks the most common dictionary sense (adjectives first, then verbs,
-nouns, adverbs) whose example sentence uses the word, and writes one line to
+For each reviewed word in words_en.txt it selects the exact dictionary sense and original context
+clue recorded in contexts_en.tsv, and writes one line to
 sudoku-engine/src/main/resources/meaning/en.tsv:
 
     word  kind  level  sentence  definition  right  close  wrong
@@ -18,7 +18,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(ROOT, "sudoku-engine", "src", "main", "resources", "meaning", "en.tsv")
 KIND = {"a": "adjective", "s": "adjective", "v": "verb", "n": "noun", "r": "adverb"}
-POS_ORDER = ["a", "v", "n", "r"]
 
 
 def load(path):
@@ -46,13 +45,6 @@ def load(path):
     return entries, synsets, sense_by_id
 
 
-def uses(sentence, word):
-    """True when the sentence contains the word or an inflection of it."""
-    w = word.lower()
-    stem = w[:-1] if w.endswith("e") else w
-    return re.search(r"\b" + re.escape(stem) + r"[a-z]*\b", sentence.lower()) is not None
-
-
 def clean(phrases, word):
     out = []
     for p in phrases:
@@ -63,56 +55,50 @@ def clean(phrases, word):
     return out
 
 
-STOP = {"with", "the", "and", "for", "from", "that", "being", "like", "likes", "very", "not", "into", "than", "some", "who", "what",
-        "something", "someone", "others", "other", "especially", "able", "have", "having", "has", "are", "was", "more", "much"}
+def validate_context(word, sentence):
+    # Length is only a regression guard. Clue usefulness and sense alignment need editorial review.
+    if len(re.findall(r"[A-Za-z]+", sentence)) < 12 or sentence[-1:] not in (".", "!", "?"):
+        raise ValueError(f"{word}: context must be a complete sentence of at least 12 words")
+    if not re.search(r"\b" + re.escape(word) + r"\b", sentence, re.IGNORECASE):
+        raise ValueError(f"{word}: context must contain the target word")
 
 
-def words_of(text):
-    """Word stems (first five letters) without filler, so "enjoying" meets "enjoys"."""
-    return {w[:5] for w in re.findall(r"[a-z]+", text.lower()) if len(w) > 2 and w not in STOP}
+def read_contexts():
+    out = {}
+    with open(os.path.join(HERE, "contexts_en.tsv"), encoding="utf-8") as f:
+        for line in f:
+            if not line.strip() or line.startswith("#"): continue
+            word, kind, definition, sentence = line.rstrip("\n").split("\t")
+            if word in out: raise ValueError(f"duplicate context: {word}")
+            validate_context(word, sentence)
+            out[word] = (kind, definition, sentence)
+    return out
 
 
-def pick(word, entries, synsets, curated_sentence, curated_meaning=None, curated_kind=None):
-    """The word's most common sense (adjectives first, then verbs, nouns, adverbs). Its own example is used
-    when it has one that uses the word, else the curated sentence; only without either does a rarer sense
-    with an example stand in."""
-    options = entries.get(word.lower(), [])
-    rank = lambda o: POS_ORDER.index("a" if o[0] == "s" else o[0]) if ("a" if o[0] == "s" else o[0]) in POS_ORDER else 9
-    senses = [(pos, s, synsets[s.get("synset")]) for pos, ss in sorted(options, key=rank) for s in ss]
-    if curated_kind:
-        same = [x for x in senses if KIND.get(x[0]) == curated_kind]
-        senses = same or senses
-    if not senses: return None
-    if curated_meaning:
-        # The curated meaning says which sense the entry is about; pick the dictionary sense closest to it.
-        want = words_of(curated_meaning)
-        best = max(range(len(senses)), key=lambda i: (len(want & words_of(senses[i][2]["definition"] + " " + " ".join(senses[i][2]["members"]))), -i))
-        senses = [senses[best]] + senses[:best] + senses[best + 1:]
-    pos, s, syn = senses[0]
-    own = next((ex for ex in syn["examples"] if uses(ex, word)), None)
-    if own: return pos, s, syn, own
-    if curated_sentence: return pos, s, syn, curated_sentence
-    for pos, s, syn in senses[1:]:
-        for ex in syn["examples"]:
-            if uses(ex, word): return pos, s, syn, ex
-    return senses[0][0], senses[0][1], senses[0][2], ""
+def pick_context(word, entries, synsets, context):
+    """Fail instead of silently attaching a reviewed clue to a different dictionary meaning."""
+    kind, definition, sentence = context
+    for pos, senses in entries.get(word.lower(), []):
+        for sense in senses:
+            syn = synsets[sense.get("synset")]
+            if KIND.get(pos) == kind and syn["definition"] == definition:
+                return pos, sense, syn, sentence
+    raise ValueError(f"{word}: reviewed sense missing from WordNet; review before rebuilding")
 
 
 def build(path):
     entries, synsets, sense_by_id = load(path)
     curated = read_curated()
+    contexts = read_contexts()
     levels = read_words()
     rows, skipped = [], []
     for level, words in levels.items():
         for word in words:
             cur = curated.get(word)
-            got = pick(word, entries, synsets, cur["sentence"] if cur else None, (cur["meaning"] + " " + " ".join(cur["right"])) if cur else None, cur["kind"] if cur else None)
-            if got is None:
-                skipped.append((word, "not in WordNet")); continue
+            if word not in contexts:
+                skipped.append((word, "needs a reviewed context and sense")); continue
+            got = pick_context(word, entries, synsets, contexts[word])
             pos, sense, syn, example = got
-            if not example and cur: example = cur["sentence"]
-            if not example:
-                skipped.append((word, "no example sentence")); continue
             definition = syn["definition"]
             right = list(syn["members"])
             close, wrong = [], []
@@ -148,7 +134,7 @@ def build(path):
             rows.append([word, kind, str(level), example, definition, "; ".join(right), "; ".join(close), "; ".join(wrong)])
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8", newline="\n") as f:
-        f.write("# Generated by tools/meaning/build_meaning_bank.py from Open English WordNet (CC BY 4.0) and curated_en.txt.\n")
+        f.write("# Generated by tools/meaning/build_meaning_bank.py from Open English WordNet (CC BY 4.0), curated_en.txt and contexts_en.tsv.\n")
         f.write("# word\tkind\tlevel\tsentence\tdefinition\tright\tclose\twrong\n")
         for r in rows:
             assert all("\t" not in c and "\n" not in c for c in r), r

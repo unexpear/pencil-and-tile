@@ -1,6 +1,6 @@
 # Hand-written extras for Word Meaning, merged over the WordNet data by build_meaning_bank.py.
 # word|kind|level|sentence|meaning, then + right, ~ close and - wrong phrases (semicolon separated).
-# The sentence and meaning here are only used when WordNet has no example for the word.
+# Historical sentences and meanings are retained for reference. contexts_en.tsv pins the playable sense and clue.
 
 brave|adjective|0|The brave firefighter ran back inside to carry out the cat.|ready to face danger or pain without fear
 + not afraid; not scared; fearless; courageous; has courage; bold; faces danger; heroic; unafraid; daring

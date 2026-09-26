@@ -5,11 +5,14 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import com.simplegamegen.sudoku.ui.i18n.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +21,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -51,10 +56,11 @@ import kotlin.math.abs
 import kotlin.math.hypot
 import com.simplegamegen.sudoku.ui.i18n.say
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DuelStatus(over: Boolean, winner: Int, turn: Int, thinking: Boolean, you: String, cpu: String) {
     val c = LocalGameLook.current.colors
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         when {
             over -> InfoChip(when (winner) { 1 -> "You won!"; -1 -> "Computer won"; else -> "Draw" }, emphasized = true)
             turn == 1 -> InfoChip("Your turn", emphasized = true)
@@ -71,7 +77,7 @@ private fun DuelStatus(over: Boolean, winner: Int, turn: Int, thinking: Boolean,
 val DotsSetup: (PuzzleFactory) -> PlaySetup<DotsGame> = { factory ->
     PlaySetup(
         rules = "Take turns drawing a line between two neighboring dots. Whoever completes the fourth side of a box claims it and " +
-            "moves again. When every line is drawn, the player with more boxes wins. Tap between two dots to draw.",
+            "moves again. When every line is drawn, the player with more boxes wins. Tap one dot, then a neighboring dot. Turn off Tap two dots to tap between them instead.",
         settingTitle = "Level", settings = DotsGame.NAMES,
         describe = { listOf("Small board; the computer sometimes misses boxes", "Avoids handing you boxes", "Gives away as little as possible; plays the ending perfectly", "Largest board; searches the ending exactly")[it] },
         settingOf = { it.setting }, inProgress = { !it.over && it.drawn.isNotEmpty() },
@@ -86,21 +92,44 @@ val DotsSetup: (PuzzleFactory) -> PlaySetup<DotsGame> = { factory ->
 fun DotsScreen(nav: NavController, vm: PlayViewModel<DotsGame>, factory: PuzzleFactory) {
     val look = LocalGameLook.current
     val c = look.colors
+    var tapDots by rememberSaveable { mutableStateOf(true) }
     PlayShell(nav, vm, GameId.DOTS, remember(factory) { DotsSetup(factory) }) { g, s ->
         val winner = if (!g.over) 0 else g.score(1).compareTo(g.score(-1))
         DuelStatus(g.over, winner, g.turn, s.thinking, "You ${g.score(1)}", "Computer ${g.score(-1)}")
         val latest by rememberUpdatedState(g)
         val playable = !g.over && g.turn == 1 && !s.thinking
+        var selectedDot by remember(g.seed, g.drawn, tapDots) { mutableStateOf<Int?>(null) }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Tap two dots", Modifier.weight(1f))
+            Switch(checked = tapDots, onCheckedChange = { tapDots = it },
+                modifier = Modifier.semantics { contentDescription = say("Tap two dots") })
+        }
+        Text(if (!tapDots) "Tap between neighboring dots to draw a line."
+            else "Tap two neighboring dots to connect. Tap a selected dot again to cancel.",
+            style = MaterialTheme.typography.bodySmall, color = c.muted)
         TablePanel {
             ZoomBox(Modifier.fillMaxWidth()) {
                 Canvas(Modifier.fillMaxWidth().aspectRatio(1f)
                     .semantics { contentDescription = say("Dots and boxes board, ${latest.drawn.size} of ${latest.edgeCount} lines drawn") }
-                    .pointerInput(playable) {
+                    .pointerInput(playable, tapDots, g.seed) {
                         detectTapGestures { pos ->
                             if (!playable) return@detectTapGestures
                             val game = latest
                             val step = size.width / (game.cols + 0.6f); val o = step * 0.3f
                             val x = (pos.x - o) / step; val y = (pos.y - o) / step
+                            if (tapDots) {
+                                val row = Math.round(y); val col = Math.round(x)
+                                if (row !in 0..game.rows || col !in 0..game.cols || hypot(x - col, y - row) > 0.35f) return@detectTapGestures
+                                val dot = row * (game.cols + 1) + col
+                                val first = selectedDot
+                                val edge = first?.let { dotsEdgeBetween(game, it, dot) }
+                                when {
+                                    first == dot -> selectedDot = null
+                                    edge != null -> { selectedDot = null; vm.play { it.draw(edge) } }
+                                    else -> selectedDot = dot
+                                }
+                                return@detectTapGestures
+                            }
                             // Nearest line: horizontals sit on whole-number rows, verticals on whole-number columns.
                             val candidates = buildList {
                                 val r = Math.round(y); val cc = x.toInt()
@@ -125,10 +154,28 @@ fun DotsScreen(nav: NavController, vm: PlayViewModel<DotsGame>, factory: PuzzleF
                         else drawLine(c.onTable.copy(alpha = 0.15f), a, b, strokeWidth = step * 0.03f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f)))
                     }
                     for (r in 0..g.rows) for (col in 0..g.cols) drawCircle(c.onTable, step * 0.08f, p(r, col))
+                    selectedDot?.let { dot ->
+                        drawCircle(c.highlight, step * 0.16f, p(dot / (g.cols + 1), dot % (g.cols + 1)), style = Stroke(step * 0.05f))
+                    }
                 }
             }
         }
     }
+}
+
+/** Converts two neighboring dots to an unclaimed edge; diagonals and row wrapping are invalid. */
+internal fun dotsEdgeBetween(game: DotsGame, first: Int, second: Int): Int? {
+    val width = game.cols + 1
+    val count = (game.rows + 1) * width
+    if (first !in 0 until count || second !in 0 until count) return null
+    val r1 = first / width; val c1 = first % width
+    val r2 = second / width; val c2 = second % width
+    val edge = when {
+        r1 == r2 && abs(c1 - c2) == 1 -> game.h(r1, minOf(c1, c2))
+        c1 == c2 && abs(r1 - r2) == 1 -> game.v(minOf(r1, r2), c1)
+        else -> return null
+    }
+    return edge.takeIf { it !in game.drawn }
 }
 
 // ---------------- Magnetic cluster ----------------
