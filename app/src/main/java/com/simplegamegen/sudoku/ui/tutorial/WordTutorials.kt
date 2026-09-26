@@ -417,6 +417,37 @@ internal object WordTutorials {
         )
     }
 
+    val quilt: Tutorial get() {
+        // Two patches: the left column holds A and T, the right column T and O.
+        fun scene(cells: String, caption: String): Scene = Scene(2f, 2f, (0 until 4).map { i ->
+            Item(cellId(i / 2, i % 2), (i % 2).toFloat(), (i / 2).toFloat(), look = Cell(text = cells[i].toString().trim(), walls = if (i % 2 == 0) 2 else 8),
+                tone = if (cells[i] != ' ') Tone.ENTERED else Tone.PLAIN, describe = cells[i].toString().trim().ifEmpty { "empty" })
+        }, maxUnit = 72, caption = caption)
+        val patches = "Left patch: A, T · Right patch: T, O"
+        return Tutorial(
+            GameId.WORD_QUILT,
+            "Place each patch's letters so every run across and down is a word.",
+            rules = listOf(
+                "The grid is sewn from patches. Each patch holds a set of letters, shown in its corner.",
+                "Place every patch's letters in its own squares.",
+                "Every run of two or more letters, across and down, must be a word.",
+                "Tap a square, then one of its patch's letters. Tap a filled square to take its letter back.",
+                "A full run that isn't a word is underlined in red. Any arrangement that makes every run a word wins.",
+            ),
+            tips = listOf("Start with patches whose letters can only go one way, like a Q that needs a U after it.",
+                "Short runs of two letters have few choices, so they're a good place to begin."),
+            steps = listOf(
+                Step("This little quilt has two patches: the left column holds A and T, and the right column holds T and O. Every row and column must end up a word.",
+                    scene("    ", patches)),
+                Step("Each patch's letters must go in its own squares. Which letter belongs top left, so the top row and left column can both be words?",
+                    scene("    ", patches).choices("A", "T"), pick = "A", after = scene("A   ", patches),
+                    then = "A: the left patch's other letter, T, goes below it, making AT down.", help = "Try each: T on top gives TA down, which is not a common word here."),
+                Step("The left column reads AT. Now the right patch: which letter goes top right?", scene("A T ", patches).choices("T", "O"), pick = "T",
+                    after = scene("ATTO", patches), then = "AT across, TO across, AT down and TO down: every run is a word!"),
+            ),
+        )
+    }
+
     val sprawl: Tutorial get() {
         val grid = listOf("CATS", "ROEN", "IDGL", "PUMB")
         fun scene(picked: Set<String> = emptySet(), found: Set<String> = emptySet()): Scene = Scene(4f, 4f, (0 until 4).flatMap { r ->

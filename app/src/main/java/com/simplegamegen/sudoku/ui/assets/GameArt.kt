@@ -396,6 +396,19 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                         drawText(measurer.measure("W", TextStyle(color = Color(0xFF2A2418), fontSize = (side * 0.26f / density).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Black)),
                             topLeft = o + Offset(side * 0.1f, side * 0.56f))
                     }
+                    GameId.WORD_QUILT -> {
+                        // Patches of colour sewn together, each with its letters.
+                        val cell = side / 3
+                        val colors = listOf(c.accent.copy(alpha = 0.35f), c.highlight.copy(alpha = 0.7f), ink.copy(alpha = 0.12f))
+                        val patchOf = listOf(0, 0, 1, 2, 1, 1, 2, 2, 0)
+                        for (i in 0 until 9) drawRect(colors[patchOf[i]], o + Offset((i % 3) * cell, (i / 3) * cell), Size(cell, cell))
+                        "CATAREBET".forEachIndexed { i, ch -> letter(ch.toString(), i % 3, i / 3, 3) }
+                        drawRect(ink, o, Size(side, side), style = Stroke(side * 0.03f))
+                        for (k in 1 until 3) {
+                            drawLine(ink.copy(alpha = 0.6f), o + Offset(cell * k, 0f), o + Offset(cell * k, side), strokeWidth = 2f)
+                            drawLine(ink.copy(alpha = 0.6f), o + Offset(0f, cell * k), o + Offset(side, cell * k), strokeWidth = 2f)
+                        }
+                    }
                     GameId.WORD_SEARCH -> {
                         val cell = side / 4
                         drawRoundRect(look.colors.highlight.copy(alpha = 0.55f), o + Offset(cell * 0.12f, cell * 1.12f),

@@ -199,4 +199,19 @@ class TutorialContentTest {
         assertTrue(g.take(listOf(9, 5, 10)) != null, "DOG")                   // D, O above it, G diagonally
         assertEquals(3, com.simplegamegen.sudoku.wordplay.Sprawl.pointsFor("HOUSE"))
     }
+
+    @Test fun `word quilt tutorial grid is words every way`() {
+        for (w in listOf("AT", "TO")) assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord(w), w)
+    }
+
+    @Test fun `wordsworn tutorial numbers match the engine`() {
+        val start = com.simplegamegen.sudoku.wordplay.Wordsworn.start(1, com.simplegamegen.sudoku.logic.LogicLevel.EASY)
+        fun hand(letters: String): com.simplegamegen.sudoku.wordplay.Wordsworn {
+            val deck = letters.map { com.simplegamegen.sudoku.wordplay.Tile(it, com.simplegamegen.sudoku.wordplay.Wordsworn.powerOf(it)) }
+            return start.copy(deck = deck, hand = deck.indices.toList(), draw = emptyList())
+        }
+        assertEquals(5, hand("CAT").preview(listOf(0, 1, 2)).damage)
+        assertEquals(18, hand("CARTONS").preview((0 until 7).toList()).damage)
+        assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("CARTONS"))
+    }
 }
