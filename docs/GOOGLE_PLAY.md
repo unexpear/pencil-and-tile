@@ -173,6 +173,42 @@ Post for social media or forums (fill in the group link):
   safety and any account-specific testing/verification requirements shown by
   Play Console. No Play Console declarations or uploads were made by this task.
 
+## Automatic releases
+
+Releases after 1.0.0 go out from GitHub, the same way StandardTune's do. `python tools/release.py 1.1.0`
+bumps `versionCode`, sets `versionName`, commits, tags `v1.1.0` and pushes. The tag starts
+`.github/workflows/release.yml`, which:
+
+1. runs the engine and app tests;
+2. builds the release bundle, signed with the upload key from GitHub secrets;
+3. checks that the bundle carries the registered upload certificate (SHA-256 `BE:42:70:FE:…:22:8B`);
+4. uploads it to the **Closed testing - Alpha** track with the notes in `distribution/whatsnew/`
+   (one file per language, 500 characters at most). It goes to testers once Google's review passes.
+
+The release script refuses to run with uncommitted changes, off `main`, behind GitHub, on an existing tag,
+or with missing or overlong release notes. `--dry-run` shows what it would do.
+
+### One-time setup (done by the owner)
+
+The Play account already lets the upload service account
+`play-ci-upload@standardtune-play.iam.gserviceaccount.com` view Pencil & Tile and release it to testing
+tracks (granted 26 Sep 2026). Two things are left, and both handle secrets, so run them yourself:
+
+1. **A key for the service account.** In Google Cloud (project `standardtune-play`): IAM & Admin → Service
+   Accounts → `play-ci-upload` → Keys → Add key → Create new key → JSON. A `.json` file downloads.
+2. **The GitHub secrets.** With the GitHub CLI signed in (`gh auth login`):
+
+   ```
+   python tools/set_release_secrets.py path/to/the-downloaded-key.json
+   ```
+
+   This reads `~/.pencil-and-tile/upload.properties` and the keystore it names, and stores
+   `PENCILTILE_KEYSTORE_BASE64`, `PENCILTILE_KEYSTORE_PASSWORD`, `PENCILTILE_KEY_ALIAS`,
+   `PENCILTILE_KEY_PASSWORD` and `PLAY_SERVICE_ACCOUNT_JSON` without printing anything. Delete the
+   downloaded key file afterwards.
+
+Until the secrets exist, a tag fails with a clear message, and nothing is uploaded.
+
 ## Official references
 
 - [Target API requirements](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en)

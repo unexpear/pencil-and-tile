@@ -1,0 +1,108 @@
+name: Release to Google Play
+
+# A version tag (made by `python tools/release.py`) builds the signed bundle and sends it to the Play
+# closed-testing track, so the bundle never has to be dragged into the console by hand. Pushes to main
+# and pull requests only run the tests.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.PENCILTILE_KEYSTORE_BASE64 != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Unit tests
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :sudoku-engine:test :app:testDebugUnitTest
+
+      - name: Build signed release bundle
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PENCILTILE_KEYSTORE_BASE64 }}
+          PENCILTILE_KEYSTORE_PASSWORD: ${{ secrets.PENCILTILE_KEYSTORE_PASSWORD }}
+          PENCILTILE_KEY_ALIAS: ${{ secrets.PENCILTILE_KEY_ALIAS }}
+          PENCILTILE_KEY_PASSWORD: ${{ secrets.PENCILTILE_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export PENCILTILE_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+          ./gradlew --no-daemon :app:bundleRelease
+          rm -f "$RUNNER_TEMP/upload.jks"
+
+      # Play only accepts bundles signed with the registered upload key, so check before uploading.
+      - name: Check the bundle is signed with the upload key
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY == 'true'
+        run: |
+          keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab | tee cert.txt
+          grep -q "BE:42:70:FE:B7:74:35:DB:88:FB:32:52:49:2D:98:31:3A:79:08:B6:1B:99:85:3F:11:39:7D:A5:21:46:22:8B" cert.txt
+
+      - name: Keep the release bundle
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: app-release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Explain why no bundle was built
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY != 'true'
+        run: |
+          echo "::error title=No signing key::The PENCILTILE_* signing secrets are not set, so no bundle can be built. Run 'python tools/set_release_secrets.py' once (see docs/GOOGLE_PLAY.md)."
+          exit 1
+
+  publish:
+    name: Upload to Play (closed testing)
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    env:
+      HAS_PLAY_SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download the release bundle
+        if: env.HAS_PLAY_SA == 'true'
+        uses: actions/download-artifact@v6
+        with:
+          name: app-release-aab
+          path: aab
+
+      - name: Upload to the closed testing track
+        if: env.HAS_PLAY_SA == 'true'
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.simplegamegen.puzzles
+          releaseFiles: aab/app-release.aab
+          tracks: alpha
+          # 'completed' goes to the closed testers as soon as Google's review passes.
+          status: completed
+          whatsNewDirectory: distribution/whatsnew
+
+      - name: Explain why the upload was skipped
+        if: env.HAS_PLAY_SA != 'true'
+        run: |
+          echo "::warning::Bundle built, but not uploaded: PLAY_SERVICE_ACCOUNT_JSON is not set. The signed bundle is attached to this run as 'app-release-aab'."
+          echo "One-time setup: docs/GOOGLE_PLAY.md, 'Automatic releases'."
