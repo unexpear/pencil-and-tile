@@ -422,9 +422,13 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                             val bridge = if (theme.mark == BlotMark.BLOCK && markPicture == null) halfPx * 1.9f else halfPx * 0.62f
                             Canvas(Modifier.matchParentSize()) {
                                 g.strokes.forEachIndexed { n, word ->
-                                    if (word.any { g.cells[it] != INK && g.cells[it] != KNOT }) return@forEachIndexed
-                                    drawInkBridge(if (theme.mark == BlotMark.BLOCK) TrailStyle.LINE else theme.motion.trail, word.map(::centre),
-                                        if (n == g.strokes.lastIndex) stroke.value else 1f, bridge, tc.mark)
+                                    // Join each unbroken stretch of the word; a square brought back or still sealed breaks the bar there.
+                                    val runs = ArrayList<List<Int>>(); var run = ArrayList<Int>()
+                                    for (c in word) if (g.cells[c] == INK || g.cells[c] == KNOT) run.add(c) else { runs += run; run = ArrayList() }
+                                    runs += run
+                                    for (r in runs) if (r.size >= 2 && r.any { g.cells[it] == INK })
+                                        drawInkBridge(if (theme.mark == BlotMark.BLOCK) TrailStyle.LINE else theme.motion.trail, r.map(::centre),
+                                            if (n == g.strokes.lastIndex) stroke.value else 1f, bridge, tc.mark)
                                 }
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(gap)) {

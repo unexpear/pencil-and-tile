@@ -85,6 +85,9 @@ private val COLS = LAND.maxOf { it.length }
  */
 @Composable
 fun BlotMap(theme: BlotTheme, tc: BlotColors, solved: Int, total: Int, fresh: Int?, onPlay: (Int) -> Unit) {
+    // Debug builds can open any puzzle, for testing the later ones.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val testing = remember { context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0 }
     val measurer = rememberTextMeasurer()
     val loop = rememberInfiniteTransition(label = "map")
     val time by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(12000, easing = LinearEasing)), label = "life")
@@ -100,7 +103,7 @@ fun BlotMap(theme: BlotTheme, tc: BlotColors, solved: Int, total: Int, fresh: In
                     val step = tile.toPx(); val left = (size.width - step * COLS) / 2
                     val c = ((at.x - left) / step).toInt(); val r = ((at.y - step * 0.4f) / step).toInt()
                     val hit = TILES.firstOrNull { it.col == c && it.row == r && it.puzzle >= 0 } ?: return@detectTapGestures
-                    if (hit.puzzle <= solved && hit.puzzle < total) onPlay(hit.puzzle)
+                    if ((hit.puzzle <= solved || testing) && hit.puzzle < total) onPlay(hit.puzzle)
                 }
             }) {
             val step = tile.toPx()
