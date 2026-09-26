@@ -288,3 +288,15 @@ Puzzles, clues, word lists, art and tutorials are original to this app. Third-pa
 - **all-MiniLM-L6-v2** (Apache 2.0): the quantised on-device sentence model that helps judge Word Meaning answers.
 - **ONNX Runtime** (MIT): runs that model.
 - AndroidX, Jetpack Compose and Kotlin (Apache 2.0).
+
+## License
+
+Pencil & Tile is free software: you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation, either version 3 of the License, or (at your
+option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+see [LICENSE](LICENSE) for details.
+
+Some parts come from others under their own licences, listed in the app under Settings → Credits and in
+`app/src/main/assets/licenses/`: word definitions and category lists from Open English WordNet (CC BY 4.0),
+the ENABLE word list (public domain), the all-MiniLM-L6-v2 sentence model (Apache 2.0) and ONNX Runtime (MIT).
+

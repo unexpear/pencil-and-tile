@@ -56,7 +56,7 @@ and flair). Lead with what's different, not with "please download":
 >
 > https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
 
-## Open-source communities (once the repo has a license)
+## Open-source communities
 
 r/opensource, r/fossdroid, r/androiddev ("I made this" threads) and a Show HN post, linking the GitHub repo:
 https://github.com/unexpear/pencil-and-tile

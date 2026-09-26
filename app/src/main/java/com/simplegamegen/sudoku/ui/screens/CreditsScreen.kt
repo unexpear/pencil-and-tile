@@ -27,6 +27,10 @@ import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 /** A third-party part of the app, what it's used for, and the licence file shipped in assets/licenses. */
 private data class Credit(val name: String, val use: String, val license: String, val file: String, val notice: String = "")
 
+/** The app's own licence. */
+private val App = Credit("Pencil & Tile", "Free software: you may share and change it under the GNU GPL. Source code: github.com/unexpear/pencil-and-tile",
+    "GNU General Public License 3.0 or later", "licenses/gpl-3.0.txt", "© 2026 unexpear and contributors. It comes with no warranty.")
+
 private val Credits = listOf(
     Credit("Open English WordNet", "Definitions, example sentences, synonyms and opposites in Word Meaning; the everyday word lists and Lone Letter's categories",
         "CC BY 4.0, based on Princeton WordNet (WordNet licence)", "licenses/open-english-wordnet.txt",
@@ -44,9 +48,9 @@ fun CreditsScreen(nav: NavController) {
     val context = LocalContext.current
     var open by rememberSaveable { mutableStateOf<String?>(null) }
     GameScaffold(title = "Credits and licenses", onBack = { nav.popBackStack() }) {
-        Text("Puzzles, clues, word lists, art and tutorials are made for this app. These parts come from others, with thanks:",
-            style = MaterialTheme.typography.bodyMedium, color = c.muted)
-        Credits.forEach { credit ->
+        (listOf(App) + Credits).forEachIndexed { i, credit ->
+            if (i == 1) Text("Puzzles, clues, word lists, art and tutorials are made for this app. These parts come from others, with thanks:",
+                style = MaterialTheme.typography.bodyMedium, color = c.muted)
             Surface(color = c.surface, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     androidx.compose.material3.Text(credit.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = c.text)

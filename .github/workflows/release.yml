@@ -47,7 +47,7 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
           export PENCILTILE_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
-          ./gradlew --no-daemon :app:bundleRelease
+          ./gradlew --no-daemon :app:bundleRelease :app:assembleRelease
           rm -f "$RUNNER_TEMP/upload.jks"
 
       # Play only accepts bundles signed with the registered upload key, so check before uploading.
@@ -63,6 +63,15 @@ jobs:
         with:
           name: app-release-aab
           path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      # The same signed build as an APK, for the GitHub release (direct download and IzzyOnDroid).
+      - name: Keep the release APK
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: app-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
       - name: Explain why no bundle was built
@@ -106,3 +115,28 @@ jobs:
         run: |
           echo "::warning::Bundle built, but not uploaded: PLAY_SERVICE_ACCOUNT_JSON is not set. The signed bundle is attached to this run as 'app-release-aab'."
           echo "One-time setup: docs/GOOGLE_PLAY.md, 'Automatic releases'."
+
+  github-release:
+    name: GitHub release with the APK
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download the release APK
+        uses: actions/download-artifact@v6
+        with:
+          name: app-release-apk
+          path: apk
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mv apk/app-release.apk "apk/pencil-and-tile-$TAG.apk"
+          gh release create "$TAG" "apk/pencil-and-tile-$TAG.apk" --title "Pencil & Tile ${TAG#v}" --notes-file distribution/whatsnew/whatsnew-en-US
