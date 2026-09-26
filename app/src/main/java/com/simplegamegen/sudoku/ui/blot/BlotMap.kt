@@ -47,7 +47,7 @@ import kotlin.math.sin
 // The Discover puzzles sit on one patch of land as numbered blocks. Solving a puzzle inks its block and the land
 // around it, a creature moves in, and every few puzzles the settlement gains something new.
 
-/** The land, row by row: a digit or letter is a puzzle (1-9, then a-q for 10-26), '#' is land, '.' is sea. */
+/** The land, row by row: a digit or letter is a puzzle (1-9, then a-u for 10-30), '#' is land, '.' is sea. */
 private val LAND = listOf(
     ".1##2##.",
     "##3##4##",
@@ -61,6 +61,8 @@ private val LAND = listOf(
     "#l##m#..",
     ".n##o#..",
     "#p##q#..",
+    ".r##s##.",
+    "#t##u#..",
 )
 
 private data class MapTile(val col: Int, val row: Int, val puzzle: Int, val owner: Int)
@@ -68,7 +70,7 @@ private data class MapTile(val col: Int, val row: Int, val puzzle: Int, val owne
 /** Every land tile, with the puzzle it is (or -1) and the puzzle whose land it belongs to (the nearest one). */
 private val TILES: List<MapTile> by lazy {
     val puzzles = LAND.flatMapIndexed { r, line -> line.mapIndexedNotNull { c, ch ->
-        val n = when (ch) { in '1'..'9' -> ch - '1'; in 'a'..'q' -> 9 + (ch - 'a'); else -> -1 }
+        val n = when (ch) { in '1'..'9' -> ch - '1'; in 'a'..'u' -> 9 + (ch - 'a'); else -> -1 }
         if (n >= 0) Triple(c, r, n) else null
     } }
     LAND.flatMapIndexed { r, line -> line.mapIndexedNotNull { c, ch ->
@@ -147,7 +149,7 @@ fun BlotMap(theme: BlotTheme, tc: BlotColors, solved: Int, total: Int, fresh: In
             // The settlement grows every three puzzles, then its creatures.
             val land = TILES.filter { it.owner < solved && (it.owner != fresh || arrive.value >= 1f) }
             if (land.isNotEmpty()) {
-                val props = listOf(3, 6, 9, 12, 15, 18, 21, 24).filter { solved >= it }
+                val props = listOf(3, 6, 9, 12, 15, 18, 21, 24, 27, 30).filter { solved >= it }
                 props.forEachIndexed { k, _ ->
                     val spot = land.filter { it.puzzle < 0 }.let { plain -> plain.getOrNull((k * 5 + 2) % plain.size.coerceAtLeast(1)) } ?: return@forEachIndexed
                     val face = rectOf(spot).let { Rect(it.left, it.top, it.right - depth, it.bottom - depth) }

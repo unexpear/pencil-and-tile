@@ -132,8 +132,12 @@ class BlotwordsTest {
             val g = BlotTrail.puzzle(i)
             val s = BlotTrail.steps[i]
             assertEquals(i, g.step)
-            assertTrue(BlotSolver.solve(g.start, g.width, g.words, start = g.start, wrap = g.wrap) is BlotSolver.Result.Solved, "step $i solvable")
-            assertTrue(BlotTrail.needs(s, g.start, g.width, g.words, s.newEffect?.let { lex.word(it) }), "${lex.one} step $i needs ${s.teaches}")
+            // Loose pieces go back where they were cut from before the puzzle is played.
+            val ready = g.pieces.indices.fold(g) { acc, k -> acc.place(k, g.pieces[k].home)!! }
+            assertTrue(ready.settled)
+            assertTrue(BlotSolver.solve(ready.cells, g.width, g.words, start = ready.cells, wrap = g.wrap) is BlotSolver.Result.Solved, "step $i solvable")
+            if (s.pieces == 0) assertTrue(BlotTrail.needs(s, g.start, g.width, g.words, s.newEffect?.let { lex.word(it) }), "${lex.one} step $i needs ${s.teaches}")
+            else assertEquals(s.pieces, g.pieces.size)
             assertEquals(g.start, BlotTrail.puzzle(i, "sea").start, "step $i is the same every time, in any theme")
             println("${lex.one} step $i (${s.teaches}) ${(System.nanoTime() - t0) / 1_000_000} ms\n" + g.start.chunked(g.width).joinToString("\n"))
         }
@@ -185,8 +189,8 @@ class BlotwordsTest {
         val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
         val g = Blotwords(BlotTier.EASY, 0, 4, words, "V+UM" + "XXXX").write(listOf(0, 2, 3))!!
         assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
-        // Saves from before strokes, holes, daily puzzles and joined edges were kept end four lines sooner.
-        val old = BlotCodec.encode(g).split('\n').dropLast(4).joinToString("\n")
+        // Saves from before strokes, holes, daily puzzles, joined edges and loose pieces were kept end six lines sooner.
+        val old = BlotCodec.encode(g).split('\n').dropLast(6).joinToString("\n")
         assertEquals(emptyList<List<Int>>(), BlotCodec.decode(old)!!.strokes)
     }
 
@@ -206,7 +210,7 @@ class BlotwordsTest {
             val holes = Blots.shape(6, 6, Random(seed.toLong()))
             assertTrue(holes.size <= 9)
             val g = BlotGenerator.generate(BlotTier.EXPERT, seed.toLong())
-            assertTrue(g.holes.all { g.start[it] == INK })
+            assertTrue(g.holes.isEmpty() || g.holes.all { g.start[it] == GAP })
             assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
         }
     }
@@ -244,5 +248,39 @@ class BlotwordsTest {
         assertEquals("####" + "X#X#", next.cells)
         // Echoes hold no letter, so no word runs through one.
         assertNull(Blotwords(BlotTier.EASY, 0, 4, words, "V~UM" + "XXXX").wordAt(listOf(0, 2, 3)))
+    }
+
+    @Test fun `KOPA pushes an arrow and the squares ahead of it into the next gap`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE, BlotEffect.PUSH))
+        val right = ARROWS[1]
+        // K O P A, then a right arrow with X Y ahead of it and a gap at the end of the row.
+        var g = Blotwords(BlotTier.EASY, 0, 5, words, "KOPA#" + "${right}XY  ").write(listOf(0, 1, 2, 3))!!
+        assertEquals(BlotEffect.PUSH, g.pending!!.effect)
+        g = g.use(5)!!
+        assertEquals(" #XY ", g.cells.substring(5), "the arrow inks as it moves, and X and Y move along one")
+        // Nothing to push into: the line runs off the board.
+        val stuck = Blotwords(BlotTier.EASY, 0, 5, words, "KOPA#" + "${right}XYZW").write(listOf(0, 1, 2, 3))
+        assertNull(stuck, "KOPA can't be written when no arrow can move")
+    }
+
+    @Test fun `loose pieces go into gaps they fit, then lock`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
+        // A two-square piece U M, and a board with a gap two wide after V.
+        val piece = BlotPiece(listOf(0 to 0, 0 to 1), "UM", 1)
+        var g = Blotwords(BlotTier.EASY, 0, 4, words, "V  X" + "XXXX", pieces = listOf(piece))
+        assertNull(g.wordAt(listOf(0, 1, 2)), "no words before the pieces are in")
+        assertNull(g.place(0, 4), "it doesn't fit over squares")
+        assertNull(g.place(0, 2), "or off the board")
+        g = g.place(0, 1)!!
+        assertTrue(g.settled)
+        assertEquals("VUMX", g.cells.take(4))
+        assertNull(g.lift(0), "fixed once they're all in")
+        assertNotNull(g.wordAt(listOf(0, 1, 2)))
+        assertEquals(g, BlotCodec.decode(BlotCodec.encode(g)))
+        val fresh = Blotwords(BlotTier.EASY, 0, 4, words, "V  X" + "XXXX", pieces = listOf(piece, BlotPiece(listOf(0 to 0), "Q", 0)))
+        val one = fresh.place(0, 1)!!
+        assertTrue(!one.settled)
+        assertEquals(fresh.cells, one.lift(0)!!.cells, "a piece can come back off while others are still loose")
+        assertEquals(one, BlotCodec.decode(BlotCodec.encode(one)))
     }
 }

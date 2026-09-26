@@ -1,5 +1,7 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import com.simplegamegen.sudoku.wordplay.ARROWS
+import com.simplegamegen.sudoku.wordplay.GAP
 import com.simplegamegen.sudoku.wordplay.ECHO
 import com.simplegamegen.sudoku.wordplay.BlotDaily
 import androidx.compose.ui.graphics.drawscope.translate
@@ -144,7 +146,9 @@ fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwo
         "word list. A word can only be written when what it does can then be used. Knot squares join letters: a word can run " +
         "through any number of them and turn a corner on one, and writing never inks a knot. A ? square stands for any letter. " +
         "A sealed square loses its seal the first time it's inked and needs inking again. Inking one echo square inks every echo. " +
-        "Gaps in the board count as ink, and on some boards the edges join. " +
+        "Gaps in the board count as ink, and on some boards the edges join. Some words push an arrow square: it's inked and " +
+        "slides one space its way, pushing the squares ahead of it into the next gap. Some puzzles start with loose pieces to " +
+        "put into the gaps first; once they're all in, they stay put. " +
         "Discover brings in the words one small puzzle at a time, and every puzzle can be finished.",
     settingTitle = "Mode", settings = BlotSettings,
     describe = { i ->
@@ -208,6 +212,10 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
     var detail by remember { mutableStateOf<String?>(null) }
     // The order squares were last inked in, so they fill like a pen stroke; and which square to shake.
     var inkOrder by remember { mutableStateOf(listOf<Int>()) }
+    // The loose piece picked up from the tray, and the squares the last push moved (with which way, and a count so it replays).
+    var carrying by remember { mutableStateOf<Int?>(null) }
+    var slid by remember { mutableStateOf(emptySet<Int>() to (0 to 0)) }
+    var slideCount by remember { mutableIntStateOf(0) }
     var shake by remember { mutableStateOf(-1 to 0) }
     fun nope(i: Int, message: String) { shake = i to shake.second + 1; vm.say(message) }
     val setup = remember(factory, store) { blotwordsSetup(factory, store) }
@@ -223,6 +231,16 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             else vm.start(setup.create(g.tier.ordinal))
         } else if (!showMap) ToolButton(GameIcons.Restart, "Restart", enabled = !s.busy && g.cells != g.start) { vm.play("Back to the start.") { it.restart() } }
         if (!showMap) HintButton(GameId.BLOTWORDS, enabled = !g.solved && !s.busy && !thinking) {
+            if (!g.settled) {
+                val k = g.pieces.indices.first { g.placed[it] != g.pieces[it].home }
+                // Take off any piece sitting where this one belongs, and this one if it's elsewhere, then put it home.
+                var next = g
+                for (j in g.pieces.indices) if (next.placed[j] != null && next.placed[j] != g.pieces[j].home) next = next.lift(j) ?: next
+                next = next.place(k, g.pieces[k].home) ?: next
+                carrying = null
+                vm.play("This piece goes here.") { next.hinted() }
+                return@HintButton
+            }
             thinking = true
             scope.launch {
                 val move = withContext(Dispatchers.Default) { g.nextMove() }
@@ -270,6 +288,14 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
 
         fun tap(i: Int) {
             if (g.solved || s.busy) return
+            if (!g.settled) {
+                g.pieceAt(i)?.let { k -> carrying = k; vm.play { it.lift(k) }; return }
+                val k = carrying ?: run { vm.say("Pick a piece below, then tap a gap to put it there."); return }
+                val next = g.place(k, i) ?: run { nope(i, "That piece doesn't fit there."); return }
+                carrying = next.pieces.indices.firstOrNull { next.placed[it] == null }
+                vm.play(if (next.settled) "All the pieces are in. Now they stay put!" else null) { next }
+                return
+            }
             val pending = g.pending
             if (pending == null) {
                 // Knots only join letters; a word is traced by its letters.
@@ -308,6 +334,12 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                 BlotEffect.ALIKE -> apply(g.use(i), g.cells.indices.filter { g.cells[it] == g.cells[i] })
                 BlotEffect.DIAG -> apply(g.use(i), Blots.diagonalOf(g.width, g.height, i).filter { g.cells[it] != INK })
                 BlotEffect.MEND -> apply(g.use(i), listOf(i))
+                BlotEffect.PUSH -> {
+                    val moves = Blots.pushMoves(g.cells, g.width, i)
+                    val step = Blots.arrowStep(g.cells[i])
+                    if (moves != null && step != null) { slid = moves.values.toSet() to step; slideCount++ }
+                    apply(g.use(i), listOfNotNull(moves?.get(i)))
+                }
                 BlotEffect.PAIR -> {
                     val a = firstPick
                     when {
@@ -363,10 +395,12 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                     BlotEffect.WRITE -> "${w.text}: tap a blank square, then pick a letter."
                     BlotEffect.DIAG -> "${w.text}: tap a square to ink its whole rising diagonal."
                     BlotEffect.MEND -> "${w.text}: tap an inked square to bring it back, or a letter to seal it."
+                    BlotEffect.PUSH -> "${w.text}: tap an arrow square to push it."
                 } else "${w.text} is waiting. Tap squares to find out what it does."
             }
             g.stuck -> "No command word can be written now. Undo a few turns, or restart."
             thinking -> "Looking for a way through…"
+            !g.settled -> "Put the loose pieces into the gaps: tap a piece below, then a gap. Once they're all in, they stay put."
             path.isEmpty() && g.wrap && g.written.isEmpty() ->
                 "The edges join! A word can run off one side and come back on the other."
             path.isEmpty() && KNOT in g.start && g.step >= 0 && g.written.isEmpty() ->
@@ -485,8 +519,15 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                                 for (r in 0 until g.height) Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                                     for (k in 0 until g.width) {
                                         val i = r * g.width + k
-                                        if (i in g.holes) { Spacer(Modifier.size(side)); continue }
+                                        if (g.cells[i] == GAP) {
+                                            val fits = !g.settled && carrying?.let { g.footprint(it, i) != null } == true
+                                            Box(Modifier.size(side).then(if (fits) Modifier.border(2.dp, tc.accent.copy(alpha = 0.7f), RoundedCornerShape(side * 0.12f))
+                                                .clickable { tap(i) }.semantics { contentDescription = say("Gap, row ${r + 1}, column ${k + 1}: the piece fits here") } else Modifier))
+                                            continue
+                                        }
+                                        val slide = if (i in slid.first) Offset(-slid.second.second.toFloat(), -slid.second.first.toFloat()) else Offset.Zero
                                         BlotCell(g, i, side, theme, tc, phase, markPicture, tilePicture,
+                                            slideFrom = slide, slideCount = slideCount, loose = !g.settled && g.pieceAt(i) != null,
                                             picked = i in path || i == firstPick || i == fillAt, hinted = i in marked,
                                             order = inkOrder.indexOf(i).coerceAtLeast(0), shake = if (shake.first == i) shake.second else 0,
                                             newest = g.strokes.lastOrNull()?.contains(i) == true) { tap(i) }
@@ -545,6 +586,29 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
                 }
             }
         }
+        if (!g.settled && !g.solved) {
+            Text("Loose pieces", style = MaterialTheme.typography.titleSmall, color = c.text)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                g.pieces.indices.filter { g.placed[it] == null }.forEach { k ->
+                    val p = g.pieces[k]
+                    val cell = 34.dp
+                    val rows = p.shape.maxOf { it.first } + 1; val cols = p.shape.maxOf { it.second } + 1
+                    Box(Modifier.size(cell * cols + 12.dp, cell * rows + 12.dp)
+                        .border(if (carrying == k) 3.dp else 1.dp, if (carrying == k) tc.accent else c.outline, RoundedCornerShape(10.dp))
+                        .clickable { carrying = if (carrying == k) null else k }
+                        .semantics { contentDescription = say("Loose piece: ${p.squares.replace(' ', '_')}") }
+                        .padding(6.dp)) {
+                        p.shape.forEachIndexed { n, (dr, dc) ->
+                            Box(Modifier.offset(cell * dc, cell * dr).size(cell - 3.dp).background(tc.tile, RoundedCornerShape(6.dp))
+                                .border(1.dp, tc.mark.copy(alpha = 0.4f), RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
+                                androidx.compose.material3.Text(p.squares[n].uppercaseChar().toString().trim(), fontFamily = FontFamily.Serif,
+                                    fontWeight = FontWeight.Black, fontSize = 18.sp, color = tc.letter)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -579,12 +643,16 @@ fun blockDepth(theme: BlotTheme, side: Dp): Dp = if (theme.tile == BlotTile.BUBB
 /** One square: its letter tile, or its mark filling in (in stroke order, after [order] others), a lift when picked and a shake when refused. */
 @Composable
 private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotColors, phase: Float, markPicture: ImageBitmap?, tilePicture: ImageBitmap?,
+    slideFrom: Offset = Offset.Zero, slideCount: Int = 0, loose: Boolean = false,
     picked: Boolean, hinted: Boolean, order: Int, shake: Int, newest: Boolean, onTap: () -> Unit) {
     val c = LocalGameLook.current.colors
     val ch = g.cells[i]
     val inked = ch == INK
     val motion = theme.motion
-    val fill = remember { Animatable(if (inked) 1f else 0f) }
+    // A square pushed here arrives already as it is; it slides in from where it was.
+    val fill = remember(if (slideFrom != Offset.Zero) slideCount else -1) { Animatable(if (inked) 1f else 0f) }
+    val slide = remember { Animatable(0f) }
+    LaunchedEffect(slideCount) { if (slideFrom != Offset.Zero) { slide.snapTo(1f); slide.animateTo(0f, tween(240, easing = FastOutSlowInEasing)) } }
     LaunchedEffect(inked) {
         // Brought back by MEND: the ink lifts off the square.
         if (!inked) { if (fill.value > 0f) fill.animateTo(0f, tween((500 * motion.pace.factor).toInt())) else fill.snapTo(0f); return@LaunchedEffect }
@@ -611,10 +679,17 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
     }
     val shape = tileShape(theme.tile, side)
     val spoken = "Row ${i / g.width + 1}, column ${i % g.width + 1}, " + when (ch) { INK -> "inked"; BLANK -> "blank"; KNOT -> "knot"; WILD -> "any letter"; ECHO -> "echo"
+        in ARROWS -> "arrow " + listOf("up", "right", "down", "left")[ARROWS.indexOf(ch)]
         else -> if (sealedNow) "${ch.uppercaseChar()}, sealed" else ch.toString() } +
         (if (picked) ", picked" else "") + (if (hinted) ", hinted" else "")
     Box(Modifier.size(side)
-        .graphicsLayer { scaleX = lift; scaleY = lift; translationX = jiggle.value * density }
+        .graphicsLayer {
+            scaleX = lift; scaleY = lift
+            translationX = jiggle.value * density + slideFrom.x * slide.value * (side + 3.dp).toPx()
+            translationY = slideFrom.y * slide.value * (side + 3.dp).toPx()
+            // A loose piece not yet fixed sits a little lighter.
+            alpha = if (loose) 0.85f else 1f
+        }
         // No ripple: the lift is the press feedback, and a ripple would square off round tiles.
         .clickable(remember { MutableInteractionSource() }, indication = null, role = Role.Button, enabled = !g.solved && (!inked || g.pending?.effect == BlotEffect.MEND)) { onTap() }
         .semantics { contentDescription = say(spoken) },
@@ -648,6 +723,16 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
                 Box(Modifier.fillMaxSize().border(if (picked) 2.5.dp else 1.dp, if (picked) tc.accent else tc.mark.copy(alpha = 0.22f), shape))
                 val shown = (if (inked) g.start[i] else ch).uppercaseChar().takeIf { it in 'A'..'Z' || it == WILD }
                 if (seal.value > 0f) Canvas(Modifier.fillMaxSize(0.84f)) { drawWaxSeal(tc.accent, seal.value, crack.value) }
+                // An arrow square: a bold ink arrow pointing the way it pushes.
+                if (ch in ARROWS) Canvas(Modifier.fillMaxSize(0.62f)) {
+                    val (dr, dc) = Blots.arrowStep(ch)!!
+                    rotate(when { dc == 1 -> 0f; dr == 1 -> 90f; dc == -1 -> 180f; else -> 270f }, center) {
+                        val w = size.width
+                        drawLine(tc.mark, Offset(w * 0.12f, center.y), Offset(w * 0.62f, center.y), w * 0.16f, cap = StrokeCap.Round)
+                        val head = Path().apply { moveTo(w * 0.92f, center.y); lineTo(w * 0.5f, w * 0.18f); lineTo(w * 0.5f, w * 0.82f); close() }
+                        drawPath(head, tc.mark)
+                    }
+                }
                 // An echo: rings rippling out from a dot, the same on every echo square.
                 if (ch == ECHO) Canvas(Modifier.fillMaxSize(0.7f)) {
                     val w = size.width

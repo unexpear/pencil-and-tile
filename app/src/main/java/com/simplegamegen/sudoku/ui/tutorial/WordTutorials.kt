@@ -550,6 +550,7 @@ internal object WordTutorials {
                 "A word can only be written when what it does can then be used.",
                 "Discover brings in the words and special squares one small puzzle at a time. Easy uses VUM; Medium adds DRIF; Hard adds ZUV and GOBA; Expert adds KEL. Daily is a new puzzle every day.",
                 "Knots join letters, and a word can turn a corner on one. A ? square is any letter, a sealed square needs inking twice, inking one echo inks them all, gaps count as ink, and some boards' edges join.",
+                "Some words push an arrow square one space, shoving the squares ahead of it into a gap. Loose pieces go into the gaps before play, and then stay put.",
                 "Hint shows the next word to write, or where to use it. Undo steps back and Restart goes back to the start.",
             ),
             tips = listOf("Squares that no word can ever reach have to be inked by a word's effect, so save effects for them.",
