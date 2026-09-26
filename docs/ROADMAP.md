@@ -33,6 +33,14 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
   many categories, computer rivals whose matching answers score zero. Lists in
   `sudoku-engine/src/main/resources/categories/en.tsv` from `tools/words/build_categories.py`.
 
+## Marketing (free)
+- Store tags set: Crossword, Logic puzzle, Mahjong solitaire, Solitaire, Word.
+- `docs/store/listing.md` updated for 1.1.0 (37 games, the new word games, "free and open source").
+- A "Word games" custom store listing for word-game searches: `docs/store/listing-word-games.md`, to publish
+  with 1.1.0.
+- Home screen shows base games with their variants underneath (Killer and Samurai under Sudoku, Spider and
+  Pyramid under Solitaire); the store still counts every game.
+
 ## Support
 - A separate support Discord, set up by the owner from `docs/community/DISCORD.md`; its invite link then
   goes in Settings → About, the Play listing and the README.
@@ -45,5 +53,3 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
 
 ## Ideas
 - Chess, a honeycomb word builder, Word Ladder.
-- Grouping game families under one tile (Klondike, Spider and Pyramid under Solitaire; Samurai under
-  Sudoku), waiting on the owner's decision.

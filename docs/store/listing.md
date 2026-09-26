@@ -11,10 +11,10 @@ Avoid other companies' game names in store text and keywords (no "Wordle", "Conn
 
 Title: Pencil & Tile
 
-Short description: 32 offline puzzle, word, card and board games. No ads, no account.
+Short description: 37 offline puzzle, word, card and board games. No ads, free and open source.
 
 Full description:
-Pencil & Tile is a quiet collection of 32 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles.
+Pencil & Tile is a quiet collection of 37 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
 
 NUMBER PUZZLES
 • Sudoku in 8 variants and 4 sizes up to 16×16, plus Killer Sudoku and a custom grid editor that checks every grid has exactly one solution
@@ -24,6 +24,11 @@ WORD GAMES
 • Common Threads: sort sixteen words into four hidden groups; every puzzle is built from rules and proven to have one answer
 • Five Letters: find the hidden word in a few guesses
 • Word Meaning: explain a word from its sentence; your answer is judged right on your phone
+• Wordsworn: spell words from letter tiles to battle a run of monsters
+• Letter Sprawl: chain touching letters into words; longer words score more
+• Word Quilt: place each patch's letters so every row and column reads as words
+• Lone Letter: one letter, many categories, against computer players who might think of the same answer
+• Blotwords: ink the grid with mysterious command words you work out for yourself
 • Crossword, Word search, Hangman, Cryptogram, Word scramble, Acrostic, Code cracker and Dropquote
 
 CARDS AND TILES
@@ -47,10 +52,10 @@ Your games and records stay on your device.
 
 Title: Pencil & Tile
 
-Short description: 32 款离线谜题、文字、纸牌和棋盘游戏。无广告，无需账号。
+Short description: 37 款离线谜题、文字、纸牌和棋盘游戏。无广告，免费开源。
 
 Full description:
-Pencil & Tile 是一套安静的谜题合集，收录 32 款经典和原创游戏，完全离线也能玩。没有广告，不用注册，不追踪：只有谜题。
+Pencil & Tile 是一套安静的谜题合集，收录 37 款经典和原创游戏，完全离线也能玩。没有广告，不用注册，不追踪：只有谜题。永久免费并开源。
 
 数字谜题
 • 8 种玩法、4 种尺寸（最大 16×16）的数独，还有杀手数独，以及能检查每个盘面都只有唯一解的自定义盘面编辑器
@@ -60,6 +65,11 @@ Pencil & Tile 是一套安静的谜题合集，收录 32 款经典和原创游�
 • 共同线索：把十六个单词分成四个隐藏的组；每道题都按规则生成，并证明只有一个答案
 • 五字母：用几次猜测找出隐藏的单词
 • 词义：根据句子解释一个单词，答案在你的手机上判定
+• 词语大作战：用字母牌拼出单词，与一连串怪物战斗
+• 字母链：把相邻的字母连成单词，单词越长得分越高
+• 字母拼布：摆好每块拼布的字母，让每一行和每一列都是单词
+• 单字母：一个字母，许多类别，和可能想到同样答案的电脑玩家比拼
+• 墨字格：用神秘的指令词给格子上墨，含义要你自己发现
 • 填字游戏、找词游戏、猜词游戏、密码谜题、字词重组、藏头词、数字填字和落字格言
 （文字游戏目前使用英文单词。）
 
@@ -84,10 +94,10 @@ Pencil & Tile 是一套安静的谜题合集，收录 32 款经典和原创游�
 
 Title: Pencil & Tile
 
-Short description: オフラインで遊べるパズル・言葉・カード・ボードゲーム32種。広告なし、登録不要。
+Short description: オフラインで遊べるパズル・言葉・カード・ボードゲーム37種。広告なし、無料でオープンソース。
 
 Full description:
-Pencil & Tile は、定番とオリジナルのパズル32種を集めた、落ち着いて遊べるパズル集です。すべてオフラインで遊べます。広告なし、アカウント不要、追跡なし。パズルだけを楽しめます。
+Pencil & Tile は、定番とオリジナルのパズル37種を集めた、落ち着いて遊べるパズル集です。すべてオフラインで遊べます。広告なし、アカウント不要、追跡なし。パズルだけを楽しめます。ずっと無料のオープンソースです。
 
 数字パズル
 • 8種類・4サイズ（最大16×16）のナンプレ、キラーナンプレ、そして答えがひとつだけになるか確認してくれる盤面エディター
@@ -97,6 +107,11 @@ Pencil & Tile は、定番とオリジナルのパズル32種を集めた、落�
 • コモン・スレッド：16語を隠れた4つのグループに分けます。どの問題もルールから作られ、答えがひとつだと確認済み
 • 5文字：少ない回数で隠れた単語を当てます
 • 言葉の意味：文の中の言葉の意味を説明。答えはスマートフォンの中で判定します
+• ことばバトル：文字タイルで単語を作り、次々に現れるモンスターと戦います
+• レターつなぎ：となり合う文字をつないで単語に。長い単語ほど高得点
+• ことばキルト：各パッチの文字を置いて、縦も横もすべて単語にします
+• ひと文字：ひとつの文字でいろんなお題に答え、同じ答えを考えそうなコンピューターと勝負
+• インクワード：なぞのコマンド語で盤にインクを。意味は自分で見つけます
 • クロスワード、シークワーズ、ハングマン、暗号パズル、文字並べ替え、頭文字パズル、数字クロスワード、落ち文字パズル
 （言葉のゲームは現在、英単語を使います。）
 
@@ -121,10 +136,10 @@ Pencil & Tile は、定番とオリジナルのパズル32種を集めた、落�
 
 Title: Pencil & Tile
 
-Short description: 32 juegos sin conexión: lógica, palabras, cartas y tablero. Sin anuncios.
+Short description: 37 juegos sin conexión: lógica, palabras, cartas y tablero. Gratis y libre.
 
 Full description:
-Pencil & Tile es una colección tranquila de 32 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles.
+Pencil & Tile es una colección tranquila de 37 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
 
 PUZZLES NUMÉRICOS
 • Sudoku en 8 variantes y 4 tamaños hasta 16×16, además de Sudoku asesino y un editor de cuadrículas que comprueba que cada una tenga una única solución
@@ -134,6 +149,11 @@ JUEGOS DE PALABRAS
 • Hilos comunes: ordena dieciséis palabras en cuatro grupos ocultos; cada puzzle se crea con reglas y se comprueba que tenga una sola respuesta
 • Cinco letras: encuentra la palabra oculta en pocos intentos
 • Significado: explica una palabra a partir de su frase; tu respuesta se evalúa en tu propio móvil
+• Duelo de palabras: forma palabras con fichas de letras para luchar contra una serie de monstruos
+• Cadena de letras: une letras vecinas para formar palabras; las más largas puntúan más
+• Colcha de letras: coloca las letras de cada parche para que cada fila y columna sean palabras
+• Letra única: una letra, muchas categorías, contra jugadores del ordenador que quizá piensen lo mismo
+• Palabras de tinta: entinta la cuadrícula con misteriosas palabras de orden que descubres tú
 • Crucigrama, Sopa de letras, Ahorcado, Criptograma, Letras revueltas, Acróstico, Crucigrama cifrado y Frase en columnas
 (Por ahora los juegos de palabras usan palabras en inglés.)
 
@@ -158,10 +178,10 @@ Tus partidas y registros se guardan en tu dispositivo.
 
 Title: Pencil & Tile
 
-Short description: 32 Offline-Rätsel, Wort-, Karten- und Brettspiele. Ohne Werbung, ohne Konto.
+Short description: 37 Offline-Rätsel, Wort-, Karten- und Brettspiele. Ohne Werbung, frei und offen.
 
 Full description:
-Pencil & Tile ist eine ruhige Sammlung von 32 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel.
+Pencil & Tile ist eine ruhige Sammlung von 37 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
 
 ZAHLENRÄTSEL
 • Sudoku in 8 Varianten und 4 Größen bis 16×16, dazu Killer-Sudoku und ein Gitter-Editor, der prüft, dass jedes Gitter genau eine Lösung hat
@@ -171,6 +191,11 @@ WORTSPIELE
 • Gemeinsame Fäden: Sortiere sechzehn Wörter in vier versteckte Gruppen; jedes Rätsel wird aus Regeln gebaut und hat nachweislich genau eine Lösung
 • Fünf Buchstaben: Finde das versteckte Wort in wenigen Versuchen
 • Wortbedeutung: Erkläre ein Wort aus seinem Satz; deine Antwort wird direkt auf deinem Handy bewertet
+• Wortgefecht: Bilde Wörter aus Buchstabensteinen und kämpfe gegen eine Reihe von Monstern
+• Buchstabennetz: Verbinde benachbarte Buchstaben zu Wörtern; längere Wörter bringen mehr Punkte
+• Wortquilt: Setze die Buchstaben jedes Flickens so, dass jede Reihe und Spalte Wörter ergibt
+• Ein Buchstabe: ein Buchstabe, viele Kategorien, gegen Computerspieler, die vielleicht dasselbe schreiben
+• Tintenwörter: Färbe das Gitter mit rätselhaften Befehlswörtern, deren Wirkung du selbst herausfindest
 • Kreuzworträtsel, Wortsuche, Galgenmännchen, Kryptogramm, Buchstabensalat, Akrostichon, Codewort-Rätsel und Buchstabenfall
 (Die Wortspiele verwenden derzeit englische Wörter.)
 

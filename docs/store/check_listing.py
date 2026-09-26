@@ -1,6 +1,7 @@
-"""Checks listing.md against Google Play's length limits (title 30, short description 80, full 4000)."""
-import re, sys
-text = open(__file__.replace("check_listing.py", "listing.md"), encoding="utf-8").read()
+"""Checks listing.md (or the listing file named) against Google Play's length limits (title 30, short description 80, full 4000)."""
+import os, re, sys
+name = sys.argv[1] if len(sys.argv) > 1 else "listing.md"
+text = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), name), encoding="utf-8").read()
 ok = True
 for block in re.split(r"\n## ", text)[1:]:
     lang = block.split("\n", 1)[0].strip()
