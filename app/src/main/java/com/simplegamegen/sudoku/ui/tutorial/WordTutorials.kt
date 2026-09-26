@@ -383,6 +383,44 @@ internal object WordTutorials {
         )
     }
 
+    val sprawl: Tutorial get() {
+        val grid = listOf("CATS", "ROEN", "IDGL", "PUMB")
+        fun scene(picked: Set<String> = emptySet(), found: Set<String> = emptySet()): Scene = Scene(4f, 4f, (0 until 4).flatMap { r ->
+            (0 until 4).map { c ->
+                val id = cellId(r, c)
+                Item(id, c.toFloat(), r.toFloat(), look = Cell(text = grid[r][c].toString()),
+                    tone = when (id) { in picked -> Tone.SELECTED; in found -> Tone.GOOD; else -> Tone.PLAIN }, describe = grid[r][c].toString())
+            }
+        }, maxUnit = 60)
+        val cat = setOf("r0c0", "r0c1", "r0c2")
+        return Tutorial(
+            GameId.LETTER_SPRAWL,
+            "Chain touching letters into words. Longer words score more.",
+            rules = listOf(
+                "Make words from letters that touch: sideways, up, down or diagonally.",
+                "Each square can be used only once in a word.",
+                "Drag across the letters, or tap them one at a time and press Enter.",
+                "The QU square counts as two letters.",
+                "Words need at least 3 letters on Easy and Medium, and 4 on Hard and Expert.",
+                "Points: 1 for three letters, 2 for four, 3 for five, 5 for six, 8 for seven and 13 for eight or more.",
+                "Reach the goal to win. Then keep going, or tap Finish to see the everyday words you missed.",
+            ),
+            tips = listOf("Look for word endings like -ING, -ED and -S next to words you've already found.",
+                "Long words score far more than short ones, so it pays to hunt for them."),
+            steps = listOf(
+                Step("Words are made of letters that touch. Tap C, the first letter of CAT.", scene(), tap = setOf("r0c0"), after = scene(picked = setOf("r0c0"))),
+                Step("Now A, right next to it.", scene(picked = setOf("r0c0")), tap = setOf("r0c1"), after = scene(picked = setOf("r0c0", "r0c1"))),
+                Step("And T.", scene(picked = setOf("r0c0", "r0c1")), tap = setOf("r0c2"), after = scene(found = cat), then = "CAT: three letters, 1 point."),
+                Step("Letters touch diagonally too. Let's find DOG. Tap D.", scene(found = cat), tap = setOf("r2c1"), after = scene(picked = setOf("r2c1"), found = cat)),
+                Step("Now O, just above it.", scene(picked = setOf("r2c1"), found = cat), tap = setOf("r1c1"), after = scene(picked = setOf("r2c1", "r1c1"), found = cat)),
+                Step("And G, down and to the right of O.", scene(picked = setOf("r2c1", "r1c1"), found = cat), tap = setOf("r2c2"),
+                    after = scene(found = cat + setOf("r2c1", "r1c1", "r2c2")), then = "DOG: up, then diagonally down."),
+                Step("How many points is a five-letter word worth?", scene(found = cat + setOf("r2c1", "r1c1", "r2c2")).choices("1", "3", "5"), pick = "3",
+                    then = "Three points. Six letters make 5, and eight or more make 13!", help = "Three letters make 1, four make 2, five make 3."),
+            ),
+        )
+    }
+
     val blotwords: Tutorial get() {
         val grid = listOf("VUMT", "M#UV")
         fun scene(inked: Set<String> = emptySet(), picked: Set<String> = emptySet()): Scene = Scene(4f, 2f, (0 until 2).flatMap { r ->

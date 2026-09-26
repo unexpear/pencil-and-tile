@@ -191,4 +191,12 @@ class TutorialContentTest {
         assertTrue(g.solved)
         assertTrue(steps.last().result.items.all { (it.look as Cell).fill == Fill.BLOCK })
     }
+
+    @Test fun `letter sprawl tutorial words touch and are real words`() {
+        val grid = "CATSROENIDGLPUMB"
+        val g = com.simplegamegen.sudoku.wordplay.Sprawl(com.simplegamegen.sudoku.logic.LogicLevel.EASY, 0, 4, grid)
+        assertTrue(g.take(listOf(0, 1, 2)) != null, "CAT")
+        assertTrue(g.take(listOf(9, 5, 10)) != null, "DOG")                   // D, O above it, G diagonally
+        assertEquals(3, com.simplegamegen.sudoku.wordplay.Sprawl.pointsFor("HOUSE"))
+    }
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextStyle
@@ -365,6 +366,23 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                             if (i in blots) drawRoundRect(ink, o + Offset(x * cell + pad, y * cell + pad), Size(cell - pad * 2, cell - pad * 2), CornerRadius(cell * 0.32f))
                             else if (letters[i] != ' ') letter(letters[i].toString(), x, y, 4, if (y == 3) c.accent else ink)
                         }
+                    }
+                    GameId.LETTER_SPRAWL -> {
+                        // Letter tiles with a word traced through them, bending diagonally.
+                        val cell = side / 4
+                        val pad = cell * 0.08f
+                        val path = listOf(0 to 1, 1 to 1, 2 to 2, 3 to 2)
+                        for (y in 0 until 4) for (x in 0 until 4) {
+                            val on = (x to y) in path
+                            drawRoundRect(if (on) c.accent.copy(alpha = 0.9f) else ink.copy(alpha = 0.12f), o + Offset(x * cell + pad, y * cell + pad),
+                                Size(cell - pad * 2, cell - pad * 2), CornerRadius(cell * 0.22f))
+                        }
+                        for (k in 1 until path.size) {
+                            val (ax, ay) = path[k - 1]; val (bx, by) = path[k]
+                            drawLine(Color.White.copy(alpha = 0.85f), o + Offset((ax + 0.5f) * cell, (ay + 0.5f) * cell), o + Offset((bx + 0.5f) * cell, (by + 0.5f) * cell),
+                                strokeWidth = cell * 0.12f, cap = StrokeCap.Round)
+                        }
+                        "SPRA".forEachIndexed { i, ch -> letter(ch.toString(), path[i].first, path[i].second, 4, Color.White) }
                     }
                     GameId.WORD_SEARCH -> {
                         val cell = side / 4
