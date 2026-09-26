@@ -13,6 +13,8 @@ class BlotMixTest {
             val shaped = games.count { it.holes.isNotEmpty() }
             println("$tier: seals $seals, knots $knots, wilds $wilds, shaped $shaped of 12")
             assertTrue(tier == BlotTier.MEDIUM || seals >= 3, "$tier seals")
+            val echoes = games.count { ECHO in it.start }
+            println("$tier echoes $echoes")
             assertTrue(shaped >= 3, "$tier shapes")
         }
     }

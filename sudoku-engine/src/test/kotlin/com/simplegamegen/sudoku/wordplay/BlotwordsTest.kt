@@ -236,4 +236,13 @@ class BlotwordsTest {
         assertTrue(Blots.touching("A##B", 4, 0, 3, wrap = true))
         assertTrue(!Blots.touching("AC#B", 4, 0, 3, wrap = false))
     }
+
+    @Test fun `inking one echo inks every echo`() {
+        val words = BlotLexicon.INK.words(listOf(BlotEffect.ONE))
+        val g = Blotwords(BlotTier.EASY, 0, 4, words, "VUM~" + "X~X~").write(listOf(0, 1, 2))!!
+        val next = g.use(3)!!
+        assertEquals("####" + "X#X#", next.cells)
+        // Echoes hold no letter, so no word runs through one.
+        assertNull(Blotwords(BlotTier.EASY, 0, 4, words, "V~UM" + "XXXX").wordAt(listOf(0, 2, 3)))
+    }
 }

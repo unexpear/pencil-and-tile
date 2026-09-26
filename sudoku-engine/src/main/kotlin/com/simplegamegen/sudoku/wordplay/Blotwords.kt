@@ -16,6 +16,8 @@ const val KNOT = '+'
 /** A wild square: it stands for any letter in a word. */
 const val WILD = '?'
 // A sealed square is its letter in lower case: inking it breaks the seal (it becomes upper case) instead.
+/** An echo square: it holds no letter, and inking any echo inks every echo on the board. */
+const val ECHO = '~'
 
 /** What a command word lets you do once it's written. */
 enum class BlotEffect(val effect: String) {
@@ -55,14 +57,14 @@ data class BlotLexicon(val one: String, val pair: String, val alike: String, val
  * [wilds] are how often filler squares are knots and word letters are wild.
  */
 enum class BlotTier(val label: String, val width: Int, val height: Int, val effects: List<BlotEffect>, val blankChance: Double,
-    val maxPreInked: Int, val decoy: Double, val knots: Double = 0.0, val wilds: Double = 0.0, val seals: Double = 0.0,
+    val maxPreInked: Int, val decoy: Double, val knots: Double = 0.0, val wilds: Double = 0.0, val seals: Double = 0.0, val echoes: Double = 0.0,
     /** Boards with an uneven outline and holes, rather than full rectangles. */
     val shaped: Boolean = false) {
     DISCOVER("Discover", 4, 4, BlotEffect.entries, 0.0, 0, 0.0),
     EASY("Easy", 5, 5, listOf(BlotEffect.ONE), 0.0, 5, 0.35),
     MEDIUM("Medium", 5, 5, listOf(BlotEffect.ONE, BlotEffect.PAIR), 0.06, 5, 0.5, shaped = true),
-    HARD("Hard", 6, 6, listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.DIAG), 0.08, 6, 0.6, knots = 0.14, seals = 0.3, shaped = true),
-    EXPERT("Expert", 6, 6, BlotEffect.entries - BlotEffect.MEND, 0.1, 6, 0.7, knots = 0.16, wilds = 0.06, seals = 0.35, shaped = true),
+    HARD("Hard", 6, 6, listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.DIAG), 0.08, 6, 0.6, knots = 0.14, seals = 0.3, echoes = 0.12, shaped = true),
+    EXPERT("Expert", 6, 6, BlotEffect.entries - BlotEffect.MEND, 0.1, 6, 0.7, knots = 0.16, wilds = 0.06, seals = 0.35, echoes = 0.15, shaped = true),
 }
 
 /** One whole turn: write [word] along [path] (in reading order), then use its effect. */
@@ -97,7 +99,7 @@ data class Blotwords(
 ) {
     init {
         require(width > 0 && start.length % width == 0 && cells.length == start.length)
-        require(cells.all { it == INK || it == BLANK || it == KNOT || it == WILD || it in 'A'..'Z' || it in 'a'..'z' } && words.isNotEmpty() && hints >= 0)
+        require(cells.all { it == INK || it == BLANK || it == KNOT || it == WILD || it == ECHO || it in 'A'..'Z' || it in 'a'..'z' } && words.isNotEmpty() && hints >= 0)
         require(holes.all { start[it] == INK })
         require(theme.none { it == '\n' })
     }
@@ -184,16 +186,20 @@ data class Blotwords(
 
 /** Grid helpers shared by the game, solver and generator. */
 object Blots {
-    /** Inks [path]: sealed squares lose their seal instead. */
+    /** Inks [path]: sealed squares lose their seal instead, and inking an echo inks every echo. */
     fun inked(cells: String, path: List<Int>): String {
-        val a = cells.toCharArray(); path.forEach { a[it] = if (a[it] in 'a'..'z') a[it].uppercaseChar() else INK }; return String(a)
+        val a = cells.toCharArray()
+        val echo = path.any { a[it] == ECHO }
+        path.forEach { a[it] = if (a[it] in 'a'..'z') a[it].uppercaseChar() else INK }
+        if (echo) for (i in a.indices) if (a[i] == ECHO) a[i] = INK
+        return String(a)
     }
 
     /** Inks every square showing [letter]; sealed ones lose their seal instead. */
     fun alike(cells: String, letter: Char): String = cells.map { if (it == letter) INK else if (it.isLowerCase() && it.uppercaseChar() == letter) letter else it }.joinToString("")
 
     /** Squares ALIKE can pick: letters (sealed or not), and knots or wilds (which all go together). */
-    fun alikeable(ch: Char): Boolean = ch in 'A'..'Z' || ch in 'a'..'z' || ch == KNOT || ch == WILD
+    fun alikeable(ch: Char): Boolean = ch in 'A'..'Z' || ch in 'a'..'z' || ch == KNOT || ch == WILD || ch == ECHO
 
     /** True for a square still under its seal. */
     fun sealed(ch: Char): Boolean = ch in 'a'..'z'
@@ -546,9 +552,9 @@ object BlotGenerator {
     /** One backwards build: the start grid and the moves that finish it. */
     fun build(width: Int, height: Int, words: List<BlotWord>, tier: BlotTier, random: Random,
         mustUse: Collection<BlotWord> = words, maxPreInked: Int = tier.maxPreInked, knots: Double = tier.knots, wilds: Double = tier.wilds,
-        seals: Double = tier.seals, holes: Set<Int> = emptySet(), wrap: Boolean = false): Pair<String, List<BlotMove>>? {
+        seals: Double = tier.seals, holes: Set<Int> = emptySet(), wrap: Boolean = false, echoes: Double = tier.echoes): Pair<String, List<BlotMove>>? {
         repeat(30) {
-            val d = Draft(width, height, plainFiller(words), knots, wilds, seals, holes, wrap)
+            val d = Draft(width, height, plainFiller(words), knots, wilds, seals, holes, wrap, echoes)
             val moves = ArrayList<BlotMove>()
             var guard = 0
             while (guard++ < 60) {
@@ -579,7 +585,7 @@ object BlotGenerator {
     }
 
     private class Draft(val width: Int, val height: Int, val plain: List<Char>, val knots: Double = 0.0, val wilds: Double = 0.0,
-        val seals: Double = 0.0, holes: Set<Int> = emptySet(), val wrap: Boolean = false) {
+        val seals: Double = 0.0, holes: Set<Int> = emptySet(), val wrap: Boolean = false, val echoes: Double = 0.0) {
         val size = width * height
         /** Squares that aren't on the board: always inked, never used. */
         val hole = BooleanArray(size) { it in holes }
@@ -692,6 +698,16 @@ object BlotGenerator {
                     }
                 }
             }
+            // Sometimes the square the effect hit was an echo, and one or two more echoes went dark with it. Only one set of
+            // echoes is ever showing at a time, or inking one set would ink the other too.
+            if (word.effect in listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.DIAG) && targets.isNotEmpty() && random.nextDouble() < echoes &&
+                (0 until size).none { !inked[it] && content[it] == ECHO } && !locked[targets[0]] && saved.second[targets[0]] && !inked[targets[0]]) {
+                val others = (0 until size).filter { inked[it] && !hole[it] && promised[it] == '\u0000' }.shuffled(random).take(1 + random.nextInt(2))
+                if (others.isNotEmpty() && (0 until size).count { inked[it] && !hole[it] } - others.size >= k) {
+                    content[targets[0]] = ECHO
+                    others.forEach { inked[it] = false; content[it] = ECHO }
+                }
+            }
             // The word's letters: inked squares along one row or column with nothing showing between them but knots.
             val spans = lineCells().map { l -> runLine(l) { !inked[it] && content[it] != KNOT } }.flatMap { line ->
                 val runs = ArrayList<List<Int>>(); var cur = ArrayList<Int>()
@@ -758,9 +774,10 @@ object BlotDaily {
 object BlotTrail {
     /** A trail step: the words in play and the one it teaches, or a square it teaches (knots or wilds). */
     data class Step(val effects: List<BlotEffect>, val newEffect: BlotEffect?, val width: Int, val height: Int,
-        val knots: Double = 0.0, val wilds: Double = 0.0, val seals: Double = 0.0, val shaped: Boolean = false, val wrap: Boolean = false) {
-        /** What the step is about: an effect's name, or KNOT / WILD / SEAL / WRAP. */
-        val teaches: String get() = newEffect?.name ?: when { wrap -> "WRAP"; seals > 0 -> "SEAL"; knots > 0 -> "KNOT"; else -> "WILD" }
+        val knots: Double = 0.0, val wilds: Double = 0.0, val seals: Double = 0.0, val shaped: Boolean = false, val wrap: Boolean = false,
+        val echoes: Double = 0.0) {
+        /** What the step is about: an effect's name, or KNOT / WILD / SEAL / ECHO / WRAP. */
+        val teaches: String get() = newEffect?.name ?: when { wrap -> "WRAP"; echoes > 0 -> "ECHO"; seals > 0 -> "SEAL"; knots > 0 -> "KNOT"; else -> "WILD" }
     }
 
     val steps: List<Step> = listOf(
@@ -786,6 +803,8 @@ object BlotTrail {
         Step(BlotEffect.entries - BlotEffect.MEND, null, 6, 5, knots = 0.15, wilds = 0.12, seals = 0.15, shaped = true),
         Step(listOf(BlotEffect.ONE, BlotEffect.MEND), BlotEffect.MEND, 4, 4),
         Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.MEND), BlotEffect.MEND, 5, 4, shaped = true),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR), null, 4, 4, echoes = 0.6),
+        Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.DIAG), null, 5, 5, echoes = 0.5, shaped = true),
         Step(listOf(BlotEffect.ONE, BlotEffect.PAIR), null, 4, 4, wrap = true),
         Step(listOf(BlotEffect.ONE, BlotEffect.PAIR, BlotEffect.ALIKE, BlotEffect.DIAG), null, 5, 5, knots = 0.1, seals = 0.15, wrap = true),
     )
@@ -805,7 +824,7 @@ object BlotTrail {
             val random = Random(7_919L * (i + 1) + attempt)
             val holes = if (s.shaped) Blots.shape(width, height, random) else emptySet()
             val built = BlotGenerator.build(width, height, words, tier, random, mustUse = setOfNotNull(newWord), maxPreInked = width * height / 5,
-                knots = s.knots, wilds = s.wilds, seals = s.seals, holes = holes, wrap = s.wrap) ?: continue
+                knots = s.knots, wilds = s.wilds, seals = s.seals, holes = holes, wrap = s.wrap, echoes = s.echoes) ?: continue
             val start = built.first
             if (start.count { it != INK } < 3) continue
             val needsIt = needs(s, start, width, words, newWord)
@@ -827,6 +846,9 @@ object BlotTrail {
         }
         // A seal step just needs a seal to break: some square must be inked twice.
         if (s.seals > 0) return start.any { it in 'a'..'z' }
+        // Echoes must matter: as plain blanks, each needing its own inking, the puzzle can't be finished.
+        if (s.echoes > 0) return ECHO in start &&
+            BlotSolver.solve(start.replace(ECHO, BLANK), width, words.filter { it.effect != BlotEffect.WRITE }, 50_000, start = start) is BlotSolver.Result.Dead
         val square = if (s.knots > 0) KNOT else WILD
         if (square !in start) return false
         // Blanks stand for squares that do nothing for words; WRITE is left out so they can't be filled.

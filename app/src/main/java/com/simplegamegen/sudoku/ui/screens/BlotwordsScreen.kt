@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import com.simplegamegen.sudoku.wordplay.ECHO
 import com.simplegamegen.sudoku.wordplay.BlotDaily
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -142,7 +143,8 @@ fun blotwordsSetup(factory: PuzzleFactory, store: ArcadeStore): PlaySetup<Blotwo
         "are inked, and then the word does something. Each word does something different: find out by trying, or peek in the " +
         "word list. A word can only be written when what it does can then be used. Knot squares join letters: a word can run " +
         "through any number of them and turn a corner on one, and writing never inks a knot. A ? square stands for any letter. " +
-        "A sealed square loses its seal the first time it's inked and needs inking again. Gaps in the board count as ink. " +
+        "A sealed square loses its seal the first time it's inked and needs inking again. Inking one echo square inks every echo. " +
+        "Gaps in the board count as ink, and on some boards the edges join. " +
         "Discover brings in the words one small puzzle at a time, and every puzzle can be finished.",
     settingTitle = "Mode", settings = BlotSettings,
     describe = { i ->
@@ -370,6 +372,8 @@ fun BlotwordsScreen(nav: NavController, vm: PlayViewModel<Blotwords>, factory: P
             path.isEmpty() && KNOT in g.start && g.step >= 0 && g.written.isEmpty() ->
                 "New: knots! A word can run through any number of them and turn a corner on one. Writing never inks a knot."
             path.isEmpty() && WILD in g.start && g.step >= 0 && g.written.isEmpty() -> "New: a ? square stands for any letter you need."
+            path.isEmpty() && ECHO in g.start && g.step >= 0 && g.written.isEmpty() ->
+                "New: echo squares! Ink one, and every echo square is inked with it."
             path.isEmpty() && g.start.any { it in 'a'..'z' } && g.step >= 0 && g.written.isEmpty() ->
                 "New: sealed squares! The first time one is inked its seal breaks instead. Ink it again to finish it."
             else -> "Tap a word's letters in order, in a straight line."
@@ -606,7 +610,7 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
         else if (seal.value > 0f) { crack.animateTo(1f, tween(450)); seal.snapTo(0f); crack.snapTo(0f) }
     }
     val shape = tileShape(theme.tile, side)
-    val spoken = "Row ${i / g.width + 1}, column ${i % g.width + 1}, " + when (ch) { INK -> "inked"; BLANK -> "blank"; KNOT -> "knot"; WILD -> "any letter"
+    val spoken = "Row ${i / g.width + 1}, column ${i % g.width + 1}, " + when (ch) { INK -> "inked"; BLANK -> "blank"; KNOT -> "knot"; WILD -> "any letter"; ECHO -> "echo"
         else -> if (sealedNow) "${ch.uppercaseChar()}, sealed" else ch.toString() } +
         (if (picked) ", picked" else "") + (if (hinted) ", hinted" else "")
     Box(Modifier.size(side)
@@ -644,6 +648,12 @@ private fun BlotCell(g: Blotwords, i: Int, side: Dp, theme: BlotTheme, tc: BlotC
                 Box(Modifier.fillMaxSize().border(if (picked) 2.5.dp else 1.dp, if (picked) tc.accent else tc.mark.copy(alpha = 0.22f), shape))
                 val shown = (if (inked) g.start[i] else ch).uppercaseChar().takeIf { it in 'A'..'Z' || it == WILD }
                 if (seal.value > 0f) Canvas(Modifier.fillMaxSize(0.84f)) { drawWaxSeal(tc.accent, seal.value, crack.value) }
+                // An echo: rings rippling out from a dot, the same on every echo square.
+                if (ch == ECHO) Canvas(Modifier.fillMaxSize(0.7f)) {
+                    val w = size.width
+                    drawCircle(tc.accent, w * 0.1f, center)
+                    for (k in 1..3) drawCircle(tc.accent.copy(alpha = 1f - k * 0.25f), w * (0.12f + 0.12f * k), center, style = Stroke(w * 0.05f))
+                }
                 // A knot: a figure-of-eight loop of ink, tied in the middle.
                 if (ch == KNOT) Canvas(Modifier.fillMaxSize(0.66f)) {
                     val w = size.width
