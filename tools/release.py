@@ -6,8 +6,9 @@ version tag and the GitHub release APK. The Play version code is assigned by the
 usage: python tools/release.py 1.1.0            # set versionName, bump versionCode by one
        python tools/release.py 1.1.0 --dry-run  # show what would happen, change nothing
 
-The tag (v1.1.0) starts .github/workflows/release.yml, which runs the tests, builds the signed bundle and
-sends it to the closed-testing track with the notes in distribution/whatsnew/.
+The tag (v1.1.0) starts .github/workflows/release.yml, which runs the tests and attaches a signed APK
+to the GitHub release. That APK uses the versionName and versionCode committed here, not the Play
+code (100 + workflow run number). Play upload stays on the main push.
 """
 import os, re, subprocess, sys
 
