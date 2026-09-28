@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import com.simplegamegen.sudoku.ui.i18n.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,7 +48,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.simplegamegen.sudoku.arcade.Game2048
 import com.simplegamegen.sudoku.arcade.Piece
@@ -128,6 +131,7 @@ fun Game2048Screen(nav: NavController, vm: PlayViewModel<Game2048>, factory: Puz
                 g.tiles.forEachIndexed { i, v ->
                     val o = Offset(gap + (i % n) * (cell + gap), gap + (i / n) * (cell + gap))
                     drawRoundRect(if (v == 0) Color(0xFFCDC1B4) else tileColor(v), o, Size(cell, cell), CornerRadius(gap * 1.4f))
+                    if (v != 0) drawRoundRect(Color.White.copy(alpha = if (v <= 4) 0.45f else 0.22f), o, Size(cell, cell * 0.16f), CornerRadius(gap * 1.4f, gap * 0.3f))
                     if (v != 0) {
                         val digits = v.toString().length
                         val style = TextStyle(color = if (v <= 4) Color(0xFF776E65) else Color(0xFFF9F6F2), fontWeight = FontWeight.Bold,
@@ -152,12 +156,15 @@ fun Game2048Screen(nav: NavController, vm: PlayViewModel<Game2048>, factory: Puz
 private val PieceColors = listOf(Color(0xFF3FC6E0), Color(0xFFF2C94C), Color(0xFFA066D3), Color(0xFF5BBF5B), Color(0xFFE5534B), Color(0xFF4A7BD9), Color(0xFFF08A3C))
 
 private fun DrawScope.block(o: Offset, s: Float, color: Color) {
-    drawRect(color, o, Size(s, s))
-    val e = s * 0.14f
-    drawRect(lerp(color, Color.White, 0.35f), o, Size(s, e))
-    drawRect(lerp(color, Color.White, 0.2f), o, Size(e, s))
-    drawRect(lerp(color, Color.Black, 0.3f), o + Offset(0f, s - e), Size(s, e))
-    drawRect(lerp(color, Color.Black, 0.2f), o + Offset(s - e, 0f), Size(e, s))
+    val inset = s * 0.07f
+    val origin = o + Offset(inset, inset)
+    val side = s - inset * 2
+    drawRect(color, origin, Size(side, side))
+    val e = side * 0.16f
+    drawRect(lerp(color, Color.White, 0.4f), origin, Size(side, e))
+    drawRect(lerp(color, Color.White, 0.22f), origin, Size(e, side))
+    drawRect(lerp(color, Color.Black, 0.35f), origin + Offset(0f, side - e), Size(side, e))
+    drawRect(lerp(color, Color.Black, 0.22f), origin + Offset(side - e, 0f), Size(e, side))
 }
 
 val TetrasSetup: (PuzzleFactory) -> PlaySetup<TetrasGame> = { factory ->
@@ -178,10 +185,12 @@ val TetrasSetup: (PuzzleFactory) -> PlaySetup<TetrasGame> = { factory ->
 fun TetrasScreen(nav: NavController, vm: PlayViewModel<TetrasGame>, factory: PuzzleFactory) {
     val look = LocalGameLook.current
     var paused by remember { mutableStateOf(false) }
-    var visible by remember { mutableStateOf(false) }
-    LifecycleResumeEffect(vm) {
-        visible = true
-        onPauseOrDispose { visible = false; vm.flush() }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var resumed by remember { mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) }
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, _ -> resumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer); vm.flush() }
     }
     // Saves when a piece locks; plain gravity steps aren't worth a write.
     fun act(transform: (TetrasGame) -> TetrasGame?) {
@@ -190,12 +199,17 @@ fun TetrasScreen(nav: NavController, vm: PlayViewModel<TetrasGame>, factory: Puz
         val after = vm.state.value.game
         if (before != null && after != null && (after.index != before.index || after.over != before.over)) vm.flush()
     }
-    PlayShell(nav, vm, GameId.TETRAS, remember(factory) { TetrasSetup(factory) }, undoable = false, scroll = false, tools = { g, _ ->
+    PlayShell(nav, vm, GameId.TETRAS, remember(factory) { TetrasSetup(factory) }, undoable = false, tools = { g, _ ->
         ToolButton(if (paused) GameIcons.Pass else GameIcons.Timer, if (paused) "Resume" else "Pause", enabled = !g.over, active = paused) { paused = !paused; vm.flush() }
+        ToolButton(GameIcons.Back, "Left", enabled = !g.over && !paused) { act { it.shift(-1) } }
+        ToolButton(GameIcons.Restart, "Turn", enabled = !g.over && !paused) { act { it.rotate() } }
+        ToolButton(GameIcons.Pass, "Right", enabled = !g.over && !paused) { act { it.shift(1) } }
+        ToolButton(GameIcons.Draw, "Drop", enabled = !g.over && !paused) { act { it.hardDrop() } }
     }) { g, s ->
-        val running = visible && !paused && !g.over && !s.busy
+        val running = resumed && !paused && !g.over && !s.busy
+        val interval = g.interval
         LaunchedEffect(running, g.level) {
-            while (running) { delay(g.interval); act { it.tick() } }
+            while (running) { delay(interval); act { it.tick() } }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             InfoChip("Score ${g.score}", emphasized = true)
@@ -204,57 +218,51 @@ fun TetrasScreen(nav: NavController, vm: PlayViewModel<TetrasGame>, factory: Puz
         }
         if (g.over) Text("Game over. Final score ${g.score}.", color = look.colors.danger, style = MaterialTheme.typography.titleMedium)
         else if (paused) Text("Paused", color = look.colors.muted, style = MaterialTheme.typography.titleMedium)
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            BoxWithConstraints(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
-                val cell = minOf(maxWidth / TetrasGame.W, maxHeight / TetrasGame.H, 30.dp)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val cell = minOf((maxWidth - 88.dp) / TetrasGame.W, 28.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
                 Canvas(Modifier.size(cell * TetrasGame.W, cell * TetrasGame.H)
                     .semantics { contentDescription = say("Tetras board, ${g.piece?.let { Piece.NAMES[it.type] } ?: "no"} piece falling") }
-                    .pointerInput(Unit) {
+                    .pointerInput(paused) {
                         detectTapGestures { if (!paused) act { it.rotate() } }
                     }
-                    .pointerInput(Unit) {
+                    .pointerInput(paused) {
                         var carried = 0f; var down = 0f
-                        detectDragGestures(onDragStart = { carried = 0f; down = 0f }, onDragEnd = { if (down > 120f) act { it.hardDrop() } }) { change, drag ->
+                        detectDragGestures(onDragStart = { carried = 0f; down = 0f }, onDragEnd = { if (down > 120f && !paused) act { it.hardDrop() } }) { change, drag ->
                             change.consume()
                             if (paused) return@detectDragGestures
                             carried += drag.x; down += drag.y
                             val step = size.width / TetrasGame.W.toFloat()
+                            if (step < 1f) return@detectDragGestures
                             while (abs(carried) >= step) { act { it.shift(if (carried > 0) 1 else -1) }; carried -= step * kotlin.math.sign(carried) }
                         }
                     }) {
                     val s = size.width / TetrasGame.W
-                    drawRect(Color(0xFF15161B))
+                    drawRect(Color(0xFF2A241C))
+                    drawRect(Color(0xFF12141A), Offset(s * 0.35f, s * 0.35f), Size(size.width - s * 0.7f, size.height - s * 0.7f))
                     for (x in 1 until TetrasGame.W) drawLine(Color(0xFF23252D), Offset(x * s, 0f), Offset(x * s, size.height))
                     for (y in 1 until TetrasGame.H) drawLine(Color(0xFF23252D), Offset(0f, y * s), Offset(size.width, y * s))
                     g.board.forEachIndexed { i, v -> if (v != 0) block(Offset(i % TetrasGame.W * s, i / TetrasGame.W * s), s, PieceColors[v - 1]) }
                     val falling = g.piece
                     if (falling != null) {
-                        g.ghost()?.cells()?.forEach { (x, y) -> if (y >= 0) drawRect(PieceColors[falling.type].copy(alpha = 0.55f), Offset(x * s + 2, y * s + 2), Size(s - 4, s - 4), style = Stroke(2f)) }
+                        g.ghost()?.cells()?.forEach { (x, y) -> if (y >= 0) drawRect(PieceColors[falling.type].copy(alpha = 0.45f), Offset(x * s + s * 0.18f, y * s + s * 0.18f), Size(s * 0.64f, s * 0.64f)) }
                         falling.cells().forEach { (x, y) -> if (y >= 0) block(Offset(x * s, y * s), s, PieceColors[falling.type]) }
                     }
-                    drawRect(look.colors.outline, style = Stroke(2f))
                 }
-            }
-            Column(Modifier.width(76.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Next", style = MaterialTheme.typography.labelLarge, color = look.colors.muted)
-                g.next.forEach { type ->
-                    Canvas(Modifier.size(64.dp, 40.dp).semantics { contentDescription = say("Next piece ${Piece.NAMES[type]}") }) {
-                        val cells = Piece.SHAPES[type][0]
-                        val s = size.height / 3.2f
-                        val minX = cells.minOf { it.first }; val maxX = cells.maxOf { it.first }
-                        val minY = cells.minOf { it.second }; val maxY = cells.maxOf { it.second }
-                        val o = Offset((size.width - (maxX - minX + 1) * s) / 2, (size.height - (maxY - minY + 1) * s) / 2)
-                        cells.forEach { (x, y) -> block(o + Offset((x - minX) * s, (y - minY) * s), s, PieceColors[type]) }
+                Column(Modifier.width(72.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Next", style = MaterialTheme.typography.labelLarge, color = look.colors.muted)
+                    g.next.forEach { type ->
+                        Canvas(Modifier.size(64.dp, 40.dp).semantics { contentDescription = say("Next piece ${Piece.NAMES[type]}") }) {
+                            val cells = Piece.SHAPES[type][0]
+                            val piece = size.height / 3.2f
+                            val minX = cells.minOf { it.first }; val maxX = cells.maxOf { it.first }
+                            val minY = cells.minOf { it.second }; val maxY = cells.maxOf { it.second }
+                            val o = Offset((size.width - (maxX - minX + 1) * piece) / 2, (size.height - (maxY - minY + 1) * piece) / 2)
+                            cells.forEach { (x, y) -> block(o + Offset((x - minX) * piece, (y - minY) * piece), piece, PieceColors[type]) }
+                        }
                     }
                 }
             }
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PadButton(GameIcons.Back, "Move left", Modifier.weight(1f), 0f) { act { it.shift(-1) } }
-            PadButton(GameIcons.Restart, "Rotate", Modifier.weight(1f), 0f) { act { it.rotate() } }
-            PadButton(GameIcons.Back, "Move right", Modifier.weight(1f), 180f) { act { it.shift(1) } }
-            PadButton(GameIcons.Back, "Soft drop", Modifier.weight(1f), -90f) { act { it.softDrop() } }
-            PadButton(GameIcons.Draw, "Hard drop", Modifier.weight(1f), 0f) { act { it.hardDrop() } }
         }
     }
 }

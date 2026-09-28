@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -300,7 +302,11 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                                     if (at >= 0) pieces = pieces.filterIndexed { k, _ -> k != at }
                                     else if (!g.vowelWorn) pieces = pieces + Piece.Vowel
                                 })
-                            Text("Draw pile ${g.draw.size} · discards ${g.discard.size} · worn out ${g.worn.size}", style = MaterialTheme.typography.bodySmall, color = c.muted)
+                            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                PileCount("Draw", g.draw.size)
+                                PileCount("Discard", g.discard.size)
+                                PileCount("Worn", g.worn.size)
+                            }
                         }
                     }
                 }
@@ -330,7 +336,7 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
 @Composable
 private fun Stage(g: Wordsworn, phase: Float, blood: Boolean, splatColor: Color, splats: List<Triple<Float, Int, Int>>, shot: Float, impact: Float,
     hurt: Float, lunge: Float, poof: Float, flipFx: Float, flying: String, onBlood: () -> Unit) {
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))) {
+    Box(Modifier.fillMaxWidth().aspectRatio(0.92f).clip(RoundedCornerShape(20.dp))) {
         Canvas(Modifier.matchParentSize()) {
             drawBookScene(g.book, phase)
             for ((x, seed, born) in splats) {
@@ -338,7 +344,7 @@ private fun Stage(g: Wordsworn, phase: Float, blood: Boolean, splatColor: Color,
                 drawSplat(Offset(size.width * x, size.height * 0.9f), size.minDimension * 0.05f, seed, splatColor, (1f - age / 4f).coerceIn(0f, 1f))
             }
         }
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     androidx.compose.material3.Text(say(g.monster.label), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFFF3E9D2))
@@ -359,16 +365,19 @@ private fun Stage(g: Wordsworn, phase: Float, blood: Boolean, splatColor: Color,
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (g.monsterStars > 0) Counter(WsIcon.STAR, g.monsterStars, say("Monster stars: ${g.monsterStars}, each adds 1 to its attacks"), light = true)
                 if (g.monsterHexes > 0) Counter(WsIcon.HEX, g.monsterHexes, say("Hexes on the monster: ${g.monsterHexes}"), light = true)
-                if (g.monster.special != Special.NONE) androidx.compose.material3.Text(say(g.monster.special.text), fontSize = 11.sp, fontStyle = FontStyle.Italic,
-                    color = Color(0xFFE8DCC0), modifier = Modifier.weight(1f))
+                specialChip(g.monster.special)?.let { (icon, mark) ->
+                    Row(Modifier.semantics(mergeDescendants = true) { contentDescription = say(g.monster.special.text) },
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Canvas(Modifier.size(16.dp)) { drawWsIcon(icon, center, size.minDimension * 0.45f) }
+                        androidx.compose.material3.Text(mark, fontWeight = FontWeight.Black, fontSize = 14.sp, color = Color(0xFFF3E9D2),
+                            modifier = Modifier.padding(start = 2.dp))
+                    }
+                }
             }
-            if (!g.over) {
-                Text(say(g.enemyStatusRule), fontSize = 11.sp, color = Color(0xFFE8DCC0))
-                ActionList(g)
-            }
-            Box(Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) {
+            if (!g.over) ActionList(g)
+            Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.BottomCenter) {
                 val shake = sin(hurt * 30).toFloat() * 10f * hurt + sin(flipFx * 40).toFloat() * 8f * flipFx
-                if (poof < 1f) Canvas(Modifier.size(160.dp).graphicsLayer {
+                if (poof < 1f) Canvas(Modifier.fillMaxSize().graphicsLayer {
                     translationX = shake * density
                     translationY = lunge * 26f * density
                     val grow = 1f + lunge * 0.12f - poof * 0.6f + flipFx * 0.1f
@@ -421,13 +430,42 @@ private fun ActionList(g: Wordsworn) {
             Surface(color = if (now) Color(0xFFFFF4D6) else Color(0x33FFFFFF), shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(if (now) 2.dp else 1.dp, if (now) Gold else Color(0x55FFFFFF)),
                 modifier = Modifier.semantics { contentDescription = say(if (now) "Next: ${a.describe(g.attackOf(a) - a.attack)}" else a.describe(g.attackOf(a) - a.attack)) }) {
-                Row(Modifier.padding(horizontal = 7.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (now) androidx.compose.material3.Text("▶ ", fontSize = 11.sp, color = color, fontWeight = FontWeight.Black)
-                    androidx.compose.material3.Text(say(a.describe(g.attackOf(a) - a.attack)), fontSize = 12.sp, fontWeight = if (now) FontWeight.Bold else FontWeight.Normal,
-                        color = if (now) Brown else Color(0xFFEDE3CC))
+                Row(Modifier.padding(horizontal = 6.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (now) Box(Modifier.size(6.dp).background(color, CircleShape))
+                    ActMarks(a, g.attackOf(a), light = !now)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ActMarks(a: Act, attack: Int, light: Boolean) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (attack > 0) Counter(WsIcon.HIT, attack, say("Attacks $attack"), light)
+        if (a.block > 0) Counter(WsIcon.BLOCK, a.block, say("Blocks ${a.block}"), light)
+        if (a.heal > 0) Counter(WsIcon.STAR, a.heal, say("Heals ${a.heal}"), light)
+        if (a.stars > 0) Counter(WsIcon.STAR, a.stars, say("Gains ${a.stars} stars"), light)
+        if (a.hexes > 0) Counter(WsIcon.HEX, a.hexes, say("Gives ${a.hexes} hexes"), light)
+        if (a.blots > 0) Counter(WsIcon.INK, a.blots, say("Adds ${a.blots} blots"), light)
+    }
+}
+
+private fun specialChip(s: Special): Pair<WsIcon, String>? = when (s) {
+    Special.STARS -> WsIcon.STAR to "2"
+    Special.REGEN -> WsIcon.HIT to "+1"
+    Special.NO_HEX -> WsIcon.HEX to "0"
+    Special.LONG_WEAK -> WsIcon.HIT to "6+"
+    Special.ARMOR -> WsIcon.BLOCK to "1"
+    Special.EAT -> WsIcon.INK to "1"
+    Special.NONE -> null
+}
+
+@Composable
+private fun PileCount(label: String, n: Int) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = say("$label $n") }) {
+        Text(n.toString(), style = MaterialTheme.typography.titleMedium, color = LocalGameLook.current.colors.text)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = LocalGameLook.current.colors.muted)
     }
 }
 
@@ -500,7 +538,6 @@ private fun Belongings(g: Wordsworn, onItem: (Int) -> Unit) {
                         Canvas(Modifier.size(12.dp)) { drawWsIcon(WsIcon.INK, center, size.minDimension * 0.45f) }
                         androidx.compose.material3.Text(item.cost.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = WsInk)
                     }
-                    androidx.compose.material3.Text(say(itemText(item)), fontSize = 10.sp, color = if (ready) Color(0xFF6B5B45) else c.muted)
                 }
             }
         }
@@ -529,7 +566,6 @@ private fun itemText(i: Item): String = when (i.kind) {
 private fun WordTray(g: Wordsworn, pieces: List<Piece>, splay: Splay, busy: Boolean, onSplay: (Splay) -> Unit, onRemove: (Int) -> Unit,
     onClear: () -> Unit, onPlay: () -> Unit) {
     val preview = if (pieces.size >= 2) g.preview(pieces, splay) else null
-    val previewHeight = 100.dp * LocalDensity.current.fontScale
     Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.verticalGradient(Parchment))
         .border(1.5.dp, Color(0xFFB08A4E), RoundedCornerShape(14.dp))) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -546,23 +582,20 @@ private fun WordTray(g: Wordsworn, pieces: List<Piece>, splay: Splay, busy: Bool
             }
             // Keep the hand below stationary while cards, validation and abilities appear.
             Box(Modifier.fillMaxWidth().height(110.dp), contentAlignment = Alignment.CenterStart) {
-                if (pieces.isEmpty()) androidx.compose.material3.Text(say("Tap cards below to spell a word"), fontSize = 15.sp, color = Color(0xFF7A6547))
-                else SplayedWord(g, pieces, splay, onRemove)
+                if (pieces.isNotEmpty()) SplayedWord(g, pieces, splay, onRemove)
             }
-            Column(Modifier.fillMaxWidth().height(previewHeight).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-              if (pieces.isNotEmpty()) Text(g.spell(pieces), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Brown)
-              preview?.let { p ->
-                val c = LocalGameLook.current.colors
-                val guard = if (p.blockedByMonster > 0) say(" (the monster blocks ${p.blockedByMonster})") else ""
-                Text(buildList {
-                    add(say("Deals ${p.damage}") + guard)
-                    if (p.blocks > 0) add(say("blocks ${p.blocks}"))
-                    if (p.ink > 0) add(say("+${p.ink} ink"))
-                    if (p.hexDamage > 0) add(say("gives ${p.hexDamage} hexes"))
-                }.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color(0xFF9A2A1E))
-                if (p.top != null && p.power.isNotEmpty()) Text("${p.top} ${say("on top")}: ${say(p.power)}", style = MaterialTheme.typography.bodySmall, color = Color(0xFF5A4630))
-                if (g.problem(pieces) == "Not in the word list.") Text("Not in the word list.", style = MaterialTheme.typography.bodySmall, color = c.danger)
-              }
+            if (pieces.isNotEmpty()) {
+                Text(g.spell(pieces), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Brown)
+                preview?.let { p ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.semantics { contentDescription = say("Deals ${p.damage}, blocks ${p.blocks}") }) {
+                        if (p.damage > 0) Counter(WsIcon.HIT, p.damage, say("Deals ${p.damage}"))
+                        if (p.blocks > 0) Counter(WsIcon.BLOCK, p.blocks, say("Blocks ${p.blocks}"))
+                        if (p.ink > 0) Counter(WsIcon.INK, p.ink, say("Ink ${p.ink}"))
+                        if (p.hexDamage > 0) Counter(WsIcon.HEX, p.hexDamage, say("Hexes ${p.hexDamage}"))
+                        if (g.problem(pieces) == "Not in the word list.") Text("Not a word", style = MaterialTheme.typography.labelLarge, color = LocalGameLook.current.colors.danger)
+                    }
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Surface(onClick = onClear, enabled = pieces.isNotEmpty() && !busy, color = Color(0xFFFFF8E6), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFB08A4E))) {

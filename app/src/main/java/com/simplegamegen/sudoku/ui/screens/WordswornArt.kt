@@ -81,27 +81,65 @@ private fun DrawScope.shadedPath(path: Path, color: Color, light: Offset, r: Flo
     drawPath(path, Outline, style = Stroke(r * 0.05f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
 }
 
+/** Legs, a torso and arms so the creature stands on the floor instead of floating as a head. */
+private fun DrawScope.stand(cx: Float, neck: Float, foot: Float, s: Float, skin: Color, wave: Float) {
+    val hip = neck + (foot - neck) * 0.28f
+    for (side in listOf(-1f, 1f)) {
+        val swing = wave * side * s * 0.04f
+        val knee = Offset(cx + side * s * 0.11f + swing, (hip + foot) / 2)
+        val shoe = Offset(cx + side * s * 0.13f + swing * 1.4f, foot)
+        drawLine(skin, Offset(cx + side * s * 0.08f, hip), knee, s * 0.09f, cap = StrokeCap.Round)
+        drawLine(skin, knee, shoe, s * 0.075f, cap = StrokeCap.Round)
+        drawOval(Color(0xFF241C16), Offset(shoe.x - s * 0.07f, shoe.y - s * 0.02f), Size(s * 0.15f, s * 0.05f))
+        val hand = Offset(cx + side * s * 0.34f, neck + s * 0.22f - swing)
+        drawLine(skin, Offset(cx + side * s * 0.12f, neck + s * 0.04f), hand, s * 0.07f, cap = StrokeCap.Round)
+        drawCircle(skin, s * 0.04f, hand)
+        drawCircle(Outline, s * 0.04f, hand, style = Stroke(s * 0.012f))
+    }
+    val torso = Rect(cx - s * 0.16f, neck - s * 0.02f, cx + s * 0.16f, hip + s * 0.04f)
+    drawOval(skin, torso.topLeft, torso.size)
+    drawOval(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.22f), Color.Transparent), Offset(cx - s * 0.05f, neck), s * 0.3f), torso.topLeft, torso.size)
+    drawOval(Outline, torso.topLeft, torso.size, style = Stroke(s * 0.02f))
+}
+
+private fun skinOf(monster: Monster) = when (monster) {
+    Monster.TYPO_IMP -> Color(0xFFE8703A)
+    Monster.DUST_BUNNY -> Color(0xFFB8B2C4)
+    Monster.INKBLOT_SLIME -> Color(0xFF2E3A8C)
+    Monster.SPELLING_BEE -> Color(0xFFFFC93C)
+    Monster.GRAMMAR_GREMLIN -> Color(0xFF5DAE5A)
+    Monster.BOOKWORM -> Color(0xFFE88BB0)
+    Monster.PAPER_DRAGON -> Color(0xFFD64545)
+    Monster.PAGE_MITE -> Color(0xFFF4ECD8)
+    Monster.GLOOM_MOTH -> Color(0xFF4A3B57)
+    Monster.QUILL_WRAITH -> Color(0xFFD7EEF0)
+    Monster.RUST_GOLEM -> Color(0xFFB5652E)
+    Monster.WORD_EATER -> Color(0xFF6B3FA3)
+}
+
 /**
  * Draws [monster] in [area]; [hurt] (0..1) squeezes its eyes and tints it; [phase] (0..1) loops for idle motion.
  * [angry] is its second stage: a red aura pulses behind it and a cross-shaped vein throbs on its head.
+ * The head sits in the upper part of [area] and the body stands on the bottom edge.
  */
 fun DrawScope.drawMonster(monster: Monster, area: Rect, hurt: Float, phase: Float, angry: Boolean = false) {
-    val s = area.minDimension
+    val s = minOf(area.width * 0.62f, area.height * 0.34f)
     val cx = area.center.x
     val wave = sin(phase * 2 * PI).toFloat()
     val bob = wave * s * 0.02f
-    val cy = area.center.y + bob
+    val ground = area.bottom - s * 0.02f
+    val cy = ground - s * 1.35f + bob
     val ouch = hurt > 0.3f
     blinking = phase in 0.9f..0.95f
-    // A shadow on the floor that shrinks as the monster bobs up.
-    val shadowW = s * (0.56f - wave * 0.03f)
-    drawOval(Color.Black.copy(alpha = 0.35f), Offset(cx - shadowW / 2, area.center.y + s * 0.25f), Size(shadowW, s * 0.09f))
+    val shadowW = s * (0.7f - wave * 0.03f)
+    drawOval(Color.Black.copy(alpha = 0.35f), Offset(cx - shadowW / 2, ground - s * 0.03f), Size(shadowW, s * 0.07f))
     if (angry) {
         val pulse = 0.5f + 0.5f * sin(phase * 4 * PI).toFloat()
         drawCircle(Brush.radialGradient(listOf(Color(0xFFFF3B30).copy(alpha = 0.45f + 0.2f * pulse), Color.Transparent), Offset(cx, cy), s * 0.5f), s * 0.5f, Offset(cx, cy))
     }
     // Breathing: a gentle squash and stretch from the feet up.
-    scale(1f - wave * 0.015f, 1f + wave * 0.025f, Offset(cx, area.center.y + s * 0.35f)) {
+    scale(1f - wave * 0.015f, 1f + wave * 0.025f, Offset(cx, ground)) {
+    stand(cx, cy + s * 0.22f, ground, s, skinOf(monster), wave)
     when (monster) {
         Monster.TYPO_IMP -> {
             val body = Color(0xFFE8703A)
@@ -327,7 +365,7 @@ object MonsterArt {
 /** A dim stone dungeon: bevelled bricks with moss, flagstones in perspective, two flickering torches and dust in their light. */
 fun DrawScope.drawDungeon(phase: Float) {
     val w = size.width; val h = size.height
-    val floorTop = h * 0.74f
+    val floorTop = h * 0.58f
     drawRect(Brush.verticalGradient(listOf(Color(0xFF2E2733), Color(0xFF1A161E)), 0f, floorTop), size = Size(w, floorTop))
     // Bricks, offset every other row, each a slightly different stone with a lit top and a shadowed base.
     val rows = 6; val bh = floorTop / rows; val bw = w / 5.5f
@@ -452,7 +490,7 @@ private fun DrawScope.drawShelves() {
     val w = size.width; val h = size.height
     val r = Random(21)
     for (x0 in listOf(w * 0.2f, w * 0.64f)) {
-        val cw = w * 0.16f; val top = h * 0.12f; val bottom = h * 0.74f
+        val cw = w * 0.16f; val top = h * 0.08f; val bottom = h * 0.58f
         drawRect(Color(0xFF3B2618), Offset(x0, top), Size(cw, bottom - top))
         val rows = 4; val rh = (bottom - top) / rows
         for (row in 0 until rows) {

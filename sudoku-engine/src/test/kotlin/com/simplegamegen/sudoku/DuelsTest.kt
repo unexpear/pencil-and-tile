@@ -54,6 +54,8 @@ class DuelsTest {
         assertEquals(listOf(7, 8), g.hands); assertEquals(-1, g.turn)
         assertNull(g.place(Stone(0.05f, 0f)), "stones can't overlap")
         assertNull(g.place(Stone(0.99f, 0f)), "stones stay inside the ring")
+        val touch = g.place(Stone(MagnetGame.PULL + MagnetGame.RADIUS - 0.01f, 0f))!!
+        assertEquals(2, touch.snapped.size, "the pull circle meeting the black stone snaps it")
         g = g.place(Stone(0.5f, 0f))!!
         g = g.place(Stone(0.5f, 0.3f))!!
         // A stone between two others pulls both.

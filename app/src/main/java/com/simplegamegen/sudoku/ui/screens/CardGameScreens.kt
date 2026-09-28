@@ -26,6 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -287,7 +290,8 @@ fun MemoryScreen(nav: NavController, vm: PlayViewModel<MemoryGame>, factory: Puz
                                         .semantics { contentDescription = say(if (up) mahjongName(g.faces[i]) + if (i in g.matched) ", matched" else "" else "Face-down tile") }) {
                                         if (up) MahjongTile(g.faces[i], width = w, depth = 4.dp, free = true, selected = i in g.open && !g.mismatch,
                                             hinted = false)
-                                        else Canvas(Modifier.size(w + 4.dp, w * TILE_ASPECT + 4.dp).padding(end = 4.dp, bottom = 4.dp)) {
+                                        else Canvas(Modifier.size(w + 6.dp, w * TILE_ASPECT + 6.dp).padding(end = 6.dp, bottom = 6.dp)) {
+                                            drawRect(Color.Black.copy(alpha = 0.28f), Offset(5f, 6f), Size(size.width, size.height))
                                             drawCardBack(look.colors.cardBack, look.colors.cardBackPattern)
                                         }
                                     }

@@ -1,6 +1,10 @@
 package com.simplegamegen.sudoku.ui.screens
 
 import com.simplegamegen.sudoku.ui.components.ZoomBox
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +36,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -208,6 +213,21 @@ fun MagnetScreen(nav: NavController, vm: PlayViewModel<MagnetGame>, factory: Puz
         val pending by rememberUpdatedState(preview)
         val playable = !g.over && g.turn == 1 && !s.thinking
         val cluster = preview?.let { p -> if (g.legal(p)) g.cluster(p) else null }
+        val attract = remember { Animatable(0f) }
+        LaunchedEffect(cluster) {
+            if ((cluster?.size ?: 0) > 1) attract.animateTo(1f, spring(dampingRatio = 0.52f, stiffness = 280f))
+            else attract.animateTo(0f, tween(160))
+        }
+        val snapAnim = remember { Animatable(1f) }
+        val snapKey = g.snapped.joinToString { "${it.x},${it.y}" }
+        LaunchedEffect(snapKey) {
+            if (g.snapped.isNotEmpty()) {
+                snapAnim.snapTo(0f)
+                snapAnim.animateTo(1f, tween(820, easing = FastOutSlowInEasing))
+            }
+        }
+        val pull = attract.value
+        val snapT = snapAnim.value
         TablePanel {
             ZoomBox(Modifier.fillMaxWidth()) {
                 Canvas(Modifier.fillMaxWidth().aspectRatio(1f)
@@ -224,24 +244,49 @@ fun MagnetScreen(nav: NavController, vm: PlayViewModel<MagnetGame>, factory: Puz
                         }
                     }) {
                     val half = size.width / 2f
+                    val radius = MagnetGame.RADIUS * half
                     fun at(st: Stone) = Offset(half + st.x * half, half + st.y * half)
+                    fun lean(st: Stone): Stone {
+                        val target = preview ?: return st
+                        if (cluster == null || cluster.size < 2 || st !in cluster) return st
+                        return Stone(st.x + (target.x - st.x) * pull * 0.46f, st.y + (target.y - st.y) * pull * 0.46f)
+                    }
                     drawCircle(c.tableInset, half)
                     drawCircle(Color(0xFFD9C9A3), half, style = Stroke(half * 0.03f))
-                    g.stones.forEach { st ->
-                        drawCircle(c.onTable.copy(alpha = 0.12f), MagnetGame.PULL * half, at(st))
-                        drawCircle(c.onTable.copy(alpha = 0.35f), MagnetGame.PULL * half, at(st), style = Stroke(1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))))
+                    val reach = MagnetGame.PULL * half
+                    fun field(st: Stone, hot: Boolean) {
+                        drawCircle(Color.Black.copy(alpha = if (hot) 0.1f else 0.05f), reach, at(st))
+                        drawCircle(Color.Black.copy(alpha = if (hot) 0.55f else 0.28f), reach, at(st), style = Stroke(if (hot) 2.5f else 1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f))))
                     }
-                    g.stones.forEach { st ->
-                        val r = MagnetGame.RADIUS * half
-                        drawCircle(Color.Black.copy(alpha = 0.35f), r, at(st) + Offset(0f, r * 0.2f))
-                        drawCircle(Brush.radialGradient(listOf(Color(0xFF8A8F98), Color(0xFF2B2E33)), at(st) - Offset(r * 0.3f, r * 0.3f), r * 1.2f), r, at(st))
-                        if (cluster != null && st in cluster) drawCircle(c.danger, r * 1.25f, at(st), style = Stroke(3f))
+                    g.stones.forEach { st -> field(lean(st), cluster != null && st in cluster && cluster.size > 1) }
+                    val target = preview
+                    val group = cluster
+                    if (pull > 0.05f && target != null && group != null && group.size > 1) {
+                        group.drop(1).forEach { st ->
+                            drawLine(Color.Black.copy(alpha = 0.35f * pull), at(lean(st)), at(target), strokeWidth = radius * 0.18f, cap = StrokeCap.Round)
+                        }
                     }
+                    g.stones.forEach { st -> blackMagnet(at(lean(st)), radius, cluster != null && st in cluster && (cluster.size > 1)) }
                     preview?.let { p ->
-                        val ok = g.legal(p)
-                        val r = MagnetGame.RADIUS * half
-                        drawCircle((if (!ok) c.danger else if ((cluster?.size ?: 1) > 1) c.danger else c.highlight).copy(alpha = 0.7f), r, at(p))
-                        drawCircle(Color.White, r, at(p), style = Stroke(2f))
+                        val others = cluster?.drop(1).orEmpty()
+                        val shown = if (others.isEmpty() || pull == 0f) p else Stone(
+                            p.x + (others.map { it.x }.average().toFloat() - p.x) * pull * 0.28f,
+                            p.y + (others.map { it.y }.average().toFloat() - p.y) * pull * 0.28f,
+                        )
+                        field(shown, others.isNotEmpty())
+                        blackMagnet(at(shown), radius * 0.96f, (cluster?.size ?: 0) > 1 || !g.legal(p), alpha = 0.85f)
+                    }
+                    if (snapT < 1f && g.snapped.isNotEmpty()) {
+                        val group = g.snapped
+                        val cx = group.map { it.x }.average().toFloat()
+                        val cy = group.map { it.y }.average().toFloat()
+                        val meet = (snapT / 0.48f).coerceIn(0f, 1f)
+                        val leave = ((snapT - 0.42f) / 0.58f).coerceIn(0f, 1f)
+                        group.forEach { st ->
+                            val x = st.x + (cx - st.x) * meet
+                            val y = st.y + (cy - st.y) * meet - leave * 0.42f
+                            blackMagnet(at(Stone(x, y)), radius * (1f - leave * 0.35f), marked = false, alpha = 1f - leave)
+                        }
                     }
                 }
             }
@@ -253,6 +298,18 @@ fun MagnetScreen(nav: NavController, vm: PlayViewModel<MagnetGame>, factory: Puz
             else -> "Safe spot. Tap it again to place your stone."
         }, style = MaterialTheme.typography.bodyMedium, color = c.muted)
     }
+}
+
+/** A black stone: shadow, dark body, and a small highlight so it reads as a sphere. */
+private fun DrawScope.blackMagnet(center: Offset, r: Float, marked: Boolean, alpha: Float = 1f) {
+    if (alpha <= 0f || r <= 0f) return
+    drawCircle(Color.Black.copy(alpha = 0.4f * alpha), r * 1.02f, center + Offset(r * 0.1f, r * 0.34f))
+    drawCircle(
+        Brush.radialGradient(listOf(Color(0xFF5A5A5E), Color(0xFF141416), Color(0xFF000000)), center + Offset(-r * 0.32f, -r * 0.36f), r * 1.45f),
+        r, center, alpha = alpha,
+    )
+    drawCircle(Color.White.copy(alpha = 0.72f * alpha), r * 0.16f, center + Offset(-r * 0.28f, -r * 0.34f))
+    if (marked) drawCircle(Color(0xFFE24B4B).copy(alpha = alpha), r * 1.22f, center, style = Stroke(r * 0.16f))
 }
 
 // ---------------- Sprouts ----------------
@@ -307,9 +364,10 @@ fun SproutsScreen(nav: NavController, vm: PlayViewModel<SproutsGame>, factory: P
                     }) {
                     val w = size.width
                     fun at(p: Pt) = Offset(p.x * w, p.y * w)
+                    drawRect(Color(0xFF6FAF78).copy(alpha = 0.22f))
                     g.curves.forEach { curve ->
                         val path = Path().apply { moveTo(at(curve[0]).x, at(curve[0]).y); curve.drop(1).forEach { lineTo(at(it).x, at(it).y) } }
-                        drawPath(path, c.onTable, style = Stroke(w * 0.012f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                        drawPath(path, Color(0xFF2F6A38), style = Stroke(w * 0.014f, cap = StrokeCap.Round, join = StrokeJoin.Round))
                     }
                     route?.let { r ->
                         val path = Path().apply { moveTo(at(r[0]).x, at(r[0]).y); r.drop(1).forEach { lineTo(at(it).x, at(it).y) } }
@@ -320,8 +378,9 @@ fun SproutsScreen(nav: NavController, vm: PlayViewModel<SproutsGame>, factory: P
                     g.dots.forEachIndexed { i, d ->
                         val lives = g.lives(i)
                         val selected = i == first || i == second
-                        drawCircle(if (lives == 0) c.onTable.copy(alpha = 0.35f) else Color.White, w * 0.022f, at(d))
-                        drawCircle(if (selected) c.highlight else c.onTable, w * 0.022f, at(d), style = Stroke(if (selected) 4f else 2f))
+                        drawCircle(if (lives == 0) Color(0xFF8AA58A) else Color(0xFF3D8C4A), w * 0.028f, at(d))
+                        drawCircle(Color(0xFFE7F6E4), w * 0.012f, at(d) - Offset(0f, w * 0.004f))
+                        drawCircle(if (selected) c.highlight else Color(0xFF1E4A28), w * 0.028f, at(d), style = Stroke(if (selected) 4f else 2f))
                         // Small ticks show remaining line ends.
                         repeat(lives) { k -> drawCircle(c.accent, w * 0.005f, at(d) + Offset((k - (lives - 1) / 2f) * w * 0.012f, w * 0.038f)) }
                     }

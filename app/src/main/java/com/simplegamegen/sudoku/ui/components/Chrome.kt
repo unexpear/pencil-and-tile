@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -67,6 +68,7 @@ import com.simplegamegen.sudoku.ui.GameId
 import com.simplegamegen.sudoku.ui.PlayModeChoice
 import com.simplegamegen.sudoku.ui.SessionClock
 import com.simplegamegen.sudoku.ui.playerRecords
+import com.simplegamegen.sudoku.ui.assets.GameArt
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 import com.simplegamegen.sudoku.ui.theme.readableOn
@@ -124,16 +126,22 @@ fun GameScaffold(
             Column {
                 TopAppBar(
                     title = {
-                        Column {
-                            Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge)
-                            subtitle?.let { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, color = onHeader.copy(alpha = 0.8f)) }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            if (game != null) Box(Modifier.size(40.dp).background(Color.White.copy(alpha = 0.16f), MaterialTheme.shapes.small),
+                                contentAlignment = Alignment.Center) { GameArt(game, Modifier.size(34.dp)) }
+                            Column {
+                                val longTitle = title.length > 13
+                                Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    style = if (longTitle) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
+                                subtitle?.let { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, color = onHeader.copy(alpha = 0.8f)) }
+                            }
                         }
                     },
                     navigationIcon = {
                         if (onBack != null) IconButton(onClick = onBack) { Icon(GameIcons.Back, contentDescription = tr("Back")) }
                     },
                     actions = {
-                        if (tutorial != null && showClock) SessionClock(tutorial)
+                        if (tutorial != null && showClock && title.length <= 13) SessionClock(tutorial)
                         if (tutorial != null && openTutorial != null) HeaderAction(GameIcons.School, "How to play: tutorial and rules") { openTutorial(tutorial) }
                         actions()
                         if (menu.isNotEmpty()) OverflowMenu(menu)
@@ -312,26 +320,29 @@ fun TablePanel(modifier: Modifier = Modifier, padding: PaddingValues = PaddingVa
     }
 }
 
-/** Welcome panel shown before the first game of a mode. */
+/** Welcome panel: the game's picture first, then one line, then the choices. Full rules stay in the header. */
 @Composable
 fun StartCard(title: String, text: String, art: @Composable () -> Unit, tutorial: GameId? = null, content: @Composable ColumnScope.() -> Unit) {
     val look = LocalGameLook.current
     val openTutorial = LocalOpenTutorial.current
+    val lead = text.substringBefore('\n').let { line ->
+        val dot = line.indexOf(". ")
+        if (dot in 12..110) line.substring(0, dot + 1) else line.take(110)
+    }
     Surface(Modifier.fillMaxWidth(), color = look.colors.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, look.colors.outline)) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Box(Modifier.size(72.dp).background(look.colors.surfaceAlt, MaterialTheme.shapes.medium), contentAlignment = Alignment.Center) { art() }
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleLarge)
-                    Text(text, style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
+        Column {
+            Box(Modifier.fillMaxWidth().height(148.dp).background(if (tutorial != null) look.headerColor(tutorial) else look.colors.surfaceAlt),
+                contentAlignment = Alignment.Center) { art() }
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                Text(lead, style = MaterialTheme.typography.bodyMedium, color = look.colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (tutorial != null && openTutorial != null && playerRecords()?.settings?.offerTutorials != false) TextButton(onClick = { openTutorial(tutorial) }) {
+                    Icon(GameIcons.School, null, Modifier.size(18.dp))
+                    Text("  Try the guided tutorial")
                 }
+                if (tutorial != null) PlayModeChoice(tutorial)
+                content()
             }
-            if (tutorial != null && openTutorial != null && playerRecords()?.settings?.offerTutorials != false) TextButton(onClick = { openTutorial(tutorial) }) {
-                Icon(GameIcons.School, null, Modifier.size(18.dp))
-                Text("  New to $title? Try the guided tutorial")
-            }
-            if (tutorial != null) PlayModeChoice(tutorial)
-            content()
         }
     }
 }

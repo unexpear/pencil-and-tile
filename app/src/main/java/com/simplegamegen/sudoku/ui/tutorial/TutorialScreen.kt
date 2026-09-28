@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -118,7 +117,7 @@ fun TutorialScreen(nav: NavController, id: GameId, fromHub: Boolean) {
     LaunchedEffect(index, done) {
         if (done && step.then.length <= 60 && index < tutorial.steps.size - 1) { delay(1200); goTo(index + 1) }
     }
-    GameScaffold(title = "How to play", subtitle = id.title, game = id, onBack = { nav.popBackStack() }) {
+    GameScaffold(title = id.title, subtitle = "How to play", game = id, showClock = false, onBack = { nav.popBackStack() }) {
         SegmentedTabs(listOf("Guided play", "Rules"), tab) { tab = it }
         if (tab == 1) {
             RulesList(tutorial)
@@ -161,31 +160,29 @@ private fun ColumnScope.GuidedStep(
 ) {
     val c = LocalGameLook.current.colors
     val total = tutorial.steps.size
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Step ${index + 1} of $total", style = MaterialTheme.typography.labelLarge, color = c.muted)
-        LinearProgressIndicator(progress = { (index + if (done || !step.interactive) 1 else 0) / total.toFloat() },
-            modifier = Modifier.weight(1f), color = c.accent, trackColor = c.surfaceAlt)
-    }
-    Surface(color = if (done && step.then.isNotEmpty()) c.success.copy(alpha = 0.12f) else c.surface, shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, c.outline), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (done && step.then.isNotEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(GameIcons.Check, null, tint = c.success, modifier = Modifier.size(20.dp))
-                    Text(step.then, style = MaterialTheme.typography.bodyLarge, color = c.text)
-                }
-            } else Text(step.say, style = MaterialTheme.typography.bodyLarge, color = c.text)
-            wrong?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = c.danger) }
-        }
-    }
     val scene = if (done) step.result else step.scene
     SceneView(scene, highlight = if (showMe && !done) step.tap else emptySet(), enabled = step.tap.isNotEmpty() && !done, onTap = onTap)
     if (scene.choices.isNotEmpty()) ChoiceRow(scene.choices, enabled = step.pick != null && !done, hinted = if (showMe && !done) step.pick else null, onPick = onPick)
+    Row(Modifier.semantics(mergeDescendants = true) { contentDescription = say("Step ${index + 1} of $total") },
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        repeat(total) { i ->
+            val on = i == index
+            Box(Modifier.size(if (on) 8.dp else 6.dp).background(if (i < index || (i == index && (done || !step.interactive))) c.accent else if (on) c.text else c.outline, CircleShape))
+        }
+        Text("Step ${index + 1} of $total", style = MaterialTheme.typography.labelLarge, color = c.muted)
+    }
+    if (done && step.then.isNotEmpty()) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(GameIcons.Check, null, tint = c.success, modifier = Modifier.size(20.dp))
+            Text(step.then, style = MaterialTheme.typography.bodyLarge, color = c.text)
+        }
+    } else Text(step.say, style = MaterialTheme.typography.bodyLarge, color = c.text)
+    wrong?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = c.danger) }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onBack, enabled = index > 0, modifier = Modifier.weight(1f)) { Text("Back") }
-        if (step.interactive && !done) OutlinedButton(onClick = onShowMe, modifier = Modifier.weight(1f)) { Text("Show me") }
+        OutlinedButton(onClick = onBack, enabled = index > 0, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text("Back") }
+        if (step.interactive && !done) OutlinedButton(onClick = onShowMe, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text("Show me") }
         Button(onClick = onNext, enabled = !step.interactive || done,
-            modifier = Modifier.weight(1f)) { Text(if (index == total - 1) "Finish" else "Next") }
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text(if (index == total - 1) "Finish" else "Next") }
     }
     TextButton(onClick = onSkip, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text(skipLabel) }
 }
@@ -194,21 +191,24 @@ private fun ColumnScope.GuidedStep(
 private fun RulesList(t: Tutorial) {
     val c = LocalGameLook.current.colors
     Text(t.summary, style = MaterialTheme.typography.titleMedium)
-    SectionTitle("Rules")
     t.rules.forEachIndexed { i, rule ->
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.size(24.dp).background(c.accentSoft, CircleShape), contentAlignment = Alignment.Center) {
-                Text("${i + 1}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = c.accent)
+        Surface(color = c.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, c.outline), modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(28.dp).background(c.accentSoft, CircleShape), contentAlignment = Alignment.Center) {
+                    Text("${i + 1}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = c.accent)
+                }
+                Text(rule, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             }
-            Text(rule, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         }
     }
     if (t.tips.isNotEmpty()) {
         SectionTitle("Tips")
         t.tips.forEach { tip ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(GameIcons.Hint, null, tint = c.highlight, modifier = Modifier.size(20.dp))
-                Text(tip, style = MaterialTheme.typography.bodyMedium, color = c.muted, modifier = Modifier.weight(1f))
+            Surface(color = c.accentSoft, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(GameIcons.Hint, null, tint = c.highlight, modifier = Modifier.size(20.dp))
+                    Text(tip, style = MaterialTheme.typography.bodyMedium, color = c.text, modifier = Modifier.weight(1f))
+                }
             }
         }
     }
@@ -516,9 +516,7 @@ private fun CellView(l: Cell, tone: Tone, unit: Dp, w: Dp, h: Dp, surface: Backd
 @Composable
 fun TutorialHubScreen(nav: NavController) {
     val c = LocalGameLook.current.colors
-    GameScaffold(title = "How to play", subtitle = "Guided tutorials and rules for every game", onBack = { nav.popBackStack() }) {
-        Text("Each game has its own short guided tutorial. They're optional: pick any game to learn it, or come back any time.",
-            style = MaterialTheme.typography.bodyMedium, color = c.muted)
+    GameScaffold(title = "How to play", onBack = { nav.popBackStack() }) {
         GameGroup.entries.forEach { group ->
             SectionTitle(group.title)
             GameId.entries.filter { it.group == group }.forEach { id ->

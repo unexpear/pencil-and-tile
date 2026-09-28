@@ -61,10 +61,13 @@ fun HomeScreen(nav: NavController, vm: GameViewModel) {
     Column(Modifier.fillMaxSize().background(c.background).verticalScroll(rememberScrollState())) {
         Column(Modifier.fillMaxWidth().background(c.topBar).statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // The brand name stays the same in every language.
                     androidx.compose.material3.Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = c.onTopBar)
-                    Text("${CollectionGuide.entries.size} games · play offline, keep your progress", style = MaterialTheme.typography.bodyMedium, color = c.onTopBar.copy(alpha = 0.8f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HomeFact("${CollectionGuide.entries.size} games")
+                        HomeFact("Offline")
+                    }
                 }
                 IconButton(onClick = { nav.navigate("tutorials") }) { Icon(GameIcons.School, contentDescription = tr("How to play"), tint = c.onTopBar) }
                 IconButton(onClick = { nav.navigate("guide") }) { Icon(GameIcons.Rules, contentDescription = tr("Games and possibilities"), tint = c.onTopBar) }
@@ -115,6 +118,14 @@ fun HomeScreen(nav: NavController, vm: GameViewModel) {
     }
     // Keeps scrolled tiles from showing through the transparent status bar.
     Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(c.topBar))
+    }
+}
+
+@Composable
+private fun HomeFact(label: String) {
+    val c = LocalGameLook.current.colors
+    Surface(color = Color.White.copy(alpha = 0.14f), contentColor = c.onTopBar, shape = MaterialTheme.shapes.extraLarge) {
+        Text(label, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge)
     }
 }
 

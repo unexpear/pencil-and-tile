@@ -109,7 +109,7 @@ fun <S : Any> PlayShell(
         if (game == null) GameFamilyPicker(nav, id)
         when {
             game == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            game == null -> StartCard(id.title, setup.rules, art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
+            game == null -> StartCard(id.title, setup.rules, art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
                 OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
                 Text(setup.describe(setting), style = MaterialTheme.typography.bodySmall, color = look.colors.muted)
                 MessageLine(s.message)

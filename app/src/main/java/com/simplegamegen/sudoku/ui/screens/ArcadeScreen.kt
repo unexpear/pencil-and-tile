@@ -129,7 +129,7 @@ fun ArcadeScreen(nav: NavController, vm: ArcadeViewModel) {
             !hasGame -> StartCard(vm.game.title,
                 if (vm.game == ArcadeGame.HANGMAN) "Guess the hidden word one letter at a time before the drawing is finished."
                 else "Match pairs of identical free tiles until the board is clear. Every deal has a verified clearing route.",
-                art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
+                art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
                 ArcadeOptions(vm.game, difficulty, theme, { difficulty = it }, { theme = it })
                 MessageLine(s.message)
                 Button(onClick = { vm.newGame(theme, difficulty) }, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start game") }

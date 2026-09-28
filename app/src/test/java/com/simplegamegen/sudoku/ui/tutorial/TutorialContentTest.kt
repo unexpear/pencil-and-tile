@@ -216,6 +216,35 @@ class TutorialContentTest {
         assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("CAT"))
     }
 
+    @Test fun `every game has a playable tutorial`() {
+        GameId.entries.forEach { id ->
+            val t = Tutorials.of(id)
+            assertEquals(id, t.game, id.name)
+            assertTrue(t.summary.isNotBlank(), "${id.name} summary")
+            assertTrue(t.rules.isNotEmpty(), "${id.name} rules")
+            assertTrue(t.steps.size >= 3, "${id.name} has ${t.steps.size} steps")
+            t.steps.forEachIndexed { i, step ->
+                assertTrue(step.say.isNotBlank(), "${id.name} step $i is blank")
+                assertTrue(step.scene.width > 0 && step.scene.height > 0, "${id.name} step $i scene size")
+                val ids = step.scene.items.map { it.id }.filter { it.isNotEmpty() }
+                assertEquals(ids.size, ids.toSet().size, "${id.name} step $i duplicate ids")
+                step.tap.forEach { tap -> assertTrue(step.scene.item(tap) != null, "${id.name} step $i taps missing $tap") }
+                step.pick?.let { pick -> assertTrue(pick in step.scene.choices, "${id.name} step $i pick $pick not in ${step.scene.choices}") }
+                step.scene.links.forEach { link ->
+                    assertTrue(step.scene.item(link.from) != null, "${id.name} step $i link from ${link.from}")
+                    assertTrue(step.scene.item(link.to) != null, "${id.name} step $i link to ${link.to}")
+                }
+                step.after?.let { after ->
+                    assertTrue(after.width > 0 && after.height > 0, "${id.name} step $i result size")
+                }
+                step.scene.items.forEach { item ->
+                    assertTrue(item.x + item.w <= step.scene.width + 0.01f && item.y + item.h <= step.scene.height + 0.01f,
+                        "${id.name} step $i item ${item.id} sits outside the scene")
+                }
+            }
+        }
+    }
+
     @Test fun `lone letter tutorial answers are on the lists`() {
         val c = com.simplegamegen.sudoku.wordplay.LoneCategories
         assertTrue(c["fruit"].accepts("Banana") && c["animals"].accepts("Badger") && c["animals"].accepts("Bear"))

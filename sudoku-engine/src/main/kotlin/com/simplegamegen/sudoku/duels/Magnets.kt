@@ -12,7 +12,7 @@ data class Stone(val x: Float, val y: Float)
 
 /**
  * Magnetic cluster, in the style of Kluster: players take turns placing stones inside
- * the ring. A stone that lands within [PULL] of others snaps to them, and the whole
+ * the ring. A stone snaps when its pull circle meets another stone's body, and the whole
  * connected cluster goes back to the player who placed it. Placing your last stone wins.
  */
 data class MagnetGame(
@@ -43,7 +43,7 @@ data class MagnetGame(
         val left = stones.toMutableList()
         var i = 0
         while (i < group.size) {
-            val pulled = left.filter { dist(it, group[i]) < PULL }
+            val pulled = left.filter { reaches(it, group[i]) }
             group += pulled; left -= pulled.toSet()
             i++
         }
@@ -71,6 +71,8 @@ data class MagnetGame(
         const val RADIUS = 0.055f
         const val PULL = 0.2f
         fun dist(a: Stone, b: Stone) = hypot(a.x - b.x, a.y - b.y)
+        /** The pull circle around [a] is touching the black body of [b], or the other way around. */
+        fun reaches(a: Stone, b: Stone) = dist(a, b) < PULL + RADIUS
         fun inside(p: Stone) = hypot(p.x, p.y) <= 1f - RADIUS
         val NAMES = listOf("Easy", "Medium", "Hard", "Expert")
         fun start(seed: Long, setting: Int) = MagnetGame(setting, seed)

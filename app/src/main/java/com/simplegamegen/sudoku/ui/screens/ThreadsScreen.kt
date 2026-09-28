@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -48,6 +49,7 @@ import com.simplegamegen.sudoku.ui.components.ToolButton
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
+import com.simplegamegen.sudoku.ui.theme.readableOn
 import com.simplegamegen.sudoku.ui.theme.readableOn
 import com.simplegamegen.sudoku.wordplay.EnglishThreads
 import com.simplegamegen.sudoku.wordplay.ThreadRule
@@ -124,7 +126,8 @@ fun ThreadsScreen(nav: NavController, vm: PlayViewModel<ThreadsGame>, factory: P
                             Surface(
                                 onClick = { picked = if (on) live - word else if (live.size < 4) live + word else live },
                                 enabled = !g.over && !s.busy,
-                                color = if (on) c.accent else c.surfaceAlt, contentColor = if (on) c.onAccent else c.text,
+                                color = if (on) c.accent else c.surface, contentColor = if (on) c.onAccent else c.text,
+                                border = BorderStroke(1.5.dp, if (on) c.accent else c.outline),
                                 shape = MaterialTheme.shapes.medium,
                                 modifier = Modifier.width(tile).height(64.dp).semantics {
                                     contentDescription = word; stateDescription = say(if (on) "selected" else "not selected")
@@ -155,13 +158,10 @@ fun ThreadsScreen(nav: NavController, vm: PlayViewModel<ThreadsGame>, factory: P
     }
 }
 
-/** A found thread: its connection and its four words, on a band that darkens with difficulty. */
+/** A found thread: yellow, green, blue, then purple, easiest first. */
 @Composable
 private fun ThreadBand(g: ThreadsGame, index: Int) {
-    val look = LocalGameLook.current
-    val c = look.colors
-    val strength = listOf(0.22f, 0.4f, 0.62f, 0.85f)[index]
-    val fill = look.gameColor(GameId.THREADS).copy(alpha = strength).compositeOver(c.surface)
+    val fill = listOf(Color(0xFFF6D365), Color(0xFF8FCB6B), Color(0xFF7EB0E0), Color(0xFFC49AE0))[index]
     val ink = readableOn(fill)
     Surface(color = fill, contentColor = ink, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {

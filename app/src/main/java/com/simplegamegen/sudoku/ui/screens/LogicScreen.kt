@@ -124,7 +124,7 @@ fun LogicScreen(nav: NavController, vm: LogicViewModel) {
         if (progress == null) GameFamilyPicker(nav, id)
         when {
             progress == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            progress == null -> StartCard(vm.kind.title, LogicGuide.rules(vm.kind), art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
+            progress == null -> StartCard(vm.kind.title, LogicGuide.rules(vm.kind), art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
                 LevelPicker(vm.kind, level) { level = it }
                 MessageLine(s.message)
                 Button(onClick = { vm.newGame(level) }, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start puzzle") }

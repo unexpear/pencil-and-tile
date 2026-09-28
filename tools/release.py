@@ -35,8 +35,14 @@ def main():
     tag = 'v' + name
 
     gradle = open(GRADLE, encoding='utf-8').read()
-    code = int(re.search(r'versionCode = (\d+)', gradle).group(1)) + 1
-    old = re.search(r'versionName = "([^"]+)"', gradle).group(1)
+    fallback = re.search(r'versionCode = playVersionCode \?: (\d+)', gradle) or re.search(r'versionCode = (\d+)', gradle)
+    if not fallback:
+        fail('could not find versionCode in app/build.gradle.kts')
+    code = int(fallback.group(1)) + 1
+    name_match = re.search(r'else "(\d+\.\d+\.\d+)"', gradle) or re.search(r'versionName = "([^"]+)"', gradle)
+    if not name_match:
+        fail('could not find versionName in app/build.gradle.kts')
+    old = name_match.group(1)
 
     # Release notes: every language present and within Play's 500-character limit.
     for locale in LOCALES:
@@ -66,8 +72,17 @@ def main():
     except subprocess.CalledProcessError:
         fail('main is behind GitHub. Pull first.')
 
-    gradle = re.sub(r'versionCode = \d+', f'versionCode = {code}', gradle, count=1)
-    gradle = re.sub(r'versionName = "[^"]+"', f'versionName = "{name}"', gradle, count=1)
+    if re.search(r'versionCode = playVersionCode \?: \d+', gradle):
+        gradle = re.sub(r'versionCode = playVersionCode \?: \d+', f'versionCode = playVersionCode ?: {code}', gradle, count=1)
+        gradle = re.sub(
+            r'versionName = if \(playVersionCode != null\) "[^"]+" else "[^"]+"',
+            f'versionName = if (playVersionCode != null) "{name}.$playVersionCode" else "{name}"',
+            gradle,
+            count=1,
+        )
+    else:
+        gradle = re.sub(r'versionCode = \d+', f'versionCode = {code}', gradle, count=1)
+        gradle = re.sub(r'versionName = "[^"]+"', f'versionName = "{name}"', gradle, count=1)
     with open(GRADLE, 'w', encoding='utf-8', newline='') as f:
         f.write(gradle)
     git('add', GRADLE)

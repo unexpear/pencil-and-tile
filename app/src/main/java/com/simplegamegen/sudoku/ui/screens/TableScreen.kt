@@ -149,7 +149,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
         if (match == null) GameFamilyPicker(nav, id)
         when {
             match == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            match == null -> StartCard(vm.game.title, GameGuide.rules(vm.game), art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
+            match == null -> StartCard(vm.game.title, GameGuide.rules(vm.game), art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
                 SettingPicker(vm.game, setting) { setting = it }
                 MessageLine(s.message)
                 Button(onClick = { vm.newGame(setting) }, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start game") }
@@ -330,7 +330,7 @@ private fun MinesBoard(s: MinesState, hint: Move?, flagMode: Boolean, play: (Mov
             val cell = if (fit >= 34.dp) min(fit, 46.dp) else 40.dp
             val scroll = rememberScrollState()
             Box(Modifier.fillMaxWidth().then(if (fit < 34.dp) Modifier.horizontalScroll(scroll) else Modifier), contentAlignment = Alignment.Center) {
-                Column(Modifier.clip(MaterialTheme.shapes.small).border(2.dp, c.outline, MaterialTheme.shapes.small)) {
+                Column(Modifier.background(Color(0xFF2F5D32)).padding(4.dp).clip(MaterialTheme.shapes.small).border(2.dp, Color(0xFF1C3A1E), MaterialTheme.shapes.small)) {
                     for (row in 0 until s.preset.height) Row {
                         for (col in 0 until s.preset.width) {
                             val i = row * s.preset.width + col

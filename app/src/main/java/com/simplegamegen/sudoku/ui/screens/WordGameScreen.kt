@@ -137,7 +137,7 @@ fun WordGameScreen(nav: NavController, vm: WordGameViewModel) {
             progress == null -> StartCard(title,
                 if (crossword) "Solve a connected grid with original clues. Tap a clue or square, then type the answer."
                 else "Find the hidden words. Tap the first letter of a word, then its last letter.",
-                art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
+                art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
                 WordOptions(crossword, difficulty, theme, { difficulty = it }, { theme = it })
                 MessageLine(state.message)
                 Button(onClick = { vm.newGame(theme, difficulty) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start puzzle") }
@@ -185,8 +185,11 @@ private fun LetterGrid(size: Int, cell: @Composable (index: Int, side: androidx.
             // nesting a horizontal scroller around a board taller than its visible viewport.
             val side = min(fit, 48.dp)
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.width(7.dp).height(side * size).background(Color(0xFFE15B64)))
                 Column(Modifier.clip(MaterialTheme.shapes.small).border(2.dp, look.colors.text.copy(alpha = 0.7f), MaterialTheme.shapes.small)) {
                     for (row in 0 until size) Row { for (col in 0 until size) cell(row * size + col, side) }
+                }
                 }
             }
         }

@@ -29,7 +29,11 @@ def listings():
 
 def main():
     gradle = open(os.path.join(ROOT, 'app', 'build.gradle.kts'), encoding='utf-8').read()
-    code = sys.argv[1] if len(sys.argv) > 1 else re.search(r'versionCode = (\d+)', gradle).group(1)
+    if len(sys.argv) > 1:
+        code = sys.argv[1]
+    else:
+        m = re.search(r'versionCode = playVersionCode \?: (\d+)', gradle) or re.search(r'versionCode = (\d+)', gradle)
+        code = m.group(1)
     for lang, fields in listings():
         folder = os.path.join(OUT, lang)
         os.makedirs(os.path.join(folder, 'changelogs'), exist_ok=True)

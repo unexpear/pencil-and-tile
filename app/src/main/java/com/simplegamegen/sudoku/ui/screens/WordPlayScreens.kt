@@ -34,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -126,7 +127,8 @@ fun CryptogramScreen(nav: NavController, vm: PlayViewModel<Cryptogram>, factory:
                 Text("“${g.quote}” — ${g.author}", style = MaterialTheme.typography.bodyLarge)
             }
         }
-        Surface(color = c.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, c.outline), modifier = Modifier.fillMaxWidth()) {
+        Surface(color = if (LocalGameLook.current.dark) c.surface else Color(0xFFFFF8EE), shape = MaterialTheme.shapes.large,
+            border = BorderStroke(1.dp, c.outline), modifier = Modifier.fillMaxWidth()) {
             FlowRow(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 g.encoded.split(' ').forEach { word ->
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
