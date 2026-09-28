@@ -8,6 +8,11 @@ Downloads, unless paths are passed in:
   ENABLE enable1.txt (public domain)
   Tatoeba English sentences released under CC0
 
+Free and open sources only. Playable membership is ENABLE. Definitions and
+sense ids are Open English WordNet and nothing else. Examples are the OEWN
+synset example when it has one, otherwise one short Tatoeba CC0 sentence.
+No proprietary dictionary or API is read.
+
 The playable flag is the shipped letter-game list (all.txt.gz), which
 tools/words/build_dictionary.py builds from ENABLE. Lemmas are casefolded so
 letter games and definitions share the same key. Word Meaning's reviewed bank

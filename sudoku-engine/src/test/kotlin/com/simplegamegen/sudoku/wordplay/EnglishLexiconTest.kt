@@ -102,6 +102,7 @@ class EnglishLexiconTest {
         assertTrue("idx_words_lemma" in indexes && "idx_senses_word_id" in indexes)
         assertTrue(count("SELECT COUNT(*) AS n FROM words") >= 100_000)
         assertTrue(count("SELECT COUNT(*) AS n FROM senses") >= 50_000)
+        assertEquals(0, count("SELECT COUNT(*) AS n FROM senses WHERE oewn_synset_id IS NULL OR oewn_synset_id = ''"))
         assertEquals("1", query("SELECT value AS value FROM meta WHERE key = 'schema'").single()["value"])
     }
 

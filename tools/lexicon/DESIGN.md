@@ -6,6 +6,27 @@ The Word Meaning round bank (`meaning/en.tsv`, built by
 `tools/meaning/build_meaning_bank.py`) is a separate reviewed set and is not
 replaced. MiniLM / ONNX judging is unchanged.
 
+## Free and open sources only
+
+Every shipped row comes from a free, redistributable source. No proprietary
+dictionary, no commercial API, and no dump whose licence is unclear. In
+particular this lexicon does not use Merriam-Webster, Oxford, Wordnik, Urban
+Dictionary, Collins, or similar services.
+
+Shipped sources, also listed under Settings → Credits and licenses:
+
+| Role | Source | Licence |
+|---|---|---|
+| Playable membership | ENABLE (`enable1.txt`, filtered into `all.txt.gz`) | Public domain |
+| Definitions and sense structure | Open English WordNet 2025, core edition | CC BY 4.0, from Princeton WordNet |
+| Examples | That synset's OEWN example, else one Tatoeba English CC0 sentence | CC BY 4.0, or CC0 |
+
+Lemmas join on the casefolded form (`ice_cream` and `Ice Cream` are `ice cream`).
+A sense is an OEWN synset id plus its definition. An OEWN example for that
+synset is preferred, especially one that contains this lemma. Tatoeba is only
+the gap fill when that synset has no example, and it is a loose lemma match,
+not a checked sense. At most one short example is stored per sense.
+
 `./gradlew :sudoku-engine:buildLexiconDb` writes `lexicon.db` (and a sha256)
 under `sudoku-engine/build/lexicon/`. The app task `copyLexiconDb` packs it as
 `assets/lexicon/lexicon.db`. Nothing in that database is committed; the first
@@ -54,56 +75,32 @@ Unique index on the casefolded lemma, index on `word_id`, unique index on
 `examples.sense_id`. No full-text search and no synset relation graph. A `meta`
 table records the source URLs.
 
-## Not in version 1
+## Considered and not shipped
 
-Version 1 is only OEWN definitions, OEWN examples, and Tatoeba CC0 sentences.
-The resources below were checked as ways to fill a missing definition or a
-missing example. None of them are downloaded or imported.
+Version 1 does not download these. Definitions stay OEWN-only.
 
-### Optional phase 2
-
-- **GCIDE 0.54** (GNU Collaborative International Dictionary of English, GPL-3.0-or-later):
-  Webster's 1913 dictionary (public domain) plus later edits. The release tarball
-  is about 18 MB compressed (`gcide-0.54.tar.gz`); older notes cite about 130,000
-  headwords. GPL text can sit in this GPL-3 app, but the entries are marked-up
-  19th-century prose, some of them outdated, and they overlap OEWN. Worth a look
-  only for lemmas OEWN does not define, after the same block list.
-- **FreeDict**: free bilingual TEI dictionaries, not an English defining dictionary.
-  Most are GPL; the licence is in each file's TEI header and some are derived from
-  share-alike sources. Useful later for another language's glosses, not for
-  English sense gaps.
-- **Wiktionary via wiktextract** (Kaikki.org English JSONL): the extractor is MIT,
-  the extracted text is Wiktionary's dual CC BY-SA and GFDL. The English file is
-  about 22.9 GB uncompressed and 2.6 GB gzip, far past the 25–40 MB budget.
-  A slice of English definitions might fit, but share-alike would cover those
-  rows and attribution would have to travel with them. Still the largest optional
-  source, not a v1 import.
-- **Princeton WordNet Gloss Corpus** (tagged glosses): words inside WordNet
-  definitions and examples are linked to senses, under the WordNet licence
-  (use and redistribution with the Princeton notice). It does not add sentences
-  this app does not already have from OEWN. Optional if a later version wants
-  sense links inside a gloss, not as a gap-fill for missing examples.
-- **SemCor**: Brown Corpus sentences tagged with WordNet senses, which is the
-  shape we would want for a sense-specific example. The sentence text is the
-  Brown Corpus, whose samples are not cleared for redistribution in a public
-  GPL app (scholarly / non-commercial limits). Princeton's SemCor notice does
-  not replace that. Do not ship SemCor sentences unless the underlying text is
-  separately cleared.
-- **FrameNet** (Berkeley / ICSI): on the order of 13,000 lexical units and
-  200,000 annotated sentences. NLTK distributes release 1.7 as CC BY 3.0;
-  release 1.5 was non-commercial, and the upstream download still goes through
-  ICSI, so the current grant has to be read before any sentence is copied.
-  Examples are tied to semantic frames, not to OEWN synsets, so they need a
-  mapping. Optional after that check, and only for senses that still have no
-  OEWN or Tatoeba sentence.
-- **Tatoeba full English export** (CC BY 2.0 FR): more sentences than the CC0
-  subset, but each sentence then needs attribution. An explicit opt-in, not the
-  default fill.
-
-### Still out
-
-- **Commercial dictionaries** (Oxford, Merriam-Webster, Collins, and similar):
-  not licensed for redistribution inside a GPL-3 app.
-- **OEWN 2025+**: adds proper nouns the letter games do not use.
+- **Webster 1913 (public domain) or GCIDE 0.54 (GPL-3.0-or-later)** are the only
+  later definition sources to consider, and only for a lemma OEWN does not
+  define. GCIDE is Webster 1913 plus later edits; `gcide-0.54.tar.gz` is about
+  18 MB compressed. The prose is marked-up and often archaic, so it is not part
+  of v1. Modern Merriam-Webster is a different, proprietary work and is not a
+  substitute for the 1913 text.
+- **Princeton WordNet Gloss Corpus**: free under the WordNet licence, but it
+  sense-tags glosses and examples OEWN already contains. It does not add the
+  missing sentences, so it is not an easy gap fill.
+- **SemCor**: sense-tagged sentences, but the text is the Brown Corpus, which is
+  not free to redistribute. It is out, not a phase-2 option.
+- **Tatoeba full English export** (CC BY 2.0 FR): free, with more sentences than
+  the CC0 file, and each sentence would need attribution. Left as an explicit
+  opt-in.
+- **Wiktionary via wiktextract**: the tool is MIT; the text is CC BY-SA and GFDL.
+  English JSONL is about 22.9 GB raw / 2.6 GB gzip. Share-alike and size keep it
+  out. It is not the approved stand-in for a missing OEWN definition.
+- **FreeDict**: free bilingual TEI dictionaries (licence per file, often GPL).
+  Not an English defining dictionary.
+- **FrameNet**: annotated sentences exist, but they are tied to frames rather
+  than OEWN synsets. Release 1.5 was non-commercial; confirm any later grant
+  before treating it as free. Not used here.
+- **OEWN 2025+**: extra proper nouns the letter games do not need.
 - **Runtime LLM examples**, Needle 3 / MiniLM changes, and edits to the Word
   Meaning bank.
