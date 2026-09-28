@@ -61,6 +61,10 @@ Things the F-Droid reviewers may ask about, and the answers:
   source is the sentence-transformers project on Hugging Face.
 - **Word lists** (`*.txt.gz`, categories) are generated data; the scripts that build them are in
   `tools/words/` and `tools/meaning/`.
+- **English lexicon** (`assets/lexicon/lexicon.db`) is built during Gradle by
+  `:sudoku-engine:buildLexiconDb` from Open English WordNet 2025, the public-domain ENABLE list, and
+  Tatoeba CC0 English sentences. The task needs network unless those files are already cached or passed
+  in. It is separate from the reviewed Word Meaning bank. See `tools/lexicon/DESIGN.md`.
 - **Anti-features:** none (no ads, tracking, non-free network services or non-free assets).
 
 ## After they're listed

@@ -1,0 +1,13 @@
+ENABLE (Enhanced North American Benchmark Lexicon)
+
+The ENABLE word list is in the public domain. It was compiled by Alan Beale from
+public-domain sources for use in word games. No attribution is legally required.
+Credit: Alan Beale and the ENABLE contributors.
+
+Pencil & Tile uses it as the playable list for letter games. tools/words/build_dictionary.py
+drops words shorter than 2 letters, longer than 15 letters, and words named in
+tools/words/blocked.txt (profanity, slurs, sexual terms, and the same simple
+inflections). The English lexicon marks that same shipped list as playable.
+
+The builder downloads enable1.txt from https://norvig.com/ngrams/enable1.txt
+and checks it still covers that list.

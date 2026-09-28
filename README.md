@@ -282,9 +282,13 @@ project. See [Google Play preparation](docs/GOOGLE_PLAY.md) before publishing.
 Puzzles, clues, word lists, art and tutorials are original to this app. Third-party parts (full texts in
 `app/src/main/assets/licenses/`, shown in the app under Settings → Credits and licenses):
 
-- **Open English WordNet** (CC BY 4.0, derived from Princeton WordNet under the WordNet licence): Word Meaning's
-  definitions, example sentences, synonyms and opposites. Regenerate with
-  `python tools/meaning/build_meaning_bank.py english-wordnet-2025.xml.gz`.
+- **Open English WordNet** (CC BY 4.0, derived from Princeton WordNet under the WordNet licence): definitions
+  and example sentences in the English lexicon and in Word Meaning, plus Word Meaning's synonyms and
+  opposites. The reviewed round bank is regenerated with
+  `python tools/meaning/build_meaning_bank.py english-wordnet-2025.xml.gz`. The full lookup database is
+  built by `./gradlew :sudoku-engine:buildLexiconDb` (see `tools/lexicon/DESIGN.md`).
+- **ENABLE** (public domain): the playable word list for letter games. The lexicon marks the same words playable.
+- **Tatoeba** (CC0 English sentences): example sentences in the lexicon when Open English WordNet has none.
 - **all-MiniLM-L6-v2** (Apache 2.0): the quantised on-device sentence model that helps judge Word Meaning answers.
 - **ONNX Runtime** (MIT): runs that model.
 - AndroidX, Jetpack Compose and Kotlin (Apache 2.0).
@@ -298,5 +302,6 @@ see [LICENSE](LICENSE) for details.
 
 Some parts come from others under their own licences, listed in the app under Settings → Credits and in
 `app/src/main/assets/licenses/`: word definitions and category lists from Open English WordNet (CC BY 4.0),
-the ENABLE word list (public domain), the all-MiniLM-L6-v2 sentence model (Apache 2.0) and ONNX Runtime (MIT).
+the ENABLE word list (public domain), Tatoeba CC0 example sentences, the all-MiniLM-L6-v2 sentence model
+(Apache 2.0) and ONNX Runtime (MIT).
 

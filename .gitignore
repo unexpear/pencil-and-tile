@@ -13,3 +13,4 @@ keystore.properties
 *.aab
 *.apk
 tools/words/laya_labels.tsv
+tools/lexicon/cache/
