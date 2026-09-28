@@ -124,6 +124,7 @@ fun SudokuHubScreen(nav: NavController, vm: GameViewModel, initialVariant: Varia
         onBack = { nav.popBackStack() },
         actions = { HeaderAction(GameIcons.Stats, "Statistics") { nav.navigate("stats") } },
     ) {
+        GameFamilyPicker(nav, GameId.SUDOKU)
         if (state.hasSave || (state.hasGame && !state.won)) {
             Surface(onClick = { vm.loadGame(); nav.navigate("game") }, color = look.colors.accent, contentColor = look.colors.onAccent,
                 shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {

@@ -91,21 +91,20 @@ fun HomeScreen(nav: NavController, vm: GameViewModel) {
             }
             GameGroup.entries.forEach { group ->
                 SectionTitle(group.title, Modifier.padding(top = 8.dp))
-                // Base games only; their variants sit under them.
+                // Variants are selected inside each game family.
                 val games = GameId.entries.filter { it.group == group && it.parent == null }
                 if (look.spec.homeLayout == HomeLayout.LIST) {
                     Surface(color = c.surface, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, c.outline)) {
                         Column {
                             games.forEachIndexed { i, g ->
                                 GameRow(g, showDivider = i > 0) { nav.navigate(g.route) }
-                                g.variants.forEach { v -> GameRow(v, showDivider = true, variant = true) { nav.navigate(v.route) } }
                             }
                         }
                     }
                 } else {
                     games.chunked(2).forEach { pair ->
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            pair.forEach { g -> GameTile(g, Modifier.weight(1f), onVariant = { nav.navigate(it.route) }) { nav.navigate(g.route) } }
+                            pair.forEach { g -> GameTile(g, Modifier.weight(1f)) { nav.navigate(g.route) } }
                             if (pair.size == 1) Spacer(Modifier.weight(1f))
                         }
                     }
@@ -120,7 +119,7 @@ fun HomeScreen(nav: NavController, vm: GameViewModel) {
 }
 
 @Composable
-private fun GameTile(game: GameId, modifier: Modifier, onVariant: (GameId) -> Unit, onClick: () -> Unit) {
+private fun GameTile(game: GameId, modifier: Modifier, onClick: () -> Unit) {
     val look = LocalGameLook.current
     val c = look.colors
     val bg = if (look.spec.coloredTiles) look.gameColor(game) else c.surface
@@ -136,33 +135,19 @@ private fun GameTile(game: GameId, modifier: Modifier, onVariant: (GameId) -> Un
                 Text(game.title, style = MaterialTheme.typography.titleMedium)
                 Text(game.blurb, style = MaterialTheme.typography.bodySmall, color = fg.copy(alpha = 0.8f))
             }
-            // Variants of this game, each opening its own game.
-            game.variants.forEach { v ->
-                Surface(onClick = { onVariant(v) }, color = fg.copy(alpha = 0.12f), contentColor = fg, shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).semantics { contentDescription = say(v.title) + ", " + say(v.blurb) }) {
-                    Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Column(Modifier.weight(1f)) {
-                            Text(v.title, style = MaterialTheme.typography.labelLarge)
-                            Text(v.blurb, style = MaterialTheme.typography.bodySmall, color = fg.copy(alpha = 0.75f))
-                        }
-                        Icon(GameIcons.Chevron, contentDescription = null, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
+
         }
     }
 }
 
 @Composable
-private fun GameRow(game: GameId, showDivider: Boolean, variant: Boolean = false, onClick: () -> Unit) {
+private fun GameRow(game: GameId, showDivider: Boolean, onClick: () -> Unit) {
     val look = LocalGameLook.current
     val c = look.colors
     Column {
         if (showDivider) Box(Modifier.fillMaxWidth().padding(start = 84.dp).height(1.dp).background(c.outline))
         Surface(onClick = onClick, color = Color.Transparent, modifier = Modifier.fillMaxWidth().semantics { contentDescription = say(game.title) + ", " + say(game.blurb) }) {
-            // Variants are indented under their base game.
-            Row(Modifier.padding(start = if (variant) 40.dp else 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically,
+            Row(Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Box(Modifier.size(58.dp).background(c.surfaceAlt, MaterialTheme.shapes.medium), contentAlignment = Alignment.Center) {
                     GameArt(game, Modifier.size(54.dp))

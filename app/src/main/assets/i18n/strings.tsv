@@ -2003,3 +2003,6 @@ Move board	移动棋盘	盤面を移動	Mover tablero	Spielfeld bewegen
 Drag to move the board. Turn off Move board to play.	拖动可移动棋盘。关闭“移动棋盘”即可操作。	ドラッグで盤面を移動します。操作するには「盤面を移動」をオフにします。	Arrastra para mover el tablero. Desactiva Mover tablero para jugar.	Ziehe, um das Spielfeld zu bewegen. Schalte Spielfeld bewegen zum Spielen aus.
 In a game, tap one dot and then its neighbor. Turn off Tap two dots to tap lines instead. In this tutorial, tap the missing line.	游戏中先点击一个点，再点击相邻的点。关闭“点击两个点”可改为点击线条。本教程中请点击缺失的线。	ゲームでは点と隣の点を順にタップします。「2つの点をタップ」をオフにすると線をタップできます。このチュートリアルでは足りない線をタップしてください。	En el juego, toca un punto y luego su vecino. Desactiva Tocar dos puntos para tocar líneas. En este tutorial, toca la línea que falta.	Tippe im Spiel auf einen Punkt und dann seinen Nachbarn. Schalte Zwei Punkte antippen aus, um Linien anzutippen. Tippe in dieser Anleitung auf die fehlende Linie.
 Tap two neighboring dots to connect. Tap a selected dot again to cancel.	点击两个相邻的点进行连接。再次点击选中的点可取消。	隣り合う2点をタップしてつなぎます。選択中の点をもう一度タップすると取り消せます。	Toca dos puntos vecinos para unirlos. Toca de nuevo el punto seleccionado para cancelar.	Tippe zum Verbinden auf zwei benachbarte Punkte. Tippe zum Abbrechen erneut auf den gewählten Punkt.
+Game	游戏	ゲーム	Juego	Spiel
+Klondike	克朗代克	クロンダイク	Klondike	Klondike
+Klondike, Spider, Pyramid	克朗代克、蜘蛛、金字塔	クロンダイク、スパイダー、ピラミッド	Klondike, Spider, Pirámide	Klondike, Spider, Pyramide

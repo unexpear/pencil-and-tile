@@ -146,6 +146,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
             }
         },
     ) {
+        if (match == null) GameFamilyPicker(nav, id)
         when {
             match == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             match == null -> StartCard(vm.game.title, GameGuide.rules(vm.game), art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
@@ -171,6 +172,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
         }
     }
     if (sheet) NewGameSheet("New game", game = id, onDismiss = { sheet = false }, onStart = ::start) {
+        GameFamilyPicker(nav, id)
         SettingPicker(vm.game, setting) { setting = it }
         Text(GameGuide.settingDescription(vm.game, setting), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
     }

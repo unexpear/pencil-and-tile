@@ -34,7 +34,7 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     WORD_QUILT("Word Quilt", "play_WORD_QUILT", "Stitch letters into words", GameGroup.WORDS),
     LONE_LETTER("Lone Letter", "play_LONE_LETTER", "One letter, many categories", GameGroup.WORDS),
     MAHJONG("Mahjong", "mahjong", "Match free tiles", GameGroup.TABLE),
-    SOLITAIRE("Solitaire", "table_SOLITAIRE", "Klondike, draw 1 or 3", GameGroup.TABLE),
+    SOLITAIRE("Solitaire", "table_SOLITAIRE", "Klondike, Spider, Pyramid", GameGroup.TABLE),
     SPIDER("Spider", "play_SPIDER", "1, 2 or 4 suits", GameGroup.TABLE),
     PYRAMID("Pyramid", "play_PYRAMID", "Pairs that make 13", GameGroup.TABLE),
     DOMINOES("Dominoes", "table_DOMINOES", "Double-six draw", GameGroup.TABLE),
@@ -48,14 +48,14 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     G2048("2048", "play_G2048", "Slide and merge", GameGroup.ARCADE),
     TETRAS("Tetras", "play_TETRAS", "Falling blocks", GameGroup.ARCADE);
 
-    /** The base game this one is a variant of; the home screen shows variants under their base game's tile. */
+    /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {
         KILLER, SAMURAI -> SUDOKU
         SPIDER, PYRAMID -> SOLITAIRE
         else -> null
     }
 
-    /** Variants shown under this game's tile, in display order. */
+    /** Related games in display order. */
     val variants: List<GameId> get() = entries.filter { it.parent == this }
 
     companion object {

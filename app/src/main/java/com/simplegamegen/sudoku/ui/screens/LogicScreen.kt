@@ -121,6 +121,7 @@ fun LogicScreen(nav: NavController, vm: LogicViewModel) {
             }
         },
     ) {
+        if (progress == null) GameFamilyPicker(nav, id)
         when {
             progress == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             progress == null -> StartCard(vm.kind.title, LogicGuide.rules(vm.kind), art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
@@ -156,6 +157,7 @@ fun LogicScreen(nav: NavController, vm: LogicViewModel) {
         }
     }
     if (sheet) NewGameSheet("New puzzle", startLabel = "Start puzzle", game = id, onDismiss = { sheet = false }, onStart = ::start) {
+        GameFamilyPicker(nav, id)
         LevelPicker(vm.kind, level) { level = it }
     }
     if (rules) AlertDialog(onDismissRequest = { rules = false }, title = { Text("How to play ${vm.kind.title}") },

@@ -106,6 +106,7 @@ fun <S : Any> PlayShell(
             }
         },
     ) {
+        if (game == null) GameFamilyPicker(nav, id)
         when {
             game == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             game == null -> StartCard(id.title, setup.rules, art = { GameArt(id, Modifier.size(64.dp)) }, tutorial = id) {
@@ -121,6 +122,7 @@ fun <S : Any> PlayShell(
         }
     }
     if (sheet) NewGameSheet("New game", startLabel = "Start", game = id, onDismiss = { sheet = false }, onStart = ::request) {
+        GameFamilyPicker(nav, id)
         OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
         Text(setup.describe(setting), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
     }
