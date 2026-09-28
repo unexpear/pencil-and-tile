@@ -43,6 +43,7 @@ object CollectionGuide {
         GameCapacity("Dots and Boxes", 1, 4, "3×3 to 6×6 boxes; board size and computer strength rise together.", "1 empty starting board; matches differ by play."),
         GameCapacity("Sprouts", 1, 4, "2 to 5 starting spots against the computer.", "Starting spots are placed per game; curve routes differ by play."),
         GameCapacity("Magnetic cluster", 1, 4, "8 magnetic stones each × 4 computer strengths.", "1 empty ring; matches differ by play."),
+        GameCapacity("Connect Four", 1, 4, "Standard 7×6 gravity board × 4 computer strengths. Four in a row wins; a full board draws.", "1 empty starting board; matches differ by play."),
         GameCapacity("2048", 1, 4, "3×3 to 6×6 boards with goal tiles 512 to 8192.", "Tile spawns are seeded per game; there is no final level."),
         GameCapacity("Tetras", 1, 4, "Falling blocks with 4 starting speeds; 7-piece bags.", "Piece order is seeded per game; there is no final level."),
     )

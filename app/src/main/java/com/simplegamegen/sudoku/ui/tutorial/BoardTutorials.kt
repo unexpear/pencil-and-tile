@@ -238,6 +238,55 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val connectFour: Tutorial get() {
+        fun scene(rows: List<String>, mark: String? = null, good: Set<String> = emptySet()): Scene {
+            val items = gridItems(rows.size, rows[0].length) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = Fill.OPEN,
+                    piece = when (rows[r][c]) {
+                        'Y' -> Piece(PieceKind.COUNTER, 1)
+                        'C' -> Piece(PieceKind.COUNTER, -1)
+                        else -> null
+                    },
+                    mark = if (id == mark) Mark.CIRCLE else Mark.NONE,
+                )
+            }
+            val base = Scene(rows[0].length.toFloat(), rows.size.toFloat(), items, Backdrop.BOARD, maxUnit = 64)
+            return if (good.isEmpty()) base else base.tone(Tone.GOOD, *good.toTypedArray())
+        }
+        val column = (0 until 4).map { cellId(it, 2) }.toSet()
+        val empty = listOf(".....", ".....", ".....", ".....")
+        val dropped = listOf(".....", ".....", ".....", "..Y..")
+        val answered = listOf(".....", ".....", ".....", "..YC.")
+        val threat = listOf(".....", ".....", ".....", "YY.YC")
+        val won = listOf(".....", ".....", ".....", "YYYYC")
+        return Tutorial(
+            GameId.CONNECT_FOUR,
+            "Drop discs and line up four in a row.",
+            rules = listOf(
+                "Take turns dropping one disc into a column. It falls to the lowest empty space.",
+                "Line up four of your discs across, down or diagonally to win.",
+                "The board has 7 columns and 6 rows. Filling it with no line of four is a draw.",
+                "You play the red discs and move first. In a game, tap a column to drop.",
+            ),
+            tips = listOf(
+                "The middle columns are part of more lines of four, so they're useful early.",
+                "If you can win in two columns at once, the other player can stop only one.",
+            ),
+            steps = listOf(
+                Step("Discs fall straight down to the lowest empty space in the column you choose.", scene(empty)),
+                Step("Tap the middle column.", scene(empty, mark = "r3c2"), tap = column,
+                    after = scene(dropped), then = "Your disc landed at the bottom.",
+                    help = "The middle column, where the circle is."),
+                Step("The computer drops in a different column. Four in a row can also run down or on a diagonal.", scene(answered)),
+                Step("Three of yours sit on the bottom, with one gap. Drop there to make four across.", scene(threat, mark = "r3c2"),
+                    tap = column, after = scene(won, good = (0..3).map { cellId(3, it) }.toSet()),
+                    then = "Four in a row. You win!", help = "The empty column between your discs."),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {

@@ -26,6 +26,9 @@ import com.simplegamegen.sudoku.arcade.Game2048
 import com.simplegamegen.sudoku.arcade.Game2048Codec
 import com.simplegamegen.sudoku.arcade.TetrasCodec
 import com.simplegamegen.sudoku.arcade.TetrasGame
+import com.simplegamegen.sudoku.duels.ConnectFour
+import com.simplegamegen.sudoku.duels.ConnectFourAi
+import com.simplegamegen.sudoku.duels.ConnectFourCodec
 import com.simplegamegen.sudoku.duels.DotsAi
 import com.simplegamegen.sudoku.duels.DotsCodec
 import com.simplegamegen.sudoku.duels.DotsGame
@@ -39,6 +42,7 @@ import com.simplegamegen.sudoku.ui.screens.AcrosticScreen
 import com.simplegamegen.sudoku.ui.screens.BlotwordsScreen
 import com.simplegamegen.sudoku.wordplay.BlotCodec
 import com.simplegamegen.sudoku.wordplay.Blotwords
+import com.simplegamegen.sudoku.ui.screens.ConnectFourScreen
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
 import com.simplegamegen.sudoku.ui.screens.MagnetScreen
 import com.simplegamegen.sudoku.ui.screens.SproutsScreen
@@ -83,6 +87,12 @@ fun <S> codecOf(encode: (S) -> String, decode: (String) -> S?): GameCodec<S> = o
 }
 
 /** Computer sides for the two-player games; the computer is always player -1. */
+object ConnectFourComputer : ComputerPlayer<ConnectFour> {
+    override fun needsMove(state: ConnectFour) = !state.over && state.turn == -1
+    override fun move(state: ConnectFour) = state.drop(ConnectFourAi.choose(state))!!
+    override val pauseMs = 350L
+}
+
 object DotsComputer : ComputerPlayer<DotsGame> {
     override fun needsMove(state: DotsGame) = !state.over && state.turn == -1
     override fun move(state: DotsGame) = state.draw(DotsAi.choose(state))!!
@@ -196,5 +206,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.SPROUTS.route) {
         SproutsScreen(nav, playModel<SproutsGame>(GameId.SPROUTS, store, codecOf(SproutsCodec::encode, SproutsCodec::decode), SproutsComputer), factory)
+    }
+    composable(GameId.CONNECT_FOUR.route) {
+        ConnectFourScreen(nav, playModel<ConnectFour>(GameId.CONNECT_FOUR, store, codecOf(ConnectFourCodec::encode, ConnectFourCodec::decode), ConnectFourComputer), factory)
     }
 }

@@ -245,6 +245,13 @@ class TutorialContentTest {
         }
     }
 
+    @Test fun `connect four tutorial finishes on four in a row`() {
+        val scene = last(GameId.CONNECT_FOUR)
+        val bottom = (0 until 5).map { c -> (scene.item(cellId(3, c))!!.look as Cell).piece }
+        assertEquals(4, bottom.count { piece -> piece != null && piece.kind == PieceKind.COUNTER && piece.player == 1 })
+        assertEquals(1, bottom.count { piece -> piece != null && piece.kind == PieceKind.COUNTER && piece.player == -1 })
+    }
+
     @Test fun `lone letter tutorial answers are on the lists`() {
         val c = com.simplegamegen.sudoku.wordplay.LoneCategories
         assertTrue(c["fruit"].accepts("Banana") && c["animals"].accepts("Badger") && c["animals"].accepts("Bear"))
