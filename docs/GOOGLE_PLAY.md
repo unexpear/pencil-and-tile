@@ -186,7 +186,14 @@ A push to `main` starts `.github/workflows/release.yml`, which:
 4. uploads it to the **Closed testing - Alpha** track with the notes in `distribution/whatsnew/`
    (one file per language, 500 characters at most). It goes to testers once Google's review passes.
    Pull requests only run the tests. Each main push gets its own Play version code, `100` plus the
-   workflow run number, because Play rejects a code it has already accepted.
+   workflow run number, because Play rejects a code it has already accepted. Passing that code also
+   appends it to the version name (`1.1.3.142`, for example).
+
+A version tag (`v*`, cut by `tools/release.py`) runs the same tests, builds the signed bundle and
+APK, and the `github-release` job attaches `pencil-and-tile-vX.Y.Z.apk` to the GitHub release.
+The tag is not uploaded to Play. The tag build does not pass `-PplayVersionCode`, so the APK
+keeps the committed version name (the tag, such as `1.1.3`) and version code (`5`, `6`, …).
+Those codes stay below 100, outside the range each main push sends to Play.
 
 ### One-time setup (done by the owner)
 

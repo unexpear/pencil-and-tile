@@ -25,7 +25,8 @@ val uploadCredentials = listOf(uploadStorePath, uploadStorePassword, uploadKeyAl
 require(uploadCredentials.all { it == null } || uploadCredentials.all { !it.isNullOrBlank() }) {
     "Upload signing is only partly configured: set all four values or none."
 }
-// CI passes -PplayVersionCode on every push to main so Play gets a new code. Local builds keep the defaults.
+// CI passes -PplayVersionCode on pushes to main so Play gets a new code and versionName becomes
+// <name>.<code>. Tag builds and local builds omit it and keep the versionName and versionCode below.
 val playVersionCode = providers.gradleProperty("playVersionCode").orNull?.toInt()
 
 android {
