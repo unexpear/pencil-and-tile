@@ -1,0 +1,1 @@
+Übersichtlichere Startseite mit einer Kachel pro Spielfamilie. Wähle Killer und Samurai unter Sudoku sowie Klondike, Spider oder Pyramide unter Solitaire. Wechsle in der Einrichtung oder im Menü für ein neues Spiel.

@@ -1,0 +1,1 @@
+Cleaner home screen with one tile per game family. Choose Killer and Samurai inside Sudoku, and Klondike, Spider or Pyramid inside Solitaire. Switch games from setup or the New game menu.

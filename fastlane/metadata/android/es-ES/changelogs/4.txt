@@ -1,0 +1,1 @@
+Inicio más ordenado con una ficha por familia de juegos. Elige Killer y Samurai dentro de Sudoku, y Klondike, Spider o Pirámide dentro de Solitario. Cambia desde la configuración o el menú de nueva partida.
