@@ -178,18 +178,15 @@ Post for social media or forums (fill in the group link):
 
 ## Automatic releases
 
-Releases after 1.0.0 go out from GitHub, the same way StandardTune's do. `python tools/release.py 1.1.0`
-bumps `versionCode`, sets `versionName`, commits, tags `v1.1.0` and pushes. The tag starts
-`.github/workflows/release.yml`, which:
+A push to `main` starts `.github/workflows/release.yml`, which:
 
 1. runs the engine tests, debug/release app tests and debug/release Android lint;
 2. builds the release bundle, signed with the upload key from GitHub secrets;
 3. checks that the bundle carries the registered upload certificate (SHA-256 `BE:42:70:FE:…:22:8B`);
 4. uploads it to the **Closed testing - Alpha** track with the notes in `distribution/whatsnew/`
    (one file per language, 500 characters at most). It goes to testers once Google's review passes.
-
-The release script refuses to run with uncommitted changes, off `main`, behind GitHub, on an existing tag,
-or with missing or overlong release notes. `--dry-run` shows what it would do.
+   Pull requests only run the tests. Each main push gets its own Play version code, `100` plus the
+   workflow run number, because Play rejects a code it has already accepted.
 
 ### One-time setup (done by the owner)
 

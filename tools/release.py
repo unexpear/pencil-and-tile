@@ -1,4 +1,7 @@
-"""Cuts a release: bumps the version, commits, tags and pushes, and GitHub Actions uploads it to Google Play.
+"""Bumps the version, commits, tags and pushes.
+
+A push to main already uploads to the Play closed-testing track. This script is only for a named
+version tag and the GitHub release APK. The Play version code is assigned by the workflow.
 
 usage: python tools/release.py 1.1.0            # set versionName, bump versionCode by one
        python tools/release.py 1.1.0 --dry-run  # show what would happen, change nothing

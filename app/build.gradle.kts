@@ -25,6 +25,8 @@ val uploadCredentials = listOf(uploadStorePath, uploadStorePassword, uploadKeyAl
 require(uploadCredentials.all { it == null } || uploadCredentials.all { !it.isNullOrBlank() }) {
     "Upload signing is only partly configured: set all four values or none."
 }
+// CI passes -PplayVersionCode on every push to main so Play gets a new code. Local builds keep the defaults.
+val playVersionCode = providers.gradleProperty("playVersionCode").orNull?.toInt()
 
 android {
     namespace = "com.simplegamegen.sudoku"
@@ -34,8 +36,8 @@ android {
         applicationId = "com.simplegamegen.puzzles"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.2"
+        versionCode = playVersionCode ?: 4
+        versionName = if (playVersionCode != null) "1.1.2.$playVersionCode" else "1.1.2"
     }
 
     signingConfigs {
