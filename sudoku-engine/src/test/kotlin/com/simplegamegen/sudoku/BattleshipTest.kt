@@ -103,7 +103,11 @@ class BattleshipTest {
         assertEquals("Miss", miss.yourNews())
         assertTrue(miss.awaitingComputer)
         assertNull(miss.fire(98))
-        assertNull(miss.receive(99))
+        val reply = miss.receive(99)!!
+        assertEquals(Mark.MISS, reply.incoming.single().mark)
+        assertEquals("The computer missed", reply.theirNews())
+        assertNull(reply.receive(99))
+        assertTrue(reply.yourTurn)
 
         val cruiser = enemy().first { it.kind == ShipKind.CRUISER }.cells
         game = laid()

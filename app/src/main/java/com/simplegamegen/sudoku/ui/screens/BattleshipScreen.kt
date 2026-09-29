@@ -253,9 +253,9 @@ private fun SeaBoard(
                                 while (true) {
                                     val event = awaitPointerEvent()
                                     val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                    ghost = squareAt(change.position, size.width)
+                                    ghost = squareAt(change.position, size.width.toFloat())
                                     if (!change.pressed) {
-                                        val landed = squareAt(change.position, size.width)
+                                        val landed = squareAt(change.position, size.width.toFloat())
                                         ghost = -1
                                         if (landed >= 0) placeAt.value(landed)
                                         break
