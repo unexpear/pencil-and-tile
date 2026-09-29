@@ -63,7 +63,7 @@ import com.simplegamegen.sudoku.ui.i18n.say
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DuelStatus(over: Boolean, winner: Int, turn: Int, thinking: Boolean, you: String, cpu: String) {
+internal fun DuelStatus(over: Boolean, winner: Int, turn: Int, thinking: Boolean, you: String, cpu: String) {
     val c = LocalGameLook.current.colors
     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         when {

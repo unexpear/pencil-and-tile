@@ -115,6 +115,19 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                     drawText(l, topLeft = o + Offset((cell - l.size.width) / 2, (cell - l.size.height) / 2))
                 }
             }
+            GameId.CONNECT_FOUR -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF1565C0), cornerRadius = CornerRadius(8f))
+                val cols = 4
+                val rows = 4
+                val cw = size.width / cols
+                val ch = size.height / rows
+                val discs = mapOf((3 to 0) to 1, (3 to 1) to 1, (3 to 2) to 1, (2 to 1) to -1, (3 to 3) to -1)
+                for (r in 0 until rows) for (c in 0 until cols) {
+                    val center = Offset((c + 0.5f) * cw, (r + 0.5f) * ch)
+                    drawCircle(Color(0xFF0D3A86), cw * 0.34f, center)
+                    discs[r to c]?.let { who -> drawCircle(if (who > 0) Color(0xFFE53935) else Color(0xFFFDD835), cw * 0.26f, center) }
+                }
+            }
             GameId.TETRAS -> Canvas(Modifier.size(56.dp)) {
                 val s = size.width / 5
                 drawRect(Color(0xFF15161B))

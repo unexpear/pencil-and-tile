@@ -229,6 +229,7 @@ Choose two matching free tiles.	选择两张相同的空闲牌。	同じ絵柄�
 circled	已画圈	丸	rodeada	eingekreist
 Circles hold odd digits.	圆圈里填奇数。	丸には奇数が入ります。	Los círculos llevan números impares.	Kreise enthalten ungerade Ziffern.
 Classic	经典	クラシック	Clásico	Klassisch
+Classics	经典	クラシック	Clásicos	Klassiker
 Clear	清除	クリア	Borrar	Leeren
 Clear digits	清除所有数字	数字をすべて消す	Borrar números	Ziffern leeren
 Clear every tile to win. If no free pair is left, the game is stuck; use Undo or start again.	清空所有牌就赢了。如果已经没有可配对的自由牌，就卡住了；可以撤销或重新开始。	すべての牌を取れば勝ちです。取れるペアがなくなったら手詰まり。元に戻すか、やり直しましょう。	Retira todas las fichas para ganar. Si no queda ninguna pareja libre, te has atascado; usa Deshacer o empieza de nuevo.	Räume alle Steine ab, um zu gewinnen. Gibt es kein freies Paar mehr, steckst du fest; nimm Züge zurück oder fang neu an.
@@ -264,6 +265,8 @@ Column 5 is the same, so its spare squares are crossed too.	第 5 列也一样�
 column {0}	第 {0} 列	{0}列	la columna {0}	Spalte {0}
 Column {0}	第 {0} 列	{0}列目	Columna {0}	Spalte {0}
 Column {0} letter {1}	第 {0} 列字母 {1}	{0}列目の文字{1}	Columna {0}, letra {1}	Spalte {0}, Buchstabe {1}
+Column {0}, drop a disc	第 {0} 列，落一枚棋子	{0}列目、コマを落とす	Columna {0}, soltar una ficha	Spalte {0}, eine Scheibe fallen lassen
+Column {0}, full	第 {0} 列，已满	{0}列目、いっぱい	Columna {0}, llena	Spalte {0}, voll
 Column {0}, {1}	第 {0} 列，{1}	{0}列目、{1}	Columna {0}, {1}	Spalte {0}, {1}
 Column {0}, {1} face up	第 {0} 列，{1} 张正面朝上	{0}列目、表向き{1}枚	Columna {0}, {1} boca arriba	Spalte {0}, {1} offen
 Common Threads	共同线索	コモン・スレッド	Hilos comunes	Gemeinsame Fäden
@@ -276,11 +279,13 @@ Computer strength	电脑强度	コンピューターの強さ	Nivel del ordenado
 Computer won	电脑获胜	コンピューターの勝ち	Ganó el ordenador	Der Computer hat gewonnen
 Computer {0}	电脑 {0}	コンピューター {0}	Ordenador {0}	Computer {0}
 computer {0}	电脑的{0}	コンピューターの{0}	{0} del ordenador	{0} des Computers
+computer's disc	电脑的棋子	コンピューターのコマ	ficha del ordenador	Scheibe des Computers
 computer's piece	电脑的棋子	コンピューターの駒	pieza del ordenador	Stein des Computers
 computer's stone	电脑的磁石	コンピューターの石	piedra del ordenador	Stein des Computers
 Computer's turn	电脑的回合	コンピューターの番	Turno del ordenador	Der Computer ist dran
 Computer: {0}	电脑：{0}	コンピューター：{0}	Ordenador: {0}	Computer: {0}
 conflict	有冲突	重複あり	conflicto	Konflikt
+Connect Four	四子棋	四目並べ	Conecta 4	Vier gewinnt
 Continue	继续	続ける	Continuar	Weiter
 Continue Sudoku	继续数独	ナンプレのつづき	Continuar sudoku	Sudoku fortsetzen
 Continue your big grid	继续你的大盘面	大きな盤のつづき	Continuar tu cuadrícula grande	Großes Gitter fortsetzen
@@ -362,6 +367,7 @@ Digits can't repeat inside a cage.	笼子里的数字不能重复。	ケージ�
 Digits may repeat inside a cage as long as they're in different rows and columns.	只要在不同的行和列，笼子里的数字可以重复。	行と列がちがえば、ケージの中で数字が重なってもかまいません。	Los números pueden repetirse dentro de una jaula si están en filas y columnas distintas.	Ziffern dürfen sich im Käfig wiederholen, solange sie in verschiedenen Zeilen und Spalten stehen.
 Digits run from 1 up to the size. Sizes without a box shape (5, 7, 11, 13) need drawn regions.	数字从 1 一直到尺寸大小。没有整齐宫格的尺寸（5、7、11、13）需要自己画区域。	数字は1からサイズの数までです。箱の形に分けられないサイズ（5・7・11・13）は、ブロックを描く必要があります。	Los números van del 1 al tamaño. Los tamaños sin forma de caja (5, 7, 11, 13) necesitan regiones dibujadas.	Die Ziffern gehen von 1 bis zur Größe. Größen ohne Kastenform (5, 7, 11, 13) brauchen gezeichnete Regionen.
 Digits strictly increase along each thermometer from its bulb.	沿着温度计从球部开始，数字严格递增。	温度計の丸い部分から先へ、数字はだんだん大きくなります。	Los números aumentan a lo largo de cada termómetro desde su bulbo.	Entlang jedes Thermometers steigen die Ziffern ab der Kugel streng an.
+Discs fall straight down to the lowest empty space in the column you choose.	棋子会垂直落到你所选那一列最下面的空位。	コマは選んだ列の一番下の空きまでまっすぐ落ちます。	Las fichas caen en línea recta al hueco más bajo de la columna que elijas.	Scheiben fallen senkrecht auf den untersten freien Platz der gewählten Spalte.
 Doesn't like wasting money	不喜欢浪费钱	お金をむだにしたくない	No le gusta malgastar el dinero	Verschwendet ungern Geld
 Domino {0} and {1}	骨牌 {0} 和 {1}	ドミノ {0}と{1}	Ficha {0} y {1}	Domino {0} und {1}
 Domino {0}–{1}	骨牌 {0}–{1}	ドミノ {0}–{1}	Ficha {0}–{1}	Domino {0}–{1}
@@ -396,9 +402,12 @@ Draw mode	翻牌方式	めくり方	Modo de robo	Ziehmodus
 Draw the line.	画线。	線を引きましょう。	Traza la línea.	Zieh die Linie.
 Drawing the fourth side of a box claims it, and you move again.	画上一个方格的第四条边，这个方格就归你，而且你可以再走一步。	箱の4本目の辺を引くとその箱はあなたのもので、もう一度線を引けます。	Si trazas el cuarto lado de una caja, te la quedas y vuelves a jugar.	Wer die vierte Seite eines Kästchens zieht, bekommt es und ist noch einmal dran.
 Drawn line	已画的线	引いた線	Línea trazada	Gezogene Linie
+drop a disc	落一枚棋子	コマを落とす	soltar una ficha	eine Scheibe fallen lassen
+Drop discs and line up four in a row.	落下棋子，连成四子。	コマを落として4つ並べよう。	Suelta fichas y alinea cuatro.	Wirf Scheiben und bilde eine Viererreihe.
 Drop it into the gap.	让它落进空隙。	すき間に落としましょう。	Suéltala en el hueco.	Lass es in die Lücke fallen.
 Drop the letters	把字落到格子里	文字を落とそう	Deja caer las letras	Lass die Buchstaben fallen
 Dropquote	落字格言	落ち文字パズル	Frase en columnas	Buchstabenfall
+Drops almost at random	几乎随便落子	ほとんどでたらめに落とします	Suelta casi al azar	Wirft fast zufällig
 Each clue lists the runs of filled squares in that row or column, in order, with gaps between runs.	每条提示按顺序列出该行或该列中连续涂色格的长度，各段之间有空隔。	ヒントは、その行や列で続けて塗るマスの長さを順番に表します。かたまりの間には空きがあります。	Cada pista indica, en orden, los tramos de casillas pintadas de su fila o columna, con huecos entre ellos.	Jeder Hinweis nennt der Reihe nach die Blöcke gefüllter Felder in dieser Zeile oder Spalte, mit Lücken dazwischen.
 Each game has its own short guided tutorial. They're optional: pick any game to learn it, or come back any time.	每款游戏都有简短的引导教程，可选可不选：挑一个游戏来学，或者随时回来看看。	どのゲームにも短いガイド付きチュートリアルがあります。やるかどうかは自由です。好きなゲームを選んで覚えるか、いつでも戻ってきてください。	Cada juego tiene su propio tutorial guiado y corto. Son opcionales: elige el juego que quieras aprender o vuelve cuando quieras.	Jedes Spiel hat sein eigenes kurzes, geführtes Tutorial. Alles freiwillig: Wähl ein Spiel zum Lernen aus oder schau jederzeit wieder vorbei.
 Each game's start screen also lets you choose. Only timed wins count towards best times.	每个游戏的开始界面也可以选择。只有计时模式的胜利会计入最佳用时。	各ゲームの開始画面でも選べます。ベストタイムに入るのはタイムありの勝利だけです。	También puedes elegir en la pantalla de inicio de cada juego. Solo las victorias con tiempo cuentan para los mejores tiempos.	Du kannst das auch im Startbildschirm jedes Spiels wählen. Nur Siege mit Zeit zählen für Bestzeiten.
@@ -426,6 +435,7 @@ Edit theme	编辑主题	テーマを編集	Editar tema	Design bearbeiten
 Empty	空	空き	Vacía	Leer
 empty	空	空き	vacía	leer
 Empty pile	空牌堆	空の山	Montón vacío	Leerer Stapel
+empty space	空位	空き	hueco vacío	freier Platz
 Empty your hand to win. If both players are stuck, the lower total of pips in hand wins (equal is a draw).	出完手牌就赢了。如果双方都卡住了，手里点数总和较小的一方赢（相同则平局）。	手札をなくせば勝ちです。どちらも出せなくなったら、手札の目の合計が少ない方の勝ち（同じなら引き分け）。	Vacía tu mano para ganar. Si los dos os atascáis, gana quien tenga menos puntos en la mano (empate si son iguales).	Leere deine Hand, um zu gewinnen. Stecken beide fest, gewinnt die kleinere Augensumme auf der Hand (gleich ist unentschieden).
 English draughts	英式跳棋	英国式チェッカー	Damas inglesas	Englisches Dame
 English draughts: jump and capture the computer's pieces.	英式跳棋：跳过并吃掉电脑的棋子。	チェッカー（イギリス式）：コンピューターの駒を飛びこえて取りましょう。	Damas inglesas: salta y captura las piezas del ordenador.	Englische Dame: Überspringe und schlage die Steine des Computers.
@@ -516,6 +526,8 @@ Found: {0}	找到：{0}	発見：{0}	Encontrado: {0}	Gefunden: {0}
 Foundation {0}	基础堆 {0}	組札{0}	Base {0}	Ablagestapel {0}
 Foundation {0}, {1}	收牌区 {0}，{1}	組札{0}、{1}	Base {0}, {1}	Ablagestapel {0}, {1}
 Four groups of four	四组，每组四个	4語ずつ4グループ	Cuatro grupos de cuatro	Vier Gruppen zu je vier
+Four in a row	连成四子	4つ並べ	Cuatro en línea	Vier in einer Reihe
+Four in a row. You win!	四子相连。你赢了！	4つ揃いました。あなたの勝ち！	¡Cuatro en línea. Has ganado!	Vier in einer Reihe. Du hast gewonnen!
 Four picked. Submit them?	选好四个了。提交吗？	4語選びました。決定しますか？	Cuatro elegidas. ¿Las envías?	Vier ausgewählt. Absenden?
 four plain categories	四个简单类别	わかりやすいカテゴリー4つ	cuatro categorías sencillas	vier einfache Kategorien
 free	可拿	取れる	libre	frei
@@ -605,6 +617,7 @@ I was right	我答对了	正解だった	Tenía razón	Ich hatte recht
 If nothing fits, draw from the boneyard until a tile fits or it's empty; then you pass.	如果没有能接的，就从牌堆里摸，直到摸到能接的或者牌堆摸完；摸完就过。	出せる牌がなければ、出せる牌が来るか山がなくなるまで山から引きます。山がなくなればパスです。	Si no encaja ninguna, roba del pozo hasta que encaje una o se vacíe; entonces pasas.	Passt nichts, ziehst du aus dem Vorrat, bis ein Stein passt oder er leer ist; dann setzt du aus.
 If they show the same picture, they stay face up. If not, both turn back over after a moment.	如果图案相同，它们就保持正面朝上；如果不同，过一会儿两张都会翻回去。	絵が同じなら表のまま。ちがえば、少しして2枚とも裏に戻ります。	Si muestran el mismo dibujo, se quedan boca arriba. Si no, las dos vuelven a girarse al poco.	Zeigen sie dasselbe Bild, bleiben sie offen. Sonst werden beide nach einem Moment wieder umgedreht.
 If three of four were right, the game tells you, so swap one word, not all four.	如果四个里对了三个，游戏会告诉你，这时只换一个词，别四个全换。	4語中3語が正しければ教えてくれます。そのときは4語全部ではなく1語だけ入れ替えましょう。	Si tres de cuatro eran correctas, el juego te lo dice: cambia una palabra, no las cuatro.	Wenn drei von vier stimmen, sagt dir das Spiel Bescheid; tausche dann ein Wort, nicht alle vier.
+If you can win in two columns at once, the other player can stop only one.	如果你同时能在两列取胜，对方只能挡住其中一列。	同時に2つの列で勝てるなら、相手は片方しか止められません。	Si puedes ganar en dos columnas a la vez, el otro jugador solo puede parar una.	Wenn du in zwei Spalten zugleich gewinnen kannst, kann der andere nur eine stoppen.
 If you have no legal move, your turn is skipped automatically. The game ends when neither side can move; most discs wins.	如果你无处可下，就会自动跳过。双方都不能下时游戏结束，棋子多的一方获胜。	置ける場所がなければ、自動でパスになります。どちらも置けなくなったら終わりで、石の多い方の勝ちです。	Si no tienes movimiento válido, pasas el turno automáticamente. La partida acaba cuando nadie puede mover; gana quien tenga más fichas.	Hast du keinen gültigen Zug, wird dein Zug automatisch übersprungen. Das Spiel endet, wenn keiner mehr ziehen kann; die meisten Steine gewinnen.
 If your stone lands within the pull of another stone, they snap together and you take the whole cluster back into your hand.	如果你的磁石落在另一块磁石的吸力范围内，它们会吸在一起，你要把吸在一起的整团都拿回手里。	置いた石がほかの石の引力の範囲に入ると、くっついてしまい、くっついたかたまりを全部手持ちに戻します。	Si tu piedra cae dentro de la atracción de otra, se pegan y te devuelves a la mano todo el grupo.	Landet dein Stein im Anziehungsbereich eines anderen, schnappen sie zusammen, und du nimmst den ganzen Haufen zurück auf die Hand.
 Import	导入	読み込む	Importar	Importieren
@@ -692,6 +705,7 @@ Level {0} · {1} lines	第 {0} 级 · {1} 行	レベル{0} · {1}列	Nivel {0} �
 Light	浅色	ライト	Claro	Hell
 LIME is a fruit too. Tap it.	LIME 也是水果。点它。	LIME も果物です。タップしましょう。	LIME también es una fruta. Tócala.	LIME ist auch Obst. Tippe darauf.
 Line not drawn	未画的线	未記入の線	Línea sin trazar	Nicht gezogene Linie
+Line up four of your discs across, down or diagonally to win.	把自己的四枚棋子在横向、纵向或斜向连成一线即获胜。	自分のコマを横・縦・斜めに4つ並べると勝ちです。	Alinea cuatro de tus fichas en horizontal, vertical o diagonal para ganar.	Verbinde vier eigene Scheiben waagerecht, senkrecht oder diagonal, um zu gewinnen.
 Lines may not cross each other or pass through a spot.	线不能互相交叉，也不能穿过点。	線どうしが交わったり、点を通りぬけたりしてはいけません。	Las líneas no pueden cruzarse ni atravesar un punto.	Linien dürfen sich nicht kreuzen und durch keinen Punkt gehen.
 Lines {0}	行数 {0}	列 {0}	Filas {0}	Reihen {0}
 List	列表	リスト	Lista	Liste
@@ -701,6 +715,7 @@ Look at the cage in the bottom-left corner.	看左下角的笼子。	左下の�
 Look down the second column from the left.	看从左数第二列。	左から2番目の列を上から見てみましょう。	Mira la segunda columna empezando por la izquierda.	Schau dir die zweite Spalte von links an.
 Look for a row, column or box that is missing only one or two digits.	找只缺一两个数字的行、列或宫。	数字が1つか2つだけ足りない行・列・ボックスを探しましょう。	Busca una fila, columna o caja a la que solo le falten uno o dos números.	Such eine Zeile, Spalte oder einen Kasten, dem nur noch eine oder zwei Ziffern fehlen.
 Looking for answers to this grid.	正在寻找这个盘面的答案。	この盤の答えを探しています。	Buscando soluciones para esta cuadrícula.	Suche nach Lösungen für dieses Gitter.
+Looks a few moves ahead	会向前看几步	数手先まで読みます	Mira unas jugadas por delante	Schaut ein paar Züge voraus
 Looks for open space	会找空旷的地方	空いている場所を探します	Busca espacio libre	Sucht freien Platz
 Loops can wall off spots from your opponent.	画圈可以把一些点围起来，不让对手用。	ループで点を囲いこむと、相手が使えなくなります。	Los bucles pueden aislar puntos de tu rival.	Schleifen können Punkte vor deinem Gegner abschirmen.
 Lost	负	負け	Perdida	Verloren
@@ -1031,6 +1046,7 @@ Science	科学	科学	Ciencia	Wissenschaft
 Score {0}	得分 {0}	スコア {0}	Puntos {0}	Punkte {0}
 Score {0} of {1}	得分 {0}/{1}	{1}点中{0}点	{0} de {1} puntos	{0} von {1} Punkten
 Search limit reached. Solvability is still unknown; try Undo or another pair.	搜索已达上限，尚不确定能否清空；可以撤销或试试别的牌对。	探索の上限に達しました。解けるかどうかはまだ不明です。元に戻すか、別のペアを試してください。	Se alcanzó el límite de búsqueda. Aún no se sabe si tiene solución; prueba a deshacer o elige otra pareja.	Suchgrenze erreicht. Ob es lösbar ist, bleibt offen; versuch Rückgängig oder ein anderes Paar.
+Searches deeper for the best column	搜索得更深，选出最好的一列	より深く読んで最良の列を選びます	Busca más a fondo la mejor columna	Sucht tiefer nach der besten Spalte
 Searching for a route to clear the board…	正在寻找清空牌面的路线…	盤を全部取れる手順を探しています…	Buscando una forma de vaciar el tablero…	Suche nach einem Weg, das Brett zu leeren …
 Secondary text	次要文字	補足の文字	Texto secundario	Zweittext
 See results	查看结果	結果を見る	Ver resultados	Ergebnis ansehen
@@ -1129,6 +1145,7 @@ Squares a chess knight's move apart can't share a digit.	相隔一个国际象�
 Squares hold even digits.	方框里填偶数。	四角には偶数が入ります。	Los cuadrados llevan números pares.	Quadrate enthalten gerade Ziffern.
 Squares next to an empty corner often give it away.	下在空角旁边的格子，往往会把角送给对手。	空いている角のとなりに置くと、角を取られやすくなります。	Las casillas junto a una esquina vacía suelen regalarla.	Felder neben einer leeren Ecke verschenken sie oft.
 Stand the piece upright: tap Rotate.	把方块竖起来：点“旋转”。	ピースを縦にしましょう。「回転」をタップします。	Pon la pieza de pie: toca Girar.	Stell das Teil aufrecht: Tippe auf Drehen.
+Standard 7×6 gravity board × 4 computer strengths. Four in a row wins; a full board draws.	标准 7×6 重力棋盘 × 4 档电脑强度。四子相连即获胜；棋盘放满则为平局。	標準の7×6重力盤 × コンピューターの強さ4段階。4つ並べれば勝ち、盤が埋まれば引き分け。	Tablero de gravedad 7×6 estándar × 4 niveles del ordenador. Cuatro en línea gana; un tablero lleno es empate.	Standard-Schwerkraftbrett 7×6 × 4 Computerstärken. Vier in einer Reihe gewinnt; ein volles Brett ist unentschieden.
 Standard 8×8 rules × 4 computer strengths.	标准 8×8 规则 × 4 种电脑强度。	標準の8×8ルール × コンピューターの強さ4段階。	Reglas estándar de 8×8 × 4 niveles del ordenador.	Standardregeln auf 8×8 × 4 Computerstärken.
 Start	开始	開始	Empezar	Los
 Start a 16×16 puzzle from the Sudoku screen, or build your own grid.	从数独界面开始一个 16×16 谜题，或者自己设计一个盘面。	ナンプレの画面から16×16のパズルを始めるか、自分で盤を作りましょう。	Empieza un puzzle de 16×16 desde la pantalla de Sudoku o crea tu propia cuadrícula.	Starte im Sudoku-Bildschirm ein 16×16-Rätsel oder bau dein eigenes Gitter.
@@ -1180,12 +1197,16 @@ Take turns drawing a line between two neighboring dots. Whoever completes the fo
 Take turns drawing a line between two spots, or from a spot back to itself (a loop).	双方轮流在两个点之间画一条线，或从一个点画回它自己（圈）。	交代で、2つの点の間か、1つの点から自分自身へ（ループ）線を引きます。	Por turnos, trazad una línea entre dos puntos, o de un punto a sí mismo (un bucle).	Abwechselnd zieht ihr eine Linie zwischen zwei Punkten oder von einem Punkt zu sich selbst zurück (eine Schleife).
 Take turns drawing a line between two spots, or from a spot back to itself. Lines may not cross each other or pass through a spot, and a new spot sprouts in the middle of each line. A spot can have at most three line ends. Whoever draws the last possible line wins. Tap two spots, optionally tap a point to steer the line, then Draw.	轮流在两个点之间画一条线，或从一个点画回它自己。线不能互相交叉，也不能穿过点；每条线的中间会长出一个新点。每个点最多只能连三个线头。画出最后一条可画的线的人获胜。点两个点，可以再点一个位置来引导线的走向，然后点“画线”。	交代に、2つの点を線でつなぐか、1つの点からぐるっと自分に戻る線を引きます。線どうしは交差できず、点を通り抜けることもできません。線を引くたびに、その真ん中に新しい点が生まれます。1つの点につながる線の端は3本まで。最後に線を引けた人の勝ちです。2つの点をタップし、必要なら経由する点をタップしてから「線を引く」を押します。	Por turnos, trazad una línea entre dos puntos o de un punto a sí mismo. Las líneas no pueden cruzarse ni pasar por un punto, y en el centro de cada línea brota un punto nuevo. Un punto admite como mucho tres extremos de línea. Gana quien traza la última línea posible. Toca dos puntos, si quieres toca otro punto para guiar la línea, y luego pulsa Trazar.	Zieht abwechselnd eine Linie zwischen zwei Punkten oder von einem Punkt zurück zu sich selbst. Linien dürfen sich nicht kreuzen und nicht durch einen Punkt gehen; in der Mitte jeder Linie sprießt ein neuer Punkt. Ein Punkt verträgt höchstens drei Linienenden. Wer die letzte mögliche Linie zieht, gewinnt. Tippe auf zwei Punkte, wenn du willst noch auf eine Stelle zum Lenken, dann auf „Linie ziehen“.
 Take turns drawing one line between two neighbouring dots.	双方轮流在两个相邻的点之间画一条线。	交代で、となり合う2つの点の間に線を1本引きます。	Por turnos, trazad una línea entre dos puntos vecinos.	Abwechselnd zieht ihr eine Linie zwischen zwei benachbarten Punkten.
+Take turns dropping a disc into a column. It falls to the lowest empty space. Line up four of your discs across, down or diagonally before the computer does. A full board with no line of four is a draw. You play red and move first. Tap a column to drop.	轮流把棋子投入一列，它会落到该列最下面的空位。在横、竖或斜向先连成四子即获胜。棋盘放满且没有四子相连则为平局。你执红子，先手。点一列即可落子。	交互にコマを列へ落とします。コマはその列の一番下の空きまで落ちます。横・縦・斜めに自分のコマを4つ並べると勝ちです。盤が埋まって4つ揃わなければ引き分け。あなたは赤で先手です。列をタップして落とします。	Por turnos, suelta una ficha en una columna. Cae al hueco más bajo. Alinea cuatro fichas tuyas en horizontal, vertical o diagonal antes que el ordenador. Si el tablero se llena sin cuatro en línea, es un empate. Juegas con rojo y empiezas. Toca una columna para soltar.	Wirf abwechselnd eine Scheibe in eine Spalte. Sie fällt auf den untersten freien Platz. Wer zuerst vier eigene Scheiben waagerecht, senkrecht oder diagonal verbindet, gewinnt. Ein volles Brett ohne Viererreihe ist unentschieden. Du spielst Rot und beginnst. Tippe auf eine Spalte.
+Take turns dropping one disc into a column. It falls to the lowest empty space.	轮流把一枚棋子投入一列。它会落到最下面的空位。	交互にコマを1つ列へ落とします。その列の一番下の空きまで落ちます。	Por turnos, suelta una ficha en una columna. Cae al hueco más bajo.	Wirf abwechselnd eine Scheibe in eine Spalte. Sie fällt auf den untersten freien Platz.
+Takes a win and blocks yours	会取胜并挡住你的四连	勝ちを取り、あなたの4つを止めます	Aprovecha su victoria y bloquea la tuya	Nimmt einen Gewinnzug und blockt deinen
 Tap a card to pick it up, then where it goes, or tap it twice to send it to the best spot.	点一张牌拿起来，再点要放的地方；或者点两下，把它送到最合适的位置。	カードをタップして持ち上げ、置き先をタップします。2回タップすると、いちばんよい場所へ自動で移ります。	Toca una carta para cogerla y luego su destino, o tócala dos veces para enviarla al mejor sitio.	Tippe auf eine Karte, um sie aufzunehmen, dann auf ihr Ziel, oder tippe zweimal, um sie an die beste Stelle zu schicken.
 Tap a card, then its destination. Hint suggests a legal move; Undo takes one back.	先点一张牌，再点它要去的地方。提示会给出一步可走的棋；撤销可以收回一步。	カードをタップし、次に置き先をタップします。ヒントは動かせる手を示し、元に戻すで1手戻せます。	Toca una carta y luego su destino. La pista sugiere un movimiento válido; Deshacer anula uno.	Tippe auf eine Karte, dann auf ihr Ziel. Der Tipp schlägt einen gültigen Zug vor; Rückgängig nimmt einen zurück.
 Tap a card, then tap where it goes. Tap a selected card again to send it home.	点一张牌，再点它要去的位置。再点一次选中的牌，可以把它送到收牌区。	カードをタップしてから、置き場所をタップします。選んだカードをもう一度タップすると組札へ送れます。	Toca una carta y luego su destino. Vuelve a tocar la carta elegida para mandarla a su base.	Tippe auf eine Karte und dann auf ihr Ziel. Tippe die gewählte Karte noch einmal an, um sie abzulegen.
 Tap a coded letter to choose it.	点一个密码字母来选择它。	暗号の文字をタップして選びます。	Toca una letra cifrada para elegirla.	Tippe auf einen verschlüsselten Buchstaben, um ihn zu wählen.
 Tap a grid on the map, or use the X-shaped picker, to play it full size.	在总览图上点一个盘面，或者用 X 形的选择器，就能放大来玩。	全体図で盤をタップするか、X字形の切り替えボタンで、大きく表示して遊べます。	Toca una cuadrícula del mapa o usa el selector en forma de X para jugarla a tamaño completo.	Tippe auf ein Gitter in der Übersicht oder nutze die X-förmige Auswahl, um es groß zu spielen.
 Tap a letter in the highlighted column.	点高亮这一列中的字母。	光っている列の文字をタップします。	Toca una letra de la columna resaltada.	Tippe auf einen Buchstaben in der markierten Spalte.
+Tap a numbered column to drop your disc.	点带数字的一列来落子。	番号の列をタップしてコマを落とします。	Toca una columna numerada para soltar tu ficha.	Tippe auf eine nummerierte Spalte, um deine Scheibe fallen zu lassen.
 Tap a spot to start a line.	点一个点开始画线。	点をタップして線を始めます。	Toca un punto para empezar una línea.	Tippe auf einen Punkt, um eine Linie zu beginnen.
 Tap a square or number to choose it.	点一个格子或数字来选择。	マスか数字をタップして選びます。	Toca una casilla o un número para elegirlo.	Tippe auf ein Feld oder eine Zahl, um sie zu wählen.
 Tap a square to cycle: odd (circle), even (square), none.	点一个格子依次切换：奇数（圆圈）、偶数（方框）、无。	マスをタップするたびに、奇数（丸）→偶数（四角）→なし と切り替わります。	Toca una casilla para alternar: impar (círculo), par (cuadrado), nada.	Tippe auf ein Feld zum Wechseln: ungerade (Kreis), gerade (Quadrat), nichts.
@@ -1210,6 +1231,7 @@ Tap the foundation.	点基础堆。	組札をタップしましょう。	Toca la
 Tap the left red dragon.	点左边的红中。	左の「中」をタップしましょう。	Toca el dragón rojo de la izquierda.	Tippe auf den linken roten Drachen.
 Tap the left spot.	点左边的点。	左の点をタップしましょう。	Toca el punto de la izquierda.	Tippe auf den linken Punkt.
 Tap the marked point below it to steer the loop.	点它下方标记的位置，控制圈的走向。	下にある印の点をタップして、ループの向きを決めましょう。	Toca el punto marcado debajo para guiar el bucle.	Tippe auf die markierte Stelle darunter, um die Schleife zu lenken.
+Tap the middle column.	点中间那一列。	真ん中の列をタップしましょう。	Toca la columna del centro.	Tippe auf die mittlere Spalte.
 Tap the North wind on top.	点上面的北风。	上の「北」をタップしましょう。	Toca el viento del norte de arriba.	Tippe auf den Nordwind oben.
 Tap the other North wind to match them.	点另一张北风，把它们配成对。	もう1枚の「北」をタップして、ペアにしましょう。	Toca el otro viento del norte para emparejarlos.	Tippe auf den anderen Nordwind, um sie zu paaren.
 Tap the other square of the top run.	点上面一段的另一个格子。	上の並びのもう1マスをタップしましょう。	Toca la otra casilla del tramo de arriba.	Tippe auf das andere Feld des oberen Blocks.
@@ -1243,6 +1265,7 @@ The 4 is on the right end of the chain.	4 在长龙的右端。	4は列の右は
 The 6♥ pairs with the 7♣ on the waste. Tap the 6♥.	6♥ 和弃牌堆上的 7♣ 配对。点 6♥。	6♥は捨て札の7♣と組み合わせられます。6♥をタップしましょう。	El 6♥ hace pareja con el 7♣ del descarte. Toca el 6♥.	Die 6♥ bildet mit der 7♣ auf dem Ablagestapel ein Paar. Tippe auf die 6♥.
 The 7♥ is red and one lower than the black 8♠, so it may go on it. Tap the 7♥.	7♥ 是红色，比黑色的 8♠ 小一，所以可以放在它上面。点 7♥。	7♥は赤で、黒の8♠より1小さいので、その上に置けます。7♥をタップしましょう。	El 7♥ es rojo y uno menos que el 8♠ negro, así que puede ir encima. Toca el 7♥.	Die 7♥ ist rot und eins niedriger als die schwarze 8♠, darf also darauf. Tippe auf die 7♥.
 The app's building blocks	本应用的基础组件	アプリの土台となる部品	Los componentes básicos de la app	Die Bausteine der App
+The board has 7 columns and 6 rows. Filling it with no line of four is a draw.	棋盘有 7 列 6 行。放满且没有四子相连则为平局。	盤は7列6行です。埋まって4つ揃わなければ引き分けです。	El tablero tiene 7 columnas y 6 filas. Llenarlo sin cuatro en línea es un empate.	Das Brett hat 7 Spalten und 6 Reihen. Füllt es sich ohne Viererreihe, ist es unentschieden.
 The board is five 9×9 Sudoku grids: one in the centre and one on each corner.	棋盘由五个 9×9 数独组成：中间一个，四个角各一个。	盤は5つの9×9のナンプレでできています。真ん中に1つ、四すみに1つずつ。	El tablero son cinco sudokus de 9×9: uno en el centro y uno en cada esquina.	Das Brett besteht aus fünf 9×9-Sudokus: eines in der Mitte und eines an jeder Ecke.
 The bottom row now has 3 and 1. Tap the square that still needs a digit.	最下面一行现在有 3 和 1。点还缺数字的那一格。	いちばん下の行には3と1が入りました。まだ数字のないマスをタップしましょう。	La fila de abajo ya tiene el 3 y el 1. Toca la casilla a la que aún le falta un número.	Die unterste Zeile hat jetzt 3 und 1. Tippe auf das Feld, das noch eine Ziffer braucht.
 The bottom rows are full except for the rightmost column: a perfect spot for this long piece.	底部几行除了最右边一列都满了：正好放这根长条。	下の列は、いちばん右以外うまっています。この長いピースにぴったりの場所です。	Las filas de abajo están llenas salvo la columna de la derecha: el sitio perfecto para esta pieza larga.	Die unteren Reihen sind bis auf die rechte Spalte voll: der perfekte Platz für dieses lange Teil.
@@ -1260,9 +1283,11 @@ The chain's open ends are 6 on the left and 4 on the right. Your tiles are below
 The circles show where it can go. Move to the right-hand one.	圆圈表示它能去的地方。走到右边那个。	丸は動ける場所です。右側の丸に動かしましょう。	Los círculos muestran adónde puede ir. Muévela al de la derecha.	Die Kreise zeigen, wohin er ziehen kann. Zieh auf den rechten.
 The computer answers by moving next to you.	电脑应了一步，走到你旁边。	コンピューターは、あなたのとなりに動いてきました。	El ordenador responde colocándose a tu lado.	Der Computer antwortet und zieht neben dich.
 The computer couldn't move. Undo to try again.	电脑无法走棋。撤销后再试一次。	コンピューターが動けませんでした。元に戻してやり直してください。	El ordenador no pudo mover. Deshaz para volver a intentarlo.	Der Computer konnte nicht ziehen. Nimm den Zug zurück und versuch es erneut.
+The computer drops in a different column. Four in a row can also run down or on a diagonal.	电脑落在另一列。四连也可以是纵向或斜向。	コンピューターは別の列に落とします。4つは縦や斜めにも揃います。	El ordenador suelta en otra columna. Cuatro en línea también puede ser vertical o en diagonal.	Der Computer wirft in eine andere Spalte. Vier in einer Reihe geht auch senkrecht oder diagonal.
 The computer won	电脑赢了	コンピューターの勝ち	Ganó el ordenador	Der Computer hat gewonnen
 The computer won this one.	这局电脑赢了。	今回はコンピューターの勝ちです。	Esta vez ganó el ordenador.	Diesmal hat der Computer gewonnen.
 The down total 4 now needs 3 under the 1. Tap that square.	纵向总和 4 现在需要在 1 的下面填 3。点那一格。	タテの合計4にするには、1の下に3が必要です。そのマスをタップしましょう。	El total vertical 4 necesita ahora un 3 bajo el 1. Toca esa casilla.	Für die senkrechte Summe 4 fehlt jetzt eine 3 unter der 1. Tippe auf dieses Feld.
+The empty column between your discs.	你的棋子之间空着的那一列。	自分のコマのあいだの空いている列です。	La columna vacía entre tus fichas.	Die leere Spalte zwischen deinen Scheiben.
 The first player to place all their stones wins.	先放完所有磁石的一方获胜。	先に石をすべて置き終えた人の勝ちです。	Gana el primero en colocar todas sus piedras.	Wer zuerst alle Steine gelegt hat, gewinnt.
 The game is over.	游戏已结束。	ゲームは終わりました。	La partida ha terminado.	Das Spiel ist vorbei.
 The game speeds up every 10 rows. It ends when a new piece can't enter the well.	每消除 10 行速度就会加快。新方块进不了场地时游戏结束。	10列消すごとにスピードが上がります。新しいピースが入れなくなると終わりです。	El juego se acelera cada 10 filas. Termina cuando una pieza nueva no puede entrar.	Alle 10 Reihen wird das Spiel schneller. Es endet, wenn ein neues Teil nicht mehr hineinpasst.
@@ -1273,6 +1298,8 @@ The judge also understands "not" and "doesn't", so "doesn't spend much" counts t
 The last column has two 4s. The top one touches a shaded square, so it stays white. Shade the lower 4.	最后一列有两个 4。上面那个挨着涂黑的格子，所以保持白色。把下面的 4 涂黑。	いちばん右の列には4が2つあります。上の4は黒マスのとなりなので白のまま。下の4を黒くしましょう。	La última columna tiene dos 4. El de arriba toca una casilla sombreada, así que queda blanco. Sombrea el 4 de abajo.	Die letzte Spalte hat zwei 4en. Die obere berührt ein schwarzes Feld und bleibt weiß. Schwärze die untere 4.
 The layout isn't finished: check the region sizes and cages.	布局还没完成：请检查区域大小和笼子。	レイアウトが未完成です。ブロックの大きさとケージを確認してください。	El diseño no está terminado: revisa el tamaño de las regiones y las jaulas.	Das Layout ist noch nicht fertig: Prüf die Regionsgrößen und Käfige.
 The loop used two of the right spot's ends: it's full and greys out.	这个圈用掉了右边点的两个线头：它满了，变成灰色。	ループで右の点の端を2つ使ったので、いっぱいになって灰色になりました。	El bucle ha usado dos extremos del punto de la derecha: está lleno y se vuelve gris.	Die Schleife hat zwei Enden des rechten Punktes verbraucht: Er ist voll und wird grau.
+The middle column, where the circle is.	中间那一列，有圆圈的地方。	真ん中の列、丸のあるところです。	La columna del centro, donde está el círculo.	Die mittlere Spalte, dort wo der Kreis ist.
+The middle columns are part of more lines of four, so they're useful early.	中间的几列能参与更多四连，所以开局很有用。	中央の列は4つの線に多く関わるので、序盤に有利です。	Las columnas centrales forman parte de más líneas de cuatro, así que sirven al principio.	Die mittleren Spalten gehören zu mehr Viererreihen und sind am Anfang nützlich.
 The missing side is the right-hand side of the top-left box.	缺的是左上方格的右边。	足りないのは、左上の箱の右の辺です。	El lado que falta es el derecho de la caja de arriba a la izquierda.	Es fehlt die rechte Seite des Kästchens oben links.
 The North wind on top covers both red dragons, so they're blocked (darker). The two North winds are free.	上面的北风压住了两张红中，所以它们被挡住了（颜色较暗）。两张北风是自由的。	上の「北」が2枚の「中」をふさいでいるので、「中」は取れません（暗い色）。2枚の「北」は取れます。	El viento del norte de arriba tapa los dos dragones rojos, así que están bloqueados (más oscuros). Los dos vientos del norte están libres.	Der Nordwind oben verdeckt beide roten Drachen, sie sind also blockiert (dunkler). Die beiden Nordwinde sind frei.
 The numbers beside each row and above each column list its runs of filled squares, in order.	每行旁边和每列上方的数字，按顺序列出了该行（列）中连续涂色格的长度。	各行の左と各列の上の数字は、その行・列で続けて塗るマスの長さを順番に表します。	Los números junto a cada fila y sobre cada columna indican, en orden, sus tramos de casillas pintadas.	Die Zahlen neben jeder Zeile und über jeder Spalte nennen der Reihe nach ihre Blöcke gefüllter Felder.
@@ -1328,6 +1355,7 @@ This replaces your saved {0} puzzle.	这会替换你保存的{0}谜题。	保存
 This round	本轮	このラウンド	Esta ronda	Diese Runde
 Threads can be categories (Fruits), words that join another word (___BALL, SUN___), hidden words or anagrams.	共同点可以是类别（水果）、能和另一个词组成新词的词（___BALL、SUN___）、藏着的词或字母重排词。	共通点は、カテゴリー（果物）、別の語とくっつく語（___BALL、SUN___）、隠れた語、アナグラムなどです。	Los hilos pueden ser categorías (Frutas), palabras que se unen a otra (___BALL, SUN___), palabras ocultas o anagramas.	Fäden können Kategorien sein (Obst), Wörter, die sich mit einem anderen verbinden (___BALL, SUN___), versteckte Wörter oder Anagramme.
 Three of those four belong together.	这四个里有三个是一组的。	その4語のうち3語は同じグループです。	Tres de esas cuatro van juntas.	Drei dieser vier gehören zusammen.
+Three of yours sit on the bottom, with one gap. Drop there to make four across.	你有三枚棋子在最下面，中间空了一格。落在那里就能横向连成四子。	一番下に自分のコマが3つあり、1つ空いています。そこに落として横に4つ揃えましょう。	Tres fichas tuyas están abajo, con un hueco. Suéltala ahí para hacer cuatro en horizontal.	Drei deiner Scheiben liegen unten, mit einer Lücke. Wirf dort hinein, um vier waagerecht zu bekommen.
 Tile and domino face	牌面与骨牌面	牌とドミノの表面	Cara de fichas y dominó	Oberfläche von Steinen und Domino
 Tile edge	牌边	牌の側面	Borde de las fichas	Steinkante
 Tile spawns are seeded per game; there is no final level.	每局方块的出现由种子决定；没有最终关卡。	タイルの出方は毎回決まったシードで作られます。最終レベルはありません。	La aparición de fichas depende de la semilla de cada partida; no hay nivel final.	Das Erscheinen der Kacheln hängt vom Startwert des Spiels ab; es gibt kein letztes Level.
@@ -1456,6 +1484,7 @@ You play Black and move first on an 8×8 board.	你执黑棋，在 8×8 的棋�
 You play Black and move first. Place a disc to trap a line of White discs between two Black discs. All trapped lines flip. If a player has no legal move, that turn is skipped automatically. The game ends when neither can move; most discs wins. Marked squares are legal moves.	你执黑先走。放下一颗棋子，把一排白子夹在两颗黑子之间。所有被夹住的线都会翻过来。如果一方无处可下，这一回合会自动跳过。双方都无法落子时游戏结束，棋子多的一方获胜。标出的格子是可以落子的位置。	あなたは黒で先手です。白石の並びを2つの黒石ではさむように置きます。はさまれた列はすべて裏返ります。置ける場所がないときは、自動的にパスになります。どちらも置けなくなったら終わりで、石の多い方が勝ちです。印のついたマスに置けます。	Juegas con negras y empiezas tú. Coloca una ficha para atrapar una línea de fichas blancas entre dos negras. Se voltean todas las líneas atrapadas. Si un jugador no tiene movimiento válido, pasa automáticamente. La partida termina cuando nadie puede mover; gana quien tiene más fichas. Las casillas marcadas son movimientos válidos.	Du spielst Schwarz und ziehst zuerst. Setze einen Stein so, dass eine Reihe weißer Steine zwischen zwei schwarzen eingeschlossen wird. Alle eingeschlossenen Reihen drehen sich um. Kann ein Spieler nicht setzen, wird er automatisch übersprungen. Das Spiel endet, wenn keiner mehr setzen kann; wer mehr Steine hat, gewinnt. Markierte Felder sind gültige Züge.
 You play black. Tap a dot to place a disc; trapped white discs flip.	你执黑。点一个圆点放子，被夹住的白子会翻过来。	あなたは黒です。点をタップして石を置くと、はさまれた白石が裏返ります。	Juegas con negras. Toca un punto para poner una ficha; las blancas atrapadas se voltean.	Du spielst Schwarz. Tippe auf einen Punkt, um einen Stein zu setzen; eingeschlossene weiße Steine drehen sich um.
 You play the dark pieces from the bottom and move first. Pieces move diagonally on dark squares.	你执深色棋子，从下方出发，先走。棋子在深色格上斜着走。	あなたは下側の黒い駒で、先手です。駒は黒いマスをななめに進みます。	Juegas con las piezas oscuras desde abajo y empiezas tú. Las piezas se mueven en diagonal por las casillas oscuras.	Du spielst die dunklen Steine von unten und ziehst zuerst. Steine ziehen diagonal auf den dunklen Feldern.
+You play the red discs and move first. In a game, tap a column to drop.	你执红子，先手。游戏中点一列即可落子。	あなたは赤いコマで先手です。対局では列をタップして落とします。	Juegas con las fichas rojas y empiezas. En la partida, toca una columna para soltar.	Du spielst die roten Scheiben und beginnst. Tippe in der Partie auf eine Spalte.
 You said: {0}	你的回答：{0}	あなたの答え：{0}	Dijiste: {0}	Deine Antwort: {0}
 You win when the computer has no pieces or no legal move. Repeated positions or 40 moves each without progress is a draw.	电脑没有棋子或无子可走时你就赢了。局面重复，或双方各走 40 步都没有进展，就算和棋。	コンピューターの駒がなくなるか、動ける手がなくなればあなたの勝ちです。同じ局面のくり返しや、おたがい40手進展がなければ引き分けです。	Ganas cuando el ordenador se queda sin piezas o sin movimientos. Repetir posiciones o hacer 40 movimientos cada uno sin avances es empate.	Du gewinnst, wenn der Computer keine Steine oder keinen Zug mehr hat. Wiederholte Stellungen oder je 40 Züge ohne Fortschritt ergeben ein Remis.
 You won!	你赢了！	あなたの勝ち！	¡Has ganado!	Du hast gewonnen!
@@ -1470,6 +1499,8 @@ Your changes to this grid will be lost.	你对这个盘面的修改会丢失。	
 Your checkers	你的棋子	あなたの駒	Tus fichas	Deine Steine
 Your dark pieces move diagonally forward (up the board) on the dark squares.	你的深色棋子在深色格上斜着向前（往上）走。	あなたの黒い駒は、黒いマスをななめ前（上）に進みます。	Tus piezas oscuras avanzan en diagonal (hacia arriba) por las casillas oscuras.	Deine dunklen Steine ziehen auf den dunklen Feldern diagonal vorwärts (nach oben).
 Your data	你的数据	データ	Tus datos	Deine Daten
+your disc	你的棋子	あなたのコマ	tu ficha	deine Scheibe
+Your disc landed at the bottom.	你的棋子落在了最下面。	あなたのコマが一番下に着きました。	Tu ficha ha caído hasta abajo.	Deine Scheibe ist unten gelandet.
 Your first square and its neighbours are always safe.	你翻开的第一格和它周围的格子一定是安全的。	最初に開けるマスとそのまわりは、必ず安全です。	Tu primera casilla y sus vecinas siempre son seguras.	Dein erstes Feld und seine Nachbarn sind immer sicher.
 Your hand	你的手牌	あなたの手	Tu mano	Deine Hand
 your king	你的王	あなたのキング	tu dama	deine Dame

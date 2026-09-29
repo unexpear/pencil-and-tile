@@ -39,7 +39,7 @@ WORD GAMES
 AND WHEN YOU WANT A CHANGE
 • Sudoku in 8 variants and 4 sizes, Killer and Samurai Sudoku, Calcudoku, Kakuro, Futoshiki, Nonograms and Hitori
 • Mahjong Solitaire, Klondike, Spider and Pyramid Solitaire, Dominoes and Memory
-• Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts, Magnetic cluster, 2048 and Tetras
+• Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts, Magnetic cluster, Connect Four, 2048 and Tetras
 
 MADE TO BE PLAYED YOUR WAY
 • Every game has a short guided tutorial and full rules

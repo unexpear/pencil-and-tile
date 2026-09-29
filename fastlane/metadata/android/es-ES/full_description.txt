@@ -1,4 +1,4 @@
-Pencil & Tile es una colección tranquila de 37 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
+Pencil & Tile es una colección tranquila de 38 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
 
 PUZZLES NUMÉRICOS
 • Sudoku en 8 variantes y 4 tamaños hasta 16×16, además de Sudoku asesino y un editor de cuadrículas que comprueba que cada una tenga una única solución
@@ -21,6 +21,7 @@ CARTAS Y FICHAS
 
 TABLERO Y ARCADE
 • Buscaminas, Damas, Reversi, Puntos y cajas, Brotes e Imanes contra el ordenador
+• Conecta 4: suelta fichas en un tablero de 7×6 y alinea cuatro
 • 2048 y Tetras
 
 A TU MANERA

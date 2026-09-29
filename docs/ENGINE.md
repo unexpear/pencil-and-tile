@@ -73,6 +73,9 @@ turns.
   Routes are smoothed by corner-cutting, which stays inside free cells. The
   computer takes immediate wins and, at Hard and Expert, avoids moves that allow
   an immediate reply win.
+- **Connect Four** (`duels/ConnectFour.kt`): a 7×6 gravity board. Easy drops
+  mostly at random, Medium takes wins and blocks threats, and Hard and Expert
+  search ahead (depth 4 and 6) with alpha-beta. Saves are versioned text.
 
 ## Grid Sudoku (16×16 and custom grids)
 

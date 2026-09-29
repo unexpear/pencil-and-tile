@@ -103,6 +103,16 @@ fun DrawScope.drawChecker(base: Color, king: Boolean) {
     }
 }
 
+/** A Connect Four disc: 1 = red (you), -1 = yellow (the computer). */
+fun DrawScope.drawCounter(player: Int, alpha: Float = 1f) {
+    val r = size.minDimension / 2 * 0.78f
+    val c = Offset(size.width / 2, size.height / 2)
+    val (hi, lo) = if (player > 0) Color(0xFFFF8A80) to Color(0xFFC62828) else Color(0xFFFFF59D) to Color(0xFFF9A825)
+    drawCircle(Color.Black.copy(alpha = 0.28f * alpha), r, c + Offset(0f, r * 0.08f))
+    drawCircle(lo, r, c, alpha = alpha)
+    drawCircle(Brush.radialGradient(listOf(hi, lo), center = c - Offset(r * 0.32f, r * 0.36f), radius = r * 1.15f), r * 0.92f, c, alpha = alpha)
+}
+
 /** A glossy Reversi disc: 1 = black, -1 = white. */
 fun DrawScope.drawDisc(player: Int, alpha: Float = 1f) {
     val r = size.minDimension / 2 * 0.84f
