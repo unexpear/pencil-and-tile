@@ -223,22 +223,25 @@ fun RowScope.ToolButton(icon: ImageVector, label: String, enabled: Boolean = tru
     }
 }
 
-/** Small rounded status label. */
+/** Small rounded status label. [onClick] makes it a button, for reopening a word's definition. */
 @Composable
-fun InfoChip(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null, emphasized: Boolean = false, onTable: Boolean = false) {
+fun InfoChip(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null, emphasized: Boolean = false, onTable: Boolean = false,
+    onClick: (() -> Unit)? = null) {
     val look = LocalGameLook.current
     val (bg, fg) = when {
         emphasized -> look.colors.highlight to readableOn(look.colors.highlight)
         onTable -> look.colors.tableInset to look.colors.onTable
         else -> look.colors.surfaceAlt to look.colors.text
     }
-    Surface(modifier, color = bg, contentColor = fg, shape = MaterialTheme.shapes.extraLarge) {
+    val body: @Composable () -> Unit = {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(16.dp)) }
             Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1)
         }
     }
+    if (onClick == null) Surface(modifier, color = bg, contentColor = fg, shape = MaterialTheme.shapes.extraLarge, content = body)
+    else Surface(onClick = onClick, modifier = modifier, color = bg, contentColor = fg, shape = MaterialTheme.shapes.extraLarge, content = body)
 }
 
 @Composable
