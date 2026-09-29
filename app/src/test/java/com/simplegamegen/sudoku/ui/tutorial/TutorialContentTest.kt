@@ -267,6 +267,19 @@ class TutorialContentTest {
         assertEquals(1, bottom.count { piece -> piece != null && piece.kind == PieceKind.COUNTER && piece.player == -1 })
     }
 
+    @Test fun `letterfall tutorial spells an orthogonal word the engine accepts`() {
+        val steps = Tutorials.of(GameId.LETTERFALL).steps
+        val taps = steps.take(3).map { it.tap.single() }
+        assertEquals(listOf("r1c0", "r1c1", "r1c2"), taps)
+        val g = com.simplegamegen.sudoku.wordplay.Letterfall(com.simplegamegen.sudoku.logic.LogicLevel.EASY, 1, 3, 4, "BRIMCATEDOGS", movesLeft = 5)
+        val played = g.play(listOf(4, 5, 6))
+        assertEquals("CAT", played?.lastWord)
+        assertEquals("BRIE", played?.letters?.substring(4, 8))
+        assertEquals("DOGS", played?.letters?.substring(8, 12))
+        assertEquals("×2", steps[3].pick)
+        assertEquals("Running out of moves", steps[4].pick)
+    }
+
     @Test fun `lone letter tutorial answers are on the lists`() {
         val c = com.simplegamegen.sudoku.wordplay.LoneCategories
         assertTrue(c["fruit"].accepts("Banana") && c["animals"].accepts("Badger") && c["animals"].accepts("Bear"))

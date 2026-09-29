@@ -1,4 +1,4 @@
-Pencil & Tile is a quiet collection of 39 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
+Pencil & Tile is a quiet collection of 40 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
 
 NUMBER PUZZLES
 • Sudoku in 8 variants and 4 sizes up to 16×16, plus Killer Sudoku and a custom grid editor that checks every grid has exactly one solution
@@ -10,6 +10,7 @@ WORD GAMES
 • Word Meaning: explain a word from its sentence; your answer is judged right on your phone
 • Wordsworn: spell words from letter tiles to battle a run of monsters
 • Letter Sprawl: chain touching letters into words; longer words score more
+• Letterfall: spell words from side-by-side tiles; they clear, the rest fall, and combos build your score
 • Word Quilt: place each patch's letters so every row and column reads as words
 • Lone Letter: one letter, many categories, against computer players who might think of the same answer
 • Blotwords: ink the grid with mysterious command words you work out for yourself

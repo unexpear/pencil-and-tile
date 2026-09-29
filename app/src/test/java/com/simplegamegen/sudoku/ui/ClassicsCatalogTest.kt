@@ -12,9 +12,9 @@ class ClassicsCatalogTest {
         assertEquals("play_MASTERMIND", GameId.MASTERMIND.route)
         assertEquals("PLAY_MASTERMIND", "PLAY_${GameId.MASTERMIND.name}")
         assertEquals(GameId.entries.size, GAME_COUNT)
-        assertEquals(39, CollectionGuide.entries.size)
-        assertEquals(49, CollectionGuide.entries.sumOf { it.variants })
-        assertEquals(343, CollectionGuide.entries.sumOf { it.setups })
+        assertEquals(40, CollectionGuide.entries.size)
+        assertEquals(50, CollectionGuide.entries.sumOf { it.variants })
+        assertEquals(347, CollectionGuide.entries.sumOf { it.setups })
         assertEquals(1, CollectionGuide.entries.count { it.title == "Mastermind" })
     }
 }
