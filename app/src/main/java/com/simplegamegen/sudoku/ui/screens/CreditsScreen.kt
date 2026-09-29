@@ -32,9 +32,15 @@ private val App = Credit("Pencil & Tile", "Free software: you may share and chan
     "GNU General Public License 3.0 or later", "licenses/gpl-3.0.txt", "© 2026 unexpear and contributors. It comes with no warranty.")
 
 private val Credits = listOf(
-    Credit("Open English WordNet", "Definitions, example sentences, synonyms and opposites in Word Meaning; the everyday word lists and Lone Letter's categories",
+    Credit("Open English WordNet", "Definitions and example sentences in the English lexicon and in Word Meaning; synonyms and opposites for Word Meaning; the everyday word lists and Lone Letter's categories",
         "CC BY 4.0, based on Princeton WordNet (WordNet licence)", "licenses/open-english-wordnet.txt",
         "Open English WordNet by the Open English WordNet team; WordNet 3.0 © 2006 by Princeton University."),
+    Credit("ENABLE", "Which words letter games accept, and which words the English lexicon marks as playable",
+        "Public domain", "licenses/enable.txt",
+        "Enhanced North American Benchmark Lexicon, compiled by Alan Beale."),
+    Credit("Tatoeba", "Example sentences in the English lexicon when Open English WordNet has none for that sense",
+        "CC0 1.0 (public domain dedication)", "licenses/tatoeba-cc0.txt",
+        "English sentences by Tatoeba contributors."),
     Credit("all-MiniLM-L6-v2", "The on-device model that helps judge Word Meaning answers", "Apache License 2.0",
         "licenses/apache-2.0.txt", "Sentence-transformers model by Nils Reimers and contributors, based on Microsoft MiniLM."),
     Credit("ONNX Runtime", "Runs the on-device model", "MIT License", "licenses/mit-onnxruntime.txt", "© Microsoft Corporation."),

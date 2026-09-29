@@ -47,6 +47,7 @@ jobs:
       - name: Unit tests and Android lint
         run: |
           python3 -m unittest discover -s tools/meaning -p 'test_*.py'
+          python3 -m unittest discover -s tools/lexicon -p 'test_*.py'
           chmod +x gradlew
           ./gradlew --no-daemon :sudoku-engine:test :app:testDebugUnitTest :app:testReleaseUnitTest :app:lintDebug :app:lintRelease
 

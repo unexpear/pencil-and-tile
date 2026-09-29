@@ -1,3 +1,8 @@
+Pencil & Tile uses Open English WordNet 2025 (the core edition) for Word Meaning
+and for the English lexicon database: definitions, synset ids, and example
+sentences tagged oewn. The Word Meaning round bank is a smaller reviewed
+selection of the same source.
+
 This resource is derived from Princeton WordNet under the WordNet License
 and further developed under the Creative Commons Attribution 4.0 International License.
 You may share and adapt this resource providing attribution is given to both
