@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.theme
 
+import com.simplegamegen.sudoku.ui.GameId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -13,7 +14,10 @@ class ThemeModelTest {
         BuiltInThemes.all.forEach { spec ->
             ThemeToken.entries.forEach { token -> spec.light[token]; spec.dark[token] }
             assertEquals(GAME_COUNT, spec.gameColors.size)
+            assertEquals(GameId.entries.size, spec.gameColors.size, "theme colors follow GameId order")
         }
+        assertEquals(GameId.entries.size, GAME_COUNT)
+        assertEquals(GameId.MASTERMIND.ordinal, GAME_COUNT - 1)
         assertSame(BuiltInThemes.table, BuiltInThemes.default)
     }
 

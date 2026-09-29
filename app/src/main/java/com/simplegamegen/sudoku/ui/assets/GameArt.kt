@@ -128,6 +128,19 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                     discs[r to c]?.let { who -> drawCircle(if (who > 0) Color(0xFFE53935) else Color(0xFFFDD835), cw * 0.26f, center) }
                 }
             }
+            GameId.MASTERMIND -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF2C2C34), cornerRadius = CornerRadius(8f))
+                val pegs = listOf(0xFFD32F2F, 0xFF1565C0, 0xFFD32F2F, 0xFFF9A825)
+                val slot = size.width / 5
+                pegs.forEachIndexed { i, col ->
+                    val center = Offset(slot * (i + 0.85f), size.height * 0.38f)
+                    drawCircle(Color(0xFF141418), slot * 0.34f, center)
+                    drawCircle(Color(col), slot * 0.26f, center)
+                }
+                val key = Offset(size.width * 0.78f, size.height * 0.74f)
+                drawCircle(Color(0xFFF4F1EA), slot * 0.16f, key)
+                drawCircle(Color(0xFFF4F1EA), slot * 0.16f, key + Offset(slot * 0.55f, 0f), style = Stroke(slot * 0.08f))
+            }
             GameId.TETRAS -> Canvas(Modifier.size(56.dp)) {
                 val s = size.width / 5
                 drawRect(Color(0xFF15161B))

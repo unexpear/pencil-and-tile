@@ -5,7 +5,7 @@ import com.simplegamegen.sudoku.tabletop.TableGame
 
 enum class GameGroup(val title: String) {
     NUMBERS("Number puzzles"), WORDS("Word games"), TABLE("Cards and tiles"), BOARD("Board and strategy"),
-    /** Paper-and-pencil games. Later classics (Mastermind, Battleship) belong in this group. */
+    /** Paper-and-pencil games. Later classics (Battleship) belong in this group. */
     CLASSICS("Classics"), ARCADE("Arcade")
 }
 
@@ -49,7 +49,8 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     MAGNETS("Magnetic cluster", "play_MAGNETS", "Don't let them snap", GameGroup.BOARD),
     G2048("2048", "play_G2048", "Slide and merge", GameGroup.ARCADE),
     TETRAS("Tetras", "play_TETRAS", "Falling blocks", GameGroup.ARCADE),
-    CONNECT_FOUR("Connect Four", "play_CONNECT_FOUR", "Four in a row", GameGroup.CLASSICS);
+    CONNECT_FOUR("Connect Four", "play_CONNECT_FOUR", "Four in a row", GameGroup.CLASSICS),
+    MASTERMIND("Mastermind", "play_MASTERMIND", "Break the code", GameGroup.CLASSICS);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {

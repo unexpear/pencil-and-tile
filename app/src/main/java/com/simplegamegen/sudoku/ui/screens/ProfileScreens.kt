@@ -81,6 +81,7 @@ private val ScoreKinds = mapOf(
     GameId.SPIDER to ScoreKind("Fewest moves", true),
     GameId.PYRAMID to ScoreKind("Fewest moves", true),
     GameId.HANGMAN to ScoreKind("Fewest wrong guesses", true),
+    GameId.MASTERMIND to ScoreKind("Fewest guesses", true),
 )
 
 private fun gameOf(name: String): GameId? = if (name == GRID_RECORD) GameId.SUDOKU else GameId.entries.firstOrNull { it.name == name }

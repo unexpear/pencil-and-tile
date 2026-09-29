@@ -11,10 +11,10 @@ Avoid other companies' game names in store text and keywords (no "Wordle", "Conn
 
 Title: Pencil & Tile
 
-Short description: 38 offline puzzle, word, card and board games. No ads, free and open source.
+Short description: 39 offline puzzle, word, card and board games. No ads, free and open source.
 
 Full description:
-Pencil & Tile is a quiet collection of 38 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
+Pencil & Tile is a quiet collection of 39 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
 
 NUMBER PUZZLES
 • Sudoku in 8 variants and 4 sizes up to 16×16, plus Killer Sudoku and a custom grid editor that checks every grid has exactly one solution
@@ -37,6 +37,7 @@ CARDS AND TILES
 BOARD AND ARCADE
 • Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster against the computer
 • Connect Four: drop discs on a 7×6 board and line up four
+• Mastermind: break a hidden code of four colored pegs
 • 2048 and Tetras falling blocks
 
 MADE TO BE PLAYED YOUR WAY
@@ -53,10 +54,10 @@ Your games and records stay on your device.
 
 Title: Pencil & Tile
 
-Short description: 38 款离线谜题、文字、纸牌和棋盘游戏。无广告，免费开源。
+Short description: 39 款离线谜题、文字、纸牌和棋盘游戏。无广告，免费开源。
 
 Full description:
-Pencil & Tile 是一套安静的谜题合集，收录 38 款经典和原创游戏，完全离线也能玩。没有广告，不用注册，不追踪：只有谜题。永久免费并开源。
+Pencil & Tile 是一套安静的谜题合集，收录 39 款经典和原创游戏，完全离线也能玩。没有广告，不用注册，不追踪：只有谜题。永久免费并开源。
 
 数字谜题
 • 8 种玩法、4 种尺寸（最大 16×16）的数独，还有杀手数独，以及能检查每个盘面都只有唯一解的自定义盘面编辑器
@@ -80,6 +81,7 @@ Pencil & Tile 是一套安静的谜题合集，收录 38 款经典和原创游�
 棋盘和街机
 • 扫雷、西洋跳棋、黑白棋、点格棋、豆芽棋和磁石堆，和电脑对战
 • 四子棋：在 7×6 的棋盘上落子，连成四子
+• 珠玑妙算：破解四颗色钉组成的隐藏密码
 • 2048 和下落方块
 
 按你的方式玩
@@ -96,10 +98,10 @@ Pencil & Tile 是一套安静的谜题合集，收录 38 款经典和原创游�
 
 Title: Pencil & Tile
 
-Short description: オフラインで遊べるパズル・言葉・カード・ボードゲーム38種。広告なし、無料でオープンソース。
+Short description: オフラインで遊べるパズル・言葉・カード・ボードゲーム39種。広告なし、無料でオープンソース。
 
 Full description:
-Pencil & Tile は、定番とオリジナルのパズル38種を集めた、落ち着いて遊べるパズル集です。すべてオフラインで遊べます。広告なし、アカウント不要、追跡なし。パズルだけを楽しめます。ずっと無料のオープンソースです。
+Pencil & Tile は、定番とオリジナルのパズル39種を集めた、落ち着いて遊べるパズル集です。すべてオフラインで遊べます。広告なし、アカウント不要、追跡なし。パズルだけを楽しめます。ずっと無料のオープンソースです。
 
 数字パズル
 • 8種類・4サイズ（最大16×16）のナンプレ、キラーナンプレ、そして答えがひとつだけになるか確認してくれる盤面エディター
@@ -123,6 +125,7 @@ Pencil & Tile は、定番とオリジナルのパズル38種を集めた、落�
 ボードとアーケード
 • マインスイーパ、チェッカー、リバーシ、ドット・アンド・ボックス、スプラウト、マグネットでコンピューターと対戦
 • 四目並べ：7×6の盤にコマを落として4つ揃える
+• マスターマインド：4つの色ピンの隠れたコードを当てる
 • 2048 とテトラス
 
 自分のペースで
@@ -139,10 +142,10 @@ Pencil & Tile は、定番とオリジナルのパズル38種を集めた、落�
 
 Title: Pencil & Tile
 
-Short description: 38 juegos sin conexión: lógica, palabras, cartas y tablero. Gratis y libre.
+Short description: 39 juegos sin conexión: lógica, palabras, cartas y tablero. Gratis y libre.
 
 Full description:
-Pencil & Tile es una colección tranquila de 38 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
+Pencil & Tile es una colección tranquila de 39 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
 
 PUZZLES NUMÉRICOS
 • Sudoku en 8 variantes y 4 tamaños hasta 16×16, además de Sudoku asesino y un editor de cuadrículas que comprueba que cada una tenga una única solución
@@ -166,6 +169,7 @@ CARTAS Y FICHAS
 TABLERO Y ARCADE
 • Buscaminas, Damas, Reversi, Puntos y cajas, Brotes e Imanes contra el ordenador
 • Conecta 4: suelta fichas en un tablero de 7×6 y alinea cuatro
+• Mastermind: descifra un código oculto de cuatro clavijas de colores
 • 2048 y Tetras
 
 A TU MANERA
@@ -182,10 +186,10 @@ Tus partidas y registros se guardan en tu dispositivo.
 
 Title: Pencil & Tile
 
-Short description: 38 Offline-Rätsel, Wort-, Karten- und Brettspiele. Ohne Werbung, frei und offen.
+Short description: 39 Offline-Rätsel, Wort-, Karten- und Brettspiele. Ohne Werbung, frei und offen.
 
 Full description:
-Pencil & Tile ist eine ruhige Sammlung von 38 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
+Pencil & Tile ist eine ruhige Sammlung von 39 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
 
 ZAHLENRÄTSEL
 • Sudoku in 8 Varianten und 4 Größen bis 16×16, dazu Killer-Sudoku und ein Gitter-Editor, der prüft, dass jedes Gitter genau eine Lösung hat
@@ -209,6 +213,7 @@ KARTEN UND STEINE
 BRETT UND ARCADE
 • Minesweeper, Dame, Reversi, Käsekästchen, Sprossen und Magnetsteine gegen den Computer
 • Vier gewinnt: Scheiben auf ein 7×6-Brett werfen und vier in einer Reihe bilden
+• Mastermind: knacke einen versteckten Code aus vier farbigen Stiften
 • 2048 und Tetras
 
 SO, WIE DU WILLST

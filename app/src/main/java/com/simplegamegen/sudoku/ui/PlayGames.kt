@@ -29,6 +29,8 @@ import com.simplegamegen.sudoku.arcade.TetrasGame
 import com.simplegamegen.sudoku.duels.ConnectFour
 import com.simplegamegen.sudoku.duels.ConnectFourAi
 import com.simplegamegen.sudoku.duels.ConnectFourCodec
+import com.simplegamegen.sudoku.duels.Mastermind
+import com.simplegamegen.sudoku.duels.MastermindCodec
 import com.simplegamegen.sudoku.duels.DotsAi
 import com.simplegamegen.sudoku.duels.DotsCodec
 import com.simplegamegen.sudoku.duels.DotsGame
@@ -43,6 +45,7 @@ import com.simplegamegen.sudoku.ui.screens.BlotwordsScreen
 import com.simplegamegen.sudoku.wordplay.BlotCodec
 import com.simplegamegen.sudoku.wordplay.Blotwords
 import com.simplegamegen.sudoku.ui.screens.ConnectFourScreen
+import com.simplegamegen.sudoku.ui.screens.MastermindScreen
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
 import com.simplegamegen.sudoku.ui.screens.MagnetScreen
 import com.simplegamegen.sudoku.ui.screens.SproutsScreen
@@ -209,5 +212,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.CONNECT_FOUR.route) {
         ConnectFourScreen(nav, playModel<ConnectFour>(GameId.CONNECT_FOUR, store, codecOf(ConnectFourCodec::encode, ConnectFourCodec::decode), ConnectFourComputer), factory)
+    }
+    composable(GameId.MASTERMIND.route) {
+        MastermindScreen(nav, playModel<Mastermind>(GameId.MASTERMIND, store, codecOf(MastermindCodec::encode, MastermindCodec::decode)), factory)
     }
 }
