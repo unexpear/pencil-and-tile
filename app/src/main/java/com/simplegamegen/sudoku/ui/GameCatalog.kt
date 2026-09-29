@@ -50,7 +50,8 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     G2048("2048", "play_G2048", "Slide and merge", GameGroup.ARCADE),
     TETRAS("Tetras", "play_TETRAS", "Falling blocks", GameGroup.ARCADE),
     CONNECT_FOUR("Connect Four", "play_CONNECT_FOUR", "Four in a row", GameGroup.CLASSICS),
-    MASTERMIND("Mastermind", "play_MASTERMIND", "Break the code", GameGroup.CLASSICS);
+    MASTERMIND("Mastermind", "play_MASTERMIND", "Break the code", GameGroup.CLASSICS),
+    LETTERFALL("Letterfall", "play_LETTERFALL", "Spell words and let tiles fall", GameGroup.WORDS);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {

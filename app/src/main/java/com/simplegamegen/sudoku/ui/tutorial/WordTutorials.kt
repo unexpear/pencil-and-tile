@@ -613,4 +613,52 @@ internal object WordTutorials {
             ),
         )
     }
+
+    val letterfall: Tutorial get() {
+        val startRows = listOf("BRIM", "CATE", "DOGS")
+        val fallenRows = listOf("NUPM", "BRIE", "DOGS")
+        fun scene(rows: List<String>, picked: Set<String> = emptySet(), fresh: Set<String> = emptySet()): Scene {
+            val base = letterScene(rows, maxUnit = 68)
+            return base.copy(items = base.items.map { item ->
+                val tone = when (item.id) {
+                    in picked -> Tone.SELECTED
+                    in fresh -> Tone.GOOD
+                    else -> Tone.PLAIN
+                }
+                val letter = (item.look as? Cell)?.text ?: ""
+                item.copy(tone = tone, describe = letter)
+            })
+        }
+        val fell = setOf("r0c0", "r0c1", "r0c2", "r1c0", "r1c1", "r1c2")
+        return Tutorial(
+            GameId.LETTERFALL,
+            "Spell words from side-by-side tiles, clear them, and let the rest fall.",
+            rules = listOf(
+                "Trace a word through tiles that share a side. Diagonals do not count.",
+                "A word needs at least 3 letters, and each tile is used only once.",
+                "Drag across the tiles, or tap them one at a time and press Enter.",
+                "A real word clears those tiles. Tiles above drop down, and new letters fall in from the top.",
+                "Longer words score more. J, Q, X and Z add 40 each; K, V, W and Y add 15. The combo multiplies the total.",
+                "A word that uses a tile that just fell or arrived scores ×2, then ×3, up to ×4. A word made only of tiles that stayed put scores ×1 and the combo starts over.",
+                "Each word spends one move. Reach the target score to win. Run out of moves first and you lose.",
+            ),
+            tips = listOf(
+                "Look at the tiles that just moved. Using one of them raises the combo.",
+                "Rare letters are worth hunting: one J or Z can be worth as much as several extra letters.",
+            ),
+            steps = listOf(
+                Step("Tiles that share a side can form a word. Tap C.", scene(startRows), tap = setOf("r1c0"), after = scene(startRows, picked = setOf("r1c0"))),
+                Step("Now A, on its right.", scene(startRows, picked = setOf("r1c0")), tap = setOf("r1c1"), after = scene(startRows, picked = setOf("r1c0", "r1c1"))),
+                Step("And T, to the right of A.", scene(startRows, picked = setOf("r1c0", "r1c1")), tap = setOf("r1c2"), after = scene(fallenRows, fresh = fell),
+                    then = "CAT clears. Tiles above drop into the gaps, and new letters fall from the top."),
+                Step("The first word scores ×1. The next word that uses a tile that just fell scores a combo. What is that combo?",
+                    scene(fallenRows, fresh = fell).choices("×2", "×3", "×4"), pick = "×2",
+                    then = "×2, then ×3, up to ×4.", help = "The first word that uses a fallen tile is ×2."),
+                Step("You have a limited number of moves. What loses the game?",
+                    scene(fallenRows, fresh = fell).choices("Running out of moves", "Spelling a short word", "Reaching the target"),
+                    pick = "Running out of moves", then = "Hit the target score before the moves run out.",
+                    help = "The game ends in a loss when the moves are gone and the target is still ahead."),
+            ),
+        )
+    }
 }

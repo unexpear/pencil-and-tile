@@ -1,6 +1,7 @@
 package com.simplegamegen.sudoku.ui.words
 
 import com.simplegamegen.sudoku.wordplay.EnglishLexicon
+import com.simplegamegen.sudoku.wordplay.Letterfall
 import com.simplegamegen.sudoku.wordplay.Lexicon
 import com.simplegamegen.sudoku.wordplay.LexiconSense
 import com.simplegamegen.sudoku.wordplay.Piece
@@ -59,6 +60,12 @@ fun EnglishLexicon.glance(raw: String, limit: Int = WORD_GLANCE_SENSES): WordGla
 
 /** The word Sprawl just scored, or null when the path is rejected. */
 fun sprawlScoredWord(game: Sprawl, path: List<Int>): String? {
+    if (game.problem(path) != null) return null
+    return game.wordOf(path)
+}
+
+/** The word Letterfall just scored, or null when the path is rejected. */
+fun letterfallScoredWord(game: Letterfall, path: List<Int>): String? {
     if (game.problem(path) != null) return null
     return game.wordOf(path)
 }

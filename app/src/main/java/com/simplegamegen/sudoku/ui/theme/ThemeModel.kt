@@ -46,7 +46,7 @@ class ThemeColors(values: Map<ThemeToken, Long>) {
 }
 
 /** Number of home-screen games; [ThemeSpec.gameColors] follows `GameId` order. */
-const val GAME_COUNT = 40
+const val GAME_COUNT = 41
 
 data class ThemeSpec(
     val id: String,
@@ -187,7 +187,7 @@ object BuiltInThemes {
             0xFF2F4E6B, 0xFF5E5230, 0xFF3B5B7A, 0xFF4E6A2F, 0xFF6B3F2A, 0xFF2B2B3A, 0xFF7A4A1E, 0xFF7A2335, 0xFF3F6B6B, 0xFF6B4A7A,
             0xFF5B3A6E, 0xFF2E6B4F, 0xFF24463A, 0xFF8C6A2A, 0xFF7A5C1E, 0xFF4F4A7A,
             0xFF9C2F2F, 0xFF8A4B2A, 0xFF33475B, 0xFF1F5E6E, 0xFF55702E, 0xFF6E3B3B,
-            0xFFA5652A, 0xFF2E3F6B, 0xFF1565C0, 0xFF6A1B9A,
+            0xFFA5652A, 0xFF2E3F6B, 0xFF1565C0, 0xFF6A1B9A, 0xFF1F6A7A,
         ),
         cornerRadius = 12, homeLayout = HomeLayout.GRID, coloredTiles = true, gameHeaders = false,
     )
@@ -261,7 +261,7 @@ object BuiltInThemes {
             0xFF1D9E75, 0xFFBA7517, 0xFF5B4FC8, 0xFF2E9E4F, 0xFFC0502E, 0xFF2C2C54, 0xFFE07A2E, 0xFFC62E4B, 0xFF2E9E9E, 0xFF9A5BC8,
             0xFF639922, 0xFFD4537E, 0xFF26215C, 0xFFFAC775, 0xFF993556, 0xFF5DCAA5,
             0xFFE24B4A, 0xFFBA7517, 0xFF185FA5, 0xFF2A7FBF, 0xFF97C459, 0xFFD85A8A,
-            0xFFF0997B, 0xFF3C3489, 0xFF1E88E5, 0xFF8E24AA,
+            0xFFF0997B, 0xFF3C3489, 0xFF1E88E5, 0xFF8E24AA, 0xFF1D9E9E,
         ),
         cornerRadius = 20, homeLayout = HomeLayout.GRID, coloredTiles = true, gameHeaders = true,
     )

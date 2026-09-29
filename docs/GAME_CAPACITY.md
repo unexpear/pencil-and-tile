@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **33 games, 43 rule variants, 318 selectable setting
+Current implementation: **40 games, 50 rule variants, 347 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
@@ -38,7 +38,10 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Sprouts | 1 | 4 | 2–5 starting spots placed per game |
 | Magnetic cluster | 1 | 4 | 1 empty ring; matches differ by play |
 | 2048 | 1 | 4 | Seeded spawns; no final level |
+| Connect Four | 1 | 4 | Standard 7×6 gravity board; four in a row |
+| Mastermind | 1 | 4 | 4 pegs from 6 colors, 10 guesses × 4 code styles |
 | Tetras | 1 | 4 | Seeded 7-piece bags; no final level |
+| Letterfall | 1 | 4 | 7×7 boards; orthogonal words of 3+ letters, gravity, combos, and a move-limited target score |
 | Dominoes | 1 | 4 | 137,680,171,200 theoretical pairs of opening hands; boneyard order adds variety |
 
 Sudoku's 88 combinations are seven variants × three sizes × four difficulties,

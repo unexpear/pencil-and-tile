@@ -11,10 +11,10 @@ Avoid other companies' game names in store text and keywords (no "Wordle", "Conn
 
 Title: Pencil & Tile
 
-Short description: 39 offline puzzle, word, card and board games. No ads, free and open source.
+Short description: 40 offline puzzle, word, card and board games. No ads, free and open source.
 
 Full description:
-Pencil & Tile is a quiet collection of 39 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
+Pencil & Tile is a quiet collection of 40 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
 
 NUMBER PUZZLES
 • Sudoku in 8 variants and 4 sizes up to 16×16, plus Killer Sudoku and a custom grid editor that checks every grid has exactly one solution
@@ -26,6 +26,7 @@ WORD GAMES
 • Word Meaning: explain a word from its sentence; your answer is judged right on your phone
 • Wordsworn: spell words from letter tiles to battle a run of monsters
 • Letter Sprawl: chain touching letters into words; longer words score more
+• Letterfall: spell words from side-by-side tiles; they clear, the rest fall, and combos build your score
 • Word Quilt: place each patch's letters so every row and column reads as words
 • Lone Letter: one letter, many categories, against computer players who might think of the same answer
 • Blotwords: ink the grid with mysterious command words you work out for yourself
@@ -54,10 +55,10 @@ Your games and records stay on your device.
 
 Title: Pencil & Tile
 
-Short description: 39 款离线谜题、文字、纸牌和棋盘游戏。无广告，免费开源。
+Short description: 40 款离线谜题、文字、纸牌和棋盘游戏。无广告，免费开源。
 
 Full description:
-Pencil & Tile 是一套安静的谜题合集，收录 39 款经典和原创游戏，完全离线也能玩。没有广告，不用注册，不追踪：只有谜题。永久免费并开源。
+Pencil & Tile 是一套安静的谜题合集，收录 40 款经典和原创游戏，完全离线也能玩。没有广告，不用注册，不追踪：只有谜题。永久免费并开源。
 
 数字谜题
 • 8 种玩法、4 种尺寸（最大 16×16）的数独，还有杀手数独，以及能检查每个盘面都只有唯一解的自定义盘面编辑器
@@ -69,6 +70,7 @@ Pencil & Tile 是一套安静的谜题合集，收录 39 款经典和原创游�
 • 词义：根据句子解释一个单词，答案在你的手机上判定
 • 词语大作战：用字母牌拼出单词，与一连串怪物战斗
 • 字母链：把相邻的字母连成单词，单词越长得分越高
+• 字母瀑：把上下左右相邻的字母拼成单词，消去后其余下落，连击会提高得分
 • 字母拼布：摆好每块拼布的字母，让每一行和每一列都是单词
 • 单字母：一个字母，许多类别，和可能想到同样答案的电脑玩家比拼
 • 墨字格：用神秘的指令词给格子上墨，含义要你自己发现
@@ -98,10 +100,10 @@ Pencil & Tile 是一套安静的谜题合集，收录 39 款经典和原创游�
 
 Title: Pencil & Tile
 
-Short description: オフラインで遊べるパズル・言葉・カード・ボードゲーム39種。広告なし、無料でオープンソース。
+Short description: オフラインで遊べるパズル・言葉・カード・ボードゲーム40種。広告なし、無料でオープンソース。
 
 Full description:
-Pencil & Tile は、定番とオリジナルのパズル39種を集めた、落ち着いて遊べるパズル集です。すべてオフラインで遊べます。広告なし、アカウント不要、追跡なし。パズルだけを楽しめます。ずっと無料のオープンソースです。
+Pencil & Tile は、定番とオリジナルのパズル40種を集めた、落ち着いて遊べるパズル集です。すべてオフラインで遊べます。広告なし、アカウント不要、追跡なし。パズルだけを楽しめます。ずっと無料のオープンソースです。
 
 数字パズル
 • 8種類・4サイズ（最大16×16）のナンプレ、キラーナンプレ、そして答えがひとつだけになるか確認してくれる盤面エディター
@@ -113,6 +115,7 @@ Pencil & Tile は、定番とオリジナルのパズル39種を集めた、落�
 • 言葉の意味：文の中の言葉の意味を説明。答えはスマートフォンの中で判定します
 • ことばバトル：文字タイルで単語を作り、次々に現れるモンスターと戦います
 • レターつなぎ：となり合う文字をつないで単語に。長い単語ほど高得点
+• レターフォール：上下左右の文字で単語を作ると消え、残りが落ち、コンボで得点が伸びます
 • ことばキルト：各パッチの文字を置いて、縦も横もすべて単語にします
 • ひと文字：ひとつの文字でいろんなお題に答え、同じ答えを考えそうなコンピューターと勝負
 • インクワード：なぞのコマンド語で盤にインクを。意味は自分で見つけます
@@ -142,10 +145,10 @@ Pencil & Tile は、定番とオリジナルのパズル39種を集めた、落�
 
 Title: Pencil & Tile
 
-Short description: 39 juegos sin conexión: lógica, palabras, cartas y tablero. Gratis y libre.
+Short description: 40 juegos sin conexión: lógica, palabras, cartas y tablero. Gratis y libre.
 
 Full description:
-Pencil & Tile es una colección tranquila de 39 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
+Pencil & Tile es una colección tranquila de 40 puzzles clásicos y originales que se juegan totalmente sin conexión. Sin anuncios, sin cuenta, sin rastreo: solo puzzles. Gratis y de código abierto, siempre.
 
 PUZZLES NUMÉRICOS
 • Sudoku en 8 variantes y 4 tamaños hasta 16×16, además de Sudoku asesino y un editor de cuadrículas que comprueba que cada una tenga una única solución
@@ -157,6 +160,7 @@ JUEGOS DE PALABRAS
 • Significado: explica una palabra a partir de su frase; tu respuesta se evalúa en tu propio móvil
 • Duelo de palabras: forma palabras con fichas de letras para luchar contra una serie de monstruos
 • Cadena de letras: une letras vecinas para formar palabras; las más largas puntúan más
+• Cascada de letras: forma palabras con fichas que se tocan por un lado; se borran, el resto cae y los combos suben la puntuación
 • Colcha de letras: coloca las letras de cada parche para que cada fila y columna sean palabras
 • Letra única: una letra, muchas categorías, contra jugadores del ordenador que quizá piensen lo mismo
 • Palabras de tinta: entinta la cuadrícula con misteriosas palabras de orden que descubres tú
@@ -186,10 +190,10 @@ Tus partidas y registros se guardan en tu dispositivo.
 
 Title: Pencil & Tile
 
-Short description: 39 Offline-Rätsel, Wort-, Karten- und Brettspiele. Ohne Werbung, frei und offen.
+Short description: 40 Offline-Rätsel, Wort-, Karten- und Brettspiele. Ohne Werbung, frei und offen.
 
 Full description:
-Pencil & Tile ist eine ruhige Sammlung von 39 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
+Pencil & Tile ist eine ruhige Sammlung von 40 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
 
 ZAHLENRÄTSEL
 • Sudoku in 8 Varianten und 4 Größen bis 16×16, dazu Killer-Sudoku und ein Gitter-Editor, der prüft, dass jedes Gitter genau eine Lösung hat
@@ -201,6 +205,7 @@ WORTSPIELE
 • Wortbedeutung: Erkläre ein Wort aus seinem Satz; deine Antwort wird direkt auf deinem Handy bewertet
 • Wortgefecht: Bilde Wörter aus Buchstabensteinen und kämpfe gegen eine Reihe von Monstern
 • Buchstabennetz: Verbinde benachbarte Buchstaben zu Wörtern; längere Wörter bringen mehr Punkte
+• Letternfall: Bilde Wörter aus Kacheln, die sich an der Seite berühren; sie verschwinden, der Rest fällt, und Kombos erhöhen die Punkte
 • Wortquilt: Setze die Buchstaben jedes Flickens so, dass jede Reihe und Spalte Wörter ergibt
 • Ein Buchstabe: ein Buchstabe, viele Kategorien, gegen Computerspieler, die vielleicht dasselbe schreiben
 • Tintenwörter: Färbe das Gitter mit rätselhaften Befehlswörtern, deren Wirkung du selbst herausfindest

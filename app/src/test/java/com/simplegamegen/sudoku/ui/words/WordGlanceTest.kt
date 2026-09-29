@@ -4,6 +4,7 @@ import com.simplegamegen.sudoku.logic.LogicLevel
 import com.simplegamegen.sudoku.wordplay.Card
 import com.simplegamegen.sudoku.wordplay.Edge
 import com.simplegamegen.sudoku.wordplay.EnglishLexicon
+import com.simplegamegen.sudoku.wordplay.Letterfall
 import com.simplegamegen.sudoku.wordplay.Hero
 import com.simplegamegen.sudoku.wordplay.Lexicon
 import com.simplegamegen.sudoku.wordplay.LexiconSense
@@ -72,6 +73,14 @@ class WordGlanceTest {
         val quad = Sprawl(LogicLevel.EASY, 1L, 3, "QADORNEST")
         assertEquals("QUAD", quad.wordOf(listOf(0, 1, 2)))
         if (Lexicon.isWord("QUAD")) assertEquals("QUAD", sprawlScoredWord(quad, listOf(0, 1, 2)))
+    }
+
+    @Test fun `letterfall reports a word only when the path is accepted`() {
+        val game = Letterfall(LogicLevel.EASY, 1L, 3, 3, "CATXXXXXX", movesLeft = 4)
+        assertEquals("CAT", letterfallScoredWord(game, listOf(0, 1, 2)))
+        assertNull(letterfallScoredWord(game, listOf(0, 1)))
+        assertNull(letterfallScoredWord(game, listOf(0, 4, 8)))
+        assertNull(letterfallScoredWord(game, listOf(6, 7, 8)))
     }
 
     @Test fun `quilt reports a run only when it becomes a word`() {

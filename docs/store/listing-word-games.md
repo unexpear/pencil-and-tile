@@ -27,6 +27,7 @@ Word games that play completely offline, with no ads, no account and no tracking
 WORD GAMES
 • Wordsworn: spell words from letter tiles to battle a run of monsters. Long words and rare letters hit harder
 • Letter Sprawl: chain touching letters into words; longer words score more
+• Letterfall: spell words from side-by-side tiles; they clear, the rest fall, and combos build your score
 • Lone Letter: one letter, many categories. Beat computer players who might think of the same answer
 • Word Quilt: place each patch's letters so every row and column reads as words
 • Blotwords: ink the grid with mysterious command words you work out for yourself
@@ -62,6 +63,7 @@ Full description:
 文字游戏
 • 词语大作战：用字母牌拼出单词，与一连串怪物战斗。长单词和少见字母威力更大
 • 字母链：把相邻的字母连成单词，单词越长得分越高
+• 字母瀑：把上下左右相邻的字母拼成单词，消去后其余下落，连击会提高得分
 • 单字母：一个字母，许多类别，和可能想到同样答案的电脑玩家比拼
 • 字母拼布：摆好每块拼布的字母，让每一行和每一列都是单词
 • 墨字格：用神秘的指令词给格子上墨，含义要你自己发现
@@ -97,6 +99,7 @@ Full description:
 言葉のゲーム
 • ことばバトル：文字タイルで単語を作り、次々に現れるモンスターと戦います。長い単語やめずらしい文字ほど強力
 • レターつなぎ：となり合う文字をつないで単語に。長い単語ほど高得点
+• レターフォール：上下左右の文字で単語を作ると消え、残りが落ち、コンボで得点が伸びます
 • ひと文字：ひとつの文字でいろんなお題に答え、同じ答えを考えそうなコンピューターと勝負
 • ことばキルト：各パッチの文字を置いて、縦も横もすべて単語にします
 • インクワード：なぞのコマンド語で盤にインクを。意味は自分で見つけます
@@ -132,6 +135,7 @@ Juegos de palabras que se juegan totalmente sin conexión, sin anuncios, sin cue
 JUEGOS DE PALABRAS
 • Duelo de palabras: forma palabras con fichas de letras para luchar contra una serie de monstruos. Las palabras largas y las letras raras golpean más fuerte
 • Cadena de letras: une letras vecinas para formar palabras; las más largas puntúan más
+• Cascada de letras: forma palabras con fichas que se tocan por un lado; se borran, el resto cae y los combos suben la puntuación
 • Letra única: una letra, muchas categorías, contra jugadores del ordenador que quizá piensen lo mismo
 • Colcha de letras: coloca las letras de cada parche para que cada fila y columna sean palabras
 • Palabras de tinta: entinta la cuadrícula con misteriosas palabras de orden que descubres tú
@@ -167,6 +171,7 @@ Wortspiele, die komplett offline funktionieren, ohne Werbung, ohne Konto und ohn
 WORTSPIELE
 • Wortgefecht: Bilde Wörter aus Buchstabensteinen und kämpfe gegen eine Reihe von Monstern. Lange Wörter und seltene Buchstaben treffen härter
 • Buchstabennetz: Verbinde benachbarte Buchstaben zu Wörtern; längere Wörter bringen mehr Punkte
+• Letternfall: Bilde Wörter aus Kacheln, die sich an der Seite berühren; sie verschwinden, der Rest fällt, und Kombos erhöhen die Punkte
 • Ein Buchstabe: ein Buchstabe, viele Kategorien, gegen Computerspieler, die vielleicht dasselbe schreiben
 • Wortquilt: Setze die Buchstaben jedes Flickens so, dass jede Reihe und Spalte Wörter ergibt
 • Tintenwörter: Färbe das Gitter mit rätselhaften Befehlswörtern, deren Wirkung du selbst herausfindest

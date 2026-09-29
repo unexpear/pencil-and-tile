@@ -47,5 +47,6 @@ object CollectionGuide {
         GameCapacity("Mastermind", 1, 4, "4 pegs from 6 colors, duplicates allowed, 10 guesses × 4 code styles. Filled keys are the right color in the right place; open keys are the right color in the wrong place.", "Secrets are seeded. Easy is a permutation of four colors; Expert is any classic code."),
         GameCapacity("2048", 1, 4, "3×3 to 6×6 boards with goal tiles 512 to 8192.", "Tile spawns are seeded per game; there is no final level."),
         GameCapacity("Tetras", 1, 4, "Falling blocks with 4 starting speeds; 7-piece bags.", "Piece order is seeded per game; there is no final level."),
+        GameCapacity("Letterfall", 1, 4, "Spell words from side-by-side tiles on a 7×7 board × 4 levels. Cleared tiles drop out, letters above fall, and new letters refill from the top. Combos build when a word uses a tile that just moved. Each level is a target score with a move limit.", "Boards are filled from weighted English letters and checked against the shared word list. The same word can be played again after new tiles fall. There is no final level."),
     )
 }

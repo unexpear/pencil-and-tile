@@ -82,6 +82,9 @@ import com.simplegamegen.sudoku.wordplay.FiveLettersCodec
 import com.simplegamegen.sudoku.wordplay.ThreadsCodec
 import com.simplegamegen.sudoku.wordplay.ThreadsGame
 import com.simplegamegen.sudoku.ui.screens.FiveLettersScreen
+import com.simplegamegen.sudoku.ui.screens.LetterfallScreen
+import com.simplegamegen.sudoku.wordplay.Letterfall
+import com.simplegamegen.sudoku.wordplay.LetterfallCodec
 import com.simplegamegen.sudoku.ui.screens.ThreadsScreen
 
 fun <S> codecOf(encode: (S) -> String, decode: (String) -> S?): GameCodec<S> = object : GameCodec<S> {
@@ -200,6 +203,9 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.TETRAS.route) {
         TetrasScreen(nav, playModel<TetrasGame>(GameId.TETRAS, store, codecOf(TetrasCodec::encode, TetrasCodec::decode)), factory)
+    }
+    composable(GameId.LETTERFALL.route) {
+        LetterfallScreen(nav, playModel<Letterfall>(GameId.LETTERFALL, store, codecOf(LetterfallCodec::encode, LetterfallCodec::decode)), factory)
     }
     composable(GameId.DOTS.route) {
         DotsScreen(nav, playModel<DotsGame>(GameId.DOTS, store, codecOf(DotsCodec::encode, DotsCodec::decode), DotsComputer), factory)

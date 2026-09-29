@@ -465,6 +465,33 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                             drawLine(ink.copy(alpha = 0.6f), o + Offset(0f, cell * k), o + Offset(side, cell * k), strokeWidth = 2f)
                         }
                     }
+                    GameId.LETTERFALL -> {
+                        // Side-by-side tiles spelling a word, with the row above still falling into place.
+                        val cell = side / 4
+                        val pad = cell * 0.08f
+                        val word = listOf(0 to 2, 1 to 2, 2 to 2)
+                        for (y in 0 until 4) for (x in 0 until 4) {
+                            val on = (x to y) in word
+                            val falling = y == 1 && x < 3
+                            val dy = if (falling) -cell * 0.22f else 0f
+                            drawRoundRect(
+                                if (on) c.accent.copy(alpha = 0.9f) else ink.copy(alpha = if (falling) 0.22f else 0.12f),
+                                o + Offset(x * cell + pad, y * cell + pad + dy),
+                                Size(cell - pad * 2, cell - pad * 2), CornerRadius(cell * 0.22f),
+                            )
+                        }
+                        for (k in 1 until word.size) {
+                            val (ax, ay) = word[k - 1]
+                            val (bx, by) = word[k]
+                            drawLine(
+                                Color.White.copy(alpha = 0.85f),
+                                o + Offset((ax + 0.5f) * cell, (ay + 0.5f) * cell),
+                                o + Offset((bx + 0.5f) * cell, (by + 0.5f) * cell),
+                                strokeWidth = cell * 0.12f, cap = StrokeCap.Round,
+                            )
+                        }
+                        "CAT".forEachIndexed { i, ch -> letter(ch.toString(), i, 2, 4, Color.White) }
+                    }
                     GameId.WORD_SEARCH -> {
                         val cell = side / 4
                         drawRoundRect(look.colors.highlight.copy(alpha = 0.55f), o + Offset(cell * 0.12f, cell * 1.12f),
