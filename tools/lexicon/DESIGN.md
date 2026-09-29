@@ -75,6 +75,35 @@ Unique index on the casefolded lemma, index on `word_id`, unique index on
 `examples.sense_id`. No full-text search and no synset relation graph. A `meta`
 table records the source URLs.
 
+## Hugging Face
+
+Version 1 does not download from Hugging Face. The builder keeps the canonical
+files below. A mirror is not a substitute for those downloads.
+
+Prefer the official file, not a Hub copy:
+
+- **Open English WordNet**: the 2025 core XML from en-word.net. Hub copies such
+  as `marksverdhei/wordnet-definitions-en-2021` are older subsets (about 44,000
+  rows that have both a definition and an example), not the 2025 core.
+- **Tatoeba**: the official English CC0 export
+  (`eng_sentences_CC0.tsv.bz2`). `Helsinki-NLP/tatoeba` is a set of parallel
+  sentence pairs under CC BY, not that CC0 English file.
+
+Optional later, and not a reason to hold version 1:
+
+- **`mjbommar/opengloss-dictionary`** (CC BY 4.0): about 150,000 lexemes and
+  537,000 senses, with synthetic encyclopedic definitions. Quality may be
+  uneven. Worth a look only if an OEWN gap needs a richer gloss and the extra
+  size is acceptable.
+- **`nandhakumarms/qualc-wordnet-en`**: WordNet exported through NLTK, about
+  207,000 sense rows. It repeats OEWN and is not a second dictionary.
+
+Do not pack these into the APK:
+
+- **`cstr/en-wiktionary-sqlite-all`** and **`jake-anto/wiktionary`**: CC BY-SA,
+  and huge (more than a million entries). Same share-alike and size reasons as
+  the Wiktionary note below.
+
 ## Considered and not shipped
 
 Version 1 does not download these. Definitions stay OEWN-only.
