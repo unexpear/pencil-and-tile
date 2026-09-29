@@ -344,6 +344,11 @@ private fun describe(item: Item): String = item.describe.ifEmpty {
                     }
                     PieceKind.STONE -> if (p.player > 0) ", your stone" else ", computer's stone"
                     PieceKind.SPOT -> ", spot" + if (p.label.isNotEmpty()) " with ${p.label} left" else ", full"
+                    PieceKind.SHIP -> when (p.player) {
+                        1 -> ", your ship"
+                        -1 -> ", hit"
+                        else -> ", sunk ship"
+                    }
                 })
             }
         }
@@ -495,6 +500,10 @@ private fun CellView(l: Cell, tone: Tone, unit: Dp, w: Dp, h: Dp, surface: Backd
                     drawCircle(Color.Black.copy(alpha = 0.3f), size.minDimension * 0.3f, center + Offset(0f, size.minDimension * 0.04f))
                     drawCircle(Brush.radialGradient(listOf(lerp(base, Color.White, 0.35f), base), center - Offset(size.minDimension * 0.08f, size.minDimension * 0.08f),
                         size.minDimension * 0.35f), size.minDimension * 0.3f)
+                }
+                PieceKind.SHIP -> Canvas(Modifier.fillMaxSize().padding(s * 0.14f)) {
+                    val hull = when (p.player) { 1 -> Color(0xFFECEFF1); -1 -> Color(0xFFE53935); else -> Color(0xFF6D4C41) }
+                    drawRoundRect(hull, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.minDimension * 0.28f))
                 }
                 PieceKind.SPOT -> {
                     Canvas(Modifier.fillMaxSize()) {

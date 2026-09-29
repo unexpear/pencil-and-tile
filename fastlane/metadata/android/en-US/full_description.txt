@@ -1,4 +1,4 @@
-Pencil & Tile is a quiet collection of 40 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
+Pencil & Tile is a quiet collection of 41 classic and original puzzles that play completely offline. No ads, no account, no tracking: just puzzles. Free and open source, forever.
 
 NUMBER PUZZLES
 • Sudoku in 8 variants and 4 sizes up to 16×16, plus Killer Sudoku and a custom grid editor that checks every grid has exactly one solution
@@ -23,6 +23,7 @@ BOARD AND ARCADE
 • Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster against the computer
 • Connect Four: drop discs on a 7×6 board and line up four
 • Mastermind: break a hidden code of four colored pegs
+• Battleship: place a fleet and sink the computer's ships
 • 2048 and Tetras falling blocks
 
 MADE TO BE PLAYED YOUR WAY

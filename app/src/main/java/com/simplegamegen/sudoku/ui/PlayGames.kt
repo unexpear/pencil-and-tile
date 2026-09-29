@@ -26,6 +26,9 @@ import com.simplegamegen.sudoku.arcade.Game2048
 import com.simplegamegen.sudoku.arcade.Game2048Codec
 import com.simplegamegen.sudoku.arcade.TetrasCodec
 import com.simplegamegen.sudoku.arcade.TetrasGame
+import com.simplegamegen.sudoku.duels.Battleship
+import com.simplegamegen.sudoku.duels.BattleshipAi
+import com.simplegamegen.sudoku.duels.BattleshipCodec
 import com.simplegamegen.sudoku.duels.ConnectFour
 import com.simplegamegen.sudoku.duels.ConnectFourAi
 import com.simplegamegen.sudoku.duels.ConnectFourCodec
@@ -44,6 +47,7 @@ import com.simplegamegen.sudoku.ui.screens.AcrosticScreen
 import com.simplegamegen.sudoku.ui.screens.BlotwordsScreen
 import com.simplegamegen.sudoku.wordplay.BlotCodec
 import com.simplegamegen.sudoku.wordplay.Blotwords
+import com.simplegamegen.sudoku.ui.screens.BattleshipScreen
 import com.simplegamegen.sudoku.ui.screens.ConnectFourScreen
 import com.simplegamegen.sudoku.ui.screens.MastermindScreen
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
@@ -96,6 +100,12 @@ fun <S> codecOf(encode: (S) -> String, decode: (String) -> S?): GameCodec<S> = o
 object ConnectFourComputer : ComputerPlayer<ConnectFour> {
     override fun needsMove(state: ConnectFour) = !state.over && state.turn == -1
     override fun move(state: ConnectFour) = state.drop(ConnectFourAi.choose(state))!!
+    override val pauseMs = 350L
+}
+
+object BattleshipComputer : ComputerPlayer<Battleship> {
+    override fun needsMove(state: Battleship) = state.awaitingComputer
+    override fun move(state: Battleship) = state.receive(BattleshipAi.choose(state))!!
     override val pauseMs = 350L
 }
 
@@ -221,5 +231,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.MASTERMIND.route) {
         MastermindScreen(nav, playModel<Mastermind>(GameId.MASTERMIND, store, codecOf(MastermindCodec::encode, MastermindCodec::decode)), factory)
+    }
+    composable(GameId.BATTLESHIP.route) {
+        BattleshipScreen(nav, playModel<Battleship>(GameId.BATTLESHIP, store, codecOf(BattleshipCodec::encode, BattleshipCodec::decode), BattleshipComputer), factory)
     }
 }

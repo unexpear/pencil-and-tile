@@ -267,6 +267,18 @@ class TutorialContentTest {
         assertEquals(1, bottom.count { piece -> piece != null && piece.kind == PieceKind.COUNTER && piece.player == -1 })
     }
 
+    @Test fun `battleship tutorial places a destroyer and records a miss`() {
+        val steps = Tutorials.of(GameId.BATTLESHIP).steps
+        val placed = steps[1].result
+        val hull = listOf(cellId(1, 1), cellId(1, 2)).map { (placed.item(it)!!.look as Cell).piece }
+        assertEquals(2, hull.count { it?.kind == PieceKind.SHIP && it.player == 1 })
+        val miss = steps[2].result.item(cellId(0, 3))!!.look as Cell
+        assertEquals(Mark.CROSS, miss.mark)
+        val sunk = steps[3].scene
+        val hits = (1..3).map { (sunk.item(cellId(2, it))!!.look as Cell).piece }
+        assertTrue(hits.all { it?.kind == PieceKind.SHIP && it.player == -1 })
+    }
+
     @Test fun `letterfall tutorial spells an orthogonal word the engine accepts`() {
         val steps = Tutorials.of(GameId.LETTERFALL).steps
         val taps = steps.take(3).map { it.tap.single() }

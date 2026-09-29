@@ -6,15 +6,18 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class ClassicsCatalogTest {
-    @Test fun `mastermind is the second classics game and the guide totals include it`() {
+    @Test fun `battleship is the third classics game and the guide totals include it`() {
         val classics = GameId.entries.filter { it.group == GameGroup.CLASSICS && it.parent == null }
-        assertEquals(listOf(GameId.CONNECT_FOUR, GameId.MASTERMIND), classics)
-        assertEquals("play_MASTERMIND", GameId.MASTERMIND.route)
-        assertEquals("PLAY_MASTERMIND", "PLAY_${GameId.MASTERMIND.name}")
+        assertEquals(listOf(GameId.CONNECT_FOUR, GameId.MASTERMIND, GameId.BATTLESHIP), classics)
+        assertEquals("play_BATTLESHIP", GameId.BATTLESHIP.route)
+        assertEquals("PLAY_BATTLESHIP", "PLAY_${GameId.BATTLESHIP.name}")
         assertEquals(GameId.entries.size, GAME_COUNT)
-        assertEquals(40, CollectionGuide.entries.size)
-        assertEquals(50, CollectionGuide.entries.sumOf { it.variants })
-        assertEquals(347, CollectionGuide.entries.sumOf { it.setups })
-        assertEquals(1, CollectionGuide.entries.count { it.title == "Mastermind" })
+        assertEquals(41, CollectionGuide.entries.size)
+        assertEquals(51, CollectionGuide.entries.sumOf { it.variants })
+        assertEquals(351, CollectionGuide.entries.sumOf { it.setups })
+        assertEquals(1, CollectionGuide.entries.count { it.title == "Battleship" })
+        val entry = CollectionGuide.entries.single { it.title == "Battleship" }
+        assertEquals(1, entry.variants)
+        assertEquals(4, entry.setups)
     }
 }

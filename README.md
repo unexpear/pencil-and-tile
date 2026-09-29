@@ -22,7 +22,7 @@ https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
 - **Cards and tiles:** Mahjong Solitaire, Solitaire (Klondike, with Spider and Pyramid under it), Dominoes
   and Memory.
 - **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster.
-- **Classics:** Connect Four and Mastermind.
+- **Classics:** Connect Four, Mastermind and Battleship.
 - **Arcade:** 2048 and Tetras.
 
 Every game has a guided tutorial, four levels, hints, themes and dark mode, screen-reader support, and
@@ -170,6 +170,9 @@ older boards show **Original** rather than acquiring a misleading rating.
   right place; open key pegs count a right color in the wrong place, without
   saying which peg is which. Easy uses four different colors from a smaller set;
   Expert is any classic code. You guess; the computer sets the code.
+- **Battleship:** classic 10×10 fleet against the computer. Place a carrier,
+  battleship, cruiser, submarine and destroyer, then fire first. Easy mostly
+  shoots at random; Expert aims where the remaining ships are most likely.
 - **2048:** 3×3 to 6×6 boards with goals from 512 to 8192. Swipe or use the arrows.
 - **Tetras:** falling blocks with seeded 7-piece bags, wall kicks, a ghost piece,
   three next pieces and four starting speeds. It pauses when you leave the screen.
@@ -195,7 +198,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**40 games, 50 rule variants, 347 setting combinations**. These are not unique
+**41 games, 51 rule variants, 351 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
@@ -235,7 +238,7 @@ corner roundness and home layout, and share or import it as a text code. See
   games' rules, generators, computer players and versioned saves.
 - `sudoku-engine/.../logic/` — Samurai Sudoku, Calcudoku, Kakuro and Futoshiki: shared model,
   counting solver, seeded generators, uniqueness verifier and save format.
-- `app/` — Compose UI for all 40 games and Sudoku statistics, backed by the
+- `app/` — Compose UI for all 41 games and Sudoku statistics, backed by the
   engine. `ui/theme/` holds the theme model, storage and Compose theme;
   `ui/assets/` the drawn game pieces and icons; `ui/components/` shared chrome.
 

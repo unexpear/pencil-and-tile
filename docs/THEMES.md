@@ -20,7 +20,7 @@ the player picks Light or Dark.
 1. Add a `ThemeSpec` to `BuiltInThemes` in
    `app/src/main/java/com/simplegamegen/sudoku/ui/theme/ThemeModel.kt`, giving
    every `ThemeToken` in both the `light` and `dark` palettes (construction fails
-   if one is missing), 41 `gameColors` in `GameId` order, a corner radius
+   if one is missing), 42 `gameColors` in `GameId` order, a corner radius
    (0–28), a home layout and the two header/tile options.
 2. Add it to `BuiltInThemes.all`. It then appears on the Appearance screen and
    can be used as the base for player themes.

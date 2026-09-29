@@ -17,7 +17,8 @@ class ThemeModelTest {
             assertEquals(GameId.entries.size, spec.gameColors.size, "theme colors follow GameId order")
         }
         assertEquals(GameId.entries.size, GAME_COUNT)
-        assertEquals(GameId.MASTERMIND.ordinal + 1, GameId.LETTERFALL.ordinal)
+        assertEquals(GameId.MASTERMIND.ordinal + 1, GameId.BATTLESHIP.ordinal)
+        assertEquals(GameId.BATTLESHIP.ordinal + 1, GameId.LETTERFALL.ordinal)
         assertEquals(GameId.LETTERFALL.ordinal, GAME_COUNT - 1)
         assertSame(BuiltInThemes.table, BuiltInThemes.default)
     }
