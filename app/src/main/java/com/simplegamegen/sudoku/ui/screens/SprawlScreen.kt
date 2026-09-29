@@ -50,9 +50,14 @@ import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.components.InfoChip
 import com.simplegamegen.sudoku.ui.components.ToolButton
+import com.simplegamegen.sudoku.ui.components.WordDefinitionCard
+import com.simplegamegen.sudoku.ui.components.rememberLexiconLookup
+import com.simplegamegen.sudoku.ui.components.rememberShownWord
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
+import com.simplegamegen.sudoku.ui.words.sprawlScoredWord
+import com.simplegamegen.sudoku.wordplay.LexiconSense
 import com.simplegamegen.sudoku.wordplay.Sprawl
 import com.simplegamegen.sudoku.wordplay.SprawlSolver
 import com.simplegamegen.sudoku.wordplay.sprawlFace
@@ -77,9 +82,10 @@ val SprawlSetup: (PuzzleFactory) -> PlaySetup<Sprawl> = { factory ->
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleFactory) {
+fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleFactory, lookup: ((String) -> List<LexiconSense>)? = null) {
     val c = LocalGameLook.current.colors
     var path by remember { mutableStateOf(listOf<Int>()) }
+    val words = rememberLexiconLookup(lookup)
     PlayShell(nav, vm, GameId.LETTER_SPRAWL, remember(factory) { SprawlSetup(factory) }, undoable = false, tools = { g, s ->
         HintButton(GameId.LETTER_SPRAWL, enabled = !g.finished && !s.busy) {
             vm.play { it.hint() }
@@ -91,13 +97,23 @@ fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleF
     }) { g, s ->
         // The word lists load off the main thread the first time.
         val ready by produceState(false, g.letters) { value = withContext(Dispatchers.Default) { g.goal; true } }
+        val board by rememberUpdatedState(g)
+        val shown = rememberShownWord(g.seed)
+        // Drag keeps this closure, so the board is read when the finger lifts, not when the gesture started.
         fun submitPath(p: List<Int>) {
-            val problem = g.problem(p)
-            val word = g.wordOf(p)
-            if (problem != null) { if (p.size > 1) vm.say(if (problem == "Already found.") "$word: already found." else problem); return }
-            val next = g.take(p) ?: return
+            val game = board
+            val word = sprawlScoredWord(game, p)
+            if (word == null) {
+                val problem = game.problem(p)
+                if (problem != null && p.size > 1) vm.say(if (problem == "Already found.") "${game.wordOf(p)}: already found." else problem)
+                return
+            }
+            val next = game.take(p) ?: return
             val points = Sprawl.pointsFor(word)
-            vm.play(if (!g.reached && next.reached) "$word +$points. Goal reached! Keep going, or tap Finish." else "$word +$points") { next }
+            vm.play(if (!game.reached && next.reached) "$word +$points. Goal reached! Keep going, or tap Finish." else "$word +$points") {
+                shown.value = word
+                next
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             InfoChip(if (ready) "${g.score} of ${g.goal} points" else "…", emphasized = g.reached)
@@ -126,11 +142,11 @@ fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleF
         }
 
         val hintPath = if (ready) g.hintPath() else emptyList()
+        val traced by rememberUpdatedState(path)
+        val grid by rememberUpdatedState(g)
         BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             val side = min((maxWidth - 16.dp) / g.size, 76.dp)
             val gap = 6.dp
-            val current by rememberUpdatedState(path)
-            val game by rememberUpdatedState(g)
             Box(Modifier.size(side * g.size + gap * (g.size - 1))
                 .pointerInput(g.letters, g.finished) {
                     if (g.finished) return@pointerInput
@@ -146,15 +162,15 @@ fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleF
                     }
                     detectDragGestures(
                         onDragStart = { o -> cellAt(o)?.let { path = listOf(it) } },
-                        onDragEnd = { val p = current; path = emptyList(); if (p.size >= 2) submitPath(p) },
+                        onDragEnd = { val p = traced; path = emptyList(); if (p.size >= 2) submitPath(p) },
                         onDragCancel = { path = emptyList() },
                     ) { change, _ ->
                         val cell = cellAt(change.position) ?: return@detectDragGestures
-                        val p = current
+                        val p = traced
                         when {
                             p.isEmpty() -> path = listOf(cell)
                             p.size >= 2 && cell == p[p.size - 2] -> path = p.dropLast(1)
-                            cell !in p && cell in SprawlSolver.neighbours(p.last(), game.size) -> path = p + cell
+                            cell !in p && cell in SprawlSolver.neighbours(p.last(), grid.size) -> path = p + cell
                         }
                     }
                 }) {
@@ -171,11 +187,11 @@ fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleF
                                 .pointerInput(i, g.finished) {
                                     detectTapGestures {
                                         if (g.finished) return@detectTapGestures
-                                        val p = current
+                                        val p = traced
                                         path = when {
                                             p.isNotEmpty() && p.last() == i -> p.dropLast(1)
                                             i in p -> p.subList(0, p.indexOf(i) + 1)
-                                            p.isEmpty() || i in SprawlSolver.neighbours(p.last(), game.size) -> p + i
+                                            p.isEmpty() || i in SprawlSolver.neighbours(p.last(), grid.size) -> p + i
                                             else -> listOf(i)
                                         }
                                     }
@@ -203,12 +219,14 @@ fun SprawlScreen(nav: NavController, vm: PlayViewModel<Sprawl>, factory: PuzzleF
             }
         }
 
+        // Below the grid, so a definition doesn't shove the letters while a path is being traced.
+        shown.value?.let { lemma -> WordDefinitionCard(lemma, words, onDismiss = { shown.value = null }) }
         // Found words, longest first; after Finish, the everyday words that were missed.
         if (g.found.isNotEmpty()) {
             Text("Found", style = MaterialTheme.typography.titleSmall, color = c.text)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 g.found.sortedWith(compareBy({ -it.length }, { it })).forEach { w ->
-                    InfoChip("${w.lowercase()} ${Sprawl.pointsFor(w)}")
+                    InfoChip("${w.lowercase()} ${Sprawl.pointsFor(w)}", onClick = { shown.value = w })
                 }
             }
         }

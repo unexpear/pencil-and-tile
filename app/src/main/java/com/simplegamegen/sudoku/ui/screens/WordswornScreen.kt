@@ -83,9 +83,14 @@ import com.simplegamegen.sudoku.ui.HintButton
 import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.components.ToolButton
+import com.simplegamegen.sudoku.ui.components.WordDefinitionCard
+import com.simplegamegen.sudoku.ui.components.rememberLexiconLookup
+import com.simplegamegen.sudoku.ui.components.rememberShownWord
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
+import com.simplegamegen.sudoku.ui.words.wordswornScoredWord
+import com.simplegamegen.sudoku.wordplay.LexiconSense
 import com.simplegamegen.sudoku.wordplay.Act
 import com.simplegamegen.sudoku.wordplay.Card
 import com.simplegamegen.sudoku.wordplay.Edge
@@ -168,8 +173,10 @@ private fun stepText(s: Step): String = when (s) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: PuzzleFactory, store: ArcadeStore) {
+fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: PuzzleFactory, store: ArcadeStore,
+    lookup: ((String) -> List<LexiconSense>)? = null) {
     val c = LocalGameLook.current.colors
+    val words = rememberLexiconLookup(lookup)
     val scope = rememberCoroutineScope()
     val progress = remember(store) { WordswornProgress(store) }
     var unlocked by remember { mutableStateOf(emptySet<Hero>()) }
@@ -220,6 +227,10 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
         }
         if (g.currentRules) ToolButton(GameIcons.Draw, "Inspect", enabled = g.hero != null && !s.busy) { inspecting = true }
     }) { g, s ->
+        val shown = rememberShownWord(g.seed)
+        val definition = @Composable {
+            shown.value?.let { lemma -> WordDefinitionCard(lemma, words, onDismiss = { shown.value = null }) }
+        }
         if (inspecting) RunInspector(g) { inspecting = false }
         LaunchedEffect(g.won, g.hero, progressLoaded) {
             if (progressLoaded && g.won && g.hero !in unlocked) {
@@ -254,6 +265,8 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
         val loop = rememberInfiniteTransition(label = "idle")
         val phase by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = LinearEasing)), label = "phase")
 
+        // Reward screens replace the fight, so the word just played stays readable above them.
+        if (g.offer != null) definition()
         when (val o = g.offer) {
             Offer.Heroes -> HeroPicker(g, phase, unlocked, onTwist = { index -> vm.play { it.toggleTwist(index) } }) { k -> vm.play(say("${Hero.entries[k % 3].label} sets out!")) { it.choose(k) } }
             null -> Box(Modifier.fillMaxWidth()) {
@@ -267,9 +280,15 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                     val preview = if (pieces.size >= 2 && g.fighting) g.preview(pieces, splay) else null
                     HeroPanel(g, phase, preview?.hits, preview?.blocks, ouch.value, glow.value)
                     when {
-                        g.won -> WinBanner(say("The Word Eater is beaten. Your story is complete!") + if (g.currentRules && g.hero in unlocked) " Alternate core abilities unlocked for ${g.hero?.label}." else "")
-                        g.lost -> Surface(color = c.danger.copy(alpha = 0.14f), shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
-                            Text("Defeated in fight ${g.fight + 1}. Try another run!", Modifier.padding(14.dp), style = MaterialTheme.typography.titleMedium, color = c.text)
+                        g.won -> {
+                            WinBanner(say("The Word Eater is beaten. Your story is complete!") + if (g.currentRules && g.hero in unlocked) " Alternate core abilities unlocked for ${g.hero?.label}." else "")
+                            definition()
+                        }
+                        g.lost -> {
+                            Surface(color = c.danger.copy(alpha = 0.14f), shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
+                                Text("Defeated in fight ${g.fight + 1}. Try another run!", Modifier.padding(14.dp), style = MaterialTheme.typography.titleMedium, color = c.text)
+                            }
+                            definition()
                         }
                         else -> {
                             Belongings(g) { k -> g.useItem(k)?.let { next -> vm.play(say("${g.items[k].kind.label}!")) { next } } ?: g.itemProblem(k)?.let { vm.say(it) } }
@@ -277,18 +296,21 @@ fun WordswornScreen(nav: NavController, vm: PlayViewModel<Wordsworn>, factory: P
                                 onRemove = { at -> pieces = pieces.filterIndexed { i, _ -> i != at } },
                                 onClear = { pieces = emptyList() },
                                 onPlay = {
-                                    val problem = g.problem(pieces)
-                                    if (problem != null) vm.say(problem)
+                                    val word = wordswornScoredWord(g, pieces)
+                                    if (word == null) g.problem(pieces)?.let { vm.say(it) }
                                     else g.play(pieces, splay)?.let { next ->
-                                        val w = g.spell(pieces)
                                         vm.play(when {
-                                            next.won -> say("$w! You won the run!")
-                                            next.offer != null -> say("$w! ${g.monster.label} is beaten.")
-                                            next.last?.flipped == true -> say("$w! ${g.monster.label} is stunned and turns nastier.")
+                                            next.won -> say("$word! You won the run!")
+                                            next.offer != null -> say("$word! ${g.monster.label} is beaten.")
+                                            next.last?.flipped == true -> say("$word! ${g.monster.label} is stunned and turns nastier.")
                                             else -> null
-                                        }) { next }
+                                        }) {
+                                            shown.value = word
+                                            next
+                                        }
                                     }
                                 })
+                            definition()
                             if (askWild) LetterPicker { ch -> pieces = pieces + Piece.Wild(ch); askWild = false }
                             HandRow(g, pieces, looking,
                                 onCard = { i ->

@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +43,14 @@ import com.simplegamegen.sudoku.ui.HintButton
 import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.components.InfoChip
+import com.simplegamegen.sudoku.ui.components.WordDefinitionCard
+import com.simplegamegen.sudoku.ui.components.rememberLexiconLookup
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
+import com.simplegamegen.sudoku.ui.words.primaryGlanceWord
+import com.simplegamegen.sudoku.ui.words.quiltWordsJustCompleted
+import com.simplegamegen.sudoku.wordplay.LexiconSense
 import com.simplegamegen.sudoku.wordplay.QUILT_EMPTY
 import com.simplegamegen.sudoku.wordplay.QUILT_HOLE
 import com.simplegamegen.sudoku.wordplay.Quilt
@@ -69,12 +75,25 @@ val QuiltSetup: (PuzzleFactory) -> PlaySetup<Quilt> = { factory ->
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun QuiltScreen(nav: NavController, vm: PlayViewModel<Quilt>, factory: PuzzleFactory) {
+fun QuiltScreen(nav: NavController, vm: PlayViewModel<Quilt>, factory: PuzzleFactory, lookup: ((String) -> List<LexiconSense>)? = null) {
     val c = LocalGameLook.current.colors
     var selected by remember { mutableStateOf<Int?>(null) }
+    val words = rememberLexiconLookup(lookup)
+    // Shared with the hint button, which sits in the tool bar outside the board.
+    val shown = rememberSaveable { mutableStateOf<String?>(null) }
+    var boundSeed by rememberSaveable { mutableStateOf("") }
     PlayShell(nav, vm, GameId.WORD_QUILT, remember(factory) { QuiltSetup(factory) }, tools = { g, s ->
-        HintButton(GameId.WORD_QUILT, enabled = !g.solved && !s.busy) { selected = null; vm.play("One square placed.") { it.hint() } }
+        HintButton(GameId.WORD_QUILT, enabled = !g.solved && !s.busy) {
+            selected = null
+            vm.play("One square placed.") { current ->
+                current.hint()?.also { next -> primaryGlanceWord(quiltWordsJustCompleted(current, next))?.let { shown.value = it } }
+            }
+        }
     }) { g, s ->
+        if (boundSeed != g.seed.toString()) {
+            boundSeed = g.seed.toString()
+            shown.value = null
+        }
         val bad by produceState(emptyList<List<Int>>(), g.cells) { value = withContext(Dispatchers.Default) { g.badRuns() } }
         val badSquares = bad.flatten().toSet()
         if (g.solved) WinBanner("Every run is a word. Quilt finished!")
@@ -134,6 +153,7 @@ fun QuiltScreen(nav: NavController, vm: PlayViewModel<Quilt>, factory: PuzzleFac
                 }
             }
         }
+        shown.value?.let { lemma -> WordDefinitionCard(lemma, words, onDismiss = { shown.value = null }) }
         // The chosen square's patch letters.
         val at = selected
         if (at != null && !g.solved) {
@@ -141,7 +161,14 @@ fun QuiltScreen(nav: NavController, vm: PlayViewModel<Quilt>, factory: PuzzleFac
             Text("Patch letters", style = MaterialTheme.typography.bodyMedium, color = c.muted)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 g.remaining(patch).toList().distinct().forEach { ch ->
-                    Surface(onClick = { g.place(at, ch)?.let { next -> vm.play { next }; selected = null } }, color = c.accent, shape = RoundedCornerShape(10.dp),
+                    Surface(onClick = {
+                        val next = g.place(at, ch) ?: return@Surface
+                        vm.play {
+                            primaryGlanceWord(quiltWordsJustCompleted(g, next))?.let { shown.value = it }
+                            next
+                        }
+                        selected = null
+                    }, color = c.accent, shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.size(48.dp).semantics { contentDescription = say("Place $ch") }) {
                         Box(contentAlignment = Alignment.Center) { androidx.compose.material3.Text(ch.toString(), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.onAccent) }
                     }
