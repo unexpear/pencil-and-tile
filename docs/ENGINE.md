@@ -76,6 +76,12 @@ turns.
 - **Connect Four** (`duels/ConnectFour.kt`): a 7×6 gravity board. Easy drops
   mostly at random, Medium takes wins and blocks threats, and Hard and Expert
   search ahead (depth 4 and 6) with alpha-beta. Saves are versioned text.
+- **Mastermind** (`duels/Mastermind.kt`): the computer hides 4 pegs chosen from
+  6 colors, duplicates allowed, and you have 10 guesses. Feedback is two counts
+  only: right color in the right place, and right color in the wrong place.
+  Easy is a permutation of four colors, Medium is four different colors from
+  all six, Hard repeats a color without being four of a kind, and Expert is any
+  classic code. Saves are versioned text.
 
 ## Grid Sudoku (16×16 and custom grids)
 

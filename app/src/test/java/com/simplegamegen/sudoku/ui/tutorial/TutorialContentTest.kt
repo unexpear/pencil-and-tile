@@ -245,6 +245,21 @@ class TutorialContentTest {
         }
     }
 
+    @Test fun `mastermind tutorial shows key counts and ends on a broken code`() {
+        val steps = Tutorials.of(GameId.MASTERMIND).steps
+        val feedback = steps[2].scene
+        val keys = (0 until 4).map { (feedback.item(cellId(1, it))!!.look as Cell).piece }
+        assertEquals(1, keys.count { piece -> piece != null && piece.player == -1 && piece.kind == PieceKind.PEG })
+        assertEquals(1, keys.count { piece -> piece != null && piece.player == -2 && piece.kind == PieceKind.PEG })
+        val scene = steps.last().result
+        val pegs = (0 until 4).map { (scene.item(cellId(0, it))!!.look as Cell).piece }
+        assertEquals(listOf(0, 4, 0, 2), pegs.map { it!!.player })
+        assertTrue(pegs.all { it!!.kind == PieceKind.PEG })
+        val won = (0 until 4).map { (scene.item(cellId(1, it))!!.look as Cell).piece }
+        assertEquals(4, won.count { it?.player == -1 })
+        assertEquals(0, won.count { it?.player == -2 })
+    }
+
     @Test fun `connect four tutorial finishes on four in a row`() {
         val scene = last(GameId.CONNECT_FOUR)
         val bottom = (0 until 5).map { c -> (scene.item(cellId(3, c))!!.look as Cell).piece }

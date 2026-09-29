@@ -1,5 +1,7 @@
 package com.simplegamegen.sudoku.ui.tutorial
 
+import com.simplegamegen.sudoku.duels.KeyPegs
+import com.simplegamegen.sudoku.duels.Mastermind
 import com.simplegamegen.sudoku.ui.GameId
 
 internal object BoardTutorials {
@@ -284,6 +286,63 @@ internal object BoardTutorials {
                 Step("Three of yours sit on the bottom, with one gap. Drop there to make four across.", scene(threat, mark = "r3c2"),
                     tap = column, after = scene(won, good = (0..3).map { cellId(3, it) }.toSet()),
                     then = "Four in a row. You win!", help = "The empty column between your discs."),
+            ),
+        )
+    }
+
+    val mastermind: Tutorial get() {
+        val secret = listOf(0, 4, 0, 2)
+        val sample = listOf(0, 3, 4, 5)
+        val scored = Mastermind.score(secret, sample)
+        fun peg(color: Int?): Cell = Cell(fill = Fill.OPEN, piece = color?.let { Piece(PieceKind.PEG, it) })
+        fun keyCell(kind: Int): Cell = Cell(fill = Fill.OPEN, piece = when (kind) {
+            1 -> Piece(PieceKind.PEG, -1)
+            2 -> Piece(PieceKind.PEG, -2)
+            else -> null
+        })
+        fun marks(keys: KeyPegs?): List<Int> = List(4) { i ->
+            when {
+                keys == null -> 0
+                i < keys.black -> 1
+                i < keys.black + keys.white -> 2
+                else -> 0
+            }
+        }
+        fun board(guess: List<Int?>, keys: KeyPegs? = null, mark: Int? = null): Scene {
+            val holes = (0 until 4).map { c ->
+                Item(cellId(0, c), 1f + c, 0f, look = peg(guess.getOrNull(c)))
+            }
+            val keysRow = marks(keys).mapIndexed { c, kind ->
+                Item(cellId(1, c), 1.1f + c, 1.2f, 0.72f, 0.72f, look = keyCell(kind))
+            }
+            val palette = Mastermind.COLOR_NAMES.mapIndexed { i, name ->
+                Item("p$i", i.toFloat(), 2.25f, 0.86f, 0.86f, look = peg(i).let { if (i == mark) it.copy(mark = Mark.CIRCLE) else it }, describe = name)
+            }
+            return Scene(6f, 3.25f, holes + keysRow + palette, Backdrop.BOARD, maxUnit = 48)
+        }
+        val won = Mastermind.score(secret, secret)
+        return Tutorial(
+            GameId.MASTERMIND,
+            "Break a hidden code of four colored pegs.",
+            rules = listOf(
+                "The computer hides a code of four pegs. Each peg is one of six colors, and a color may be used more than once.",
+                "You have ten guesses. Tap colors to fill the row, then tap Guess.",
+                "A filled key means that color is in the right place. An open key means that color is in the code but in the wrong place.",
+                "The keys are only those two counts. They do not show which peg earned which key.",
+            ),
+            tips = listOf(
+                "A color that earns no key is not in the code.",
+                "On Easy, the code uses red, orange, yellow and green once each.",
+            ),
+            steps = listOf(
+                Step("The computer has hidden four pegs. You choose from six colors, and the same color can appear twice.", board(emptyList())),
+                Step("Tap red to place the first peg of a guess.", board(emptyList(), mark = 0), tap = setOf("p0"),
+                    after = board(listOf(0)), then = "Red is in the first hole.", help = "The red peg, with the circle."),
+                Step("This guess is red, green, blue, purple. One filled key and one open key: one peg is in the right place, and one right color is in the wrong place. The keys do not say which peg.",
+                    board(sample, scored)),
+                Step("Red, blue, red, yellow matches the code. Tap yellow.", board(listOf(0, 4, 0), mark = 2), tap = setOf("p2"),
+                    after = board(secret, won).tone(Tone.GOOD, *Array(4) { cellId(0, it) }),
+                    then = "Four filled keys. You broke the code!", help = "The yellow peg."),
             ),
         )
     }

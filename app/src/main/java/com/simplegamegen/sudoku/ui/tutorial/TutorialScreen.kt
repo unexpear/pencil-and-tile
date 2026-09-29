@@ -78,8 +78,11 @@ import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.assets.MahjongTile
 import com.simplegamegen.sudoku.ui.assets.PlayingCard
 import com.simplegamegen.sudoku.ui.assets.drawCardBack
+import com.simplegamegen.sudoku.duels.Mastermind
+import com.simplegamegen.sudoku.ui.assets.drawCodePeg
 import com.simplegamegen.sudoku.ui.assets.drawCounter
 import com.simplegamegen.sudoku.ui.assets.drawDisc
+import com.simplegamegen.sudoku.ui.assets.drawKeyPeg
 import com.simplegamegen.sudoku.ui.assets.drawFlag
 import com.simplegamegen.sudoku.ui.assets.drawMine
 import com.simplegamegen.sudoku.ui.assets.mahjongName
@@ -334,6 +337,11 @@ private fun describe(item: Item): String = item.describe.ifEmpty {
                     PieceKind.CHECKER -> if (p.player > 0) ", your ${if (p.king) "king" else "piece"}" else ", computer's piece"
                     PieceKind.DISC -> if (p.player > 0) ", black disc" else ", white disc"
                     PieceKind.COUNTER -> if (p.player > 0) ", your disc" else ", computer's disc"
+                    PieceKind.PEG -> when {
+                        p.player >= 0 -> ", ${Mastermind.COLOR_NAMES[p.player]} peg"
+                        p.player == -1 -> ", filled key peg"
+                        else -> ", open key peg"
+                    }
                     PieceKind.STONE -> if (p.player > 0) ", your stone" else ", computer's stone"
                     PieceKind.SPOT -> ", spot" + if (p.label.isNotEmpty()) " with ${p.label} left" else ", full"
                 })
@@ -478,6 +486,9 @@ private fun CellView(l: Cell, tone: Tone, unit: Dp, w: Dp, h: Dp, surface: Backd
                 PieceKind.CHECKER -> CheckerPiece(p.player, p.king, Modifier.align(Alignment.Center), size = s * 0.84f)
                 PieceKind.DISC -> Canvas(Modifier.fillMaxSize().padding(s * 0.06f)) { drawDisc(p.player) }
                 PieceKind.COUNTER -> Canvas(Modifier.fillMaxSize().padding(s * 0.08f)) { drawCounter(p.player) }
+                PieceKind.PEG -> Canvas(Modifier.fillMaxSize().padding(s * 0.08f)) {
+                    if (p.player >= 0) drawCodePeg(p.player) else drawKeyPeg(open = p.player != -1)
+                }
                 PieceKind.STONE -> Canvas(Modifier.fillMaxSize()) {
                     val base = if (p.player > 0) c.playerOne else c.playerTwo
                     drawCircle(base.copy(alpha = 0.12f), size.minDimension * 0.5f)

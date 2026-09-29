@@ -44,5 +44,6 @@ object Tutorials {
         GameId.G2048 -> ArcadeTutorials.g2048
         GameId.TETRAS -> ArcadeTutorials.tetras
         GameId.CONNECT_FOUR -> BoardTutorials.connectFour
+        GameId.MASTERMIND -> BoardTutorials.mastermind
     }
 }

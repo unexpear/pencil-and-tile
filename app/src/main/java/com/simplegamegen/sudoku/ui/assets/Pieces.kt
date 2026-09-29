@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -111,6 +112,52 @@ fun DrawScope.drawCounter(player: Int, alpha: Float = 1f) {
     drawCircle(Color.Black.copy(alpha = 0.28f * alpha), r, c + Offset(0f, r * 0.08f))
     drawCircle(lo, r, c, alpha = alpha)
     drawCircle(Brush.radialGradient(listOf(hi, lo), center = c - Offset(r * 0.32f, r * 0.36f), radius = r * 1.15f), r * 0.92f, c, alpha = alpha)
+}
+
+/** Mastermind peg colors. A shape sits on each peg so the color is not the only signal. */
+val CodePegColors = listOf(
+    Color(0xFFD32F2F), Color(0xFFEF6C00), Color(0xFFF9A825),
+    Color(0xFF2E7D32), Color(0xFF1565C0), Color(0xFF6A1B9A),
+)
+
+/** A code peg. [color] is 0–5: red, orange, yellow, green, blue, purple. */
+fun DrawScope.drawCodePeg(color: Int) {
+    val r = size.minDimension / 2 * 0.82f
+    val c = Offset(size.width / 2, size.height / 2)
+    val base = CodePegColors[color]
+    val hi = lerp(base, Color.White, 0.42f)
+    val ink = if (color == 1 || color == 2) Color(0xFF2A2418) else Color.White
+    val mark = r * 0.34f
+    drawCircle(Color.Black.copy(alpha = 0.28f), r, c + Offset(0f, r * 0.08f))
+    drawCircle(base, r, c)
+    drawCircle(Brush.radialGradient(listOf(hi, base), center = c - Offset(r * 0.28f, r * 0.32f), radius = r * 1.15f), r * 0.9f, c)
+    when (color) {
+        0 -> drawCircle(ink, mark * 0.42f, c)
+        1 -> drawRect(ink, c - Offset(mark * 0.7f, mark * 0.7f), Size(mark * 1.4f, mark * 1.4f))
+        2 -> drawPath(Path().apply {
+            moveTo(c.x, c.y - mark)
+            lineTo(c.x + mark, c.y + mark * 0.75f)
+            lineTo(c.x - mark, c.y + mark * 0.75f)
+            close()
+        }, ink)
+        3 -> {
+            drawLine(ink, c - Offset(mark, 0f), c + Offset(mark, 0f), strokeWidth = r * 0.18f, cap = StrokeCap.Round)
+            drawLine(ink, c - Offset(0f, mark), c + Offset(0f, mark), strokeWidth = r * 0.18f, cap = StrokeCap.Round)
+        }
+        4 -> rotate(45f, c) { drawRect(ink, c - Offset(mark * 0.62f, mark * 0.62f), Size(mark * 1.24f, mark * 1.24f)) }
+        else -> {
+            drawLine(ink, c - Offset(mark, mark * 0.4f), c + Offset(mark, mark * 0.4f), strokeWidth = r * 0.16f, cap = StrokeCap.Round)
+            drawLine(ink, c - Offset(mark, -mark * 0.4f), c + Offset(mark, -mark * 0.4f), strokeWidth = r * 0.16f, cap = StrokeCap.Round)
+        }
+    }
+}
+
+/** A key peg: filled for the right place, open for the right color in the wrong place. */
+fun DrawScope.drawKeyPeg(open: Boolean) {
+    val r = size.minDimension / 2 * 0.62f
+    val c = Offset(size.width / 2, size.height / 2)
+    val ink = Color(0xFFF4F1EA)
+    if (open) drawCircle(ink, r, c, style = Stroke(r * 0.42f)) else drawCircle(ink, r, c)
 }
 
 /** A glossy Reversi disc: 1 = black, -1 = white. */

@@ -1,6 +1,6 @@
 # Pencil & Tile
 
-A quiet collection of 38 puzzle, word, card and board games for Android. Everything plays offline, with
+A quiet collection of 39 puzzle, word, card and board games for Android. Everything plays offline, with
 no ads, no account and no tracking.
 
 **Try it:** join the test on Google Play at
@@ -22,7 +22,7 @@ https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
 - **Cards and tiles:** Mahjong Solitaire, Solitaire (Klondike, with Spider and Pyramid under it), Dominoes
   and Memory.
 - **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster.
-- **Classics:** Connect Four.
+- **Classics:** Connect Four and Mastermind.
 - **Arcade:** 2048 and Tetras.
 
 Every game has a guided tutorial, four levels, hints, themes and dark mode, screen-reader support, and
@@ -161,6 +161,11 @@ older boards show **Original** rather than acquiring a misleading rating.
 - **Connect Four:** standard 7×6 board. Discs fall to the lowest space. Four in a
   row across, down or diagonally wins; a full board draws. Four computer strengths.
   You play red and move first.
+- **Mastermind:** break the computer's code of 4 pegs chosen from 6 colors
+  (duplicates allowed) in 10 guesses. Filled key pegs count a right color in the
+  right place; open key pegs count a right color in the wrong place, without
+  saying which peg is which. Easy uses four different colors from a smaller set;
+  Expert is any classic code. You guess; the computer sets the code.
 - **2048:** 3×3 to 6×6 boards with goals from 512 to 8192. Swipe or use the arrows.
 - **Tetras:** falling blocks with seeded 7-piece bags, wall kicks, a ghost piece,
   three next pieces and four starting speeds. It pauses when you leave the screen.
@@ -186,7 +191,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**38 games, 48 rule variants, 339 setting combinations**. These are not unique
+**39 games, 49 rule variants, 343 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
