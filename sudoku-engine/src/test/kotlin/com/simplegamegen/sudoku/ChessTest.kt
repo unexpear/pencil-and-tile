@@ -24,7 +24,8 @@ class ChessTest {
         ep: Int = -1,
         setting: Int = 0,
         seed: Long = 1,
-    ) = Chess(setting, seed, board, turn, castling, ep)
+        halfmove: Int = 0,
+    ) = Chess(setting, seed, board, turn, castling, ep, halfmove = halfmove)
 
     @Test fun `opening has twenty legal white moves and knights develop`() {
         val open = Chess.start(1, 0)
@@ -110,6 +111,42 @@ class ChessTest {
         assertEquals(0, next.board[36])
     }
 
+    @Test fun `fifty quiet moves each is a draw and a pawn move resets the count`() {
+        val board = emptyBoard()
+        place(board, 60, Chess.KING)
+        place(board, 4, -Chess.KING)
+        val drawn = game(board, halfmove = 99).play(60, 61)!!
+        assertTrue(drawn.ended)
+        assertEquals(0, drawn.winner)
+        val withPawn = emptyBoard()
+        place(withPawn, 60, Chess.KING)
+        place(withPawn, 4, -Chess.KING)
+        place(withPawn, 52, Chess.PAWN)
+        val reset = game(withPawn, halfmove = 99).play(52, 44)!!
+        assertFalse(reset.ended)
+        assertEquals(0, reset.halfmove)
+        val checking = emptyBoard()
+        place(checking, 56, Chess.ROOK)
+        place(checking, 63, Chess.KING)
+        place(checking, 0, -Chess.KING)
+        val checkedDraw = game(checking, halfmove = 99).play(56, 48)!!
+        assertTrue(checkedDraw.ended)
+        assertEquals(0, checkedDraw.winner)
+        assertTrue(checkedDraw.inCheck())
+    }
+
+    @Test fun `the same position three times is a draw`() {
+        val board = emptyBoard()
+        place(board, 60, Chess.KING)
+        place(board, 4, -Chess.KING)
+        val start = game(board).let { it.copy(history = listOf(it.positionKey())) }
+        val back = start.play(60, 61)!!.play(4, 5)!!.play(61, 60)!!.play(5, 4)!!
+        assertFalse(back.ended)
+        val third = back.play(60, 61)!!.play(4, 5)!!.play(61, 60)!!.play(5, 4)!!
+        assertTrue(third.ended)
+        assertEquals(0, third.winner)
+    }
+
     @Test fun `computer returns a legal move at each strength`() {
         for (setting in Chess.NAMES.indices) {
             val g = Chess.start(setting.toLong() + 10, setting).play(52, 36)!! // e2-e4
@@ -123,6 +160,11 @@ class ChessTest {
     @Test fun `save codec round-trips and rejects junk`() {
         val g = Chess.start(9, 2).play(52, 36)!!.play(12, 28)!!
         assertEquals(g, ChessCodec.decode(ChessCodec.encode(g)))
+        val oldSave = ChessCodec.encode(g).lineSequence().take(11).joinToString("\n")
+        val loaded = ChessCodec.decode(oldSave)!!
+        assertEquals(g.board, loaded.board)
+        assertEquals(0, loaded.halfmove)
+        assertTrue(loaded.history.isEmpty())
         assertNull(ChessCodec.decode("bad"))
         assertNull(Chess.start(1, 0).play(0, 1))
     }

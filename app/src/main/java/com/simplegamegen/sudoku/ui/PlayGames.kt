@@ -70,6 +70,8 @@ import com.simplegamegen.sudoku.grids.LightsCodec
 import com.simplegamegen.sudoku.grids.LightsGame
 import com.simplegamegen.sudoku.grids.SlidingBlocks
 import com.simplegamegen.sudoku.grids.SlidingBlocksCodec
+import com.simplegamegen.sudoku.grids.Klotski
+import com.simplegamegen.sudoku.grids.KlotskiCodec
 import com.simplegamegen.sudoku.grids.SlitherlinkCodec
 import com.simplegamegen.sudoku.grids.SlitherlinkGame
 import com.simplegamegen.sudoku.grids.TowersCodec
@@ -81,6 +83,7 @@ import com.simplegamegen.sudoku.ui.screens.FreeCellScreen
 import com.simplegamegen.sudoku.ui.screens.GoScreen
 import com.simplegamegen.sudoku.ui.screens.LightsScreen
 import com.simplegamegen.sudoku.ui.screens.SlidingBlocksScreen
+import com.simplegamegen.sudoku.ui.screens.KlotskiScreen
 import com.simplegamegen.sudoku.ui.screens.SlitherlinkScreen
 import com.simplegamegen.sudoku.ui.screens.TowersScreen
 import com.simplegamegen.sudoku.ui.screens.LetterDrawScreen
@@ -164,7 +167,7 @@ object ChessComputer : ComputerPlayer<Chess> {
 }
 
 object GoComputer : ComputerPlayer<Go> {
-    override fun needsMove(state: Go) = !state.ended && state.turn == Go.WHITE
+    override fun needsMove(state: Go) = !state.ended && !state.counting && state.turn == Go.WHITE
     override fun move(state: Go) = when (val choice = GoAi.choose(state)) {
         Go.PASS -> state.pass()!!
         else -> state.place(choice)!!
@@ -342,5 +345,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.GO.route) {
         GoScreen(nav, playModel<Go>(GameId.GO, store, codecOf(GoCodec::encode, GoCodec::decode), GoComputer), factory)
+    }
+    composable(GameId.KLOTSKI.route) {
+        KlotskiScreen(nav, playModel<Klotski>(GameId.KLOTSKI, store, codecOf(KlotskiCodec::encode, KlotskiCodec::decode)), factory)
     }
 }

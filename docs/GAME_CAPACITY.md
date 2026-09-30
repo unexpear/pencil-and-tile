@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **54 games, 64 rule variants, 400 selectable setting
+Current implementation: **55 games, 65 rule variants, 404 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
@@ -25,10 +25,11 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Solitaire | 2 | 2 | Draw 1 / Draw 3; 52! theoretical deck orders, sampled by the generator |
 | Minesweeper | 1 | 4 | 4 presets; theoretical layout counts below, actual coverage not measured |
 | Checkers | 1 | 4 | **1 standard opening**, 4 computer strengths, varying match continuations |
-| Chess | 1 | 4 | **1 standard opening**, 4 computer strengths. You play white. Castling, en passant, and queen promotion |
+| Chess | 1 | 4 | **1 standard opening**, 4 computer strengths. You play white. Castling, en passant, queen promotion, threefold repetition, and the 50-move draw |
 | Go | 1 | 4 | **1 empty 19×19 board**, 4 computer strengths. You play black. Area scoring, positional superko, white receives 7.5 |
 | FreeCell | 1 | 1 | Classic FreeCell. Seeded 52-card deals; not every deal is winnable |
 | Sliding blocks | 1 | 4 | 6×6 boards. Each kept only after a search proves the target can reach the exit |
+| Klotski | 1 | 4 | 4×5 boards. The 2×2 block must reach the bottom opening. Expert is the classic layout, 116 squares |
 | Reversi | 1 | 4 | **1 standard opening**, 4 computer strengths, varying match continuations |
 | Cryptogram | 1 | 4 | Original sayings plus Tatoeba sentences, each in a fresh letter code |
 | Word scramble | 1 | 4 | Rounds of 8 everyday words; any real anagram counts |

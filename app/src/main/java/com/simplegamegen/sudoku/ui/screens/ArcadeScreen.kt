@@ -8,21 +8,16 @@ import com.simplegamegen.sudoku.data.Outcome
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -57,9 +52,7 @@ import com.simplegamegen.sudoku.ui.ArcadeViewModel
 import com.simplegamegen.sudoku.ui.GameId
 import com.simplegamegen.sudoku.ui.assets.GameArt
 import com.simplegamegen.sudoku.ui.assets.GameIcons
-import com.simplegamegen.sudoku.ui.assets.MahjongTile
-import com.simplegamegen.sudoku.ui.assets.TILE_ASPECT
-import com.simplegamegen.sudoku.ui.assets.mahjongName
+import com.simplegamegen.sudoku.ui.assets.MahjongBoard
 import com.simplegamegen.sudoku.ui.components.ConfirmDialog
 import com.simplegamegen.sudoku.ui.components.GameScaffold
 import com.simplegamegen.sudoku.ui.components.InfoChip
@@ -265,33 +258,12 @@ private fun MahjongPlay(p: MahjongProgress, s: ArcadeState, select: (Int) -> Uni
     } else if (pairs.isEmpty()) Text("No free pairs match. Undo a move or restart the deal.", color = look.colors.danger)
     TablePanel(padding = androidx.compose.foundation.layout.PaddingValues(8.dp)) {
         ZoomBox(Modifier.fillMaxWidth()) {
-            BoxWithConstraints(Modifier.fillMaxWidth()) {
-                val tiles = p.deal.tiles
-                val columns = (tiles.maxOf { it.x } + 2) / 2f
-                val maxZ = tiles.maxOf { it.z }
-                val fitWidth = maxWidth / (columns + 0.12f * (maxZ + 1) + 0.02f)
-                val w = if (fitWidth >= 32.dp) minOf(fitWidth, 56.dp) else 40.dp
-                val depth = w * 0.12f
-                val faceH = w * TILE_ASPECT
-                val lift = depth
-                val boardW = w * columns + depth + lift * maxZ
-                val boardH = faceH * ((tiles.maxOf { it.y } + 2) / 2f) + depth + lift * maxZ
-                Box(Modifier.fillMaxWidth().then(if (fitWidth < 32.dp) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
-                    contentAlignment = Alignment.TopCenter) {
-                    Box(Modifier.size(boardW, boardH)) {
-                        tiles.filter { it.id !in removed }.sortedWith(compareBy({ it.z }, { it.y }, { it.x })).forEach { tile ->
-                            val free = MahjongRules.free(tiles, removed, tile.id)
-                            val chosen = tile.id == s.selected
-                            val hinted = tile.id == s.highlighted?.a || tile.id == s.highlighted?.b
-                            MahjongTile(tile.face,
-                                Modifier.offset(x = w / 2 * tile.x + lift * (maxZ - tile.z), y = faceH / 2 * tile.y + lift * (maxZ - tile.z))
-                                    .clickable(enabled = free && !p.complete) { select(tile.id) }
-                                    .semantics { contentDescription = say("${mahjongName(tile.face)}, ${if (free) "free" else "blocked"}"); if (chosen) stateDescription = say("Selected") },
-                                width = w, depth = depth, free = free, selected = chosen, hinted = hinted)
-                        }
-                    }
-                }
-            }
+            MahjongBoard(
+                p.deal.tiles, removed, s.selected,
+                hinted = setOfNotNull(s.highlighted?.a, s.highlighted?.b),
+                enabled = !p.complete && !s.busy,
+                onSelect = select,
+            )
         }
         Text(if (s.selected != null) "Now tap a matching free tile." else "Tap two identical free tiles. Free tiles have nothing on top and an open left or right side.",
             style = MaterialTheme.typography.bodySmall)

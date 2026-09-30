@@ -55,7 +55,6 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
 ## Ideas
 Not building these now.
 
-- **Chess draws.** A game can go on forever. There is no draw when the same position repeats, and no 50-move draw.
-- **Go's opponent.** The board is 19×19 with the small on-phone player. KataGo's pretrained network is free to use, but it only runs inside KataGo's own program. Do not add an internet permission to fetch it.
+- **Stronger opponents.** Decided: keep the on-phone players. Stockfish’s NNUE and KataGo’s small b6c64 net are free and strong, but each plays only inside its own C++ engine, and this app does not build native code. The published KataGo ONNX files are the 28-block nets, about 147 MB, and one look is too slow for a turn. Do not add an internet permission to fetch a network. Do not vendor Stockfish or KataGo.
 - **Multiplayer.** Removed. Do not add Wi-Fi, Bluetooth, Nearby, or an internet match until `PRIVACY.md`, the in-app privacy note, and the Play data-safety form say that a game can be shared with another phone. They currently say the app never sends anything. No iPhone app.
 

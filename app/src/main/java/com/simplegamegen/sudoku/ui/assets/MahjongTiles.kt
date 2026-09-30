@@ -1,8 +1,14 @@
 package com.simplegamegen.sudoku.ui.assets
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -16,6 +22,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -23,9 +35,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simplegamegen.sudoku.mahjong.MahjongRules
+import com.simplegamegen.sudoku.mahjong.MahjongTile as StackTile
+import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
+import kotlin.math.roundToInt
 
 private val TileBlue = Color(0xFF1F5FA8)
 private val TileGreen = Color(0xFF2E7D32)
@@ -60,21 +77,34 @@ fun MahjongTile(face: Int, modifier: Modifier = Modifier, width: Dp = 46.dp, dep
     val c = look.colors
     Canvas(modifier.size(width + depth, width * TILE_ASPECT + depth)) {
         val d = depth.toPx()
-        val w = size.width - d; val h = size.height - d
-        val corner = CornerRadius(w * 0.12f)
-        drawRoundRect(c.tileBack, topLeft = Offset(d, d), size = Size(w, h), cornerRadius = corner)
-        drawRoundRect(lerp(c.pieceFace, c.pieceEdge, 0.55f), topLeft = Offset(d * 0.45f, d * 0.45f), size = Size(w, h), cornerRadius = corner)
-        drawRoundRect(Brush.linearGradient(listOf(c.pieceFace, lerp(c.pieceFace, c.pieceEdge, 0.35f)), Offset.Zero, Offset(w, h)),
-            size = Size(w, h), cornerRadius = corner)
-        drawRoundRect(c.pieceEdge, size = Size(w, h), cornerRadius = corner, style = Stroke(maxOf(1f, w * 0.025f)))
-        val inner = Rect(w * 0.1f, h * 0.08f, w * 0.9f, h * 0.92f)
-        drawTileFace(face, inner, measurer)
-        if (!free) drawRoundRect(Color.Black.copy(alpha = 0.2f), size = Size(w, h), cornerRadius = corner)
-        if (selected || hinted) {
-            val sw = w * 0.08f
-            drawRoundRect(c.highlight, topLeft = Offset(sw / 2, sw / 2), size = Size(w - sw, h - sw), cornerRadius = corner,
-                style = Stroke(sw, pathEffect = if (hinted && !selected) PathEffect.dashPathEffect(floatArrayOf(sw * 1.6f, sw)) else null))
-        }
+        drawMahjongBrick(face, Offset.Zero, size.width - d, size.height - d, d, measurer, c.pieceFace, c.pieceEdge, c.tileBack, c.highlight, free, selected, hinted)
+    }
+}
+
+internal fun DrawScope.drawMahjongBrick(
+    face: Int, origin: Offset, w: Float, h: Float, d: Float, measurer: TextMeasurer,
+    faceColor: Color, edgeColor: Color, backColor: Color, highlight: Color,
+    free: Boolean, selected: Boolean, hinted: Boolean,
+) {
+    val dx = d * 0.72f
+    val dy = d
+    fun out(p: Offset) = p + Offset(dx, dy)
+    val tr = origin + Offset(w, 0f)
+    val br = origin + Offset(w, h)
+    val bl = origin + Offset(0f, h)
+    drawPath(quad(tr, out(tr), out(br), br), lerp(edgeColor, Color.Black, 0.28f))
+    drawPath(quad(bl, br, out(br), out(bl)), lerp(edgeColor, backColor, 0.35f))
+    val corner = CornerRadius(w * 0.12f)
+    drawRoundRect(Brush.linearGradient(listOf(faceColor, lerp(faceColor, edgeColor, 0.35f)), origin, origin + Offset(w, h)),
+        topLeft = origin, size = Size(w, h), cornerRadius = corner)
+    drawRoundRect(edgeColor, topLeft = origin, size = Size(w, h), cornerRadius = corner, style = Stroke(maxOf(1f, w * 0.025f)))
+    val inner = Rect(origin.x + w * 0.1f, origin.y + h * 0.08f, origin.x + w * 0.9f, origin.y + h * 0.92f)
+    drawTileFace(face, inner, measurer)
+    if (!free) drawRoundRect(Color.Black.copy(alpha = 0.28f), topLeft = origin, size = Size(w, h), cornerRadius = corner)
+    if (selected || hinted) {
+        val sw = w * 0.08f
+        drawRoundRect(highlight, topLeft = origin + Offset(sw / 2, sw / 2), size = Size(w - sw, h - sw), cornerRadius = corner,
+            style = Stroke(sw, pathEffect = if (hinted && !selected) PathEffect.dashPathEffect(floatArrayOf(sw * 1.6f, sw)) else null))
     }
 }
 
@@ -199,4 +229,86 @@ private fun DrawScope.drawBird(b: Rect) {
     drawPath(poly(.66f to .18f, .7f to .06f, .76f to .18f), TileRed)
     drawLine(TileInk, at(.5f, .74f), at(.46f, .9f), strokeWidth = b.width * .03f)
     drawLine(TileInk, at(.58f, .74f), at(.62f, .9f), strokeWidth = b.width * .03f)
+}
+
+/**
+ * The pile seen from above and to the side. Each tile is a brick; a tile on a higher
+ * layer sits up and to the left, on top of the one below.
+ */
+@Composable
+fun MahjongBoard(
+    tiles: List<StackTile>,
+    removed: Set<Int>,
+    selected: Int?,
+    hinted: Set<Int>,
+    enabled: Boolean,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val look = LocalGameLook.current
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val visible = tiles.filter { it.id !in removed }.sortedWith(compareBy({ it.z }, { it.y }, { it.x }))
+    if (visible.isEmpty()) return
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val maxX = tiles.maxOf { it.x }
+        val maxY = tiles.maxOf { it.y }
+        val maxZ = tiles.maxOf { it.z }
+        val depthRatio = 0.34f
+        val shear = 0.16f
+        val dxR = depthRatio * 0.72f
+        val dyR = depthRatio
+        val xUnits = maxX * (1f + dxR) / 2f + maxY * shear + maxZ * dxR + 1f + dxR
+        val yUnits = maxY * (TILE_ASPECT + dyR) / 2f + maxZ * dyR + TILE_ASPECT + dyR
+        val faceW = minOf(with(density) { maxWidth.toPx() } * 0.96f / xUnits, with(density) { 54.dp.toPx() })
+        val faceH = faceW * TILE_ASPECT
+        val dx = faceW * dxR
+        val dy = faceW * dyR
+        val xStep = (faceW + dx) / 2f
+        val yStep = (faceH + dy) / 2f
+        val pad = faceW * 0.08f
+        fun origin(tile: StackTile) = Offset(
+            pad + tile.x * xStep + tile.y * faceW * shear + (maxZ - tile.z) * dx,
+            pad + tile.y * yStep + (maxZ - tile.z) * dy,
+        )
+        val boardW = pad * 2 + xUnits * faceW
+        val boardH = pad * 2 + yUnits * faceW
+        val c = look.colors
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(with(density) { boardW.toDp() }, with(density) { boardH.toDp() })) {
+            visible.forEach { tile ->
+                val at = origin(tile)
+                val free = MahjongRules.free(tiles, removed, tile.id)
+                Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }
+                    .size(with(density) { faceW.toDp() }, with(density) { faceH.toDp() })
+                    .semantics {
+                        contentDescription = say("${mahjongName(tile.face)}, ${if (free) "free" else "blocked"}")
+                        if (tile.id == selected) stateDescription = say("Selected")
+                        if (free && enabled) onClick { onSelect(tile.id); true }
+                    })
+            }
+            Canvas(Modifier.matchParentSize().pointerInput(faceW, removed, enabled) {
+                detectTapGestures { pos ->
+                    if (!enabled) return@detectTapGestures
+                    val hit = visible.asReversed().firstOrNull { tile ->
+                        val at = origin(tile)
+                        pos.x in at.x..at.x + faceW && pos.y in at.y..at.y + faceH
+                    } ?: return@detectTapGestures
+                    onSelect(hit.id)
+                }
+            }) {
+                drawRoundRect(c.table, Offset(pad * 0.3f, pad * 0.3f), Size(boardW - pad * 0.6f, boardH - pad * 0.6f), CornerRadius(faceW * 0.2f))
+                visible.forEach { tile ->
+                    drawMahjongBrick(
+                        tile.face, origin(tile), faceW, faceH, faceW * depthRatio, measurer,
+                        c.pieceFace, c.pieceEdge, c.tileBack, c.highlight,
+                        free = MahjongRules.free(tiles, removed, tile.id),
+                        selected = tile.id == selected,
+                        hinted = tile.id in hinted,
+                    )
+                }
+            }
+        }
+        }
+    }
 }

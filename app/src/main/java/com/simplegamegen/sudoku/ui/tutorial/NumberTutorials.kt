@@ -464,4 +464,20 @@ internal object NumberTutorials {
             Step("Clear a path, then slide the target out. Hint plays the next shortest move.", dots("Clear")),
         ),
     )
+
+    val klotski: Tutorial get() = Tutorial(
+        GameId.KLOTSKI,
+        "Slide the big block down to the opening.",
+        rules = listOf(
+            "The board is 4 cells wide and 5 tall, with two empty cells.",
+            "Slide one block one square at a time, up, down, left or right, into empty space.",
+            "The big square wins when it sits on the opening at the bottom. Each square a block slides counts as one move.",
+        ),
+        tips = listOf("Expert is the classic opening. Hint plays the next shortest step."),
+        steps = listOf(
+            Step("Tap a block, then an arrow, or drag it into an empty square.", dots("Slide")),
+            Step("The big square is the one that has to reach the opening.", dots("Big block")),
+            Step("Clear a path downward, then slide it onto the opening.", dots("Opening")),
+        ),
+    )
 }

@@ -10,8 +10,8 @@ import kotlin.random.Random
  * [setting] is Easy…Expert.
  *
  * KataGo publishes a free pretrained network, but it only plays through KataGo's
- * own C++ search. This opponent is the on-phone stand-in: Easy mostly places at
- * random, and higher levels look further ahead.
+ * own C++ search. This opponent stays on the phone: it prefers captures, stays
+ * off the edge, and counts nearby stones. Higher levels look further ahead.
  */
 data class Go(
     val setting: Int,
@@ -28,6 +28,8 @@ data class Go(
     val blackArea: Int = 0,
     val whiteArea: Int = 0,
     val seen: List<Long> = emptyList(),
+    val counting: Boolean = false,
+    val dead: List<Int> = emptyList(),
 ) {
     init {
         require(setting in NAMES.indices && size in 5..19 && board.size == size * size)
@@ -35,6 +37,8 @@ data class Go(
         require(turn == BLACK || turn == WHITE)
         require(ko == -1 || ko in board.indices)
         require(passes in 0..2 && prisoners >= 0 && winner in -1..1)
+        require(dead.all { it in board.indices && board[it] != 0 })
+        if (counting) require(!ended)
     }
 
     val over: Boolean get() = ended
@@ -46,7 +50,7 @@ data class Go(
 
     /** Places [point] for the side to move. Null when the point is illegal. */
     fun place(point: Int): Go? {
-        if (ended || point !in board.indices || board[point] != 0 || point == ko) return null
+        if (ended || counting || point !in board.indices || board[point] != 0 || point == ko) return null
         val next = board.toMutableList()
         next[point] = turn
         val doomed = LinkedHashSet<Int>()
@@ -74,16 +78,36 @@ data class Go(
     }
 
     fun pass(): Go? {
-        if (ended) return null
+        if (ended || counting) return null
         val nextPasses = passes + 1
         if (nextPasses < 2) return copy(turn = -turn, ko = -1, last = PASS, passes = nextPasses)
-        val (black, white) = area(board, size)
+        return copy(turn = -turn, ko = -1, last = PASS, passes = 2, counting = true, dead = GoLife.dead(board, size))
+    }
+
+    /** Toggles the whole group at [point] as dead. Used only while counting. */
+    fun mark(point: Int): Go? {
+        if (!counting || point !in board.indices || board[point] == 0) return null
+        val group = groupAndLibs(board, point).first.toSet()
+        val marked = dead.toSet()
+        val next = if (group.all { it in marked }) dead.filter { it !in group } else (dead + group).distinct().sorted()
+        return copy(dead = next)
+    }
+
+    /** Removes the marked stones and scores the board that remains. */
+    fun count(): Go? {
+        if (!counting) return null
+        val gone = dead.toSet()
+        val cleared = board.mapIndexed { i, stone -> if (i in gone) 0 else stone }
+        val (black, white) = area(cleared, size)
         val winner = if (black > white + KOMI) BLACK else WHITE
         return copy(
-            turn = -turn, ko = -1, last = PASS, passes = 2,
-            ended = true, winner = winner, blackArea = black, whiteArea = white,
+            board = cleared, counting = false, dead = emptyList(), ended = true,
+            winner = winner, blackArea = black, whiteArea = white,
         )
     }
+
+    /** Leaves the counting step and continues, with the same side to move. */
+    fun resume(): Go? = if (!counting) null else copy(counting = false, passes = 0, dead = emptyList(), ko = -1)
 
     fun neighbors(point: Int): List<Int> {
         val n = size
@@ -201,7 +225,8 @@ object GoAi {
         val moves = g.legalPlacements()
         if (moves.isEmpty()) return Go.PASS
         val calm = moves.filter { !g.eye(it, g.turn) }
-        val pool = calm.ifEmpty { moves }
+        if (calm.isEmpty()) return Go.PASS
+        val pool = calm
         if (g.setting == 0) {
             val captures = pool.filter { captures(g, it) > 0 }
             return if (captures.isNotEmpty() && random.nextInt(10) < 7) captures.random(random) else pool.random(random)
@@ -246,12 +271,34 @@ object GoAi {
         val taken = captures(g, point)
         val next = g.place(point) ?: return Int.MIN_VALUE
         val (own, libs) = next.groupAndLibs(next.board, point)
-        var score = taken * 40 + libs * 3 - own.size
+        var score = taken * 50 + libs * 4 - own.size + nearby(g, point)
+        if (libs <= 1 && taken == 0) score -= 35
         val center = g.size / 2
         val row = point / g.size
         val col = point % g.size
         score -= (kotlin.math.abs(row - center) + kotlin.math.abs(col - center))
         if (g.eye(point, -g.turn)) score += 25
+        return score
+    }
+
+    /** Nearby empty points and stones, so the player builds toward the middle instead of the edge. */
+    private fun nearby(g: Go, point: Int): Int {
+        val row = point / g.size
+        val col = point % g.size
+        var score = 0
+        for (dr in -2..2) for (dc in -2..2) {
+            if (dr == 0 && dc == 0) continue
+            val r = row + dr
+            val c = col + dc
+            if (r !in 0 until g.size || c !in 0 until g.size) continue
+            val dist = maxOf(kotlin.math.abs(dr), kotlin.math.abs(dc))
+            score += when (g.board[r * g.size + c]) {
+                0 -> 3 - dist
+                g.turn -> 1
+                else -> -2
+            }
+        }
+        if (row == 0 || col == 0 || row == g.size - 1 || col == g.size - 1) score -= 6
         return score
     }
 
@@ -285,11 +332,13 @@ object GoCodec {
         g.blackArea.toString(),
         g.whiteArea.toString(),
         g.seen.joinToString(","),
+        if (g.counting) "1" else "0",
+        g.dead.joinToString(","),
     ).joinToString("\n")
 
     fun decode(text: String): Go? = try {
         val lines = text.split('\n')
-        require(lines.size == 15 && lines[0] == "1")
+        require((lines.size == 15 || lines.size == 17) && lines[0] == "1")
         Go(
             setting = lines[1].toInt(),
             seed = lines[2].toLong(),
@@ -305,6 +354,8 @@ object GoCodec {
             blackArea = lines[12].toInt(),
             whiteArea = lines[13].toInt(),
             seen = if (lines[14].isEmpty()) emptyList() else lines[14].split(',').map { it.toLong() },
+            counting = lines.size == 17 && lines[15] == "1",
+            dead = if (lines.size == 17 && lines[16].isNotEmpty()) lines[16].split(',').map { it.toInt() } else emptyList(),
         )
     } catch (_: IllegalArgumentException) {
         null

@@ -98,17 +98,21 @@ turns.
 - **Chess** (`tabletop/Chess.kt`): standard chess. You play white. Pawns promote
   to a queen. Castling and en passant are included. Easy picks a legal move,
   Medium looks one move ahead, Hard and Expert search two and three moves with
-  a node cap. Saves are versioned text.
+  a node cap. The same position three times, or 50 moves each with no capture and no pawn move, draws.
+  Saves are versioned text.
 - **Go** (`tabletop/Go.kt`): 19×19. You play black. Chinese area scoring and
   positional superko. White receives 7.5. Easy places almost at random. Higher
-  levels score a short list of moves and look further ahead. KataGo's pretrained
-  network is free to use, but it only runs inside KataGo's own program.
+  levels score a short list of moves and look further ahead, counting nearby stones so it plays toward the middle.
+  KataGo's pretrained network is free to use, but it only runs inside KataGo's own program.
 - **FreeCell** (`cards/FreeCell.kt`): its own table, separate from Klondike,
   Spider, and Pyramid. Four free cells, eight face-up columns, foundations Ace
   to King by suit. Not every deal is winnable.
 - **Sliding blocks** (`grids/SlidingBlocks.kt`): vehicles slide along their
   length on a 6×6 grid. A board is kept only when a search proves the marked
   vehicle can reach the exit.
+- **Klotski** (`grids/Klotski.kt`): a 4×5 board. The 2×2 block wins on the bottom
+  opening. Each square a block slides counts as one move. Expert is the classic
+  opening, 116 squares. Shorter levels are scrambles a search has proved solvable.
 - **Word ladder** (`wordplay/WordLadder.kt`): change one letter at a time
   between two everyday words. Steps may use any accepted word. Easy is three
   letters; Expert is five. The par is the shortest route. Saves are versioned text.

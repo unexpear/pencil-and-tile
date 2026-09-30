@@ -60,5 +60,6 @@ object Tutorials {
         GameId.FREECELL -> TableTutorials.freecell
         GameId.SLIDING_BLOCKS -> NumberTutorials.slidingBlocks
         GameId.GO -> BoardTutorials.go
+        GameId.KLOTSKI -> NumberTutorials.klotski
     }
 }

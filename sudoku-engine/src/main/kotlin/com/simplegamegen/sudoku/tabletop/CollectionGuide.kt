@@ -58,9 +58,10 @@ object CollectionGuide {
         GameCapacity("Slitherlink", 1, 4, "One loop on 5×5 to 7×7 squares × 4 levels. A number is how many sides of that square the loop uses.", "The loop does not branch. Harder levels leave more squares blank. Each puzzle has one loop."),
         GameCapacity("Towers", 1, 4, "4×4 and 5×5 skylines × 4 levels. Side clues say how many towers you can see.", "Each row and column holds every height once. A taller tower hides the shorter ones behind it. Each puzzle has one filling."),
         GameCapacity("Lights", 1, 4, "5×5 to 7×7 rooms × 4 levels. Lamps light every white square and cannot see each other.", "A number in a black square is how many lamps touch it. Each puzzle has one placement."),
-        GameCapacity("Chess", 1, 4, "Standard chess × 4 computer strengths. You play white. Pawns promote to queen; castling and en passant included.", "1 opening board; matches differ by play."),
+        GameCapacity("Chess", 1, 4, "Standard chess × 4 computer strengths. You play white. Pawns promote to queen; castling and en passant included. Threefold repetition and 50 moves each with no capture or pawn move draw.", "1 opening board; matches differ by play."),
         GameCapacity("FreeCell", 1, 1, "Classic FreeCell: 4 free cells, 8 face-up columns, 4 foundations Ace to King by suit; supermoves use free cells and empty columns.", "52! theoretical deck orders, sampled by the seeded generator; not every deal is winnable."),
         GameCapacity("Sliding blocks", 1, 4, "6×6 jammed grids × 4 levels. Slide vehicles so the target reaches the exit on the right.", "Each board is built from a cleared layout and kept only when BFS finds a solution; the stored length is that distance."),
         GameCapacity("Go", 1, 4, "19×19 Go × 4 computer strengths. You play black. Chinese area scoring, positional superko, white receives 7.5.", "1 empty board; matches differ by play."),
+        GameCapacity("Klotski", 1, 4, "4×5 Klotski × 4 levels. Slide the 2×2 block onto the bottom opening. Expert is the classic layout.", "Shorter levels are scrambles kept only when a search proves the big block can reach the opening. Each square a block slides counts as one move."),
     )
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -24,15 +25,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
@@ -49,6 +55,9 @@ import com.simplegamegen.sudoku.grids.SlitherlinkGame
 import com.simplegamegen.sudoku.grids.SlitherlinkCodec
 import com.simplegamegen.sudoku.grids.TowersGame
 import com.simplegamegen.sudoku.grids.TowersCodec
+import com.simplegamegen.sudoku.ui.assets.iso
+import com.simplegamegen.sudoku.ui.assets.pointInQuad
+import com.simplegamegen.sudoku.ui.assets.quad
 import com.simplegamegen.sudoku.ui.GameId
 import com.simplegamegen.sudoku.ui.HintButton
 import com.simplegamegen.sudoku.ui.PlayViewModel
@@ -58,6 +67,7 @@ import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 private fun levelName(i: Int) = LevelNames[i]
 
@@ -205,7 +215,7 @@ val TowersSetup: (PuzzleFactory) -> PlaySetup<TowersGame> = { factory ->
     PlaySetup(
         rules = "Fill every square with a height from 1 up to the grid size. Each height appears once in every row and column. " +
             "A clue at the side is how many towers you can see looking in from there. A taller tower hides the shorter ones behind it. " +
-            "Tap a square to raise its height.",
+            "Tap a tower to raise it.",
         settingTitle = "Difficulty", settings = LevelNames,
         describe = { TowersGame.SIZES[it].let { n -> "$n×$n skyline" } },
         settingOf = { it.setting }, inProgress = { !it.complete && it.entered.any { h -> h > 0 } },
@@ -218,50 +228,118 @@ val TowersSetup: (PuzzleFactory) -> PlaySetup<TowersGame> = { factory ->
 
 @Composable
 fun TowersScreen(nav: NavController, vm: PlayViewModel<TowersGame>, factory: PuzzleFactory) {
-    val c = LocalGameLook.current.colors
     PlayShell(nav, vm, GameId.TOWERS, remember(factory) { TowersSetup(factory) }, tools = { g, s ->
         HintButton(GameId.TOWERS, enabled = !g.complete && !s.busy) { vm.play("One height filled.") { it.hint() } }
     }) { g, s ->
         if (g.complete) WinBanner("The skyline matches every clue.")
-        val n = g.size
         ZoomBox(Modifier.fillMaxWidth()) {
-            BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                val side = min(maxWidth / (n + 2), 48.dp)
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row {
-                        Box(Modifier.size(side))
-                        for (col in 0 until n) Clue(g.top[col], side)
-                        Box(Modifier.size(side))
-                    }
-                    for (r in 0 until n) Row {
-                        Clue(g.left[r], side)
-                        for (col in 0 until n) {
-                            val i = r * n + col
-                            val value = g.entered[i]
-                            Box(Modifier.size(side).background(c.surface).border(0.5.dp, c.outline)
-                                .clickable(enabled = !g.complete && !s.busy, role = Role.Button) { vm.play { it.cycle(i) } }
-                                .semantics { contentDescription = say("Row ${r + 1}, column ${col + 1}" + if (value == 0) "" else ", $value") },
-                                contentAlignment = Alignment.Center) {
-                                Text(if (value == 0) "" else value.toString(), fontWeight = FontWeight.Bold, color = c.text)
-                            }
-                        }
-                        Clue(g.right[r], side)
-                    }
-                    Row {
-                        Box(Modifier.size(side))
-                        for (col in 0 until n) Clue(g.bottom[col], side)
-                    }
-                }
-            }
+            TowersCity(g, enabled = !g.complete && !s.busy) { index -> vm.play { it.cycle(index) } }
         }
     }
 }
 
 @Composable
-private fun Clue(value: Int, side: androidx.compose.ui.unit.Dp) {
+private fun TowersCity(g: TowersGame, enabled: Boolean, onTap: (Int) -> Unit) {
     val c = LocalGameLook.current.colors
-    Box(Modifier.size(side), contentAlignment = Alignment.Center) {
-        if (value > 0) Text(value.toString(), color = c.muted, fontWeight = FontWeight.Bold)
+    val measurer = rememberTextMeasurer()
+    val display = LocalDensity.current
+    val n = g.size
+    BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val cell = minOf(with(display) { maxWidth.toPx() } / (n * 2.15f + 2.4f), with(display) { 34.dp.toPx() })
+        val rise = cell * 0.78f
+        fun at(x: Float, y: Float, z: Float) = iso(x, y, z, cell, rise)
+        val samples = buildList {
+            for (x in 0..n) for (y in 0..n) add(at(x.toFloat(), y.toFloat(), n.toFloat()))
+            for (i in 0 until n) {
+                add(at(i + 0.5f, -1.25f, 0f))
+                add(at(i + 0.5f, n + 1.25f, 0f))
+                add(at(-1.35f, i + 0.5f, 0f))
+                add(at(n + 1.35f, i + 0.5f, 0f))
+            }
+        }
+        val minX = samples.minOf { it.x }
+        val minY = samples.minOf { it.y }
+        val pad = cell * 0.35f
+        fun p(x: Float, y: Float, z: Float) = at(x, y, z) - Offset(minX - pad, minY - pad)
+        val boardW = samples.maxOf { it.x } - minX + pad * 2
+        val boardH = samples.maxOf { it.y } - minY + pad * 2
+        val order = (0 until n * n).sortedBy { (it / n) + (it % n) }
+        Box(Modifier.size(with(display) { boardW.toDp() }, with(display) { boardH.toDp() })) {
+            order.forEach { i ->
+                val row = i / n
+                val col = i % n
+                val h = g.entered[i]
+                val top = p(col + 0.5f, row + 0.5f, if (h == 0) 0.16f else h.toFloat())
+                Box(Modifier.offset { IntOffset(top.x.roundToInt(), top.y.roundToInt()) }.size(1.dp).semantics {
+                    contentDescription = say("Row ${row + 1}, column ${col + 1}" + if (h == 0) ", empty" else ", height $h")
+                    if (enabled) onClick { onTap(i); true }
+                })
+            }
+            Canvas(Modifier.matchParentSize().pointerInput(cell, g.entered, enabled) {
+                detectTapGestures { pos ->
+                    if (!enabled) return@detectTapGestures
+                    val hit = order.asReversed().firstOrNull { i ->
+                        val row = i / n
+                        val col = i % n
+                        val h = if (g.entered[i] == 0) 0.16f else g.entered[i].toFloat()
+                        val topA = p(col.toFloat(), row.toFloat(), h)
+                        val topB = p(col + 1f, row.toFloat(), h)
+                        val topC = p(col + 1f, row + 1f, h)
+                        val topD = p(col.toFloat(), row + 1f, h)
+                        val footB = p(col + 1f, row.toFloat(), 0f)
+                        val footC = p(col + 1f, row + 1f, 0f)
+                        val footD = p(col.toFloat(), row + 1f, 0f)
+                        pointInQuad(pos, topA, topB, topC, topD) ||
+                            pointInQuad(pos, topB, topC, footC, footB) ||
+                            pointInQuad(pos, topD, topC, footC, footD)
+                    } ?: return@detectTapGestures
+                    onTap(hit)
+                }
+            }) {
+                val ground = listOf(p(0f, 0f, 0f), p(n.toFloat(), 0f, 0f), p(n.toFloat(), n.toFloat(), 0f), p(0f, n.toFloat(), 0f))
+                drawPath(quad(ground[0], ground[1], ground[2], ground[3]), c.table)
+                order.forEach { i ->
+                    val row = i / n
+                    val col = i % n
+                    val height = g.entered[i]
+                    val h = if (height == 0) 0.16f else height.toFloat()
+                    val x = col.toFloat()
+                    val y = row.toFloat()
+                    val topA = p(x, y, h)
+                    val topB = p(x + 1f, y, h)
+                    val topC = p(x + 1f, y + 1f, h)
+                    val topD = p(x, y + 1f, h)
+                    val footB = p(x + 1f, y, 0f)
+                    val footC = p(x + 1f, y + 1f, 0f)
+                    val footD = p(x, y + 1f, 0f)
+                    val roof = if (height == 0) c.tableInset else lerp(c.pieceFace, c.boardLight, (height - 1f) / n.coerceAtLeast(1))
+                    drawPath(quad(topB, topC, footC, footB), lerp(c.boardDark, Color.Black, 0.18f))
+                    drawPath(quad(topD, topC, footC, footD), c.boardDark)
+                    drawPath(quad(topA, topB, topC, topD), roof)
+                    drawPath(quad(topA, topB, topC, topD), c.pieceEdge, style = Stroke(maxOf(1f, cell * 0.04f)))
+                    if (height > 1) {
+                        for (step in 1 until height) {
+                            drawLine(c.pieceEdge.copy(alpha = 0.55f), p(x, y + 1f, step.toFloat()), p(x + 1f, y + 1f, step.toFloat()), strokeWidth = maxOf(1f, cell * 0.035f))
+                        }
+                    }
+                    if (height > 0) {
+                        val label = measurer.measure("$height", TextStyle(color = c.text, fontSize = (cell * 0.42f / this.density).sp, fontWeight = FontWeight.Bold))
+                        val center = Offset((topA.x + topC.x) / 2f, (topA.y + topC.y) / 2f)
+                        drawText(label, topLeft = center - Offset(label.size.width / 2f, label.size.height / 2f))
+                    }
+                }
+                val clueStyle = TextStyle(color = c.muted, fontSize = (cell * 0.38f / this.density).sp, fontWeight = FontWeight.Bold)
+                for (i in 0 until n) {
+                    listOf(g.top[i] to p(i + 0.5f, -1.15f, 0f), g.bottom[i] to p(i + 0.5f, n + 1.15f, 0f),
+                        g.left[i] to p(-1.2f, i + 0.5f, 0f), g.right[i] to p(n + 1.2f, i + 0.5f, 0f)).forEach { (value, at) ->
+                        if (value > 0) {
+                            val label = measurer.measure("$value", clueStyle)
+                            drawText(label, topLeft = at - Offset(label.size.width / 2f, label.size.height / 2f))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

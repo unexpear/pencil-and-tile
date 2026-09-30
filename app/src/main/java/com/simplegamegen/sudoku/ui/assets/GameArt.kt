@@ -239,6 +239,14 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 drawCircle(c.playerTwo, step * 0.32f, Offset(step * 2.5f, step * 1.4f))
                 drawCircle(c.text, step * 0.32f, Offset(step * 2.5f, step * 1.4f), style = Stroke(2f))
             }
+            GameId.KLOTSKI -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFEFEBE9), cornerRadius = CornerRadius(8f))
+                drawRoundRect(Color(0xFF6D4C41), Offset(size.width * 0.28f, size.height * 0.08f), Size(size.width * 0.44f, size.height * 0.36f), CornerRadius(4f))
+                drawRoundRect(Color(0xFF8D6E63), Offset(size.width * 0.08f, size.height * 0.08f), Size(size.width * 0.16f, size.height * 0.36f), CornerRadius(3f))
+                drawRoundRect(Color(0xFF8D6E63), Offset(size.width * 0.76f, size.height * 0.08f), Size(size.width * 0.16f, size.height * 0.36f), CornerRadius(3f))
+                drawRoundRect(Color(0xFFBCAAA4), Offset(size.width * 0.28f, size.height * 0.5f), Size(size.width * 0.44f, size.height * 0.16f), CornerRadius(3f))
+                drawRect(Color(0xFF6D4C41), Offset(size.width * 0.28f, size.height * 0.88f), Size(size.width * 0.44f, size.height * 0.08f))
+            }
             GameId.LETTER_DRAW -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFFE0F2F1), cornerRadius = CornerRadius(8f))
                 val cell = size.width / 5

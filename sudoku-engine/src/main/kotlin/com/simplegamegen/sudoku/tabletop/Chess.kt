@@ -24,6 +24,8 @@ data class Chess(
     val lastTo: Int? = null,
     val winner: Int = 0,
     val ended: Boolean = false,
+    val halfmove: Int = 0,
+    val history: List<String> = emptyList(),
 ) {
     init {
         require(setting in NAMES.indices && board.size == 64 && board.all { abs(it) in 0..6 })
@@ -33,7 +35,8 @@ data class Chess(
         require(winner in -1..1)
         require(lastFrom == null || lastFrom in board.indices)
         require(lastTo == null || lastTo in board.indices)
-        if (ended) require(winner != 0 || !inCheck(turn))
+        require(halfmove >= 0)
+        if (ended && winner != 0) require(inCheck(turn))
     }
 
     val over: Boolean get() = ended
@@ -70,12 +73,12 @@ data class Chess(
 
     private fun finishTurn(): Chess {
         val nextTurn = -turn
+        val key = positionKey(nextTurn)
+        val record = history + key
         val replies = copy(turn = nextTurn).legalMoves()
-        return when {
-            replies.isNotEmpty() -> copy(turn = nextTurn, ended = false, winner = 0)
-            inCheck(nextTurn) -> copy(turn = nextTurn, ended = true, winner = turn)
-            else -> copy(turn = nextTurn, ended = true, winner = 0)
-        }
+        val mate = replies.isEmpty() && inCheck(nextTurn)
+        val draw = !mate && (replies.isEmpty() || halfmove >= 100 || record.count { it == key } >= 3)
+        return copy(turn = nextTurn, history = record, ended = mate || draw, winner = if (mate) turn else 0)
     }
 
     private fun leavesInCheck(move: ChessMove): Boolean = applyUnchecked(move).inCheck(turn)
@@ -123,6 +126,7 @@ data class Chess(
             next[move.from / 8 * 8 + move.to % 8] = 0
         }
 
+        val captured = next[move.to] != 0 || (type == PAWN && move.to == ep)
         next[move.from] = 0
         val promoted = type == PAWN && move.to / 8 == if (turn == 1) 0 else 7
         next[move.to] = if (promoted) QUEEN * turn else piece
@@ -133,6 +137,7 @@ data class Chess(
             ep = nextEp,
             lastFrom = move.from,
             lastTo = move.to,
+            halfmove = if (type == PAWN || captured) 0 else halfmove + 1,
         )
     }
 
@@ -269,6 +274,9 @@ data class Chess(
         return false
     }
 
+    /** Pieces, side to move, castling, and en passant. Repeating this three times draws. */
+    fun positionKey(side: Int = turn) = board.joinToString(",") + "|$side|$castling|$ep"
+
     companion object {
         const val PAWN = 1
         const val KNIGHT = 2
@@ -298,7 +306,10 @@ data class Chess(
         private val ROOK_DIRS = listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)
         private val QUEEN_DIRS = BISHOP_DIRS + ROOK_DIRS
 
-        fun start(seed: Long, setting: Int) = Chess(setting, seed)
+        fun start(seed: Long, setting: Int): Chess {
+            val opening = Chess(setting, seed)
+            return opening.copy(history = listOf(opening.positionKey()))
+        }
 
         fun pieceName(code: Int): String = when (abs(code)) {
             PAWN -> "pawn"
@@ -416,11 +427,13 @@ object ChessCodec {
         g.lastTo?.toString() ?: "",
         g.winner.toString(),
         if (g.ended) "1" else "0",
+        g.halfmove.toString(),
+        g.history.joinToString(";"),
     ).joinToString("\n")
 
     fun decode(text: String): Chess? = try {
         val lines = text.split('\n')
-        require(lines.size == 11 && lines[0] == "1")
+        require((lines.size == 11 || lines.size == 13) && lines[0] == "1")
         Chess(
             setting = lines[1].toInt(),
             seed = lines[2].toLong(),
@@ -432,6 +445,8 @@ object ChessCodec {
             lastTo = lines[8].toIntOrNull(),
             winner = lines[9].toInt(),
             ended = lines[10] == "1",
+            halfmove = if (lines.size == 13) lines[11].toInt() else 0,
+            history = if (lines.size == 13 && lines[12].isNotEmpty()) lines[12].split(";") else emptyList(),
         )
     } catch (_: IllegalArgumentException) { null }
 }

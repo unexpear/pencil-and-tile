@@ -518,7 +518,7 @@ internal object BoardTutorials {
                 "Tap a piece, then a highlighted square. Capture by landing on the other piece.",
                 "Pawns move one square forward, or two from their starting row, and capture one square diagonally forward.",
                 "Check means your king is attacked. You must escape, block, or capture the attacker.",
-                "Checkmate wins. Stalemate, when a side has no legal move and is not in check, is a draw. Pawns promote to a queen. Castling and en passant follow the usual rules.",
+                "Checkmate wins. Stalemate, when a side has no legal move and is not in check, is a draw. The same position three times, or 50 moves each with no capture and no pawn move, is also a draw. Pawns promote to a queen. Castling and en passant follow the usual rules.",
             ),
             tips = listOf(
                 "Develop a piece toward the center before you attack.",
@@ -559,10 +559,10 @@ internal object BoardTutorials {
                 "You play black and move first on a 19×19 board. Stones stay where you put them.",
                 "A connected group with no empty neighbor is captured and taken off.",
                 "You cannot fill your own last liberty, and you cannot repeat an earlier board.",
-                "Pass when you are finished. Two passes end the game. Your score is your stones plus empty regions that touch only your color. White receives 7.5 points.",
+                "Pass when you are finished. Two passes stop play so groups that cannot live can be marked, then counted. Your score is your stones plus empty regions that touch only your color. White receives 7.5 points.",
             ),
             tips = listOf(
-                "Capture stones that cannot live before you pass. Stones left on the board count for their owner.",
+                "Mark groups that cannot live after both players pass. Count removes them. Stones still on the board count for their owner.",
                 "Do not fill a point that is already surrounded by your own stones.",
             ),
             steps = listOf(

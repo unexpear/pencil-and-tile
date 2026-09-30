@@ -82,6 +82,7 @@ private val ScoreKinds = mapOf(
     GameId.PYRAMID to ScoreKind("Fewest moves", true),
     GameId.FREECELL to ScoreKind("Fewest moves", true),
     GameId.SLIDING_BLOCKS to ScoreKind("Fewest moves", true),
+    GameId.KLOTSKI to ScoreKind("Fewest moves", true),
     GameId.GO to ScoreKind("Most area", false),
     GameId.HANGMAN to ScoreKind("Fewest wrong guesses", true),
     GameId.MASTERMIND to ScoreKind("Fewest guesses", true),
