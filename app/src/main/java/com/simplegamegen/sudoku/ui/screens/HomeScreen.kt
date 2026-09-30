@@ -59,20 +59,27 @@ fun HomeScreen(nav: NavController, vm: GameViewModel) {
     SystemBarsFor(c.topBar, c.background)
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(c.background).verticalScroll(rememberScrollState())) {
-        Column(Modifier.fillMaxWidth().background(c.topBar).statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 20.dp)) {
+        Column(
+            Modifier.fillMaxWidth().background(c.topBar).statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // The brand name stays the same in every language.
-                    androidx.compose.material3.Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = c.onTopBar)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        HomeFact("${CollectionGuide.entries.size} games")
-                        HomeFact("Offline")
-                    }
-                }
+                // The brand name stays the same in every language.
+                androidx.compose.material3.Text(
+                    stringResource(R.string.app_name),
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = c.onTopBar,
+                    maxLines = 1,
+                )
                 IconButton(onClick = { nav.navigate("tutorials") }) { Icon(GameIcons.School, contentDescription = tr("How to play"), tint = c.onTopBar) }
                 IconButton(onClick = { nav.navigate("guide") }) { Icon(GameIcons.Rules, contentDescription = tr("Games and possibilities"), tint = c.onTopBar) }
                 IconButton(onClick = { nav.navigate("profile") }) { Icon(GameIcons.Person, contentDescription = tr("Profile"), tint = c.onTopBar) }
                 IconButton(onClick = { nav.navigate("settings") }) { Icon(GameIcons.Settings, contentDescription = tr("Settings"), tint = c.onTopBar) }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HomeFact("${CollectionGuide.entries.size} games")
+                HomeFact("Offline")
             }
         }
         Column(Modifier.padding(16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -125,7 +132,13 @@ fun HomeScreen(nav: NavController, vm: GameViewModel) {
 private fun HomeFact(label: String) {
     val c = LocalGameLook.current.colors
     Surface(color = Color.White.copy(alpha = 0.14f), contentColor = c.onTopBar, shape = MaterialTheme.shapes.extraLarge) {
-        Text(label, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge)
+        Text(
+            label,
+            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            softWrap = false,
+        )
     }
 }
 
