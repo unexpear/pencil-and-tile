@@ -82,6 +82,11 @@ turns.
   Easy is a permutation of four colors, Medium is four different colors from
   all six, Hard repeats a color without being four of a kind, and Expert is any
   classic code. Saves are versioned text.
+- **Battleship** (`duels/Battleship.kt`): a 10×10 fleet (carrier 5, battleship 4,
+  cruiser 3, submarine 3, destroyer 2). Ships may touch and cannot overlap.
+  You place, then fire first. Easy mostly shoots at random, Medium hunts the
+  squares next to a hit, Hard adds checkerboard parity, and Expert counts where
+  the remaining ships can still lie. Saves are versioned text.
 
 ## Grid Sudoku (16×16 and custom grids)
 

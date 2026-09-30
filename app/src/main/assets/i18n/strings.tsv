@@ -2130,3 +2130,89 @@ Reaching the target	达到目标	目標に達する	Alcanzar la meta	Das Ziel er
 Hit the target score before the moves run out.	在步数用完之前达到目标分。	手数が尽きる前に目標点に届こう。	Llega a la puntuación objetivo antes de que se acaben los movimientos.	Erreiche die Zielpunktzahl, bevor die Züge ausgehen.
 The game ends in a loss when the moves are gone and the target is still ahead.	步数用完而目标分还没到，游戏就输了。	手数が尽きて、まだ目標点に届いていなければ負けです。	La partida se pierde cuando se acaban los movimientos y la meta sigue por delante.	Das Spiel ist verloren, wenn die Züge weg sind und das Ziel noch voraus liegt.
 And T, to the right of A.	然后是 A 右边的 T。	そして A の右の T。	Y la T, a la derecha de la A.	Und T, rechts von A.
+Battleship	海战棋	バトルシップ	Batalla naval	Schiffe versenken
+Sink the fleet	击沉舰队	艦隊を沈めよう	Hunde la flota	Versenke die Flotte
+@ship:Carrier	航空母舰	空母	Portaaviones	Flugzeugträger
+@ship:Battleship	战列舰	戦艦	Acorazado	Schlachtschiff
+@ship:Cruiser	巡洋舰	巡洋艦	Crucero	Kreuzer
+@ship:Submarine	潜艇	潜水艦	Submarino	U-Boot
+@ship:Destroyer	驱逐舰	駆逐艦	Destructor	Zerstörer
+Place your fleet	布置你的舰队	艦隊を配置	Coloca tu flota	Stelle deine Flotte auf
+Across. Tap a square or drag.	横向。点一格，或拖动。	ヨコ。マスをタップするか、ドラッグします。	En horizontal. Toca una casilla o arrastra.	Waagerecht. Tippe ein Feld an oder ziehe.
+Down. Tap a square or drag.	纵向。点一格，或拖动。	タテ。マスをタップするか、ドラッグします。	En vertical. Toca una casilla o arrastra.	Senkrecht. Tippe ein Feld an oder ziehe.
+Place your Carrier. It covers 5 squares.	放置你的航空母舰。它占 5 格。	空母を置きます。5マスです。	Coloca tu portaaviones. Ocupa 5 casillas.	Setze deinen Flugzeugträger. Er belegt 5 Felder.
+Place your Battleship. It covers 4 squares.	放置你的战列舰。它占 4 格。	戦艦を置きます。4マスです。	Coloca tu acorazado. Ocupa 4 casillas.	Setze dein Schlachtschiff. Es belegt 4 Felder.
+Place your Cruiser. It covers 3 squares.	放置你的巡洋舰。它占 3 格。	巡洋艦を置きます。3マスです。	Coloca tu crucero. Ocupa 3 casillas.	Setze deinen Kreuzer. Er belegt 3 Felder.
+Place your Submarine. It covers 3 squares.	放置你的潜艇。它占 3 格。	潜水艦を置きます。3マスです。	Coloca tu submarino. Ocupa 3 casillas.	Setze dein U-Boot. Es belegt 3 Felder.
+Place your Destroyer. It covers 2 squares.	放置你的驱逐舰。它占 2 格。	駆逐艦を置きます。2マスです。	Coloca tu destructor. Ocupa 2 casillas.	Setze deinen Zerstörer. Er belegt 2 Felder.
+Randomize	随机布置	ランダム配置	Al azar	Zufällig
+Ships have to stay on the board without overlapping.	舰船必须留在棋盘内，并且不能重叠。	艦は盤の中に置き、重ねられません。	Los barcos tienen que quedarse en el tablero y no pueden solaparse.	Schiffe müssen auf dem Brett bleiben und dürfen sich nicht überlappen.
+Your fleet	你的舰队	自分の艦隊	Tu flota	Deine Flotte
+Enemy waters	敌方海域	相手の海域	Aguas enemigas	Gegnerische Gewässer
+Hidden until your fleet is placed.	放好你的舰队之前，这里是隐藏的。	艦隊を置き終えるまで隠れています。	Ocultas hasta que coloques tu flota.	Verborgen, bis deine Flotte steht.
+Tap a square to fire.	点一格开炮。	マスをタップして撃つ。	Toca una casilla para disparar.	Tippe ein Feld an, um zu schießen.
+You sank the fleet!	你击沉了整支舰队！	艦隊をすべて沈めました！	¡Has hundido la flota!	Du hast die Flotte versenkt!
+Your fleet was sunk.	你的舰队被击沉了。	あなたの艦隊は沈みました。	Han hundido tu flota.	Deine Flotte wurde versenkt.
+Rematch	再战	再戦	Revancha	Revanche
+Change difficulty	更换难度	難易度を変える	Cambiar dificultad	Schwierigkeit ändern
+Place	放置	配置	Colocar	Setzen
+Fewest shots	最少炮数	最少の射撃	Menos disparos	Wenigste Schüsse
+1 shot	1 炮	1発	1 disparo	1 Schuss
+{0} shots	{0} 炮	{0}発	{0} disparos	{0} Schüsse
+{0} of {1} placed	已放 {0}/{1}	{1}隻中{0}隻配置	{0} de {1} colocados	{0} von {1} gesetzt
+Miss	未中	はずれ	Agua	Wasser
+Hit	命中	命中	Tocado	Treffer
+The computer missed	电脑未中	コンピューターははずしました	El ordenador ha fallado	Der Computer hat verfehlt
+The computer hit a ship	电脑命中了一艘船	コンピューターが艦に当てました	El ordenador ha tocado un barco	Der Computer hat ein Schiff getroffen
+You sank their Carrier	你击沉了对方的航空母舰	相手の空母を沈めました	Has hundido su portaaviones	Du hast den Flugzeugträger versenkt
+You sank their Battleship	你击沉了对方的战列舰	相手の戦艦を沈めました	Has hundido su acorazado	Du hast das Schlachtschiff versenkt
+You sank their Cruiser	你击沉了对方的巡洋舰	相手の巡洋艦を沈めました	Has hundido su crucero	Du hast den Kreuzer versenkt
+You sank their Submarine	你击沉了对方的潜艇	相手の潜水艦を沈めました	Has hundido su submarino	Du hast das U-Boot versenkt
+You sank their Destroyer	你击沉了对方的驱逐舰	相手の駆逐艦を沈めました	Has hundido su destructor	Du hast den Zerstörer versenkt
+The computer sank your Carrier	电脑击沉了你的航空母舰	コンピューターが空母を沈めました	El ordenador ha hundido tu portaaviones	Der Computer hat deinen Flugzeugträger versenkt
+The computer sank your Battleship	电脑击沉了你的战列舰	コンピューターが戦艦を沈めました	El ordenador ha hundido tu acorazado	Der Computer hat dein Schlachtschiff versenkt
+The computer sank your Cruiser	电脑击沉了你的巡洋舰	コンピューターが巡洋艦を沈めました	El ordenador ha hundido tu crucero	Der Computer hat deinen Kreuzer versenkt
+The computer sank your Submarine	电脑击沉了你的潜艇	コンピューターが潜水艦を沈めました	El ordenador ha hundido tu submarino	Der Computer hat dein U-Boot versenkt
+The computer sank your Destroyer	电脑击沉了你的驱逐舰	コンピューターが駆逐艦を沈めました	El ordenador ha hundido tu destructor	Der Computer hat deinen Zerstörer versenkt
+Mostly random shots, with a weak follow-up after a hit	大多随机开炮，命中后很少追击	ほとんどランダムに撃ち、命中後の追撃は弱い	Dispara casi al azar y apenas sigue un impacto	Schießt meist zufällig und verfolgt einen Treffer nur schwach
+After a hit, fires at a neighboring square	命中后，朝相邻的格子开炮	命中すると、となりのマスを撃つ	Tras un impacto, dispara a una casilla vecina	Nach einem Treffer schießt es auf ein Nachbarfeld
+Hunts around hits, then fires in a checkerboard	先追击命中点，再按棋盘格开炮	命中の周りを狙い、その後は市松に撃つ	Persigue los impactos y luego dispara en damero	Jagt Treffer und schießt danach im Schachbrettmuster
+Aims at the squares most likely to hold a remaining ship	瞄准最可能还有剩余舰船的格子	残っている艦がありそうなマスを狙う	Apunta a las casillas donde es más probable que quede un barco	Zielt auf die Felder, auf denen ein restliches Schiff am wahrscheinlichsten liegt
+Place five ships on your grid: a carrier (5), a battleship (4), a cruiser (3), a submarine (3) and a destroyer (2). Ships run in a straight line. They may touch, but they cannot overlap or leave the board. Tap or drag to place the bow, and rotate to turn a ship. Randomize places the whole fleet. Then fire at the computer's hidden grid. You shoot first. Squares you already fired at are ignored. Sink every enemy ship to win. If the computer sinks yours, you lose.	在你的格子上放置五艘船：航空母舰（5）、战列舰（4）、巡洋舰（3）、潜艇（3）和驱逐舰（2）。船呈直线。它们可以相邻，但不能重叠，也不能出界。点或拖动来放船头，旋转可调转方向。随机布置会放好整支舰队。然后向电脑隐藏的格子开炮。你先手。已经开过炮的格子会被忽略。击沉所有敌舰即获胜。如果电脑击沉你的舰队，你就输了。	自分の盤に5隻を置きます。空母（5）、戦艦（4）、巡洋艦（3）、潜水艦（3）、駆逐艦（2）です。艦は直線に並び、隣り合ってもかまいませんが、重ねたり盤の外には出せません。タップかドラッグで艦首を置き、回転で向きを変えます。ランダム配置ですべて置けます。その後、コンピューターの隠れた盤を撃ります。あなたが先手です。すでに撃ったマスは無視されます。相手の艦をすべて沈めると勝ち、自分の艦隊を沈められると負けです。	Coloca cinco barcos en tu cuadrícula: un portaaviones (5), un acorazado (4), un crucero (3), un submarino (3) y un destructor (2). Van en línea recta. Pueden tocarse, pero no solaparse ni salirse del tablero. Toca o arrastra para colocar la proa, y gira para cambiar el sentido. Al azar coloca toda la flota. Luego dispara a la cuadrícula oculta del ordenador. Empiezas tú. Las casillas ya disparadas se ignoran. Hunde todos los barcos enemigos para ganar. Si el ordenador hunde los tuyos, pierdes.	Setze fünf Schiffe auf dein Gitter: einen Flugzeugträger (5), ein Schlachtschiff (4), einen Kreuzer (3), ein U-Boot (3) und einen Zerstörer (2). Sie liegen in einer geraden Linie. Sie dürfen sich berühren, aber nicht überlappen oder das Brett verlassen. Tippe oder ziehe, um den Bug zu setzen, und drehe, um das Schiff zu wenden. Zufällig stellt die ganze Flotte auf. Dann schieße auf das verdeckte Gitter des Computers. Du schießt zuerst. Bereits beschossene Felder werden ignoriert. Versenke jedes gegnerische Schiff, um zu gewinnen. Versenkt der Computer deine Flotte, verlierst du.
+Classic 10×10 fleet (carrier 5, battleship 4, cruiser 3, submarine 3, destroyer 2) × 4 computer strengths. Ships may touch but cannot overlap. You fire first.	经典 10×10 舰队（航空母舰 5、战列舰 4、巡洋舰 3、潜艇 3、驱逐舰 2）× 4 档电脑强度。舰船可以相邻，但不能重叠。你先开炮。	定番の10×10艦隊（空母5、戦艦4、巡洋艦3、潜水艦3、駆逐艦2）× コンピューターの強さ4段階。艦は隣り合ってよいが重ねられない。あなたが先に撃つ。	Flota clásica de 10×10 (portaaviones 5, acorazado 4, crucero 3, submarino 3, destructor 2) × 4 niveles del ordenador. Los barcos pueden tocarse, pero no solaparse. Disparas primero.	Klassische 10×10-Flotte (Flugzeugträger 5, Schlachtschiff 4, Kreuzer 3, U-Boot 3, Zerstörer 2) × 4 Computerstärken. Schiffe dürfen sich berühren, aber nicht überlappen. Du schießt zuerst.
+Each fleet is placed per game. The computer's ships stay hidden until you hit them.	每局各自布置舰队。电脑的船在你命中之前一直隐藏。	艦隊はその対局ごとに配置されます。コンピューターの艦は当たるまで隠れています。	Cada flota se coloca en la partida. Los barcos del ordenador siguen ocultos hasta que les des.	Jede Flotte wird pro Partie gesetzt. Die Schiffe des Computers bleiben verborgen, bis du sie triffst.
+Place your fleet, then sink the computer's ships.	先布置舰队，再击沉电脑的船。	艦隊を置いて、コンピューターの艦を沈めよう。	Coloca tu flota y hunde los barcos del ordenador.	Stelle deine Flotte auf und versenke die Schiffe des Computers.
+Each fleet has a carrier (5), a battleship (4), a cruiser (3), a submarine (3) and a destroyer (2).	每支舰队有航空母舰（5）、战列舰（4）、巡洋舰（3）、潜艇（3）和驱逐舰（2）。	各艦隊は空母（5）、戦艦（4）、巡洋艦（3）、潜水艦（3）、駆逐艦（2）です。	Cada flota tiene un portaaviones (5), un acorazado (4), un crucero (3), un submarino (3) y un destructor (2).	Jede Flotte hat einen Flugzeugträger (5), ein Schlachtschiff (4), einen Kreuzer (3), ein U-Boot (3) und einen Zerstörer (2).
+Ships sit in a straight line. They may touch, but they cannot overlap or leave the board.	船呈直线。它们可以相邻，但不能重叠，也不能出界。	艦は直線に並びます。隣り合ってもよいですが、重ねたり盤の外には出せません。	Los barcos van en línea recta. Pueden tocarse, pero no solaparse ni salirse del tablero.	Schiffe liegen in einer geraden Linie. Sie dürfen sich berühren, aber nicht überlappen oder das Brett verlassen.
+Tap or drag to place the bow. Rotate turns the ship. Randomize places the whole fleet.	点或拖动来放船头。旋转可调转船的方向。随机布置会放好整支舰队。	タップかドラッグで艦首を置きます。回転で向きを変え、ランダム配置で全艦を置けます。	Toca o arrastra para colocar la proa. Girar da la vuelta al barco. Al azar coloca toda la flota.	Tippe oder ziehe, um den Bug zu setzen. Drehen wendet das Schiff. Zufällig stellt die ganze Flotte auf.
+You shoot first at hidden water. A shot is a miss, a hit, or the shot that sinks a named ship. Sink every enemy ship to win.	你先向隐藏的海域开炮。一炮可能是未中、命中，或击沉一艘点名的船。击沉所有敌舰即获胜。	隠れた海域にあなたが先に撃ちます。一発ははずれ、命中、または名のついた艦を沈める一撃です。相手の艦をすべて沈めると勝ちです。	Disparas primero al agua oculta. Un disparo es agua, tocado, o el disparo que hunde un barco con nombre. Hunde todos los barcos enemigos para ganar.	Du schießt zuerst auf verdecktes Wasser. Ein Schuss ist Wasser, ein Treffer oder der Schuss, der ein benanntes Schiff versenkt. Versenke jedes gegnerische Schiff, um zu gewinnen.
+On Easy the computer mostly fires at random. Higher levels hunt around hits.	简单难度下，电脑大多随机开炮。更高难度会追击命中点。	かんたんではコンピューターはほとんどランダムに撃ちます。上の段階では命中の周りを追います。	En Fácil el ordenador dispara casi al azar. Los niveles altos persiguen los impactos.	Auf Leicht schießt der Computer meist zufällig. Höhere Stufen jagen um Treffer herum.
+When a ship sinks you learn its name, so you can stop firing along that line.	船被击沉时你会知道它的名字，就可以不再沿那条线开炮。	艦が沈むとその名前が分かるので、その列への砲撃をやめられます。	Cuando un barco se hunde sabes su nombre, así que puedes dejar de disparar por esa línea.	Wenn ein Schiff sinkt, erfährst du seinen Namen und kannst aufhören, diese Linie zu beschießen.
+Your grid shows your ships. The computer's grid stays fog until you fire.	你的格子显示你的船。电脑的格子在你开炮之前一直是雾。	自分の盤には自分の艦が見えます。コンピューターの盤は撃つまで霧のままです。	Tu cuadrícula muestra tus barcos. La del ordenador sigue en niebla hasta que disparas.	Dein Gitter zeigt deine Schiffe. Das Gitter des Computers bleibt im Nebel, bis du schießt.
+Tap the marked square to place a destroyer across two squares.	点标记的格子，横向放置一艘占两格的驱逐舰。	印のついたマスをタップして、駆逐艦を2マスにわたって置きます。	Toca la casilla marcada para colocar un destructor en dos casillas.	Tippe das markierte Feld an, um einen Zerstörer über zwei Felder zu setzen.
+The destroyer is placed. Keep going until every ship is down.	驱逐舰已放下。继续，直到每艘船都就位。	駆逐艦を置きました。すべての艦を置くまで続けます。	El destructor está colocado. Sigue hasta que todos los barcos estén puestos.	Der Zerstörer steht. Mach weiter, bis jedes Schiff liegt.
+The circled square.	画圈的那一格。	丸のついたマス。	La casilla con el círculo.	Das eingekreiste Feld.
+Tap fog to fire. This square is empty.	点雾开炮。这一格是空的。	霧をタップして撃ちます。このマスは空です。	Toca la niebla para disparar. Esta casilla está vacía.	Tippe auf den Nebel, um zu schießen. Dieses Feld ist leer.
+A miss. Ships stay hidden until you hit them.	未中。船在你命中之前一直隐藏。	はずれです。艦は当たるまで隠れています。	Agua. Los barcos siguen ocultos hasta que les des.	Wasser. Schiffe bleiben verborgen, bis du sie triffst.
+The circled square of fog.	画圈的那格雾。	丸のついた霧のマス。	La casilla de niebla con el círculo.	Das eingekreiste Nebelfeld.
+Three hits in a line sink the cruiser. Sink the rest of the fleet to win.	直线上的三次命中击沉了巡洋舰。击沉其余的船即可获胜。	一直線の3発の命中で巡洋艦が沈みます。残りの艦隊を沈めると勝ちです。	Tres impactos en línea hunden el crucero. Hunde el resto de la flota para ganar.	Drei Treffer in einer Linie versenken den Kreuzer. Versenke den Rest der Flotte, um zu gewinnen.
+water	水面	水面	agua	Wasser
+miss	未中	はずれ	agua	Wasser
+hit	命中	命中	tocado	Treffer
+fog	雾	霧	niebla	Nebel
+hidden	隐藏	隠れている	oculto	verborgen
+your Carrier	你的航空母舰	自分の空母	tu portaaviones	dein Flugzeugträger
+your Battleship	你的战列舰	自分の戦艦	tu acorazado	dein Schlachtschiff
+your Cruiser	你的巡洋舰	自分の巡洋艦	tu crucero	dein Kreuzer
+your Submarine	你的潜艇	自分の潜水艦	tu submarino	dein U-Boot
+your Destroyer	你的驱逐舰	自分の駆逐艦	tu destructor	dein Zerstörer
+hit on your Carrier	命中你的航空母舰	自分の空母に命中	impacto en tu portaaviones	Treffer auf deinem Flugzeugträger
+hit on your Battleship	命中你的战列舰	自分の戦艦に命中	impacto en tu acorazado	Treffer auf deinem Schlachtschiff
+hit on your Cruiser	命中你的巡洋舰	自分の巡洋艦に命中	impacto en tu crucero	Treffer auf deinem Kreuzer
+hit on your Submarine	命中你的潜艇	自分の潜水艦に命中	impacto en tu submarino	Treffer auf deinem U-Boot
+hit on your Destroyer	命中你的驱逐舰	自分の駆逐艦に命中	impacto en tu destructor	Treffer auf deinem Zerstörer
+sunk Carrier	被击沉的航空母舰	沈んだ空母	portaaviones hundido	versenkter Flugzeugträger
+sunk Battleship	被击沉的战列舰	沈んだ戦艦	acorazado hundido	versenktes Schlachtschiff
+sunk Cruiser	被击沉的巡洋舰	沈んだ巡洋艦	crucero hundido	versenkter Kreuzer
+sunk Submarine	被击沉的潜艇	沈んだ潜水艦	submarino hundido	versenktes U-Boot
+sunk Destroyer	被击沉的驱逐舰	沈んだ駆逐艦	destructor hundido	versenkter Zerstörer

@@ -5,7 +5,7 @@ import com.simplegamegen.sudoku.tabletop.TableGame
 
 enum class GameGroup(val title: String) {
     NUMBERS("Number puzzles"), WORDS("Word games"), TABLE("Cards and tiles"), BOARD("Board and strategy"),
-    /** Paper-and-pencil games. Later classics (Battleship) belong in this group. */
+    /** Paper-and-pencil games. */
     CLASSICS("Classics"), ARCADE("Arcade")
 }
 
@@ -51,6 +51,7 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     TETRAS("Tetras", "play_TETRAS", "Falling blocks", GameGroup.ARCADE),
     CONNECT_FOUR("Connect Four", "play_CONNECT_FOUR", "Four in a row", GameGroup.CLASSICS),
     MASTERMIND("Mastermind", "play_MASTERMIND", "Break the code", GameGroup.CLASSICS),
+    BATTLESHIP("Battleship", "play_BATTLESHIP", "Sink the fleet", GameGroup.CLASSICS),
     LETTERFALL("Letterfall", "play_LETTERFALL", "Spell words and let tiles fall", GameGroup.WORDS);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */

@@ -346,6 +346,63 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val battleship: Tutorial get() {
+        fun sea(
+            ships: Set<String> = emptySet(),
+            hits: Set<String> = emptySet(),
+            fog: Boolean = false,
+            mark: String? = null,
+            crosses: Set<String> = emptySet(),
+        ): Scene {
+            val drawn = gridItems(4, 5) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = if (fog && id !in hits && id !in crosses && id !in ships) Fill.SHADED else Fill.OPEN,
+                    piece = when (id) {
+                        in ships -> Piece(PieceKind.SHIP, 1)
+                        in hits -> Piece(PieceKind.SHIP, -1)
+                        else -> null
+                    },
+                    mark = when {
+                        id == mark -> Mark.CIRCLE
+                        id in crosses -> Mark.CROSS
+                        else -> Mark.NONE
+                    },
+                )
+            }
+            return Scene(5f, 4f, drawn, Backdrop.BOARD, maxUnit = 56)
+        }
+        val bow = cellId(1, 1)
+        val stern = cellId(1, 2)
+        val splash = cellId(0, 3)
+        val sunk = (1..3).map { cellId(2, it) }.toSet()
+        return Tutorial(
+            GameId.BATTLESHIP,
+            "Place your fleet, then sink the computer's ships.",
+            rules = listOf(
+                "Each fleet has a carrier (5), a battleship (4), a cruiser (3), a submarine (3) and a destroyer (2).",
+                "Ships sit in a straight line. They may touch, but they cannot overlap or leave the board.",
+                "Tap or drag to place the bow. Rotate turns the ship. Randomize places the whole fleet.",
+                "You shoot first at hidden water. A shot is a miss, a hit, or the shot that sinks a named ship. Sink every enemy ship to win.",
+            ),
+            tips = listOf(
+                "On Easy the computer mostly fires at random. Higher levels hunt around hits.",
+                "When a ship sinks you learn its name, so you can stop firing along that line.",
+            ),
+            steps = listOf(
+                Step("Your grid shows your ships. The computer's grid stays fog until you fire.", sea()),
+                Step("Tap the marked square to place a destroyer across two squares.", sea(mark = bow), tap = setOf(bow),
+                    after = sea(ships = setOf(bow, stern)), then = "The destroyer is placed. Keep going until every ship is down.",
+                    help = "The circled square."),
+                Step("Tap fog to fire. This square is empty.", sea(fog = true, mark = splash), tap = setOf(splash),
+                    after = sea(fog = true, crosses = setOf(splash)), then = "A miss. Ships stay hidden until you hit them.",
+                    help = "The circled square of fog."),
+                Step("Three hits in a line sink the cruiser. Sink the rest of the fleet to win.",
+                    sea(hits = sunk).tone(Tone.GOOD, *sunk.toTypedArray())),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {

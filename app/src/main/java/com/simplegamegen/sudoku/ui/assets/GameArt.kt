@@ -128,6 +128,19 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                     discs[r to c]?.let { who -> drawCircle(if (who > 0) Color(0xFFE53935) else Color(0xFFFDD835), cw * 0.26f, center) }
                 }
             }
+            GameId.BATTLESHIP -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF0D47A1), cornerRadius = CornerRadius(8f))
+                val n = 4
+                val cw = size.width / n
+                val ch = size.height / n
+                for (r in 0 until n) for (c in 0 until n) {
+                    val shade = if ((r + c) % 2 == 0) Color(0xFF1565C0) else Color(0xFF0E4C92)
+                    drawRect(shade, Offset(c * cw, r * ch), Size(cw, ch))
+                }
+                drawRoundRect(Color(0xFFECEFF1), Offset(cw * 0.35f, ch * 2.28f), Size(cw * 2.5f, ch * 0.5f), CornerRadius(cw * 0.16f))
+                drawCircle(Color(0xFFF7F4EF), cw * 0.14f, Offset(cw * 3.45f, ch * 0.55f))
+                drawCircle(Color(0xFFE53935), cw * 0.16f, Offset(cw * 1.45f, ch * 2.52f))
+            }
             GameId.MASTERMIND -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFF2C2C34), cornerRadius = CornerRadius(8f))
                 val pegs = listOf(0xFFD32F2F, 0xFF1565C0, 0xFFD32F2F, 0xFFF9A825)

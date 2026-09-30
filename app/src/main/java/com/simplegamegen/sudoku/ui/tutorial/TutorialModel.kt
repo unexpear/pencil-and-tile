@@ -13,7 +13,7 @@ enum class Mark { NONE, CROSS, CIRCLE, FLAG, MINE }
 /** What sits under a scene. */
 enum class Backdrop { PAPER, TABLE, BOARD }
 
-enum class PieceKind { CHECKER, DISC, COUNTER, STONE, SPOT, PEG }
+enum class PieceKind { CHECKER, DISC, COUNTER, STONE, SPOT, PEG, SHIP }
 
 /** A game piece drawn on a square. [player] 1 is you, -1 the opponent (Reversi: 1 black, -1 white). */
 data class Piece(val kind: PieceKind, val player: Int = 1, val king: Boolean = false, val label: String = "")

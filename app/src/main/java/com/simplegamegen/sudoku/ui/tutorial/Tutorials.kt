@@ -45,6 +45,7 @@ object Tutorials {
         GameId.TETRAS -> ArcadeTutorials.tetras
         GameId.CONNECT_FOUR -> BoardTutorials.connectFour
         GameId.MASTERMIND -> BoardTutorials.mastermind
+        GameId.BATTLESHIP -> BoardTutorials.battleship
         GameId.LETTERFALL -> WordTutorials.letterfall
     }
 }
