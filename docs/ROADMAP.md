@@ -52,3 +52,10 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
   answers, and hangman and word-search themes also use these lists (`tools/words/build_open_content.py`).
   Cryptogram and Dropquote add Tatoeba CC0 sentences. Letter grids already use the ENABLE lists.
 
+## Ideas
+Not building these now.
+
+- **Chess draws.** A game can go on forever. There is no draw when the same position repeats, and no 50-move draw.
+- **Go's opponent.** The board is 19×19 with the small on-phone player. KataGo's pretrained network is free to use, but it only runs inside KataGo's own program. Do not add an internet permission to fetch it.
+- **Multiplayer.** Removed. Do not add Wi-Fi, Bluetooth, Nearby, or an internet match until `PRIVACY.md`, the in-app privacy note, and the Play data-safety form say that a game can be shared with another phone. They currently say the app never sends anything. No iPhone app.
+
