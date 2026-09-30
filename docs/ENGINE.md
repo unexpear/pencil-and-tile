@@ -57,8 +57,10 @@ saves that are validated on load. The app's shared `PlayViewModel` adds saving,
 undo (one step per human action, including the computer's reply) and computer
 turns.
 
-- **Cryptogram, Word scramble, Acrostic** (`wordplay/`) build on the bundled
-  clue bank and word lists. Cryptogram codes never map a letter to itself.
+- **Cryptogram, Word scramble, Acrostic** (`wordplay/`) draw on the shared word
+  lists. Cryptogram and Dropquote use the original sayings plus Tatoeba sentences.
+  Crossword and acrostic clues add short WordNet definitions to the original bank.
+  Scramble and code cracker sample everyday words. Cryptogram codes never map a letter to itself.
 - **Spider, Pyramid, Memory** (`cards/`) are seeded deals. Spider removes
   finished same-suit runs automatically and offers heuristic hints.
 - **2048 and Tetras** (`arcade/`) derive every tile spawn and piece from the seed
@@ -87,6 +89,31 @@ turns.
   You place, then fire first. Easy mostly shoots at random, Medium hunts the
   squares next to a hit, Hard adds checkerboard parity, and Expert counts where
   the remaining ships can still lie. Saves are versioned text.
+- **Mancala** (`duels/Mancala.kt`): Kalah, six pits a side and four stones.
+  Easy sows at random, Medium takes captures and extra turns, and Hard and
+  Expert search ahead (depth 4 and 6). Saves are versioned text.
+- **Five in a row** (`duels/FiveRow.kt`): an 11×11 board. Five or more in a
+  line wins. Easy places near existing stones, Medium takes wins and blocks,
+  and Hard and Expert search a short list of nearby squares. Saves are versioned text.
+- **Chess** (`tabletop/Chess.kt`): standard chess. You play white. Pawns promote
+  to a queen. Castling and en passant are included. Easy picks a legal move,
+  Medium looks one move ahead, Hard and Expert search two and three moves with
+  a node cap. Saves are versioned text.
+- **Go** (`tabletop/Go.kt`): 19×19. You play black. Chinese area scoring and
+  positional superko. White receives 7.5. Easy places almost at random. Higher
+  levels score a short list of moves and look further ahead. KataGo's pretrained
+  network is free to use, but it only runs inside KataGo's own program.
+- **FreeCell** (`cards/FreeCell.kt`): its own table, separate from Klondike,
+  Spider, and Pyramid. Four free cells, eight face-up columns, foundations Ace
+  to King by suit. Not every deal is winnable.
+- **Sliding blocks** (`grids/SlidingBlocks.kt`): vehicles slide along their
+  length on a 6×6 grid. A board is kept only when a search proves the marked
+  vehicle can reach the exit.
+- **Word ladder** (`wordplay/WordLadder.kt`): change one letter at a time
+  between two everyday words. Steps may use any accepted word. Easy is three
+  letters; Expert is five. The par is the shortest route. Saves are versioned text.
+- **Honeycomb** (`wordplay/Honeycomb.kt`): seven letters, one required. Everyday words score their length; any other accepted word scores 1; using all seven scores 7 more.
+- **Letter Draw** (`wordplay/LetterDraw.kt`): a dealt rack and a clock. Each letter is used only as often as it was dealt. The target length wins; the rack is kept only when some accepted word reaches it.
 
 ## Grid Sudoku (16×16 and custom grids)
 

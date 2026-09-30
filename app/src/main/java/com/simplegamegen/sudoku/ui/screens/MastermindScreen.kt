@@ -3,6 +3,7 @@ package com.simplegamegen.sudoku.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -120,12 +121,14 @@ fun MastermindScreen(nav: NavController, vm: PlayViewModel<Mastermind>, factory:
             Canvas(Modifier.size(16.dp)) { drawKeyPeg(open = true) }
             Text("Wrong place", style = MaterialTheme.typography.bodySmall, color = c.muted)
         }
+        if (g.setting == 0) Text("Four colors, each used once. The colors in play are marked.", style = MaterialTheme.typography.bodyMedium, color = c.muted)
         if (playable) Text("Tap a color, then Guess.", style = MaterialTheme.typography.bodyMedium, color = c.muted)
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Mastermind.COLOR_NAMES.forEachIndexed { color, name ->
-                Box(Modifier.size(48.dp)
-                    .clickable(enabled = playable && g.draft.size < Mastermind.PEGS, role = Role.Button) { vm.play { it.place(color) } }
+                val allowed = g.setting != 0 || color in g.palette
+                Box(Modifier.size(48.dp).alpha(if (allowed) 1f else 0.28f)
+                    .clickable(enabled = playable && allowed && g.draft.size < Mastermind.PEGS, role = Role.Button) { vm.play { it.place(color) } }
                     .semantics { contentDescription = say(name) }, contentAlignment = Alignment.Center) {
                     Canvas(Modifier.fillMaxSize()) { drawCodePeg(color) }
                 }

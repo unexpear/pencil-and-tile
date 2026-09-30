@@ -661,4 +661,105 @@ internal object WordTutorials {
             ),
         )
     }
+
+    val wordLadder: Tutorial get() {
+        fun scene(word: String, selected: Int = -1): Scene {
+            val items = word.mapIndexed { index, letter ->
+                Item(
+                    "c$index", index.toFloat(), 0f,
+                    look = Letter(letter.toString()),
+                    tone = if (index == selected) Tone.SELECTED else Tone.PLAIN,
+                    describe = letter.toString(),
+                )
+            } + Item("goal", 0f, 1.2f, word.length.toFloat(), 0.7f, Label(if (word == "WARM") "Done" else "Aim: WARM", 0.42f, bold = true))
+            return Scene(word.length.toFloat().coerceAtLeast(4f), 1.9f, items, maxUnit = 64)
+        }
+        return Tutorial(
+            GameId.WORD_LADDER,
+            "Change one letter at a time until the word becomes the target.",
+            rules = listOf(
+                "You start on one English word and aim at another of the same length.",
+                "Change exactly one letter. The result has to be a real word.",
+                "The shortest route is shown. You may take a few extra steps, then the ladder ends.",
+                "Tap a letter in your word, then the letter that replaces it. A hint plays the next step on a shortest route.",
+            ),
+            tips = listOf(
+                "Change a letter that moves you toward the target, not just any real word.",
+                "If you wander, undo is free until you like the step.",
+            ),
+            steps = listOf(
+                Step("COLD has to become WARM. Each step changes one letter and stays a word.", scene("COLD")),
+                Step("Tap the L.", scene("COLD"), tap = setOf("c2"), after = scene("COLD", selected = 2),
+                    help = "The third letter."),
+                Step("R makes CORD, a real word one step closer.", scene("COLD", selected = 2).choices("R", "A", "Z"),
+                    pick = "R", after = scene("CORD"), then = "CORD. Keep changing one letter until you reach WARM.",
+                    help = "R turns COLD into CORD."),
+                Step("WARM is the target. The ladder ends when you land on it, or when the spare steps run out.", scene("WARM")),
+            ),
+        )
+    }
+
+    val honeycomb: Tutorial get() {
+        fun scene(middle: Boolean = false): Scene {
+            val letters = listOf("C", "A", "T", "E", "R", "D")
+            val items = letters.mapIndexed { index, letter ->
+                Item("o$index", (index % 3).toFloat(), (index / 3).toFloat(), look = Letter(letter), describe = letter)
+            } + Item("mid", 1f, 2f, look = Letter("P"), tone = if (middle) Tone.SELECTED else Tone.PLAIN, describe = "P")
+            return Scene(3f, 3f, items, maxUnit = 56)
+        }
+        return Tutorial(
+            GameId.HONEYCOMB,
+            "Make words from seven letters. Every word uses the middle one.",
+            rules = listOf(
+                "Seven letters are in play. One sits in the middle and has to be in every word.",
+                "Use only those letters. A letter may be used more than once.",
+                "Everyday words score their length. Any other accepted word scores 1.",
+                "A word that uses all seven letters scores 7 more. Reach the target score.",
+            ),
+            tips = listOf(
+                "Start with the middle letter and add everyday endings.",
+                "A word that uses every letter is worth hunting.",
+            ),
+            steps = listOf(
+                Step("P is in the middle. Every word has to use it.", scene(), tap = setOf("mid"), after = scene(middle = true),
+                    help = "The middle letter."),
+                Step("CATERED uses all seven letters. What is that called here?", scene(middle = true).choices("A pangram", "A ladder", "A drop"),
+                    pick = "A pangram", then = "Using all seven letters scores 7 more.",
+                    help = "A word that uses every letter."),
+                Step("Everyday words score their length. A rarer accepted word scores 1.", scene(middle = true)),
+            ),
+        )
+    }
+
+    val letterDraw: Tutorial get() {
+        fun scene(word: String): Scene {
+            val items = word.mapIndexed { index, letter ->
+                Item("c$index", index.toFloat(), 0f, look = Letter(letter.toString()), describe = letter.toString())
+            }
+            return Scene(word.length.toFloat().coerceAtLeast(4f), 1.2f, items, maxUnit = 64)
+        }
+        return Tutorial(
+            GameId.LETTER_DRAW,
+            "Spell the longest word you can before the clock runs out.",
+            rules = listOf(
+                "You are dealt a handful of letters and a target length.",
+                "Each letter can be used only as often as it was dealt.",
+                "A real word of the target length wins at once.",
+                "When time runs out, a longest accepted word from those letters is shown.",
+            ),
+            tips = listOf(
+                "Look for a vowel next to a common ending.",
+                "A shorter real word still stands if the clock beats you to a longer one.",
+            ),
+            steps = listOf(
+                Step("These letters are your rack. Tap them to spell.", scene("PLANTERS")),
+                Step("PLANT uses letters from the rack. What happens if it is long enough?",
+                    scene("PLANT").choices("You win at once", "The clock stops and you lose", "The letters change"),
+                    pick = "You win at once", then = "The target length wins before the clock ends.",
+                    help = "Reach the target and the round is won."),
+                Step("Each letter can be used only as often as it appears. When time runs out, the longest accepted word is shown.",
+                    scene("PLANTERS")),
+            ),
+        )
+    }
 }

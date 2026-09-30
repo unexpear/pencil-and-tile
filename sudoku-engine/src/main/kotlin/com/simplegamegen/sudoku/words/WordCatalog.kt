@@ -85,9 +85,9 @@ internal object WordCatalog {
         "MELODY" to "A sequence of notes heard as a tune",
     )
 
-    // Each theme has more words than even the largest puzzle needs, so new
-    // puzzles vary their answer lists as well as their layouts.
-    val searches: List<Pair<String, List<String>>> = listOf(
+    // Each theme keeps this list, then ThemeWords adds everyday words from the matching
+    // WordNet categories. Space and Weather have no category, so they stay as written.
+    private val handSearches: List<Pair<String, List<String>>> = listOf(
         "Nature" to "RIVER OCEAN TREE LEAF RAIN CLOUD ROOT SEED ROSE GRASS FOREST DESERT VALLEY ISLAND MEADOW STREAM CANYON GLACIER MOUNTAIN WATERFALL",
         "Animals" to "TIGER HORSE OTTER EAGLE ROBIN SNAIL WHALE ZEBRA CAMEL PANDA RABBIT TURTLE DOLPHIN PENGUIN GIRAFFE ELEPHANT BUTTERFLY SQUIRREL HAMSTER PARROT",
         "Space" to "PLANET STAR MOON COMET ORBIT SPACE MARS VENUS SUN EARTH PLUTO SOLAR ROCKET GALAXY METEOR SATURN NEPTUNE ASTEROID TELESCOPE SATELLITE",
@@ -101,4 +101,8 @@ internal object WordCatalog {
         "Garden" to "ROSE SEED SOIL ROOT LEAF STEM GRASS HERB VINE BULB MOSS FERN TULIP DAISY ORCHID FLOWER COMPOST SHOVEL SPROUT WATERING",
         "Science" to "ATOM CELL LIGHT HEAT FORCE WAVE GENE LASER PRISM PLANT SOLID LIQUID ENERGY MAGNET GRAVITY OXYGEN CARBON CIRCUIT ELECTRON MOLECULE",
     ).map { (title, words) -> title to words.split(' ') }
+
+    val searches: List<Pair<String, List<String>>> by lazy {
+        handSearches.map { (title, words) -> title to ThemeWords.expand(title, words) }
+    }
 }

@@ -1,6 +1,7 @@
 package com.simplegamegen.sudoku.ui.tutorial
 
 import com.simplegamegen.sudoku.duels.KeyPegs
+import com.simplegamegen.sudoku.duels.Mancala
 import com.simplegamegen.sudoku.duels.Mastermind
 import com.simplegamegen.sudoku.ui.GameId
 
@@ -400,6 +401,175 @@ internal object BoardTutorials {
                     help = "The circled square of fog."),
                 Step("Three hits in a line sink the cruiser. Sink the rest of the fleet to win.",
                     sea(hits = sunk).tone(Tone.GOOD, *sunk.toTypedArray())),
+            ),
+        )
+    }
+
+    val mancala: Tutorial get() {
+        fun scene(pits: List<Int>, mark: Int? = null): Scene {
+            val items = buildList {
+                add(Item("cpu", 0f, 0f, 1f, 2f, Cell(text = pits[Mancala.CPU].toString(), fill = Fill.SHADED), describe = "Computer's store"))
+                for (i in 0 until 6) {
+                    val top = 12 - i
+                    val bot = i
+                    add(Item("t$i", 1f + i, 0f, look = Cell(text = pits[top].toString(), fill = Fill.OPEN, mark = if (mark == top) Mark.CIRCLE else Mark.NONE)))
+                    add(Item("b$i", 1f + i, 1f, look = Cell(
+                        text = pits[bot].toString(),
+                        fill = Fill.PAPER,
+                        mark = if (mark == bot) Mark.CIRCLE else Mark.NONE,
+                    )))
+                }
+                add(Item("you", 7f, 0f, 1f, 2f, Cell(text = pits[Mancala.YOU].toString(), fill = Fill.LIGHT), describe = "Your store"))
+            }
+            return Scene(8f, 2f, items, Backdrop.BOARD, maxUnit = 44)
+        }
+        val opening = Mancala.OPENING
+        val again = Mancala(0, 1, opening).sow(2)!!.pits
+        return Tutorial(
+            GameId.MANCALA,
+            "Sow stones to the right and capture the pit opposite.",
+            rules = listOf(
+                "You have six pits of four stones, and a store on the right. The computer's store is on the left.",
+                "Tap a pit to sow its stones one at a time to the right. Your store collects a stone. The computer's store is skipped.",
+                "Land in your store and you go again. Land in an empty pit on your side and you take that stone plus the pit opposite.",
+                "When either side runs out of stones, the other side keeps what is left. Most stones in your store wins.",
+            ),
+            tips = listOf(
+                "A pit that lands in your store is worth more than it looks, because you move again.",
+                "Count the stones before you sow. The last stone is the one that captures.",
+            ),
+            steps = listOf(
+                Step("Your pits are the bottom row. Stones move to the right, into the store on the right.", scene(opening)),
+                Step("This pit has 4 stones, which reaches your store. Tap it.", scene(opening, mark = 2), tap = setOf("b2"),
+                    after = scene(again), then = "The last stone landed in your store, so you go again.",
+                    help = "The circled pit, third from the left."),
+                Step("The next three pits each gained a stone, and your store has 1.", scene(again)),
+            ),
+        )
+    }
+
+    val fiveRow: Tutorial get() {
+        fun scene(rows: List<String>, mark: String? = null, good: Set<String> = emptySet()): Scene {
+            val items = gridItems(rows.size, rows[0].length) { r, c ->
+                Cell(
+                    fill = Fill.OPEN,
+                    piece = when (rows[r][c]) {
+                        'Y' -> Piece(PieceKind.STONE, 1)
+                        'C' -> Piece(PieceKind.STONE, -1)
+                        else -> null
+                    },
+                    mark = if (cellId(r, c) == mark) Mark.CIRCLE else Mark.NONE,
+                )
+            }
+            val base = Scene(rows[0].length.toFloat(), rows.size.toFloat(), items, Backdrop.BOARD, maxUnit = 56)
+            return if (good.isEmpty()) base else base.tone(Tone.GOOD, *good.toTypedArray())
+        }
+        val empty = listOf(".....", ".....", ".....")
+        val placed = listOf(".....", "..Y..", ".....")
+        val answered = listOf(".....", "..YC.", ".....")
+        val threat = listOf(".C...", "YYY.Y", "C.C..")
+        val won = listOf(".C...", "YYYYY", "C.C..")
+        val line = (0 until 5).map { cellId(1, it) }.toSet()
+        return Tutorial(
+            GameId.FIVE_ROW,
+            "Place stones and line up five.",
+            rules = listOf(
+                "Take turns placing one stone on an empty square. Stones do not move.",
+                "Five or more in a line — across, down or diagonal — wins.",
+                "The board is 11×11. Filling it with no line of five is a draw.",
+                "You play the dark stones and move first.",
+            ),
+            tips = listOf(
+                "A line of four with both ends open needs two blocks.",
+                "Stay near the stones already on the board. Far-away stones rarely connect in time.",
+            ),
+            steps = listOf(
+                Step("Stones stay where you put them. A line can run across, down or diagonally.", scene(empty)),
+                Step("Tap the middle square.", scene(empty, mark = "r1c2"), tap = setOf("r1c2"),
+                    after = scene(placed), then = "Your stone is down.", help = "The circled square."),
+                Step("The computer answers beside it.", scene(answered)),
+                Step("Four of yours, with one gap. Tap the gap.", scene(threat, mark = "r1c3"), tap = setOf("r1c3"),
+                    after = scene(won, good = line), then = "Five in a row. You win!", help = "The empty square in your line."),
+            ),
+        )
+    }
+
+    val chess: Tutorial get() {
+        fun scene(pieces: Map<String, String>, selected: String? = null, targets: Set<String> = emptySet()): Scene {
+            val items = gridItems(4, 4) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = if ((r + c) % 2 == 0) Fill.LIGHT else Fill.DARK,
+                    text = pieces[id].orEmpty(),
+                    mark = if (id in targets) Mark.CIRCLE else Mark.NONE,
+                )
+            }.map { if (it.id == selected) it.copy(tone = Tone.SELECTED) else it }
+            return Scene(4f, 4f, items, Backdrop.BOARD, maxUnit = 64)
+        }
+        val start = mapOf("r0c1" to "♟", "r2c0" to "♙", "r3c1" to "♔")
+        val stepped = mapOf("r0c1" to "♟", "r1c0" to "♙", "r3c1" to "♔")
+        val capture = mapOf("r1c1" to "♟", "r2c0" to "♙", "r3c1" to "♔")
+        val taken = mapOf("r1c1" to "♙", "r3c1" to "♔")
+        val check = mapOf("r0c3" to "♚", "r2c3" to "♕", "r3c1" to "♔")
+        return Tutorial(
+            GameId.CHESS,
+            "Standard chess. You play white from the bottom and move first.",
+            rules = listOf(
+                "Tap a piece, then a highlighted square. Capture by landing on the other piece.",
+                "Pawns move one square forward, or two from their starting row, and capture one square diagonally forward.",
+                "Check means your king is attacked. You must escape, block, or capture the attacker.",
+                "Checkmate wins. Stalemate, when a side has no legal move and is not in check, is a draw. Pawns promote to a queen. Castling and en passant follow the usual rules.",
+            ),
+            tips = listOf(
+                "Develop a piece toward the center before you attack.",
+                "Do not leave your king in check.",
+            ),
+            steps = listOf(
+                Step("You play the white pieces from the bottom. Tap your pawn.", scene(start), tap = setOf("r2c0"),
+                    after = scene(start, selected = "r2c0", targets = setOf("r1c0")), help = "The white pawn."),
+                Step("It can step one square forward. Tap that square.", scene(start, selected = "r2c0", targets = setOf("r1c0")),
+                    tap = setOf("r1c0"), after = scene(stepped), then = "The pawn moved forward."),
+                Step("A pawn captures one square diagonally. Tap your pawn.", scene(capture), tap = setOf("r2c0"),
+                    after = scene(capture, selected = "r2c0", targets = setOf("r1c1")), help = "The white pawn next to the black pawn."),
+                Step("Take the black pawn.", scene(capture, selected = "r2c0", targets = setOf("r1c1")), tap = setOf("r1c1"),
+                    after = scene(taken), then = "Captured."),
+                Step("The white queen looks straight at the black king. That is check.", scene(check)),
+            ),
+        )
+    }
+
+    val go: Tutorial get() {
+        fun scene(stones: Map<String, Int>, mark: String? = null): Scene {
+            val items = gridItems(4, 4) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = Fill.LIGHT,
+                    piece = stones[id]?.let { Piece(PieceKind.STONE, it) },
+                    mark = if (id == mark) Mark.CIRCLE else Mark.NONE,
+                )
+            }
+            return Scene(4f, 4f, items, Backdrop.BOARD, maxUnit = 64)
+        }
+        val white = mapOf("r0c1" to 1, "r1c0" to 1, "r1c1" to -1, "r1c2" to 1)
+        val captured = mapOf("r0c1" to 1, "r1c0" to 1, "r1c2" to 1, "r2c1" to 1)
+        return Tutorial(
+            GameId.GO,
+            "Place stones, surround groups, and claim the empty points.",
+            rules = listOf(
+                "You play black and move first on a 19×19 board. Stones stay where you put them.",
+                "A connected group with no empty neighbor is captured and taken off.",
+                "You cannot fill your own last liberty, and you cannot repeat an earlier board.",
+                "Pass when you are finished. Two passes end the game. Your score is your stones plus empty regions that touch only your color. White receives 7.5 points.",
+            ),
+            tips = listOf(
+                "Capture stones that cannot live before you pass. Stones left on the board count for their owner.",
+                "Do not fill a point that is already surrounded by your own stones.",
+            ),
+            steps = listOf(
+                Step("The white stone has one empty neighbor. Tap it.", scene(white, mark = "r2c1"), tap = setOf("r2c1"),
+                    after = scene(captured), then = "Captured. The white stone comes off.", help = "The empty point under the white stone."),
+                Step("Connected stones share their empty neighbors. One empty neighbor left means the group can be taken.", scene(captured)),
+                Step("When both players pass, empty regions that touch only your stones count for you. White receives 7.5 points.", scene(captured)),
             ),
         )
     }

@@ -1,11 +1,14 @@
 package com.simplegamegen.sudoku.wordplay
 
+import com.simplegamegen.sudoku.logic.LogicLevel
+import com.simplegamegen.sudoku.words.OpenContent
+
 /**
  * Cryptogram sayings. Only proverbs and public-domain sources: pre-1900 authors,
  * the King James Bible and U.S. government speeches.
  */
 internal object Quotes {
-    val all: List<Pair<String, String>> = listOf(
+    private val classics: List<Pair<String, String>> = listOf(
         "Well done is better than well said." to "Benjamin Franklin",
         "Lost time is never found again." to "Benjamin Franklin",
         "Energy and persistence conquer all things." to "Benjamin Franklin",
@@ -87,6 +90,29 @@ internal object Quotes {
         "A journey of a thousand miles begins with a single step." to "Proverb",
         "The squeaky wheel gets the grease." to "Proverb",
     )
+
+    /** The original sayings, plus short public-domain sentences from Tatoeba. */
+    val all: List<Pair<String, String>> by lazy { classics + OpenContent.sayings.map { it to "Tatoeba" } }
+
+    /**
+     * Sayings for one level. Easy and Medium keep the original sayings, and a Tatoeba
+     * sentence only when its words are everyday and several letters repeat, so a short
+     * puzzle still has a pattern to find.
+     */
+    fun forLevel(level: LogicLevel, letters: IntRange, accepts: (String) -> Boolean = { true }): List<Pair<String, String>> {
+        val inRange = all.filter { (quote, _) -> quote.count { it.isLetter() } in letters && accepts(quote) }
+        if (level.ordinal > LogicLevel.MEDIUM.ordinal) return inRange
+        val friendly = inRange.filter { (quote, author) -> author != "Tatoeba" || readable(quote) }
+        return friendly.ifEmpty { inRange }
+    }
+
+    private fun readable(quote: String): Boolean {
+        val words = quote.uppercase().split(Regex("[^A-Z]+")).filter { it.length >= 3 }
+        if (words.size < 3 || words.count { Lexicon.isCommon(it) } * 2 < words.size) return false
+        val counts = IntArray(26)
+        quote.uppercase().forEach { if (it in 'A'..'Z') counts[it - 'A']++ }
+        return counts.count { it >= 2 } >= 4
+    }
 }
 
 /** Public count for the collection guide. */

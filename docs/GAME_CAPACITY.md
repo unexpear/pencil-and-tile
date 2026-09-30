@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **41 games, 51 rule variants, 351 selectable setting
+Current implementation: **54 games, 64 rule variants, 400 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
@@ -14,22 +14,30 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Futoshiki | 1 | 4 | 4×4–7×7 by level; sign layouts vary; each proven to have one solution |
 | Nonograms | 1 | 4 | Pictures generated per game; each line-solvable, so it has one answer |
 | Hitori | 1 | 4 | 5×5–8×8; each proven to have exactly one shading |
-| Crossword | 1 | 4 | 120 original clues; exact connected-grid total not measured |
-| Word search | 1 | 48 | 12 themes × 20 words; selections/layouts/filler vary; total not measured |
-| Hangman | 1 | 48 | **227 distinct eligible answers** across all themes and levels |
+| Bridges | 1 | 4 | Islands on 7×7 to 9×9. One layout of non-crossing bridges |
+| Slitherlink | 1 | 4 | One loop on 5×5 to 7×7 squares. A number is how many sides the loop uses |
+| Towers | 1 | 4 | 4×4 and 5×5 skylines. Side clues say how many towers are visible |
+| Lights | 1 | 4 | 5×5 to 7×7 rooms. One lamp placement lights every white square |
+| Crossword | 1 | 4 | Original clues plus short WordNet definitions; exact connected-grid total not measured |
+| Word search | 1 | 48 | 12 themes; category themes also use everyday WordNet words; layouts vary; total not measured |
+| Hangman | 1 | 48 | **1,696 distinct eligible answers** across the theme lists, including everyday words from matching WordNet categories |
 | Mahjong Solitaire | 1 | 4 | 4 layout/difficulty presets, shuffled faces; exact deal total not measured |
 | Solitaire | 2 | 2 | Draw 1 / Draw 3; 52! theoretical deck orders, sampled by the generator |
 | Minesweeper | 1 | 4 | 4 presets; theoretical layout counts below, actual coverage not measured |
 | Checkers | 1 | 4 | **1 standard opening**, 4 computer strengths, varying match continuations |
+| Chess | 1 | 4 | **1 standard opening**, 4 computer strengths. You play white. Castling, en passant, and queen promotion |
+| Go | 1 | 4 | **1 empty 19×19 board**, 4 computer strengths. You play black. Area scoring, positional superko, white receives 7.5 |
+| FreeCell | 1 | 1 | Classic FreeCell. Seeded 52-card deals; not every deal is winnable |
+| Sliding blocks | 1 | 4 | 6×6 boards. Each kept only after a search proves the target can reach the exit |
 | Reversi | 1 | 4 | **1 standard opening**, 4 computer strengths, varying match continuations |
-| Cryptogram | 1 | 4 | Public-domain sayings in fresh random codes; sayings repeat eventually |
-| Word scramble | 1 | 4 | Rounds of 8 words from the bundled vocabulary |
-| Acrostic | 1 | 4 | Hidden words and clues from the bundled vocabulary |
-| Code cracker | 1 | 4 | Grids packed from the bundled vocabulary with a fresh number code |
-| Dropquote | 1 | 4 | Public-domain sayings; the same sayings as Cryptogram, laid out in columns |
+| Cryptogram | 1 | 4 | Original sayings plus Tatoeba sentences, each in a fresh letter code |
+| Word scramble | 1 | 4 | Rounds of 8 everyday words; any real anagram counts |
+| Acrostic | 1 | 4 | Everyday hidden words; original clues plus short WordNet definitions |
+| Code cracker | 1 | 4 | Each grid is a fresh sample of everyday words and a new number code |
+| Dropquote | 1 | 4 | Same sayings as Cryptogram, laid out in columns |
 | Common Threads | 1 | 4 | Built from rules each game; checked to have exactly one way to sort the sixteen words |
-| Word Meaning | 1 | 4 | 337 words with sentences from Open English WordNet; answers judged on the device |
-| Five Letters | 1 | 4 | Hidden five-letter words from a curated answer list; guesses checked against a larger list |
+| Word Meaning | 1 | 4 | 337 reviewed sentences, plus lexicon examples and single-meaning Tatoeba sentences; answers judged on the device |
+| Five Letters | 1 | 4 | Hidden words are WordNet lemmas; Easy and Medium use the everyday ones. Guesses are every accepted five-letter word |
 | Blotwords | 1 | 5 | A fixed 12-step Discover trail, then grids built backwards per game (5×5 to 6×6); every grid can be finished |
 | Spider Solitaire | 3 | 3 | 1, 2 or 4 suits; shuffled two-deck deals, not certified winnable |
 | Pyramid Solitaire | 1 | 4 | 52! theoretical deck orders, sampled; not every deal clears |
@@ -43,6 +51,11 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Battleship | 1 | 4 | Classic 10×10 fleet × 4 computer strengths |
 | Tetras | 1 | 4 | Seeded 7-piece bags; no final level |
 | Letterfall | 1 | 4 | 7×7 boards; orthogonal words of 3+ letters, gravity, combos, and a move-limited target score |
+| Mancala | 1 | 4 | Six pits a side, four stones; sow, extra turns, and captures |
+| Five in a row | 1 | 4 | 11×11 board; five or more in a line |
+| Word ladder | 1 | 4 | One-letter steps between everyday English words; 3 to 5 letters |
+| Honeycomb | 1 | 4 | Seven letters, one required. Everyday words score their length; other accepted words score 1 |
+| Letter Draw | 1 | 4 | A handful of letters and a clock. Reach a target length; the rack always has such a word |
 | Dominoes | 1 | 4 | 137,680,171,200 theoretical pairs of opening hands; boneyard order adds variety |
 
 Sudoku's 88 combinations are seven variants × three sizes × four difficulties,

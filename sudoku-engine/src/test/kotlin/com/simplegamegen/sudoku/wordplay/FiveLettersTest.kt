@@ -25,6 +25,8 @@ class FiveLettersTest {
         (FiveWords.answers + FiveWords.valid).forEach { assertTrue(it.length == 5 && it.all { c -> c in 'A'..'Z' }, it) }
         assertTrue(FiveWords.answers.all { it in FiveWords.valid })
         assertTrue(FiveWords.everyday.size >= 250 && FiveWords.valid.size >= 1500, "${FiveWords.everyday.size} / ${FiveWords.valid.size}")
+        assertTrue(FiveWords.everyday.all { it in FiveWords.answers && Lexicon.isCommon(it) })
+        assertTrue(FiveWords.answers.all { it in FiveWords.valid })
     }
 
     @Test fun `guessing wins, loses and checks the list`() {

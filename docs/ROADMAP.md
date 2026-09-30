@@ -48,9 +48,7 @@ names, art and content; mechanics are shared ideas, names and trade dress are no
 ## Shared word data
 - **Open English WordNet** (CC BY 4.0, from Princeton WordNet) feeds Word Meaning through
   `tools/meaning/build_meaning_bank.py`, and the full English lexicon (`tools/lexicon/build_lexicon_db.py`)
-  for lemma lookup. The reviewed Word Meaning bank stays separate. Other games can use either: Common
-  Threads categories from its "is a kind of" trees, crossword clues from definitions, a bigger Five Letters
-  guess list, category-game answer lists and letter-grid dictionaries.
+  for lemma lookup. The reviewed Word Meaning bank stays separate. Crossword and acrostic clues, Five Letters
+  answers, and hangman and word-search themes also use these lists (`tools/words/build_open_content.py`).
+  Cryptogram and Dropquote add Tatoeba CC0 sentences. Letter grids already use the ENABLE lists.
 
-## Ideas
-- Chess, a honeycomb word builder, Word Ladder.

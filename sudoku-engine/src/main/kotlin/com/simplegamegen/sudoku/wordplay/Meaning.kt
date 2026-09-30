@@ -47,6 +47,7 @@ object MeaningJudge {
     /** Where [phrase] occurs in [guess] as an in-order run allowing short gaps (filler words don't count), or null. */
     fun find(guess: List<String>, phrase: List<String>): IntRange? {
         val core = phrase.filter { it !in FILLER }.ifEmpty { phrase }
+        if (core.isEmpty() || guess.isEmpty()) return null
         val spots = guess.indices.filter { guess[it] !in FILLER || core.size == phrase.size && guess[it] in core }
         for (s in spots.indices) {
             if (guess[spots[s]] != core[0]) continue

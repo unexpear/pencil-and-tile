@@ -378,4 +378,90 @@ internal object NumberTutorials {
             ),
         )
     }
+
+    private fun dots(label: String): Scene = Scene(3f, 1.4f, listOf(
+        Item("a", 0f, 0f, look = Letter("2"), describe = "2"),
+        Item("b", 2f, 0f, look = Letter("1"), describe = "1"),
+        Item("note", 0f, 0.9f, 3f, 0.5f, Label(label, 0.4f)),
+    ), maxUnit = 56)
+
+    val bridges: Tutorial get() = Tutorial(
+        GameId.BRIDGES,
+        "Join numbered islands with the right number of bridges.",
+        rules = listOf(
+            "A number is how many bridges touch that island.",
+            "Bridges run straight across or down. One line or two may share a route.",
+            "Bridges never cross, and every island ends up in one connected group.",
+        ),
+        tips = listOf("An island showing 1 has only one bridge to place."),
+        steps = listOf(
+            Step("Tap an island, then another in the same row or column.", dots("Islands")),
+            Step("A second tap on the same pair makes a double bridge.", dots("Double")),
+            Step("The puzzle is done when every number is satisfied and nothing is left apart.", dots("Linked")),
+        ),
+    )
+
+    val slitherlink: Tutorial get() = Tutorial(
+        GameId.SLITHERLINK,
+        "Draw one loop. Each number is how many sides of that square the loop uses.",
+        rules = listOf(
+            "The loop follows the grid lines and closes on itself.",
+            "A number is how many of that square's four sides are part of the loop.",
+            "The line does not branch or cross.",
+        ),
+        tips = listOf("A 0 forbids every side of that square. A 3 forces three sides."),
+        steps = listOf(
+            Step("Tap a grid line to draw it. Tap it again to erase it.", dots("Lines")),
+            Step("A 2 means exactly two sides of that square are used.", dots("Two sides")),
+            Step("Keep going until there is one closed loop and every number is right.", dots("Loop")),
+        ),
+    )
+
+    val towers: Tutorial get() = Tutorial(
+        GameId.TOWERS,
+        "Fill the grid so the side clues match how many towers you can see.",
+        rules = listOf(
+            "Each row and column holds every height once, from 1 up to the grid size.",
+            "Looking in from a clue, you see a tower when it is taller than everything in front of it.",
+            "A taller tower hides the shorter ones behind it.",
+        ),
+        tips = listOf("A clue of 1 means the tallest tower is first. A clue equal to the grid size means the heights rise the whole way."),
+        steps = listOf(
+            Step("Tap a square to raise its height, from empty through the tallest.", dots("Heights")),
+            Step("From the left, a clue of 1 means the tallest tower in that row is on the left.", dots("See one")),
+            Step("The puzzle is done when every row, column and side clue agrees.", dots("Skyline")),
+        ),
+    )
+
+    val lights: Tutorial get() = Tutorial(
+        GameId.LIGHTS,
+        "Place lamps so every white square is lit and no two lamps see each other.",
+        rules = listOf(
+            "A lamp shines up, down, left and right until a black square blocks it.",
+            "Every white square must be lit, by a lamp on it or by a beam.",
+            "Two lamps cannot see each other. A number is how many lamps touch that black square.",
+        ),
+        tips = listOf("A black 0 means no lamp touches it. A black square whose number matches its white neighbors must hold a lamp on each of them."),
+        steps = listOf(
+            Step("Tap a white square to place a lamp. Tap again to remove it.", dots("Lamp")),
+            Step("Light stops at a black square. The number there counts the lamps beside it.", dots("Number")),
+            Step("Finish when every white square is lit and every number is right.", dots("Lit")),
+        ),
+    )
+
+    val slidingBlocks: Tutorial get() = Tutorial(
+        GameId.SLIDING_BLOCKS,
+        "Slide vehicles so the marked one reaches the exit.",
+        rules = listOf(
+            "Each vehicle is two or three cells and only slides along its length.",
+            "A move slides one vehicle any number of free cells. Vehicles cannot overlap or leave the grid.",
+            "The marked target wins when its front reaches the exit on the right of its row.",
+        ),
+        tips = listOf("Clear blockers off the target's row, then drive it out. Hint plays the next move on a shortest path."),
+        steps = listOf(
+            Step("Tap a vehicle to select it, or drag it along its length.", dots("Select")),
+            Step("The marked target must reach the exit on the right of its row.", dots("Exit")),
+            Step("Clear a path, then slide the target out. Hint plays the next shortest move.", dots("Clear")),
+        ),
+    )
 }

@@ -80,9 +80,16 @@ private val ScoreKinds = mapOf(
     GameId.MEMORY to ScoreKind("Fewest moves", true),
     GameId.SPIDER to ScoreKind("Fewest moves", true),
     GameId.PYRAMID to ScoreKind("Fewest moves", true),
+    GameId.FREECELL to ScoreKind("Fewest moves", true),
+    GameId.SLIDING_BLOCKS to ScoreKind("Fewest moves", true),
+    GameId.GO to ScoreKind("Most area", false),
     GameId.HANGMAN to ScoreKind("Fewest wrong guesses", true),
     GameId.MASTERMIND to ScoreKind("Fewest guesses", true),
     GameId.BATTLESHIP to ScoreKind("Fewest shots", true),
+    GameId.WORD_LADDER to ScoreKind("Fewest steps", true),
+    GameId.HONEYCOMB to ScoreKind("Most points", false),
+    GameId.LETTER_DRAW to ScoreKind("Longest word", false),
+    GameId.MANCALA to ScoreKind("Most stones", false),
 )
 
 private fun gameOf(name: String): GameId? = if (name == GRID_RECORD) GameId.SUDOKU else GameId.entries.firstOrNull { it.name == name }

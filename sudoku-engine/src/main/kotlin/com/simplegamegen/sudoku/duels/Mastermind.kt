@@ -9,8 +9,9 @@ import kotlin.random.Random
  * in the wrong place. Those are only counts: feedback never says which peg earned which key.
  *
  * You guess. The computer only sets the code. [setting] changes how constrained that code is:
- * Easy is a permutation of the first four colors, Medium is four different colors from all six,
- * Hard repeats a color without being four of a kind, and Expert is any classic code.
+ * Easy is a permutation of four colors, and those four change from game to game.
+ * Medium is four different colors from all six, Hard repeats a color without being four of a kind,
+ * and Expert is any classic code. [palette] is the four Easy colors; other levels ignore it.
  */
 data class Mastermind(
     val setting: Int,
@@ -19,14 +20,16 @@ data class Mastermind(
     val guesses: List<List<Int>> = emptyList(),
     val feedback: List<KeyPegs> = emptyList(),
     val draft: List<Int> = emptyList(),
+    val palette: List<Int> = listOf(0, 1, 2, 3),
 ) {
     init {
         require(setting in NAMES.indices)
-        require(fits(setting, secret))
+        require(palette.size == PEGS && palette.toSet().size == PEGS && palette.all { it in 0 until COLORS })
+        require(fits(setting, secret, palette))
         require(guesses.size == feedback.size && guesses.size <= GUESSES)
         require(draft.size <= PEGS && draft.all { it in 0 until COLORS })
         guesses.forEachIndexed { i, guess ->
-            require(fits(setting, guess)) { "illegal guess" }
+            require(fits(setting, guess, palette)) { "illegal guess" }
             require(feedback[i] == score(secret, guess))
             if (i < guesses.lastIndex) require(guess != secret)
         }
@@ -42,13 +45,14 @@ data class Mastermind(
     fun problem(): String? = when {
         over -> "The game is over."
         draft.size != PEGS -> "Fill all four pegs."
-        !fits(setting, draft) -> CONSTRAINTS[setting]
+        !fits(setting, draft, palette) -> CONSTRAINTS[setting]
         else -> null
     }
 
     /** Adds [color] to the end of the draft. Null when that peg is not allowed. */
     fun place(color: Int): Mastermind? {
         if (over || color !in 0 until COLORS || draft.size >= PEGS) return null
+        if (setting == 0 && color !in palette) return null
         return copy(draft = draft + color)
     }
 
@@ -71,32 +75,34 @@ data class Mastermind(
         val NAMES = listOf("Easy", "Medium", "Hard", "Expert")
         val COLOR_NAMES = listOf("Red", "Orange", "Yellow", "Green", "Blue", "Purple")
         val CONSTRAINTS = listOf(
-            "Each of red, orange, yellow and green appears once",
+            "Four colors, each used once. The colors in play are marked.",
             "Four different colors, chosen from all six",
             "A color repeats, but not all four pegs are the same",
             "Any code, including repeats",
         )
 
-        fun start(seed: Long, setting: Int) = Mastermind(setting, seed, secret(seed, setting))
-
-        /** A secret for [setting], chosen from [seed]. The same seed always gives the same code. */
-        fun secret(seed: Long, setting: Int): List<Int> {
+        fun start(seed: Long, setting: Int): Mastermind {
             require(setting in NAMES.indices)
             val random = Random(seed)
-            return when (setting) {
-                0 -> (0 until PEGS).shuffled(random)
+            val palette = if (setting == 0) (0 until COLORS).shuffled(random).take(PEGS).sorted() else (0 until PEGS).toList()
+            val secret = when (setting) {
+                0 -> palette.shuffled(random)
                 1 -> (0 until COLORS).shuffled(random).take(PEGS)
                 2 -> hard(random)
                 else -> List(PEGS) { random.nextInt(COLORS) }
             }
+            return Mastermind(setting, seed, secret, palette = palette)
         }
 
+        /** A secret for [setting], chosen from [seed]. The same seed always gives the same code. */
+        fun secret(seed: Long, setting: Int): List<Int> = start(seed, setting).secret
+
         /** True when [code] is a legal secret, and a legal guess, at [setting]. */
-        fun fits(setting: Int, code: List<Int>): Boolean {
+        fun fits(setting: Int, code: List<Int>, palette: List<Int> = listOf(0, 1, 2, 3)): Boolean {
             if (setting !in NAMES.indices || code.size != PEGS || code.any { it !in 0 until COLORS }) return false
             val distinct = code.toSet().size
             return when (setting) {
-                0 -> code.toSet() == (0 until PEGS).toSet()
+                0 -> code.toSet() == palette.toSet()
                 1 -> distinct == PEGS
                 2 -> distinct in 2 until PEGS
                 else -> true
@@ -162,11 +168,12 @@ object MastermindCodec {
         g.guesses.joinToString(";") { it.joinToString(",") },
         g.feedback.joinToString(";") { "${it.black},${it.white}" },
         g.draft.joinToString(","),
+        g.palette.joinToString(","),
     ).joinToString("\n")
 
     fun decode(text: String): Mastermind? = try {
         val lines = text.split('\n')
-        require(lines.size == 7 && lines[0] == "1")
+        require(lines.size in 7..8 && lines[0] == "1")
         Mastermind(
             lines[1].toInt(),
             lines[2].toLong(),
@@ -174,6 +181,7 @@ object MastermindCodec {
             rows(lines[4]),
             keys(lines[5]),
             if (lines[6].isEmpty()) emptyList() else pegs(lines[6]),
+            if (lines.size == 8) pegs(lines[7]) else listOf(0, 1, 2, 3),
         )
     } catch (_: IllegalArgumentException) { null }
 

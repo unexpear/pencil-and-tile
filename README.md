@@ -1,6 +1,6 @@
 # Pencil & Tile
 
-A quiet collection of 40 puzzle, word, card and board games for Android. Everything plays offline, with
+A quiet collection of 44 puzzle, word, card and board games for Android. Everything plays offline, with
 no ads, no account and no tracking.
 
 **Try it:** join the test on Google Play at
@@ -17,12 +17,12 @@ https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
 - **Number puzzles:** Sudoku (eight variants and four sizes, with Killer and Samurai Sudoku under it),
   Calcudoku, Kakuro, Futoshiki, Nonograms and Hitori.
 - **Word games:** Wordsworn (battle monsters with words), Letter Sprawl, Letterfall, Word Quilt, Lone Letter,
-  Blotwords, Common Threads, Five Letters, Word Meaning, crossword, word search, Hangman, cryptogram,
+  Blotwords, Word ladder, Common Threads, Five Letters, Word Meaning, crossword, word search, Hangman, cryptogram,
   word scramble, acrostic, code cracker and dropquote.
 - **Cards and tiles:** Mahjong Solitaire, Solitaire (Klondike, with Spider and Pyramid under it), Dominoes
   and Memory.
 - **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster.
-- **Classics:** Connect Four, Mastermind and Battleship.
+- **Classics:** Connect Four, Mastermind, Battleship, Mancala and Five in a row.
 - **Arcade:** 2048 and Tetras.
 
 Every game has a guided tutorial, four levels, hints, themes and dark mode, screen-reader support, and
@@ -101,11 +101,12 @@ Built with Kotlin and Jetpack Compose on a pure-Kotlin engine (`sudoku-engine`);
 
 ## Word games
 
-- **Crossword:** connected grids with numbered Across/Down clues from
-  a bank of 120 original English clues. Tap a clue or square, enter a full answer,
+- **Crossword:** connected grids with numbered Across/Down clues. Each puzzle
+  uses the original clues and a sample of short WordNet definitions. Tap a clue or square, enter a full answer,
   check it, or reveal a letter. Shared letters update both crossing answers.
-- **Word search:** 12 themes with 20 words each: Nature, Animals, Space,
+- **Word search:** 12 themes: Nature, Animals, Space,
   Everyday, Food, Travel, Sports, Music, Ocean, Weather, Garden and Science.
+  Themes that match a WordNet category also include those everyday words.
   Each new puzzle selects a fresh word list and layout. Tap the two endpoints
   of a word; reverse selection also works. Hints highlight a starting letter.
 - Each mode saves its complete board, entered answers/found words and hint
@@ -173,6 +174,12 @@ older boards show **Original** rather than acquiring a misleading rating.
 - **Battleship:** classic 10×10 fleet against the computer. Place a carrier,
   battleship, cruiser, submarine and destroyer, then fire first. Easy mostly
   shoots at random; Expert aims where the remaining ships are most likely.
+- **Mancala:** six pits a side, four stones each. Sow to the right, skip the
+  far store, and capture the pit opposite. Another turn if you land in your store.
+- **Five in a row:** 11×11 board. Five or more in a line wins. You play dark
+  and move first. Pinch to zoom.
+- **Word ladder:** change one letter at a time from one English word to another.
+  Every step has to be a real word. Four lengths, with a few spare steps.
 - **2048:** 3×3 to 6×6 boards with goals from 512 to 8192. Swipe or use the arrows.
 - **Tetras:** falling blocks with seeded 7-piece bags, wall kicks, a ghost piece,
   three next pieces and four starting speeds. It pauses when you leave the screen.
@@ -198,7 +205,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**41 games, 51 rule variants, 351 setting combinations**. These are not unique
+**54 games, 64 rule variants, 400 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
@@ -238,7 +245,7 @@ corner roundness and home layout, and share or import it as a text code. See
   games' rules, generators, computer players and versioned saves.
 - `sudoku-engine/.../logic/` — Samurai Sudoku, Calcudoku, Kakuro and Futoshiki: shared model,
   counting solver, seeded generators, uniqueness verifier and save format.
-- `app/` — Compose UI for all 41 games and Sudoku statistics, backed by the
+- `app/` — Compose UI for all 54 games and Sudoku statistics, backed by the
   engine. `ui/theme/` holds the theme model, storage and Compose theme;
   `ui/assets/` the drawn game pieces and icons; `ui/components/` shared chrome.
 

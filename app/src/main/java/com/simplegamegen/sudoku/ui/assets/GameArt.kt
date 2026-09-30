@@ -141,6 +141,113 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 drawCircle(Color(0xFFF7F4EF), cw * 0.14f, Offset(cw * 3.45f, ch * 0.55f))
                 drawCircle(Color(0xFFE53935), cw * 0.16f, Offset(cw * 1.45f, ch * 2.52f))
             }
+            GameId.MANCALA -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF6D4C41), cornerRadius = CornerRadius(8f))
+                drawRoundRect(Color(0xFF3E2723), Offset(size.width * 0.06f, size.height * 0.18f), Size(size.width * 0.16f, size.height * 0.64f), CornerRadius(8f))
+                drawRoundRect(Color(0xFF3E2723), Offset(size.width * 0.78f, size.height * 0.18f), Size(size.width * 0.16f, size.height * 0.64f), CornerRadius(8f))
+                val pit = size.width * 0.1f
+                for (i in 0 until 4) {
+                    drawCircle(Color(0xFFF3E5C4), pit * 0.45f, Offset(size.width * (0.32f + i * 0.12f), size.height * 0.34f))
+                    drawCircle(Color(0xFFF3E5C4), pit * 0.45f, Offset(size.width * (0.32f + i * 0.12f), size.height * 0.66f))
+                }
+            }
+            GameId.FIVE_ROW -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFC4A574), cornerRadius = CornerRadius(8f))
+                val n = 5
+                val cw = size.width / n
+                for (i in 1 until n) {
+                    drawLine(Color(0xFF3E2723), Offset(i * cw, cw * 0.4f), Offset(i * cw, size.height - cw * 0.4f), strokeWidth = 1.5f)
+                    drawLine(Color(0xFF3E2723), Offset(cw * 0.4f, i * cw), Offset(size.width - cw * 0.4f, i * cw), strokeWidth = 1.5f)
+                }
+                listOf(1 to 2, 2 to 2, 3 to 2, 2 to 1, 2 to 3).forEachIndexed { i, (r, c) ->
+                    drawCircle(if (i < 3) Color(0xFF1A1A1A) else Color(0xFFF7F4EF), cw * 0.28f, Offset((c + 0.5f) * cw, (r + 0.5f) * cw))
+                }
+            }
+            GameId.WORD_LADDER -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFFFFDF7), cornerRadius = CornerRadius(8f))
+                drawRoundRect(Color(0xFF2A2A2E), cornerRadius = CornerRadius(8f), style = Stroke(size.width * 0.03f))
+                val cell = size.width / 4
+                "COLD".forEachIndexed { i, ch ->
+                    val layout = measurer.measure(ch.toString(), TextStyle(color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = (cell * 0.55f / density).sp))
+                    drawText(layout, topLeft = Offset(i * cell + (cell - layout.size.width) / 2, size.height * 0.22f))
+                }
+                drawLine(Color(0xFF1B5E20), Offset(size.width * 0.2f, size.height * 0.72f), Offset(size.width * 0.8f, size.height * 0.72f), strokeWidth = 4f, cap = StrokeCap.Round)
+            }
+            GameId.HONEYCOMB -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFFFF8E1), cornerRadius = CornerRadius(8f))
+                val spots = listOf(0.32f to 0.28f, 0.68f to 0.28f, 0.22f to 0.55f, 0.5f to 0.55f, 0.78f to 0.55f, 0.32f to 0.8f, 0.68f to 0.8f)
+                spots.forEachIndexed { i, (x, y) ->
+                    drawCircle(if (i == 3) Color(0xFFE65100) else Color(0xFFFFE082), size.width * 0.11f, Offset(size.width * x, size.height * y))
+                }
+            }
+            GameId.BRIDGES -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFE3F2FD), cornerRadius = CornerRadius(8f))
+                drawLine(Color(0xFF0277BD), Offset(size.width * 0.22f, size.height * 0.35f), Offset(size.width * 0.78f, size.height * 0.35f), strokeWidth = 4f)
+                drawCircle(Color(0xFF0277BD), size.width * 0.12f, Offset(size.width * 0.22f, size.height * 0.35f))
+                drawCircle(Color(0xFF0277BD), size.width * 0.12f, Offset(size.width * 0.78f, size.height * 0.35f))
+                drawCircle(Color(0xFF0277BD), size.width * 0.12f, Offset(size.width * 0.5f, size.height * 0.72f))
+                drawLine(Color(0xFF0277BD), Offset(size.width * 0.5f, size.height * 0.35f), Offset(size.width * 0.5f, size.height * 0.72f), strokeWidth = 4f)
+            }
+            GameId.SLITHERLINK -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFECEFF1), cornerRadius = CornerRadius(8f))
+                val step = size.width / 4
+                drawLine(Color(0xFF37474F), Offset(step, step), Offset(step * 3, step), strokeWidth = 4f)
+                drawLine(Color(0xFF37474F), Offset(step * 3, step), Offset(step * 3, step * 3), strokeWidth = 4f)
+                drawLine(Color(0xFF37474F), Offset(step * 3, step * 3), Offset(step, step * 3), strokeWidth = 4f)
+                drawLine(Color(0xFF37474F), Offset(step, step * 3), Offset(step, step), strokeWidth = 4f)
+            }
+            GameId.TOWERS -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFF3E5F5), cornerRadius = CornerRadius(8f))
+                listOf(0.55f, 0.85f, 0.4f, 0.7f).forEachIndexed { i, h ->
+                    val w = size.width / 5
+                    drawRect(Color(0xFF6A1B9A), Offset(w * 0.6f + i * w, size.height * (1f - h) * 0.75f), Size(w * 0.7f, size.height * h * 0.75f))
+                }
+            }
+            GameId.LIGHTS -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF263238), cornerRadius = CornerRadius(8f))
+                drawCircle(Color(0xFFFFE082), size.width * 0.16f, Offset(size.width * 0.35f, size.height * 0.4f))
+                drawLine(Color(0xFFFFE082), Offset(size.width * 0.35f, size.height * 0.4f), Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 3f)
+                drawLine(Color(0xFFFFE082), Offset(size.width * 0.35f, size.height * 0.4f), Offset(size.width * 0.35f, size.height * 0.8f), strokeWidth = 3f)
+            }
+            GameId.CHESS -> Canvas(Modifier.size(56.dp)) {
+                val s = size.width / 4
+                for (r in 0 until 4) for (k in 0 until 4) {
+                    drawRect(if ((r + k) % 2 == 0) c.boardLight else c.boardDark, Offset(k * s, r * s), Size(s, s))
+                }
+                drawCircle(c.playerTwo, s * 0.32f, Offset(s * 1.5f, s * 0.5f))
+                drawCircle(c.playerOne, s * 0.28f, Offset(s * 2.5f, s * 3.5f))
+            }
+            GameId.FREECELL -> {
+                PlayingCard(0, Modifier.offset((-14).dp, (-4).dp), width = 26.dp)
+                PlayingCard(12, Modifier.offset(10.dp, 4.dp), width = 26.dp)
+            }
+            GameId.SLIDING_BLOCKS -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFE0F7FA), cornerRadius = CornerRadius(8f))
+                drawRoundRect(Color(0xFF00838F), Offset(size.width * 0.12f, size.height * 0.38f), Size(size.width * 0.42f, size.height * 0.22f), CornerRadius(6f))
+                drawRoundRect(Color(0xFF546E7A), Offset(size.width * 0.55f, size.height * 0.18f), Size(size.width * 0.22f, size.height * 0.42f), CornerRadius(6f))
+                drawRoundRect(Color(0xFF90A4AE), Offset(size.width * 0.18f, size.height * 0.68f), Size(size.width * 0.5f, size.height * 0.18f), CornerRadius(6f))
+                drawRect(Color(0xFF00838F), Offset(size.width * 0.88f, size.height * 0.38f), Size(size.width * 0.08f, size.height * 0.22f))
+            }
+            GameId.GO -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(c.boardLight, cornerRadius = CornerRadius(8f))
+                val step = size.width / 4
+                for (i in 1..3) {
+                    drawLine(c.text.copy(alpha = 0.45f), Offset(step, step * i), Offset(step * 3, step * i), strokeWidth = 2f)
+                    drawLine(c.text.copy(alpha = 0.45f), Offset(step * i, step), Offset(step * i, step * 3), strokeWidth = 2f)
+                }
+                drawCircle(c.playerOne, step * 0.32f, Offset(step * 1.5f, step * 2.2f))
+                drawCircle(c.playerTwo, step * 0.32f, Offset(step * 2.5f, step * 1.4f))
+                drawCircle(c.text, step * 0.32f, Offset(step * 2.5f, step * 1.4f), style = Stroke(2f))
+            }
+            GameId.LETTER_DRAW -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFE0F2F1), cornerRadius = CornerRadius(8f))
+                val cell = size.width / 5
+                "WORD".forEachIndexed { i, ch ->
+                    val layout = measurer.measure(ch.toString(), TextStyle(color = Color(0xFF00695C), fontWeight = FontWeight.Bold, fontSize = (cell * 0.7f / density).sp))
+                    drawText(layout, topLeft = Offset(cell * 0.4f + i * cell + (cell - layout.size.width) / 2, size.height * 0.28f))
+                }
+                drawArc(Color(0xFF00695C), -90f, 270f, false, Offset(size.width * 0.72f, size.height * 0.62f), Size(size.width * 0.2f, size.width * 0.2f), style = Stroke(3f))
+            }
             GameId.MASTERMIND -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFF2C2C34), cornerRadius = CornerRadius(8f))
                 val pegs = listOf(0xFFD32F2F, 0xFF1565C0, 0xFFD32F2F, 0xFFF9A825)

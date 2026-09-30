@@ -28,6 +28,7 @@ WORD GAMES
 • Wordsworn: spell words from letter tiles to battle a run of monsters. Long words and rare letters hit harder
 • Letter Sprawl: chain touching letters into words; longer words score more
 • Letterfall: spell words from side-by-side tiles; they clear, the rest fall, and combos build your score
+• Word ladder: change one letter at a time to turn one word into another
 • Lone Letter: one letter, many categories. Beat computer players who might think of the same answer
 • Word Quilt: place each patch's letters so every row and column reads as words
 • Blotwords: ink the grid with mysterious command words you work out for yourself
@@ -40,7 +41,7 @@ WORD GAMES
 AND WHEN YOU WANT A CHANGE
 • Sudoku in 8 variants and 4 sizes, Killer and Samurai Sudoku, Calcudoku, Kakuro, Futoshiki, Nonograms and Hitori
 • Mahjong Solitaire, Klondike, Spider and Pyramid Solitaire, Dominoes and Memory
-• Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts, Magnetic cluster, Connect Four, Mastermind, Battleship, 2048 and Tetras
+• Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts, Magnetic cluster, Connect Four, Mastermind, Battleship, Mancala, Five in a row, 2048 and Tetras
 
 MADE TO BE PLAYED YOUR WAY
 • Every game has a short guided tutorial and full rules
@@ -64,6 +65,7 @@ Full description:
 • 词语大作战：用字母牌拼出单词，与一连串怪物战斗。长单词和少见字母威力更大
 • 字母链：把相邻的字母连成单词，单词越长得分越高
 • 字母瀑：把上下左右相邻的字母拼成单词，消去后其余下落，连击会提高得分
+• 单词阶梯：每次改一个字母，把一个单词变成另一个
 • 单字母：一个字母，许多类别，和可能想到同样答案的电脑玩家比拼
 • 字母拼布：摆好每块拼布的字母，让每一行和每一列都是单词
 • 墨字格：用神秘的指令词给格子上墨，含义要你自己发现
@@ -76,7 +78,7 @@ Full description:
 想换换口味时
 • 8 种玩法、4 种尺寸的数独，杀手数独、武士数独、聪明格、数和、不等式数独、数织和数壹
 • 麻将连连看、纸牌接龙、蜘蛛纸牌、金字塔纸牌、多米诺骨牌和记忆翻牌
-• 扫雷、西洋跳棋、黑白棋、点格棋、豆芽棋、磁石堆、珠玑妙算、海战棋、2048 和下落方块
+• 扫雷、西洋跳棋、黑白棋、点格棋、豆芽棋、磁石堆、珠玑妙算、海战棋、曼卡拉、五子棋、2048 和下落方块
 
 按你的方式玩
 • 每款游戏都有简短的引导教程和完整规则
@@ -100,6 +102,7 @@ Full description:
 • ことばバトル：文字タイルで単語を作り、次々に現れるモンスターと戦います。長い単語やめずらしい文字ほど強力
 • レターつなぎ：となり合う文字をつないで単語に。長い単語ほど高得点
 • レターフォール：上下左右の文字で単語を作ると消え、残りが落ち、コンボで得点が伸びます
+• ワードラダー：1文字ずつ変えて、別の単語にする
 • ひと文字：ひとつの文字でいろんなお題に答え、同じ答えを考えそうなコンピューターと勝負
 • ことばキルト：各パッチの文字を置いて、縦も横もすべて単語にします
 • インクワード：なぞのコマンド語で盤にインクを。意味は自分で見つけます
@@ -112,7 +115,7 @@ Full description:
 気分を変えたいときは
 • 8種類・4サイズのナンプレ、キラーナンプレ、サムライナンプレ、カルクドク、クロスサム、不等式、ノノグラム、ひとりにしてくれ
 • 上海（麻雀牌）、ソリティア、スパイダー、ピラミッド、ドミノ、神経衰弱
-• マインスイーパ、チェッカー、リバーシ、ドット・アンド・ボックス、スプラウト、マグネット、マスターマインド、バトルシップ、2048、テトラス
+• マインスイーパ、チェッカー、リバーシ、ドット・アンド・ボックス、スプラウト、マグネット、マスターマインド、バトルシップ、マンカラ、五目並べ、2048、テトラス
 
 自分のペースで
 • どのゲームにも短いガイド付きチュートリアルとルール
@@ -136,6 +139,7 @@ JUEGOS DE PALABRAS
 • Duelo de palabras: forma palabras con fichas de letras para luchar contra una serie de monstruos. Las palabras largas y las letras raras golpean más fuerte
 • Cadena de letras: une letras vecinas para formar palabras; las más largas puntúan más
 • Cascada de letras: forma palabras con fichas que se tocan por un lado; se borran, el resto cae y los combos suben la puntuación
+• Escalera de palabras: cambia una letra cada vez hasta convertir una palabra en otra
 • Letra única: una letra, muchas categorías, contra jugadores del ordenador que quizá piensen lo mismo
 • Colcha de letras: coloca las letras de cada parche para que cada fila y columna sean palabras
 • Palabras de tinta: entinta la cuadrícula con misteriosas palabras de orden que descubres tú
@@ -148,7 +152,7 @@ JUEGOS DE PALABRAS
 Y CUANDO QUIERAS CAMBIAR
 • Sudoku en 8 variantes y 4 tamaños, Sudoku asesino y samurái, Calcudoku, Kakuro, Futoshiki, Nonogramas e Hitori
 • Mahjong solitario, Klondike, Spider, Pirámide, Dominó y Parejas
-• Buscaminas, Damas, Reversi, Puntos y cajas, Brotes, Imanes, Mastermind, Batalla naval, 2048 y Tetras
+• Buscaminas, Damas, Reversi, Puntos y cajas, Brotes, Imanes, Mastermind, Batalla naval, Mancala, Cinco en línea, 2048 y Tetras
 
 A TU MANERA
 • Cada juego tiene un tutorial guiado y sus reglas completas
@@ -172,6 +176,7 @@ WORTSPIELE
 • Wortgefecht: Bilde Wörter aus Buchstabensteinen und kämpfe gegen eine Reihe von Monstern. Lange Wörter und seltene Buchstaben treffen härter
 • Buchstabennetz: Verbinde benachbarte Buchstaben zu Wörtern; längere Wörter bringen mehr Punkte
 • Letternfall: Bilde Wörter aus Kacheln, die sich an der Seite berühren; sie verschwinden, der Rest fällt, und Kombos erhöhen die Punkte
+• Wortleiter: Ändere jeweils einen Buchstaben, bis aus einem Wort ein anderes wird
 • Ein Buchstabe: ein Buchstabe, viele Kategorien, gegen Computerspieler, die vielleicht dasselbe schreiben
 • Wortquilt: Setze die Buchstaben jedes Flickens so, dass jede Reihe und Spalte Wörter ergibt
 • Tintenwörter: Färbe das Gitter mit rätselhaften Befehlswörtern, deren Wirkung du selbst herausfindest
@@ -184,7 +189,7 @@ WORTSPIELE
 UND FÜR ABWECHSLUNG
 • Sudoku in 8 Varianten und 4 Größen, Killer- und Samurai-Sudoku, Calcudoku, Kakuro, Futoshiki, Nonogramme und Hitori
 • Mahjong-Solitär, Klondike, Spider, Pyramide, Domino und Memory
-• Minesweeper, Dame, Reversi, Käsekästchen, Sprossen, Magnetsteine, Mastermind, Schiffe versenken, 2048 und Tetras
+• Minesweeper, Dame, Reversi, Käsekästchen, Sprossen, Magnetsteine, Mastermind, Schiffe versenken, Mancala, Fünf in einer Reihe, 2048 und Tetras
 
 SO, WIE DU WILLST
 • Jedes Spiel hat ein kurzes, geführtes Tutorial und vollständige Regeln

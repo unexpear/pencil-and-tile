@@ -57,22 +57,21 @@ class MastermindTest {
 
     @Test fun `illegal colors lengths and difficulty guesses are refused`() {
         val easy = Mastermind.start(3, 0)
+        val colors = easy.palette
         assertNull(easy.place(-1))
         assertNull(easy.place(Mastermind.COLORS))
+        assertNull(easy.place((0 until Mastermind.COLORS).first { it !in colors }))
         assertNull(easy.submit())
         assertNull(easy.backspace())
-        assertEquals("Fill all four pegs.", easy.place(0)!!.problem())
+        assertEquals("Fill all four pegs.", easy.place(colors[0])!!.problem())
 
-        val repeated = place(easy, listOf(0, 0, 1, 2))
+        val repeated = place(easy, listOf(colors[0], colors[0], colors[1], colors[2]))
         assertEquals(Mastermind.CONSTRAINTS[0], repeated.problem())
         assertNull(repeated.submit())
-        assertEquals(listOf(0, 0, 1, 2), repeated.draft)
+        assertEquals(listOf(colors[0], colors[0], colors[1], colors[2]), repeated.draft)
 
-        val outside = place(easy, listOf(0, 1, 2, 5))
-        assertNull(outside.submit())
-
-        val full = place(easy, listOf(0, 1, 2, 3))
-        assertNull(full.place(1))
+        val full = place(easy, colors)
+        assertNull(full.place(colors[0]))
         assertNotNull(full.submit())
 
         val medium = Mastermind.start(4, 1)
@@ -97,8 +96,9 @@ class MastermindTest {
     @Test fun `each difficulty constrains the secret and the same seed repeats`() {
         repeat(40) { n ->
             val seed = n.toLong()
-            val easy = Mastermind.start(seed, 0).secret
-            assertEquals(setOf(0, 1, 2, 3), easy.toSet(), "easy $seed")
+            val easy = Mastermind.start(seed, 0)
+            assertEquals(easy.palette.toSet(), easy.secret.toSet(), "easy $seed")
+            assertEquals(4, easy.palette.size)
             val medium = Mastermind.start(seed, 1).secret
             assertEquals(4, medium.toSet().size, "medium $seed")
             assertTrue(medium.all { it in 0 until Mastermind.COLORS })
@@ -108,11 +108,14 @@ class MastermindTest {
             assertEquals(4, expert.size)
             assertTrue(expert.all { it in 0 until Mastermind.COLORS })
             for (setting in 0..3) {
-                assertEquals(Mastermind.start(seed, setting), Mastermind.start(seed, setting))
-                assertTrue(Mastermind.fits(setting, Mastermind.secret(seed, setting)))
+                val game = Mastermind.start(seed, setting)
+                assertEquals(game, Mastermind.start(seed, setting))
+                assertTrue(Mastermind.fits(setting, game.secret, game.palette))
             }
         }
-        assertTrue((0 until 24).map { Mastermind.start(it.toLong(), 0).secret }.toSet().size > 1)
+        val easySecrets = (0 until 80L).map { Mastermind.start(it, 0).secret }.toSet()
+        assertTrue(easySecrets.size > 24, "easy codes ${easySecrets.size}")
+        assertTrue((0 until 40L).map { Mastermind.start(it, 0).palette }.toSet().size > 1)
         val experts = (0 until 60L).map { Mastermind.start(it, 3).secret }
         assertTrue(experts.any { it.toSet().size == 4 })
         assertTrue(experts.any { it.toSet().size < 4 })

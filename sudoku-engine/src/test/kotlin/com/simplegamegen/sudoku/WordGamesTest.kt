@@ -133,10 +133,11 @@ class WordGamesTest {
             assertTrue(clue.isNotBlank())
         }
         WordCatalog.searches.forEach { (_, words) ->
-            assertEquals(20, words.size)
+            assertTrue(words.size >= 20, "${words.size}")
             assertEquals(words.size, words.distinct().size)
             assertTrue(words.all { word -> word.all { it in 'A'..'Z' } && word.length <= 12 })
         }
+        assertTrue(WordCatalog.searches.first { it.first == "Animals" }.second.size > 100)
     }
 
     @Test fun `version two saves preserve highlights and are marked original`() {

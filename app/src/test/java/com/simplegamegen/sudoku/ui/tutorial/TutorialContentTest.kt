@@ -279,6 +279,31 @@ class TutorialContentTest {
         assertTrue(hits.all { it?.kind == PieceKind.SHIP && it.player == -1 })
     }
 
+    @Test fun `mancala tutorial sow matches the engine`() {
+        val again = com.simplegamegen.sudoku.duels.Mancala(0, 1).sow(2)!!
+        val scene = Tutorials.of(GameId.MANCALA).steps[1].result
+        assertEquals(again.pits[3].toString(), (scene.item("b3")!!.look as Cell).text)
+        assertEquals(again.pits[com.simplegamegen.sudoku.duels.Mancala.YOU].toString(), (scene.item("you")!!.look as Cell).text)
+        assertEquals(1, again.turn)
+    }
+
+    @Test fun `five in a row tutorial ends on five dark stones`() {
+        val scene = last(GameId.FIVE_ROW)
+        val line = (0 until 5).map { (scene.item(cellId(1, it))!!.look as Cell).piece }
+        assertEquals(5, line.count { it?.kind == PieceKind.STONE && it.player == 1 })
+    }
+
+    @Test fun `word ladder tutorial changes one letter into a real word`() {
+        val steps = Tutorials.of(GameId.WORD_LADDER).steps
+        fun word(scene: Scene) = (0 until 4).joinToString("") { (scene.item("c$it")!!.look as Letter).ch }
+        assertEquals("COLD", word(steps[0].scene))
+        assertEquals("CORD", word(steps[2].result))
+        assertEquals("WARM", word(steps[3].scene))
+        assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("COLD"))
+        assertTrue(com.simplegamegen.sudoku.wordplay.Lexicon.isWord("CORD"))
+        assertEquals(1, com.simplegamegen.sudoku.wordplay.WordLadder.changes("COLD", "CORD"))
+    }
+
     @Test fun `letterfall tutorial spells an orthogonal word the engine accepts`() {
         val steps = Tutorials.of(GameId.LETTERFALL).steps
         val taps = steps.take(3).map { it.tap.single() }

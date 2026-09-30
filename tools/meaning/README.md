@@ -24,7 +24,9 @@ python -m unittest discover -s tools/meaning -p "test_*.py"
 
 The generator refuses a missing or changed reviewed sense rather than selecting
 another meaning because it happens to have a dictionary example. New vocabulary
-without a reviewed context is reported and skipped. CI checks the source contexts
+without a reviewed context is reported and skipped. `build_open_bank.py` writes
+a separate `meaning/open.tsv` from the lexicon's WordNet examples and single-meaning
+Tatoeba sentences, and does not change this reviewed file. CI checks the source contexts
 against the shipped bank, and engine tests reject short prompts and exercise
 multiple-meaning grading. WordNet's [format specification](https://globalwordnet.github.io/schemas/)
 describes the sense-to-synset links used for this selection.

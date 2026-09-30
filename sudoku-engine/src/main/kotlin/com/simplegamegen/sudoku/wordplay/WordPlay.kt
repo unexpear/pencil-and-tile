@@ -1,17 +1,11 @@
 package com.simplegamegen.sudoku.wordplay
 
 import com.simplegamegen.sudoku.logic.LogicLevel
-import com.simplegamegen.sudoku.words.WordCatalog
+import com.simplegamegen.sudoku.words.OpenContent
 import com.simplegamegen.sudoku.words.WordPuzzles
 import kotlin.random.Random
 
 private val ALPHABET = ('A'..'Z').joinToString("")
-
-/** Every bundled English answer, used to accept alternative anagrams. */
-internal object WordBank {
-    val clues: List<Pair<String, String>> = WordPuzzles.clues
-    val words: Set<String> = (WordCatalog.searches.flatMap { it.second } + clues.map { it.first }).map { it.uppercase() }.toSet()
-}
 
 // ---------------- Cryptogram ----------------
 
@@ -76,9 +70,9 @@ data class Cryptogram(
     companion object {
         fun generate(seed: Long, level: LogicLevel): Cryptogram {
             val random = Random(seed)
-            fun size(q: String) = q.count { it.isLetter() }
-            val range = when (level) { LogicLevel.EASY -> 0..32; LogicLevel.MEDIUM -> 25..55; LogicLevel.HARD -> 40..80; LogicLevel.EXPERT -> 60..200 }
-            val (quote, author) = Quotes.all.filter { size(it.first) in range }.ifEmpty { Quotes.all }.random(random)
+            val range = when (level) { LogicLevel.EASY -> 12..36; LogicLevel.MEDIUM -> 25..55; LogicLevel.HARD -> 40..80; LogicLevel.EXPERT -> 60..200 }
+            val pool = Quotes.forLevel(level, range)
+            val (quote, author) = pool.ifEmpty { Quotes.all }.random(random)
             var cipher: String
             do cipher = ALPHABET.toList().shuffled(random).joinToString("") while (cipher.indices.any { cipher[it] == 'A' + it })
             var puzzle = Cryptogram(quote, author, level, seed, cipher)
@@ -146,10 +140,10 @@ data class ScrambleGame(
     fun backspace(): ScrambleGame = if (typed.length > revealed[index]) copy(typed = typed.dropLast(1)) else this
     fun clear(): ScrambleGame = copy(typed = word.take(revealed[index]))
 
-    /** Checks a full answer: the intended word or any bundled word with the same letters counts. */
+    /** Checks a full answer: the intended word or any real word with the same letters counts. */
     fun submit(): Pair<ScrambleGame, Boolean> {
         if (complete || typed.length != word.length) return this to false
-        val ok = typed == word || typed in WordBank.words
+        val ok = typed == word || Lexicon.isWord(typed)
         return (if (ok) mark(ScrambleStatus.SOLVED) else this) to ok
     }
 
@@ -181,14 +175,14 @@ data class ScrambleGame(
         fun jumbleOf(word: String, random: Random): String {
             repeat(50) {
                 val j = word.toList().shuffled(random).joinToString("")
-                if (j != word && j !in WordBank.words) return j
+                if (j != word && !Lexicon.isWord(j)) return j
             }
             return word.reversed().takeIf { it != word } ?: word.drop(1) + word.first()
         }
 
         fun generate(seed: Long, level: LogicLevel): ScrambleGame {
             val random = Random(seed)
-            val pool = WordBank.words.filter { it.length in lengths(level) && it.toSet().size > 1 }.sorted()
+            val pool = Lexicon.common.filter { it.length in lengths(level) && it.toSet().size > 1 }.sorted()
             val words = pool.shuffled(random).take(ROUND)
             return ScrambleGame(level, seed, words, words.map { jumbleOf(it, random) })
         }
@@ -252,10 +246,15 @@ data class AcrosticGame(
 
         fun generate(seed: Long, level: LogicLevel): AcrosticGame {
             val random = Random(seed)
-            val clues = WordBank.clues.map { (a, c) -> AcrosticEntry(a.uppercase(), c) }
-                .filter { it.answer.length in answerLengths(level) }.shuffled(random)
+            val hand = WordPuzzles.clues.map { (a, c) -> AcrosticEntry(a.uppercase(), c) }
+            val handWords = hand.map { it.answer }.toSet()
+            val clues = (hand + OpenContent.clues
+                .filter { (answer, _) -> answer !in handWords }
+                .map { (answer, clue) -> AcrosticEntry(answer, clue) })
+                .filter { it.answer.length in answerLengths(level) }
+                .shuffled(random)
             val byLetter = clues.groupBy { it.answer[0] }
-            val keywords = WordBank.words.filter { it.length in keywordLengths(level) }.sorted().shuffled(random)
+            val keywords = Lexicon.common.filter { it.length in keywordLengths(level) }.sorted().shuffled(random)
             for (keyword in keywords) {
                 val used = mutableSetOf<String>()
                 val picked = keyword.map { ch -> byLetter[ch]?.firstOrNull { it.answer !in used && it.answer != keyword }?.also { used += it.answer } }

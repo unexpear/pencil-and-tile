@@ -1,4 +1,4 @@
-Pencil & Tile ist eine ruhige Sammlung von 41 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
+Pencil & Tile ist eine ruhige Sammlung von 44 klassischen und eigenen Rätseln, die komplett offline funktionieren. Keine Werbung, kein Konto, kein Tracking: nur Rätsel. Kostenlos und quelloffen, für immer.
 
 ZAHLENRÄTSEL
 • Sudoku in 8 Varianten und 4 Größen bis 16×16, dazu Killer-Sudoku und ein Gitter-Editor, der prüft, dass jedes Gitter genau eine Lösung hat
@@ -11,6 +11,7 @@ WORTSPIELE
 • Wortgefecht: Bilde Wörter aus Buchstabensteinen und kämpfe gegen eine Reihe von Monstern
 • Buchstabennetz: Verbinde benachbarte Buchstaben zu Wörtern; längere Wörter bringen mehr Punkte
 • Letternfall: Bilde Wörter aus Kacheln, die sich an der Seite berühren; sie verschwinden, der Rest fällt, und Kombos erhöhen die Punkte
+• Wortleiter: Ändere jeweils einen Buchstaben, bis aus einem Wort ein anderes wird
 • Wortquilt: Setze die Buchstaben jedes Flickens so, dass jede Reihe und Spalte Wörter ergibt
 • Ein Buchstabe: ein Buchstabe, viele Kategorien, gegen Computerspieler, die vielleicht dasselbe schreiben
 • Tintenwörter: Färbe das Gitter mit rätselhaften Befehlswörtern, deren Wirkung du selbst herausfindest
@@ -25,6 +26,8 @@ BRETT UND ARCADE
 • Vier gewinnt: Scheiben auf ein 7×6-Brett werfen und vier in einer Reihe bilden
 • Mastermind: knacke einen versteckten Code aus vier farbigen Stiften
 • Schiffe versenken: Stelle eine Flotte auf und versenke die Schiffe des Computers
+• Mancala: verteile Steine auf sechs Mulden und nimm die gegenüberliegende
+• Fünf in einer Reihe: setze Steine auf ein 11×11-Brett und bilde fünf
 • 2048 und Tetras
 
 SO, WIE DU WILLST

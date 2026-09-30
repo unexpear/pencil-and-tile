@@ -168,13 +168,17 @@ object WordPuzzles {
     fun crossword(seed: Long, difficulty: WordDifficulty = WordDifficulty.MEDIUM): WordPuzzle {
         val random = Random(seed)
         val size = difficulty.crosswordSize
-        val vocabulary = clues.filter { it.first.length in difficulty.answerLengths }
+        val hand = clues.filter { it.first.length in difficulty.answerLengths }
+        val handWords = hand.map { it.first }.toSet()
+        val extras = OpenContent.clues.filter { it.first.length in difficulty.answerLengths && it.first !in handWords }
         var best: WordPuzzle? = null
         repeat(32) {
             checkpoint()
             val grid = CharArray(size * size) { '#' }
             val entries = mutableListOf<WordEntry>()
-            for ((answer, clue) in vocabulary.shuffled(random)) {
+            // The original clues stay in every attempt. A sample of dictionary clues changes the grid.
+            val vocabulary = (hand + extras.shuffled(random).take(48)).shuffled(random)
+            for ((answer, clue) in vocabulary) {
                 checkpoint()
                 val candidates = mutableListOf<List<Int>>()
                 for (down in listOf(false, true)) for (start in grid.indices) {

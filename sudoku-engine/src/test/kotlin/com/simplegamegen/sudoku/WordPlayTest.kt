@@ -14,6 +14,11 @@ class WordPlayTest {
             assertEquals(listOf(3, 1, 0, 0)[level.ordinal].coerceAtMost(c.letters.size), c.given.length)
             // Decoding the cipher recovers the quote.
             assertEquals(c.quote.uppercase(), c.encoded.map { if (it in 'A'..'Z') c.plainOf(it) else it }.joinToString(""))
+            if (level.ordinal <= LogicLevel.MEDIUM.ordinal && c.author == "Tatoeba") {
+                val counts = IntArray(26)
+                c.quote.uppercase().forEach { if (it in 'A'..'Z') counts[it - 'A']++ }
+                assertTrue(counts.count { it >= 2 } >= 4, c.quote)
+            }
         }
         var c = Cryptogram.generate(3, LogicLevel.HARD)
         val letters = c.letters.toList()

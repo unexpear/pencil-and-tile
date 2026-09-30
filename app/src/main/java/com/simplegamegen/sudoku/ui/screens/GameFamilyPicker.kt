@@ -11,7 +11,7 @@ internal fun GameFamilyPicker(nav: NavController, game: GameId) {
     val family = game.parent ?: game
     val choices = when (family) {
         GameId.SUDOKU -> listOf(GameId.SUDOKU, GameId.SAMURAI)
-        GameId.SOLITAIRE -> listOf(GameId.SOLITAIRE, GameId.SPIDER, GameId.PYRAMID)
+        GameId.SOLITAIRE -> listOf(GameId.SOLITAIRE, GameId.SPIDER, GameId.PYRAMID, GameId.FREECELL)
         else -> return
     }
     val selected = if (game == GameId.KILLER) GameId.SUDOKU else game

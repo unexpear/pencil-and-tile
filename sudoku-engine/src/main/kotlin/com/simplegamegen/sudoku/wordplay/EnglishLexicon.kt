@@ -9,7 +9,8 @@ import java.util.Locale
  * Definitions and [exampleSource] `oewn` come from Open English WordNet (CC BY 4.0, from Princeton
  * WordNet). [exampleSource] `tatoeba_cc0` is a short public-domain sentence used only when that sense
  * has no WordNet example; it contains the lemma, and it is not pinned to this sense the way Word
- * Meaning's reviewed clues are. [MeaningBank] is unchanged.
+ * Meaning's reviewed clues are. Extra Word Meaning words use a WordNet example, or a Tatoeba
+ * sentence only when the word has one meaning.
  */
 data class LexiconSense(
     val pos: String,

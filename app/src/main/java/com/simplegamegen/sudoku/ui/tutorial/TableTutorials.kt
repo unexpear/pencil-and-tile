@@ -229,4 +229,37 @@ internal object TableTutorials {
             ),
         )
     }
+
+    val freecell: Tutorial get() {
+        val dealt = Scene(
+            4.2f, 1.6f,
+            listOf(
+                cardItem("ace", 0f, 0f, 1, 0),
+                cardItem("six", 1.4f, 0f, 6, 0),
+                cardItem("five", 2.8f, 0f, 5, 1),
+            ),
+            Backdrop.TABLE, maxUnit = 72,
+        )
+        return Tutorial(
+            GameId.FREECELL,
+            "Four free cells; build Ace to King by suit.",
+            rules = listOf(
+                "All 52 cards are dealt face up into eight columns (four of seven, four of six).",
+                "Four free cells hold one card each. Four foundations build Ace to King in one suit.",
+                "On the tableau, place a card on the opposite color and one rank higher. Empty columns take any card or built pile.",
+                "A built descending alternating pile may move together when you have enough free cells and empty columns.",
+                "Clear all four foundations to win. Not every deal can be won.",
+            ),
+            tips = listOf(
+                "Park a blocker in a free cell, then free a column.",
+                "Build a foundation when the card is free and nothing lower is buried.",
+            ),
+            steps = listOf(
+                Step("Every card is face up. Tap the ace.", dealt, tap = setOf("ace"),
+                    after = dealt.tone(Tone.SELECTED, "ace"), help = "The ace of spades."),
+                Step("An ace starts its foundation.", dealt.tone(Tone.GOOD, "ace"), then = "That suit can now build up to the king."),
+                Step("A red five can sit on a black six, one rank higher.", dealt.tone(Tone.SELECTED, "five")),
+            ),
+        )
+    }
 }

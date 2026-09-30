@@ -127,7 +127,7 @@ Additional implementation reference: [Compose filter chips](https://developer.an
   four computer strengths. Rules and generation limits are shown in the app.
 - The in-app capacity guide and [GAME_CAPACITY.md](GAME_CAPACITY.md) distinguish
   **10 games, 18 rule variants and 210 setting combinations** from unique boards.
-  The eligible Hangman answer union is **227 words**. Mathematical deal/layout
+  The eligible Hangman answer union is **1,696 words**. Mathematical deal/layout
   spaces are explicitly not claims of exhaustive generator coverage.
 - Final automated checks: **162 distinct tests** (119 engine, 43 app), **205
   executions** including release app tests, zero failures. Debug/release lint:

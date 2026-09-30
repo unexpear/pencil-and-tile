@@ -36,7 +36,7 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     WORD_QUILT("Word Quilt", "play_WORD_QUILT", "Stitch letters into words", GameGroup.WORDS),
     LONE_LETTER("Lone Letter", "play_LONE_LETTER", "One letter, many categories", GameGroup.WORDS),
     MAHJONG("Mahjong", "mahjong", "Match free tiles", GameGroup.TABLE),
-    SOLITAIRE("Solitaire", "table_SOLITAIRE", "Klondike, Spider, Pyramid", GameGroup.TABLE),
+    SOLITAIRE("Solitaire", "table_SOLITAIRE", "Klondike, Spider, Pyramid, FreeCell", GameGroup.TABLE),
     SPIDER("Spider", "play_SPIDER", "1, 2 or 4 suits", GameGroup.TABLE),
     PYRAMID("Pyramid", "play_PYRAMID", "Pairs that make 13", GameGroup.TABLE),
     DOMINOES("Dominoes", "table_DOMINOES", "Double-six draw", GameGroup.TABLE),
@@ -52,12 +52,25 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     CONNECT_FOUR("Connect Four", "play_CONNECT_FOUR", "Four in a row", GameGroup.CLASSICS),
     MASTERMIND("Mastermind", "play_MASTERMIND", "Break the code", GameGroup.CLASSICS),
     BATTLESHIP("Battleship", "play_BATTLESHIP", "Sink the fleet", GameGroup.CLASSICS),
-    LETTERFALL("Letterfall", "play_LETTERFALL", "Spell words and let tiles fall", GameGroup.WORDS);
+    LETTERFALL("Letterfall", "play_LETTERFALL", "Spell words and let tiles fall", GameGroup.WORDS),
+    MANCALA("Mancala", "play_MANCALA", "Sow and capture", GameGroup.CLASSICS),
+    FIVE_ROW("Five in a row", "play_FIVE_ROW", "Get five in a line", GameGroup.CLASSICS),
+    WORD_LADDER("Word ladder", "play_WORD_LADDER", "Change one letter", GameGroup.WORDS),
+    HONEYCOMB("Honeycomb", "play_HONEYCOMB", "Seven letters, one required", GameGroup.WORDS),
+    LETTER_DRAW("Letter Draw", "play_LETTER_DRAW", "Longest word on the clock", GameGroup.WORDS),
+    BRIDGES("Bridges", "play_BRIDGES", "Link the islands", GameGroup.NUMBERS),
+    SLITHERLINK("Slitherlink", "play_SLITHERLINK", "One loop on the lines", GameGroup.NUMBERS),
+    TOWERS("Towers", "play_TOWERS", "See the skyline", GameGroup.NUMBERS),
+    LIGHTS("Lights", "play_LIGHTS", "Light every square", GameGroup.NUMBERS),
+    CHESS("Chess", "play_CHESS", "White vs computer", GameGroup.BOARD),
+    FREECELL("FreeCell", "play_FREECELL", "Four free cells", GameGroup.TABLE),
+    SLIDING_BLOCKS("Sliding blocks", "play_SLIDING_BLOCKS", "Slide one car out", GameGroup.NUMBERS),
+    GO("Go", "play_GO", "Surround and capture", GameGroup.BOARD);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {
         KILLER, SAMURAI -> SUDOKU
-        SPIDER, PYRAMID -> SOLITAIRE
+        SPIDER, PYRAMID, FREECELL -> SOLITAIRE
         else -> null
     }
 

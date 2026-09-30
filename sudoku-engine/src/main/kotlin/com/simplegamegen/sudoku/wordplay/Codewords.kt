@@ -68,9 +68,9 @@ data class CodeCracker(
         fun sizeOf(level: LogicLevel) = listOf(9, 11, 13, 13)[level.ordinal]
         fun reveals(level: LogicLevel) = listOf(5, 3, 2, 1)[level.ordinal]
 
-        /** Packs bundled words into a connected crossword-style grid. */
+        /** Packs a sample of everyday words into a connected crossword-style grid. */
         fun layout(size: Int, random: Random): String {
-            val words = WordBank.words.filter { it.length in 3..size && it.all { c -> c in 'A'..'Z' } }.sorted()
+            val words = Lexicon.common.filter { it.length in 3..size }.sorted().shuffled(random).take(120)
             var best = ""; var bestFill = -1
             repeat(16) {
                 checkpoint()
@@ -248,16 +248,26 @@ data class Dropquote(
             return rows
         }
 
+        /** Wrapped letters, or null when a word does not fit or some column would be empty. */
+        fun layout(quote: String, width: Int): Pair<Int, String>? {
+            val rows = wrap(quote, width) ?: return null
+            val used = rows.maxOf { it.length }
+            if (used == 0) return null
+            val cells = rows.joinToString("") { it.padEnd(used, '#') }
+            val empty = (0 until used).any { column ->
+                (0 until rows.size).all { cells[it * used + column] == '#' }
+            }
+            return if (empty) null else used to cells
+        }
+
         fun generate(seed: Long, level: LogicLevel): Dropquote {
             val random = Random(seed)
             val width = widthOf(level)
             val range = letterRange(level)
-            val fits = Quotes.all.filter { (q, _) -> q.count { it.isLetter() } in range && wrap(q, width) != null }
-            val (quote, author) = fits.ifEmpty { Quotes.all.filter { wrap(it.first, width) != null } }.random(random)
-            val rows = checkNotNull(wrap(quote, width))
-            // Trim to the longest row so no column is empty.
-            val used = rows.maxOf { it.length }
-            return Dropquote(level, seed, quote, author, used, rows.joinToString("") { it.padEnd(used, '#') })
+            val pool = Quotes.forLevel(level, range) { layout(it, width) != null }
+            val (quote, author) = pool.ifEmpty { Quotes.all.filter { layout(it.first, width) != null } }.random(random)
+            val (used, cells) = checkNotNull(layout(quote, width))
+            return Dropquote(level, seed, quote, author, used, cells)
         }
     }
 }

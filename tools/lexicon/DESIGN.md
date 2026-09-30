@@ -2,9 +2,11 @@
 
 Read-only SQLite lookup for games: a casefolded lemma returns dictionary senses
 (part of speech, definition, and one example sentence when one is available).
-The Word Meaning round bank (`meaning/en.tsv`, built by
-`tools/meaning/build_meaning_bank.py`) is a separate reviewed set and is not
-replaced. MiniLM / ONNX judging is unchanged.
+The reviewed Word Meaning bank (`meaning/en.tsv`, built by
+`tools/meaning/build_meaning_bank.py`) is not replaced. `meaning/open.tsv`
+adds words from the same definitions and sentences: a WordNet example that is
+already a full sentence, or one Tatoeba sentence when the word has a single
+meaning (`tools/meaning/build_open_bank.py`). MiniLM / ONNX judging is unchanged.
 
 ## Free and open sources only
 

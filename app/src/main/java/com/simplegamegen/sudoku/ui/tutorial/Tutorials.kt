@@ -47,5 +47,18 @@ object Tutorials {
         GameId.MASTERMIND -> BoardTutorials.mastermind
         GameId.BATTLESHIP -> BoardTutorials.battleship
         GameId.LETTERFALL -> WordTutorials.letterfall
+        GameId.MANCALA -> BoardTutorials.mancala
+        GameId.FIVE_ROW -> BoardTutorials.fiveRow
+        GameId.WORD_LADDER -> WordTutorials.wordLadder
+        GameId.HONEYCOMB -> WordTutorials.honeycomb
+        GameId.LETTER_DRAW -> WordTutorials.letterDraw
+        GameId.BRIDGES -> NumberTutorials.bridges
+        GameId.SLITHERLINK -> NumberTutorials.slitherlink
+        GameId.TOWERS -> NumberTutorials.towers
+        GameId.LIGHTS -> NumberTutorials.lights
+        GameId.CHESS -> BoardTutorials.chess
+        GameId.FREECELL -> TableTutorials.freecell
+        GameId.SLIDING_BLOCKS -> NumberTutorials.slidingBlocks
+        GameId.GO -> BoardTutorials.go
     }
 }
