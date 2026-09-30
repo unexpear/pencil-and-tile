@@ -137,8 +137,8 @@ fun BattleshipScreen(nav: NavController, vm: PlayViewModel<Battleship>, factory:
         } else {
             DuelStatus(
                 g.over, g.winner, if (g.yourTurn) 1 else -1, s.thinking,
-                "You ${g.incoming.count { it.mark != Mark.MISS }}",
-                "Computer ${g.salvo.count { it.mark != Mark.MISS }}",
+                "You ${g.salvo.count { it.mark != Mark.MISS }}",
+                "Computer ${g.incoming.count { it.mark != Mark.MISS }}",
             )
         }
         g.yourNews()?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = if (g.won) c.success else c.text) }
