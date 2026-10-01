@@ -395,7 +395,8 @@ internal object NumberTutorials {
         ),
         tips = listOf("An island showing 1 has only one bridge to place."),
         steps = listOf(
-            Step("Tap an island, then another in the same row or column.", dots("Islands")),
+            Step("Tap an island, then another in the same row or column.", dots("Islands"), tap = setOf("a"),
+                after = dots("Islands").tone(Tone.SELECTED, "a")),
             Step("A second tap on the same pair makes a double bridge.", dots("Double")),
             Step("The puzzle is done when every number is satisfied and nothing is left apart.", dots("Linked")),
         ),
@@ -411,7 +412,8 @@ internal object NumberTutorials {
         ),
         tips = listOf("A 0 forbids every side of that square. A 3 forces three sides."),
         steps = listOf(
-            Step("Tap a grid line to draw it. Tap it again to erase it.", dots("Lines")),
+            Step("Tap a grid line to draw it. Tap it again to erase it.", dots("Lines"), tap = setOf("a"),
+                after = dots("Lines").tone(Tone.SELECTED, "a")),
             Step("A 2 means exactly two sides of that square are used.", dots("Two sides")),
             Step("Keep going until there is one closed loop and every number is right.", dots("Loop")),
         ),
@@ -427,7 +429,8 @@ internal object NumberTutorials {
         ),
         tips = listOf("A clue of 1 means the tallest tower is first. A clue equal to the grid size means the heights rise the whole way."),
         steps = listOf(
-            Step("Tap a square to raise its height, from empty through the tallest.", dots("Heights")),
+            Step("Tap a square to raise its height, from empty through the tallest.", dots("Heights"), tap = setOf("a"),
+                after = dots("Heights").tone(Tone.SELECTED, "a")),
             Step("From the left, a clue of 1 means the tallest tower in that row is on the left.", dots("See one")),
             Step("The puzzle is done when every row, column and side clue agrees.", dots("Skyline")),
         ),
@@ -443,7 +446,8 @@ internal object NumberTutorials {
         ),
         tips = listOf("A black 0 means no lamp touches it. A black square whose number matches its white neighbors must hold a lamp on each of them."),
         steps = listOf(
-            Step("Tap a white square to place a lamp. Tap again to remove it.", dots("Lamp")),
+            Step("Tap a white square to place a lamp. Tap again to remove it.", dots("Lamp"), tap = setOf("a"),
+                after = dots("Lamp").tone(Tone.SELECTED, "a")),
             Step("Light stops at a black square. The number there counts the lamps beside it.", dots("Number")),
             Step("Finish when every white square is lit and every number is right.", dots("Lit")),
         ),
@@ -459,7 +463,8 @@ internal object NumberTutorials {
         ),
         tips = listOf("Clear blockers off the target's row, then drive it out. Hint plays the next move on a shortest path."),
         steps = listOf(
-            Step("Tap a vehicle to select it, or drag it along its length.", dots("Select")),
+            Step("Tap a vehicle to select it, or drag it along its length.", dots("Select"), tap = setOf("a"),
+                after = dots("Select").tone(Tone.SELECTED, "a")),
             Step("The marked target must reach the exit on the right of its row.", dots("Exit")),
             Step("Clear a path, then slide the target out. Hint plays the next shortest move.", dots("Clear")),
         ),
@@ -475,7 +480,8 @@ internal object NumberTutorials {
         ),
         tips = listOf("Expert is the classic opening. Hint plays the next shortest step."),
         steps = listOf(
-            Step("Tap a block, then an arrow, or drag it into an empty square.", dots("Slide")),
+            Step("Tap a block, then an arrow, or drag it into an empty square.", dots("Slide"), tap = setOf("a"),
+                after = dots("Slide").tone(Tone.SELECTED, "a")),
             Step("The big square is the one that has to reach the opening.", dots("Big block")),
             Step("Clear a path downward, then slide it onto the opening.", dots("Opening")),
         ),
