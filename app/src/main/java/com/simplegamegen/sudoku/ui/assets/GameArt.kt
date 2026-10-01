@@ -247,6 +247,49 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 drawRoundRect(Color(0xFFBCAAA4), Offset(size.width * 0.28f, size.height * 0.5f), Size(size.width * 0.44f, size.height * 0.16f), CornerRadius(3f))
                 drawRect(Color(0xFF6D4C41), Offset(size.width * 0.28f, size.height * 0.88f), Size(size.width * 0.44f, size.height * 0.08f))
             }
+            GameId.YACHT -> Canvas(Modifier.size(56.dp)) {
+                fun die(face: Int, x: Float, y: Float, side: Float) {
+                    drawRoundRect(Color(0xFFFFFBF2), Offset(x, y), Size(side, side), CornerRadius(side * 0.18f))
+                    drawRoundRect(Color(0xFF283593), Offset(x, y), Size(side, side), CornerRadius(side * 0.18f), style = Stroke(side * 0.06f))
+                    val pips = if (face == 5) listOf(0.28f to 0.28f, 0.72f to 0.28f, 0.5f to 0.5f, 0.28f to 0.72f, 0.72f to 0.72f)
+                    else listOf(0.28f to 0.28f, 0.72f to 0.28f, 0.28f to 0.5f, 0.72f to 0.5f, 0.28f to 0.72f, 0.72f to 0.72f)
+                    pips.forEach { (px, py) -> drawCircle(Color(0xFF283593), side * 0.07f, Offset(x + side * px, y + side * py)) }
+                }
+                die(6, size.width * 0.08f, size.height * 0.12f, size.width * 0.42f)
+                die(5, size.width * 0.46f, size.height * 0.4f, size.width * 0.42f)
+            }
+            GameId.SHUT_BOX -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF4E342E), cornerRadius = CornerRadius(8f))
+                listOf("1", "2", "3", "4", "5", "6", "7", "8", "9").forEachIndexed { i, n ->
+                    val x = (i % 5) * size.width / 5.2f + size.width * 0.04f
+                    val y = (i / 5) * size.height / 2.2f + size.height * 0.08f
+                    drawRoundRect(if (i == 8) Color(0xFFD7CCC8) else Color(0xFFFFFBF2), Offset(x, y), Size(size.width / 6f, size.height / 3.2f), CornerRadius(3f))
+                    val layout = measurer.measure(n, TextStyle(color = Color(0xFF3E2723), fontSize = 8.sp, fontWeight = FontWeight.Bold))
+                    drawText(layout, topLeft = Offset(x + 2f, y + 2f))
+                }
+            }
+            GameId.TEN_THOUSAND -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF1B5E20), cornerRadius = CornerRadius(8f))
+                val die = size.width * 0.28f
+                listOf(1 to 0.08f, 5 to 0.38f, 1 to 0.62f).forEachIndexed { i, (face, x) ->
+                    val y = if (i == 1) size.height * 0.48f else size.height * 0.18f
+                    drawRoundRect(Color(0xFFFFFBF2), Offset(x * size.width, y), Size(die, die), CornerRadius(4f))
+                    drawCircle(Color(0xFF1B5E20), die * 0.12f, Offset(x * size.width + die / 2, y + die / 2))
+                    if (face == 5) {
+                        drawCircle(Color(0xFF1B5E20), die * 0.08f, Offset(x * size.width + die * 0.25f, y + die * 0.25f))
+                        drawCircle(Color(0xFF1B5E20), die * 0.08f, Offset(x * size.width + die * 0.75f, y + die * 0.75f))
+                    }
+                }
+            }
+            GameId.SHIP_CREW -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF0D47A1), cornerRadius = CornerRadius(8f))
+                listOf("6", "5", "4").forEachIndexed { i, n ->
+                    val x = size.width * (0.08f + i * 0.3f)
+                    drawRoundRect(Color(0xFFFFFBF2), Offset(x, size.height * 0.28f), Size(size.width * 0.26f, size.width * 0.26f), CornerRadius(4f))
+                    val layout = measurer.measure(n, TextStyle(color = Color(0xFF0D47A1), fontSize = 11.sp, fontWeight = FontWeight.Bold))
+                    drawText(layout, topLeft = Offset(x + 4f, size.height * 0.32f))
+                }
+            }
             GameId.LETTER_DRAW -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFFE0F2F1), cornerRadius = CornerRadius(8f))
                 val cell = size.width / 5

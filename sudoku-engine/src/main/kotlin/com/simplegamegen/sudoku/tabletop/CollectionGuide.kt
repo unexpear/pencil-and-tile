@@ -63,5 +63,9 @@ object CollectionGuide {
         GameCapacity("Sliding blocks", 1, 4, "6×6 jammed grids × 4 levels. Slide vehicles so the target reaches the exit on the right.", "Each board is built from a cleared layout and kept only when BFS finds a solution; the stored length is that distance."),
         GameCapacity("Go", 1, 4, "19×19 Go × 4 computer strengths. You play black. Chinese area scoring, positional superko, white receives 7.5.", "1 empty board; matches differ by play."),
         GameCapacity("Klotski", 1, 4, "4×5 Klotski × 4 levels. Slide the 2×2 block onto the bottom opening. Expert is the classic layout.", "Shorter levels are scrambles kept only when a search proves the big block can reach the opening. Each square a block slides counts as one move."),
+        GameCapacity("Yacht", 1, 4, "Five dice and thirteen boxes × 4 computer strengths. Up to three rolls a turn. 63 or more on Ones through Sixes scores 35 more. A later five of a kind, after that box scores 50, adds 100. The higher total wins.", "Each sheet is filled in play. Dice come from the game's seed."),
+        GameCapacity("Shut the Box", 1, 4, "Nine tiles, 1 through 9, × 4 computer strengths. Flip a set that adds up to the roll. One die once every tile still up is 6 or less. The lower score wins.", "Each player has one box. Dice come from the game's seed."),
+        GameCapacity("Ten Thousand", 1, 4, "Six dice to 10,000 × 4 computer strengths. The first bank has to be at least 500. A roll that scores nothing loses the turn. The other player gets one more turn after 10,000.", "Each turn's dice come from the game's seed."),
+        GameCapacity("Ship, Captain, Crew", 1, 4, "Five dice, up to three rolls, five hands × 4 computer strengths. A 6, then a 5, then a 4, and the other two dice are cargo. The higher cargo wins.", "Each hand's dice come from the game's seed."),
     )
 }

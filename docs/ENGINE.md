@@ -113,6 +113,20 @@ turns.
 - **Klotski** (`grids/Klotski.kt`): a 4×5 board. The 2×2 block wins on the bottom
   opening. Each square a block slides counts as one move. Expert is the classic
   opening, 116 squares. Shorter levels are scrambles a search has proved solvable.
+- **Yacht** (`duels/Yacht.kt`): five dice and thirteen boxes, up to three rolls a
+  turn. Ones through Sixes, three and four of a kind, full house, straights, five
+  of a kind, and chance. 63 or more on the upper boxes scores 35 more. A later five
+  of a kind, after that box scores 50, adds 100 and must use the matching upper box
+  when it is open. You and the computer each fill a sheet. Saves are versioned text.
+- **Shut the Box** (`duels/ShutBox.kt`): nine tiles. Flip a set that adds up to two dice,
+  or one die once every remaining tile is 6 or less. The score is the tiles left up.
+  Each player has a box. The lower score wins.
+- **Ten Thousand** (`duels/TenThousand.kt`): six dice. Ones and fives score, and so do
+  three or more of a kind, a straight, three pairs and two threes. Bank the turn or
+  keep rolling. The first bank is at least 500. Reach 10,000 and the other player
+  has one more turn.
+- **Ship, Captain, Crew** (`duels/ShipCrew.kt`): five dice, three rolls, five hands.
+  A 6, then a 5, then a 4. The other two dice are cargo. The higher cargo wins.
 - **Word ladder** (`wordplay/WordLadder.kt`): change one letter at a time
   between two everyday words. Steps may use any accepted word. Easy is three
   letters; Expert is five. The par is the shortest route. Saves are versioned text.

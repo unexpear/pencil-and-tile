@@ -61,5 +61,9 @@ object Tutorials {
         GameId.SLIDING_BLOCKS -> NumberTutorials.slidingBlocks
         GameId.GO -> BoardTutorials.go
         GameId.KLOTSKI -> NumberTutorials.klotski
+        GameId.YACHT -> BoardTutorials.yacht
+        GameId.SHUT_BOX -> DiceTutorials.shutBox
+        GameId.TEN_THOUSAND -> DiceTutorials.tenThousand
+        GameId.SHIP_CREW -> DiceTutorials.shipCrew
     }
 }

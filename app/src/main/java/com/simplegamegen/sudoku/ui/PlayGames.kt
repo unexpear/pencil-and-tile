@@ -48,6 +48,18 @@ import com.simplegamegen.sudoku.duels.ConnectFourAi
 import com.simplegamegen.sudoku.duels.ConnectFourCodec
 import com.simplegamegen.sudoku.duels.Mastermind
 import com.simplegamegen.sudoku.duels.MastermindCodec
+import com.simplegamegen.sudoku.duels.ShipAi
+import com.simplegamegen.sudoku.duels.ShipCrew
+import com.simplegamegen.sudoku.duels.ShipCrewCodec
+import com.simplegamegen.sudoku.duels.ShutAi
+import com.simplegamegen.sudoku.duels.ShutBox
+import com.simplegamegen.sudoku.duels.ShutBoxCodec
+import com.simplegamegen.sudoku.duels.TenAi
+import com.simplegamegen.sudoku.duels.TenThousand
+import com.simplegamegen.sudoku.duels.TenThousandCodec
+import com.simplegamegen.sudoku.duels.Yacht
+import com.simplegamegen.sudoku.duels.YachtAi
+import com.simplegamegen.sudoku.duels.YachtCodec
 import com.simplegamegen.sudoku.duels.DotsAi
 import com.simplegamegen.sudoku.duels.DotsCodec
 import com.simplegamegen.sudoku.duels.DotsGame
@@ -84,6 +96,10 @@ import com.simplegamegen.sudoku.ui.screens.GoScreen
 import com.simplegamegen.sudoku.ui.screens.LightsScreen
 import com.simplegamegen.sudoku.ui.screens.SlidingBlocksScreen
 import com.simplegamegen.sudoku.ui.screens.KlotskiScreen
+import com.simplegamegen.sudoku.ui.screens.ShipCrewScreen
+import com.simplegamegen.sudoku.ui.screens.ShutBoxScreen
+import com.simplegamegen.sudoku.ui.screens.TenThousandScreen
+import com.simplegamegen.sudoku.ui.screens.YachtScreen
 import com.simplegamegen.sudoku.ui.screens.SlitherlinkScreen
 import com.simplegamegen.sudoku.ui.screens.TowersScreen
 import com.simplegamegen.sudoku.ui.screens.LetterDrawScreen
@@ -173,6 +189,30 @@ object GoComputer : ComputerPlayer<Go> {
         else -> state.place(choice)!!
     }
     override val pauseMs = 350L
+}
+
+object YachtComputer : ComputerPlayer<Yacht> {
+    override fun needsMove(state: Yacht) = !state.ended && state.turn == -1
+    override fun move(state: Yacht) = YachtAi.step(state)
+    override val pauseMs = 320L
+}
+
+object ShutBoxComputer : ComputerPlayer<ShutBox> {
+    override fun needsMove(state: ShutBox) = !state.ended && state.turn == -1
+    override fun move(state: ShutBox) = ShutAi.step(state)
+    override val pauseMs = 320L
+}
+
+object TenThousandComputer : ComputerPlayer<TenThousand> {
+    override fun needsMove(state: TenThousand) = !state.ended && state.turn == -1
+    override fun move(state: TenThousand) = TenAi.step(state)
+    override val pauseMs = 280L
+}
+
+object ShipCrewComputer : ComputerPlayer<ShipCrew> {
+    override fun needsMove(state: ShipCrew) = !state.ended && state.turn == -1
+    override fun move(state: ShipCrew) = ShipAi.step(state)
+    override val pauseMs = 280L
 }
 
 object FiveRowComputer : ComputerPlayer<FiveRow> {
@@ -348,5 +388,17 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.KLOTSKI.route) {
         KlotskiScreen(nav, playModel<Klotski>(GameId.KLOTSKI, store, codecOf(KlotskiCodec::encode, KlotskiCodec::decode)), factory)
+    }
+    composable(GameId.YACHT.route) {
+        YachtScreen(nav, playModel<Yacht>(GameId.YACHT, store, codecOf(YachtCodec::encode, YachtCodec::decode), YachtComputer), factory)
+    }
+    composable(GameId.SHUT_BOX.route) {
+        ShutBoxScreen(nav, playModel<ShutBox>(GameId.SHUT_BOX, store, codecOf(ShutBoxCodec::encode, ShutBoxCodec::decode), ShutBoxComputer), factory)
+    }
+    composable(GameId.TEN_THOUSAND.route) {
+        TenThousandScreen(nav, playModel<TenThousand>(GameId.TEN_THOUSAND, store, codecOf(TenThousandCodec::encode, TenThousandCodec::decode), TenThousandComputer), factory)
+    }
+    composable(GameId.SHIP_CREW.route) {
+        ShipCrewScreen(nav, playModel<ShipCrew>(GameId.SHIP_CREW, store, codecOf(ShipCrewCodec::encode, ShipCrewCodec::decode), ShipCrewComputer), factory)
     }
 }

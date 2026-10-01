@@ -22,7 +22,7 @@ https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
 - **Cards and tiles:** Mahjong Solitaire, Solitaire (Klondike, with Spider and Pyramid under it), Dominoes
   and Memory.
 - **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster.
-- **Classics:** Connect Four, Mastermind, Battleship, Mancala and Five in a row.
+- **Classics:** Connect Four, Mastermind, Battleship, Mancala, Five in a row, Yacht, Shut the Box, Ten Thousand, and Ship, Captain, Crew.
 - **Arcade:** 2048 and Tetras.
 
 Every game has a guided tutorial, four levels, hints, themes and dark mode, screen-reader support, and
@@ -178,6 +178,15 @@ older boards show **Original** rather than acquiring a misleading rating.
   far store, and capture the pit opposite. Another turn if you land in your store.
 - **Five in a row:** 11×11 board. Five or more in a line wins. You play dark
   and move first. Pinch to zoom.
+- **Yacht:** five dice and thirteen boxes. Roll up to three times, hold any
+  dice, then score one box. You and the computer each fill a sheet. The higher
+  total wins.
+- **Shut the Box:** nine tiles. Flip a set that adds up to the dice. One die
+  once every tile left is 6 or less. The lower leftover wins.
+- **Ten Thousand:** six dice. Bank scoring rolls, or push and risk losing the
+  turn. The first bank is at least 500. First to 10,000, then one reply turn.
+- **Ship, Captain, Crew:** five dice and three rolls. A 6, then a 5, then a 4.
+  The other two dice are cargo. Five hands. The higher cargo wins.
 - **Word ladder:** change one letter at a time from one English word to another.
   Every step has to be a real word. Four lengths, with a few spare steps.
 - **2048:** 3×3 to 6×6 boards with goals from 512 to 8192. Swipe or use the arrows.
@@ -205,7 +214,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**55 games, 65 rule variants, 404 setting combinations**. These are not unique
+**59 games, 69 rule variants, 420 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
@@ -245,7 +254,7 @@ corner roundness and home layout, and share or import it as a text code. See
   games' rules, generators, computer players and versioned saves.
 - `sudoku-engine/.../logic/` — Samurai Sudoku, Calcudoku, Kakuro and Futoshiki: shared model,
   counting solver, seeded generators, uniqueness verifier and save format.
-- `app/` — Compose UI for all 55 games and Sudoku statistics, backed by the
+- `app/` — Compose UI for all 59 games and Sudoku statistics, backed by the
   engine. `ui/theme/` holds the theme model, storage and Compose theme;
   `ui/assets/` the drawn game pieces and icons; `ui/components/` shared chrome.
 

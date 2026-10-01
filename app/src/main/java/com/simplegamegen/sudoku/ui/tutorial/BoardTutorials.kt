@@ -573,6 +573,38 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val yacht: Tutorial get() {
+        fun dice(faces: List<Int>, held: Set<Int> = emptySet()) = Scene(5f, 1f, faces.mapIndexed { i, face ->
+            Item("d$i", i.toFloat(), 0f, look = Cell(text = face.toString(), fill = if (i in held) Fill.SHADED else Fill.PAPER),
+                describe = if (i in held) "Die showing $face, held" else "Die showing $face")
+        }, maxUnit = 64)
+        val start = listOf(4, 4, 4, 2, 1)
+        val rolled = listOf(4, 4, 4, 4, 6)
+        val holdHelp = "Hold a 4. The 2 and the 1 are the ones to roll again."
+        return Tutorial(
+            GameId.YACHT,
+            "Five dice, up to three rolls, then one box.",
+            rules = listOf(
+                "Roll five dice up to three times. Tap a die to hold it, then roll the rest.",
+                "Score the roll in one open box. Each box is used once. Ones through Sixes add that face, and 63 or more there scores 35 more.",
+                "Three and four of a kind add all five dice. A full house scores 25, a small straight 30, a large straight 40, five of a kind scores 50, and Chance adds all five dice.",
+                "After five of a kind scores 50, each later one adds 100 and fills the matching upper box when it is open. The higher sheet wins.",
+            ),
+            tips = listOf("Scoring 0 spends that box and saves a later roll for a better one."),
+            steps = listOf(
+                Step("Three 4s is a start. You may roll twice more.", dice(start)),
+                Step("Tap a 4 to hold it.", dice(start), tap = setOf("d0"), after = dice(start, setOf(0)),
+                    then = "That 4 stays.", help = holdHelp),
+                Step("Tap a 4 to hold it.", dice(start, setOf(0)), tap = setOf("d1"), after = dice(start, setOf(0, 1)), help = holdHelp),
+                Step("Tap a 4 to hold it.", dice(start, setOf(0, 1)), tap = setOf("d2"), after = dice(start, setOf(0, 1, 2)),
+                    then = "The 2 and the 1 will roll again.", help = holdHelp),
+                Step("Roll the dice you did not hold.", dice(start, setOf(0, 1, 2)).choices("Roll again"), pick = "Roll again", after = dice(rolled)),
+                Step("Four 4s. Four of a kind adds every die.", dice(rolled).choices("Four of a kind"), pick = "Four of a kind",
+                    then = "22 points. Four of a kind adds all five dice."),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {

@@ -91,6 +91,10 @@ private val ScoreKinds = mapOf(
     GameId.HONEYCOMB to ScoreKind("Most points", false),
     GameId.LETTER_DRAW to ScoreKind("Longest word", false),
     GameId.MANCALA to ScoreKind("Most stones", false),
+    GameId.YACHT to ScoreKind("Most points", false),
+    GameId.SHUT_BOX to ScoreKind("Lowest score", true),
+    GameId.TEN_THOUSAND to ScoreKind("Most points", false),
+    GameId.SHIP_CREW to ScoreKind("Most points", false),
 )
 
 private fun gameOf(name: String): GameId? = if (name == GRID_RECORD) GameId.SUDOKU else GameId.entries.firstOrNull { it.name == name }
