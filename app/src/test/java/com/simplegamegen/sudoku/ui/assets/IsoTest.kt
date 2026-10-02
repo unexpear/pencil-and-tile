@@ -70,6 +70,23 @@ class IsoTest {
         assertOnSquare(frame)
     }
 
+    @Test fun `the seat view keeps squares large on a tall phone and still recedes`() {
+        val seat = tableFrame(8, 1080f, peakZ = 1.5f, view = BoardViews.behind, maxHeightPx = 1400f, margin = 0.46f)
+        val low = tableFrame(8, 1080f, peakZ = 1.5f, view = BoardViews.behind.copy(pitch = 40f, distance = 1.5f), maxHeightPx = 1400f, margin = 0.46f)
+        assertTrue(seat.cell > low.cell)
+        assertTrue(span(seat, 0f) < span(seat, 8f) * 0.92f)
+        assertOnSquare(seat)
+    }
+
+    @Test fun `a tap between go points hits the nearest intersection`() {
+        val frame = tableFrame(19, 1000f, peakZ = 0.55f, view = BoardView("Above", 0f, 76f, 1.28f), maxHeightPx = 1400f, margin = 0.68f)
+        val center = frame.at(9.5f, 9.5f, 0.18f)
+        assertTrue(nearestCell(frame, center, 19, 0.18f) == 9 * 19 + 9)
+        val unit = frame.unitAt(9.5f, 9.5f, 0.18f)
+        assertTrue(nearestCell(frame, Offset(center.x + unit * 0.35f, center.y), 19, 0.18f) == 9 * 19 + 9)
+        assertTrue(nearestCell(frame, Offset(-400f, -400f), 19, 0.18f) == null)
+    }
+
     @Test fun `yaw turns the camera onto the right-hand side`() {
         val frame = tableFrame(8, 400f, peakZ = 1.5f, view = BoardViews.behind.copy(yaw = 90f), maxHeightPx = 700f)
         assertTrue(frame.depth(0f, 4f, 0f) > frame.depth(8f, 4f, 0f))

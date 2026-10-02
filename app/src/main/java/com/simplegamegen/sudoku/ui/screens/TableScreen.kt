@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -140,10 +141,13 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
         outcome = when (state?.result) {
             GameResult.WON -> Outcome(Result.WON); GameResult.LOST -> Outcome(Result.LOST); GameResult.DRAW -> Outcome(Result.DRAW); else -> null
         })
+    val tightBoard = vm.game == TableGame.CHECKERS && match != null
     GameScaffold(
         title = vm.game.title, game = id, tutorial = id, onBack = { nav.popBackStack() },
         subtitle = match?.let { GameGuide.settingDescription(vm.game, it.setting) },
         busy = s.busy || s.thinking,
+        contentPadding = if (tightBoard) PaddingValues(horizontal = 2.dp, vertical = 2.dp) else PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        itemSpacing = if (tightBoard) 4.dp else 12.dp,
         actions = { HeaderAction(GameIcons.Rules, "Rules") { rules = true } },
         menu = if (match == null) emptyList() else listOf(
             MenuAction("New game", GameIcons.Plus, enabled = !s.busy) { sheet = true },
@@ -401,6 +405,14 @@ private fun MinesBoard(s: MinesState, hint: Move?, flagMode: Boolean, play: (Mov
 
 // ---------------- Checkers ----------------
 
+private const val SelectedLift = 0.42f
+
+/** The man a jump lands over, or null for a quiet step. */
+private fun jumpedIndex(from: Int, to: Int): Int? {
+    if (kotlin.math.abs(from / 8 - to / 8) != 2) return null
+    return (from / 8 + to / 8) / 2 * 8 + (from % 8 + to % 8) / 2
+}
+
 @Composable
 private fun ColumnScope.CheckersBoard(
     s: CheckersState,
@@ -415,18 +427,22 @@ private fun ColumnScope.CheckersBoard(
     val camera = rememberBoardCamera("checkers_views")
     var selected by remember(s) { mutableStateOf(s.forced) }
     val legal = remember(s) { s.legalMoves() }
-    if (s.forced != null) InfoChip("Keep jumping with the same piece", emphasized = true)
-    PlayBoard(full, onExit, canUndo, onUndo, bar = {
-        if (s.forced != null) InfoChip("Keep jumping with the same piece", emphasized = true)
-    }) {
+    PlayBoard(
+        full, onExit, canUndo, onUndo,
+        above = {
+            if (s.forced != null) InfoChip("Keep jumping with the same piece", emphasized = true)
+        },
+        below = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                CheckerPiece(1, false, size = 20.dp); Text("You move first, up the board", style = MaterialTheme.typography.bodySmall, color = c.muted)
+                CheckerPiece(-1, false, size = 20.dp); Text("Computer", style = MaterialTheme.typography.bodySmall, color = c.muted)
+            }
+        },
+    ) {
         CheckersTable(camera, s, legal, selected, hint, onSelect = { selected = it }, onPlay = { move ->
             play(move)
             selected = null
         })
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        CheckerPiece(1, false, size = 20.dp); Text("You move first, up the board", style = MaterialTheme.typography.bodySmall, color = c.muted)
-        CheckerPiece(-1, false, size = 20.dp); Text("Computer", style = MaterialTheme.typography.bodySmall, color = c.muted)
     }
 }
 
@@ -443,7 +459,7 @@ private fun CheckersTable(
     val c = LocalGameLook.current.colors
     val measurer = rememberTextMeasurer()
     val playing = s.turn == 1 && s.result == GameResult.PLAYING
-    BoardWithViews(camera, n = 8, peakZ = 1.35f, margin = 0.62f) { frame ->
+    BoardWithViews(camera, n = 8, peakZ = 1.35f, margin = 0.5f) { frame ->
         val top = 0.22f
         val order = (0 until 64).sortedByDescending { frame.depth((it % 8) + 0.5f, (it / 8) + 0.5f, top) }
         order.forEach { i ->
@@ -452,6 +468,7 @@ private fun CheckersTable(
             val piece = s.board[i]
             val dest = legal.firstOrNull { it.from == selected && it.to == i }
             val movable = legal.any { it.from == i }
+            val jumped = selected != null && legal.any { it.from == selected && jumpedIndex(it.from, it.to) == i }
             val at = frame.at(col + 0.5f, row + 0.5f, top)
             Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
                 contentDescription = say(
@@ -460,11 +477,19 @@ private fun CheckersTable(
                         piece < 0 -> "computer ${if (piece == -2) "king" else "man"}"
                         dest != null -> "legal move"
                         else -> "empty"
+                    } + when {
+                        piece != 0 && dest != null -> ", legal move"
+                        jumped -> ", capture"
+                        else -> ""
                     },
                 )
                 if (selected == i) stateDescription = say("Selected")
                 if (playing && (dest != null || movable)) onClick {
-                    if (dest != null) onPlay(dest) else onSelect(i)
+                    when {
+                        dest != null -> onPlay(dest)
+                        selected == i && s.forced == null -> onSelect(null)
+                        else -> onSelect(i)
+                    }
                     true
                 }
             })
@@ -474,14 +499,14 @@ private fun CheckersTable(
                 if (!playing) return@detectTapGestures
                 val hit = order.asReversed().firstOrNull { i ->
                     val piece = s.board[i]
-                    val lift = if (selected == i) 0.28f else 0f
+                    val lift = if (selected == i) SelectedLift else 0f
                     val tall = if (piece == 0) top else top + lift + checkerRise(kotlin.math.abs(piece) == 2)
                     coversCell(frame, pos, i % 8, i / 8, top, tall, frame.unitAt(i % 8 + 0.5f, i / 8 + 0.5f, top) * 0.38f)
                 } ?: return@detectTapGestures
                 val dest = legal.firstOrNull { it.from == selected && it.to == hit }
                 when {
                     dest != null -> onPlay(dest)
-                    legal.any { it.from == hit } -> onSelect(hit)
+                    legal.any { it.from == hit } -> onSelect(if (selected == hit && s.forced == null) null else hit)
                     selected != null -> onSelect(null)
                 }
             }
@@ -491,9 +516,15 @@ private fun CheckersTable(
                 val row = i / 8
                 val col = i % 8
                 val dark = (row + col) % 2 == 1
-                val marked = selected == i || hint?.from == i || hint?.to == i
+                val dest = legal.firstOrNull { it.from == selected && it.to == i }
+                val tint = when {
+                    selected == i -> 0.62f
+                    dest != null -> 0.32f
+                    hint?.from == i || hint?.to == i -> 0.38f
+                    else -> 0f
+                }
                 val fill = if (dark) c.boardDark else c.boardLight
-                drawSquareTop(frame, col, row, top, if (marked) lerp(fill, c.highlight, 0.45f) else fill)
+                drawSquareTop(frame, col, row, top, if (tint > 0f) lerp(fill, c.highlight, tint) else fill)
                 drawSquareGrain(frame, col, row, top, fill)
             }
             val ink = Color(0xFFF1DFC0)
@@ -511,17 +542,27 @@ private fun CheckersTable(
                 val piece = s.board[i]
                 val row = i / 8
                 val col = i % 8
+                val king = kotlin.math.abs(piece) == 2
+                val lift = if (selected == i) SelectedLift else 0f
                 if (piece != 0) {
                     drawPuck(
                         frame, col + 0.5f, row + 0.5f, top,
                         if (piece > 0) c.playerOne else c.playerTwo,
-                        king = kotlin.math.abs(piece) == 2,
-                        lift = if (selected == i) 0.28f else 0f,
+                        king = king,
+                        lift = lift,
                     )
                 }
                 val dest = legal.firstOrNull { it.from == selected && it.to == i }
-                if (dest != null && piece == 0) drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
-                if (selected == i) drawRing(frame, col + 0.5f, row + 0.5f, top, c.highlight)
+                val jumped = selected != null && legal.any { it.from == selected && jumpedIndex(it.from, it.to) == i }
+                when {
+                    selected == i && piece != 0 -> drawRing(
+                        frame, col + 0.5f, row + 0.5f, top + lift + checkerRise(king) * 0.7f, c.highlight, radiusScale = 0.5f,
+                    )
+                    jumped && piece != 0 -> drawRing(
+                        frame, col + 0.5f, row + 0.5f, top + checkerRise(king) * 0.65f, c.highlight,
+                    )
+                    dest != null && piece == 0 -> drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
+                }
             }
         }
     }

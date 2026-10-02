@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -33,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -85,6 +87,8 @@ fun <S : Any> PlayShell(
     tools: @Composable RowScope.(S, PlaySession<S>) -> Unit = { _, _ -> },
     undoable: Boolean = true,
     scroll: Boolean = true,
+    /** Less padding, so a 3D board can use the phone's width and height. */
+    tight: Boolean = false,
     content: @Composable ColumnScope.(S, PlaySession<S>) -> Unit,
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
@@ -108,6 +112,8 @@ fun <S : Any> PlayShell(
             MenuAction("New game", GameIcons.Plus, enabled = !s.busy) { sheet = true },
             MenuAction("Save now", GameIcons.Save, enabled = !s.busy, onClick = vm::retrySave),
         ),
+        contentPadding = if (tight) PaddingValues(horizontal = 2.dp, vertical = 2.dp) else PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        itemSpacing = if (tight) 4.dp else 12.dp,
         bottomBar = if (game == null) null else {
             {
                 ToolBar {
@@ -156,6 +162,9 @@ fun ColumnScope.PlayBoard(
     canUndo: Boolean,
     onUndo: () -> Unit,
     bar: @Composable RowScope.() -> Unit = {},
+    /** Status, captures, or hands. Shown in the play column and again in full screen. */
+    above: @Composable ColumnScope.() -> Unit = {},
+    below: @Composable ColumnScope.() -> Unit = {},
     board: @Composable BoxScope.() -> Unit,
 ) {
     if (full) {
@@ -165,19 +174,25 @@ fun ColumnScope.PlayBoard(
             properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
         ) {
             Column(
-                Modifier.fillMaxSize().background(colors.background).systemBarsPadding().padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                Modifier.fillMaxSize().background(colors.background).systemBarsPadding().padding(horizontal = 2.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Button(onClick = onExit, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Exit full screen") }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (canUndo) OutlinedButton(onClick = onUndo, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text("Undo") }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = onExit, modifier = Modifier.weight(1.3f).heightIn(min = 48.dp)) {
+                        Text("Exit full screen", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    if (canUndo) OutlinedButton(onClick = onUndo, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Undo") }
                     bar()
                 }
+                above()
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center, content = board)
+                below()
             }
         }
     }
+    above()
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center, content = board)
+    below()
 }
 
 val LevelNames = listOf("Easy", "Medium", "Hard", "Expert")
