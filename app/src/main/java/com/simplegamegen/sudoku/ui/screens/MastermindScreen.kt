@@ -99,9 +99,10 @@ fun MastermindScreen(nav: NavController, vm: PlayViewModel<Mastermind>, factory:
             ZoomBox(Modifier.fillMaxWidth()) {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     val gap = 6.dp
-                    val peg = minOf((maxWidth - 20.dp - gap * 4) / 5, 52.dp)
+                    // Compact rows, so the whole board and the colour picker fit on a phone with little scrolling.
+                    val peg = minOf((maxWidth - 20.dp - gap * 4) / 5, 34.dp)
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Board).padding(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         if (g.over) {
                             Text("Secret code", style = MaterialTheme.typography.labelMedium, color = Color(0xFFF4F1EA))
                             CodeRow(g.secret, peg)

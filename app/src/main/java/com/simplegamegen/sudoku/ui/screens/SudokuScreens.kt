@@ -483,26 +483,27 @@ fun NumberPad(size: Int, current: List<Int>, notesMode: Boolean, onNumber: (Int)
     val look = LocalGameLook.current
     val counts = remember(current) { current.groupingBy { it }.eachCount() }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        for (row in (1..size).chunked(if (size == 9) 5 else size)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Every digit fits on screen under the board: one row up to 9×9, two rows of eight for 16×16.
+        val perRow = if (size > 9) 8 else size
+        for (row in (1..size).chunked(perRow)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(if (perRow > 6) 4.dp else 8.dp)) {
                 for (n in row) {
                     val left = size - (counts[n] ?: 0)
                     val done = left <= 0
                     Surface(
-                        onClick = { onNumber(n) }, modifier = Modifier.weight(1f).height(60.dp)
+                        onClick = { onNumber(n) }, modifier = Modifier.weight(1f).height(if (perRow > 6) 54.dp else 60.dp)
                             .semantics { contentDescription = say("Digit $n, $left left") },
                         shape = MaterialTheme.shapes.medium,
                         color = if (notesMode) look.colors.surface else if (done) look.colors.surfaceAlt else look.colors.accentSoft,
                         border = BorderStroke(1.dp, if (notesMode) look.colors.accent else look.colors.outline),
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Text(n.toString(), fontSize = if (notesMode) 18.sp else 24.sp, fontWeight = FontWeight.SemiBold,
+                            Text(n.toString(), fontSize = if (notesMode) 18.sp else if (perRow > 6) 21.sp else 24.sp, fontWeight = FontWeight.SemiBold,
                                 color = if (done) look.colors.muted else look.colors.accent)
                             Text(if (done) "done" else "$left", fontSize = 10.sp, color = look.colors.muted)
                         }
                     }
                 }
-                if (row.size < 5 && size == 9) repeat(5 - row.size) { Box(Modifier.weight(1f)) }
             }
         }
     }

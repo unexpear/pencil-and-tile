@@ -199,7 +199,8 @@ fun TetrasScreen(nav: NavController, vm: PlayViewModel<TetrasGame>, factory: Puz
         val after = vm.state.value.game
         if (before != null && after != null && (after.index != before.index || after.over != before.over)) vm.flush()
     }
-    PlayShell(nav, vm, GameId.TETRAS, remember(factory) { TetrasSetup(factory) }, undoable = false, tools = { g, _ ->
+    // No scrolling: in an action game the whole well has to be on screen at once.
+    PlayShell(nav, vm, GameId.TETRAS, remember(factory) { TetrasSetup(factory) }, undoable = false, scroll = false, tools = { g, _ ->
         ToolButton(if (paused) GameIcons.Pass else GameIcons.Timer, if (paused) "Resume" else "Pause", enabled = !g.over, active = paused) { paused = !paused; vm.flush() }
         ToolButton(GameIcons.Back, "Left", enabled = !g.over && !paused) { act { it.shift(-1) } }
         ToolButton(GameIcons.Restart, "Turn", enabled = !g.over && !paused) { act { it.rotate() } }
@@ -218,8 +219,9 @@ fun TetrasScreen(nav: NavController, vm: PlayViewModel<TetrasGame>, factory: Puz
         }
         if (g.over) Text("Game over. Final score ${g.score}.", color = look.colors.danger, style = MaterialTheme.typography.titleMedium)
         else if (paused) Text("Paused", color = look.colors.muted, style = MaterialTheme.typography.titleMedium)
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val cell = minOf((maxWidth - 88.dp) / TetrasGame.W, 28.dp)
+        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+            // The well fits both the width (beside the next pieces) and the height that is left under the score.
+            val cell = minOf((maxWidth - 88.dp) / TetrasGame.W, maxHeight / TetrasGame.H, 28.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
                 Canvas(Modifier.size(cell * TetrasGame.W, cell * TetrasGame.H)
                     .semantics { contentDescription = say("Tetras board, ${g.piece?.let { Piece.NAMES[it.type] } ?: "no"} piece falling") }

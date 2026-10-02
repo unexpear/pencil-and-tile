@@ -257,14 +257,13 @@ private fun MahjongPlay(p: MahjongProgress, s: ArcadeState, select: (Int) -> Uni
         }
     } else if (pairs.isEmpty()) Text("No free pairs match. Undo a move or restart the deal.", color = look.colors.danger)
     TablePanel(padding = androidx.compose.foundation.layout.PaddingValues(8.dp)) {
-        ZoomBox(Modifier.fillMaxWidth()) {
-            MahjongBoard(
-                p.deal.tiles, removed, s.selected,
-                hinted = setOfNotNull(s.highlighted?.a, s.highlighted?.b),
-                enabled = !p.complete && !s.busy,
-                onSelect = select,
-            )
-        }
+        // Pinch to zoom; the camera chips under the board turn it.
+        MahjongBoard(
+            p.deal.tiles, removed, s.selected,
+            hinted = setOfNotNull(s.highlighted?.a, s.highlighted?.b),
+            enabled = !p.complete && !s.busy,
+            onSelect = select,
+        )
         Text(if (s.selected != null) "Now tap a matching free tile." else "Tap two identical free tiles. Free tiles have nothing on top and an open left or right side.",
             style = MaterialTheme.typography.bodySmall)
     }

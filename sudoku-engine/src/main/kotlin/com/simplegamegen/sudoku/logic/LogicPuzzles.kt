@@ -4,7 +4,7 @@ import com.simplegamegen.sudoku.solver.checkpoint
 import kotlin.random.Random
 
 /** Number-logic puzzles that aren't square Sudoku boards: Samurai, KenKen and Kakuro. */
-enum class LogicKind(val title: String) { SAMURAI("Samurai Sudoku"), KENKEN("KenKen"), KAKURO("Kakuro"), FUTOSHIKI("Futoshiki") }
+enum class LogicKind(val title: String) { SAMURAI("Samurai Sudoku"), KENKEN("Calcudoku"), KAKURO("Kakuro"), FUTOSHIKI("Futoshiki") }
 
 enum class LogicLevel(val label: String) { EASY("Easy"), MEDIUM("Medium"), HARD("Hard"), EXPERT("Expert") }
 

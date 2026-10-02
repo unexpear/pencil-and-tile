@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import com.simplegamegen.sudoku.ui.assets.DiceTray
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -99,24 +100,8 @@ fun YachtScreen(nav: NavController, vm: PlayViewModel<Yacht>, factory: PuzzleFac
         val legal = if (playable) Yacht.legalBoxes(g.you, g.dice).toSet() else emptySet()
         DuelStatus(g.ended, g.winner, g.turn, s.thinking, "You ${g.yourTotal()}", "Computer ${g.cpuTotal()}")
         if (g.rolls in 1..3) InfoChip("Roll ${g.rolls} of 3")
-        TablePanel {
-            BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                val gap = 8.dp
-                val die = minOf((maxWidth - gap * 4) / 5, 72.dp)
-                Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
-                    g.dice.forEachIndexed { i, face ->
-                        val spoken = if (g.held[i]) "Die showing $face, held" else "Die showing $face"
-                        Box(
-                            Modifier.size(die)
-                                .clickable(enabled = canHold, role = Role.Button) { vm.play { it.hold(i) } }
-                                .semantics { contentDescription = say(spoken) },
-                        ) {
-                            Canvas(Modifier.fillMaxSize()) { drawYachtDie(face, g.held[i], c.accent) }
-                        }
-                    }
-                }
-            }
-        }
+        // The dice tumble on a felt tray when they're rolled; tap one to hold it.
+        DiceTray(g.dice, g.held, canHold, rollKey = g.rolls to g.dice) { i -> vm.play { it.hold(i) } }
         if (playable && g.rolls < 3) {
             Button(
                 onClick = { vm.play { it.roll() } },

@@ -1,5 +1,11 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -83,11 +89,11 @@ fun MancalaScreen(nav: NavController, vm: PlayViewModel<Mancala>, factory: Puzzl
         }
         TablePanel {
             Row(
-                Modifier.fillMaxWidth().padding(8.dp),
+                Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Store(g.pits[Mancala.CPU], "Computer's store, ${g.pits[Mancala.CPU]} stones", Modifier.width(52.dp).height(112.dp), g.last == Mancala.CPU)
+                Store(g.pits[Mancala.CPU], "Computer's store, ${g.pits[Mancala.CPU]} stones", Modifier.width(52.dp).fillMaxHeight(), g.last == Mancala.CPU)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         for (shown in 0 until Mancala.PITS) {
@@ -109,7 +115,7 @@ fun MancalaScreen(nav: NavController, vm: PlayViewModel<Mancala>, factory: Puzzl
                         }
                     }
                 }
-                Store(g.pits[Mancala.YOU], "Your store, ${g.pits[Mancala.YOU]} stones", Modifier.width(52.dp).height(112.dp), g.last == Mancala.YOU)
+                Store(g.pits[Mancala.YOU], "Your store, ${g.pits[Mancala.YOU]} stones", Modifier.width(52.dp).fillMaxHeight(), g.last == Mancala.YOU)
             }
         }
         if (!g.ended && playable) Text("Tap one of your pits. Stones sow to the right.", style = MaterialTheme.typography.bodyMedium, color = c.muted)
@@ -132,29 +138,39 @@ private fun Store(count: Int, spoken: String, modifier: Modifier, landed: Boolea
 @Composable
 private fun PitWell(count: Int, spoken: String, landed: Boolean, enabled: Boolean, onSow: () -> Unit, modifier: Modifier) {
     val ring = LocalGameLook.current.colors.highlight
-    Box(
-        modifier.height(52.dp).clip(RoundedCornerShape(26.dp))
+    // A carved bowl with its stones heaped in it, and the count on a small label underneath, clear of the stones.
+    Column(
+        modifier.clip(RoundedCornerShape(16.dp))
             .clickable(enabled = enabled, role = Role.Button, onClick = onSow)
             .semantics { contentDescription = say(spoken) },
-        contentAlignment = Alignment.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            drawCircle(Wood, size.minDimension * 0.5f)
-            drawCircle(Pit, size.minDimension * 0.38f)
-            val shown = count.coerceAtMost(6)
-            if (shown > 0) {
-                val radius = size.minDimension * 0.08f
-                for (i in 0 until shown) {
-                    val angle = (i * 360f / shown) * (Math.PI / 180.0)
-                    val at = Offset(
-                        center.x + kotlin.math.cos(angle).toFloat() * size.minDimension * 0.16f,
-                        center.y + kotlin.math.sin(angle).toFloat() * size.minDimension * 0.16f,
-                    )
-                    drawCircle(Seed, radius, at)
-                }
-            }
-            if (landed) drawCircle(ring, size.minDimension * 0.46f, style = Stroke(size.minDimension * 0.06f))
+        Canvas(Modifier.fillMaxWidth().aspectRatio(1f)) {
+            val r = size.minDimension * 0.47f
+            drawCircle(Brush.radialGradient(listOf(Wood, WoodDark), center, r * 1.1f), r)
+            drawCircle(Brush.radialGradient(listOf(Color.Black.copy(alpha = 0.55f), Pit), center + Offset(0f, -r * 0.15f), r * 0.85f), r * 0.8f)
+            pebbles(count, r * 0.62f)
+            if (landed) drawCircle(ring, r * 0.96f, style = Stroke(size.minDimension * 0.06f))
         }
-        Text("$count", style = MaterialTheme.typography.labelLarge, color = Color.White)
+        Text("$count", style = MaterialTheme.typography.labelLarge, color = Seed, fontWeight = FontWeight.Bold)
+    }
+}
+
+private val Pebbles = listOf(Color(0xFFE8D9B5), Color(0xFF8FB8DE), Color(0xFFE59A8C), Color(0xFF9CC79A), Color(0xFFD8B4E2))
+
+/** Up to a dozen glossy pebbles heaped in a bowl of radius [spread]; more than that still shows a full heap. */
+private fun DrawScope.pebbles(count: Int, spread: Float) {
+    val shown = count.coerceAtMost(12)
+    val stone = spread * 0.3f
+    val rnd = java.util.Random(count * 7919L)
+    for (i in 0 until shown) {
+        // A loose spiral from the middle out, so a few stones sit in the middle and more fill the bowl.
+        val a = i * 2.4f + rnd.nextFloat() * 0.6f
+        val d = if (shown == 1) 0f else spread * 0.75f * kotlin.math.sqrt((i + 0.5f) / shown)
+        val at = center + Offset(kotlin.math.cos(a) * d, kotlin.math.sin(a) * d)
+        val tint = Pebbles[(i + count) % Pebbles.size]
+        drawCircle(Color.Black.copy(alpha = 0.35f), stone, at + Offset(stone * 0.15f, stone * 0.25f))
+        drawCircle(Brush.radialGradient(listOf(Color.White, tint, tint.copy(red = tint.red * 0.6f, green = tint.green * 0.6f, blue = tint.blue * 0.6f)),
+            at - Offset(stone * 0.35f, stone * 0.4f), stone * 1.5f), stone, at)
     }
 }

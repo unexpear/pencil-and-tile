@@ -180,7 +180,8 @@ private fun LetterGrid(size: Int, cell: @Composable (index: Int, side: androidx.
     val look = LocalGameLook.current
     ZoomBox(Modifier.fillMaxWidth()) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val fit = maxWidth / size
+            // The margin line takes 7dp, so the squares share what is left.
+            val fit = (maxWidth - 7.dp) / size
             // Start fitted on both axes. ZoomBox owns all board movement, rather than
             // nesting a horizontal scroller around a board taller than its visible viewport.
             val side = min(fit, 48.dp)

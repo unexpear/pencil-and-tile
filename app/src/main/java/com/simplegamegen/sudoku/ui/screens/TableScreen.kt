@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.ui.graphics.Brush
 import com.simplegamegen.sudoku.ui.components.ZoomBox
 import com.simplegamegen.sudoku.ui.HintButton
 import com.simplegamegen.sudoku.ui.ReportPlay
@@ -82,7 +83,9 @@ import com.simplegamegen.sudoku.ui.TableViewModel
 import com.simplegamegen.sudoku.ui.assets.CardSlot
 import com.simplegamegen.sudoku.ui.assets.CheckerPiece
 import com.simplegamegen.sudoku.ui.assets.coversCell
-import com.simplegamegen.sudoku.ui.assets.drawBoardSlab
+import com.simplegamegen.sudoku.ui.assets.drawBoardFrame
+import com.simplegamegen.sudoku.ui.assets.drawSquareGrain
+import com.simplegamegen.sudoku.ui.assets.BoardViews
 import com.simplegamegen.sudoku.ui.assets.drawDot
 import com.simplegamegen.sudoku.ui.assets.drawPuck
 import com.simplegamegen.sudoku.ui.assets.drawSquareTop
@@ -362,12 +365,14 @@ private fun MinesBoard(s: MinesState, hint: Move?, flagMode: Boolean, play: (Mov
                                         drawRect(if (i == s.exploded) c.danger else c.surface)
                                         drawRect(c.outline, style = Stroke(1f))
                                     } else {
-                                        drawRect(c.surfaceAlt)
-                                        val e = w * 0.09f
-                                        drawRect(Color.White.copy(alpha = if (look.dark) 0.12f else 0.75f), size = size.copy(height = e))
-                                        drawRect(Color.White.copy(alpha = if (look.dark) 0.12f else 0.75f), size = size.copy(width = e))
-                                        drawRect(Color.Black.copy(alpha = 0.22f), topLeft = Offset(0f, size.height - e), size = size.copy(height = e))
-                                        drawRect(Color.Black.copy(alpha = 0.22f), topLeft = Offset(w - e, 0f), size = size.copy(width = e))
+                                        // A raised turf tile, in two shades like a mown lawn, so covered squares stand
+                                        // clearly apart from opened ones.
+                                        val turf = if ((row + col) % 2 == 0) Color(0xFF8BC34A) else Color(0xFF7CB342)
+                                        val e = w * 0.08f
+                                        drawRect(lerp(turf, Color.Black, 0.35f))
+                                        drawRoundRect(Brush.verticalGradient(listOf(lerp(turf, Color.White, 0.25f), turf, lerp(turf, Color.Black, 0.12f))),
+                                            Offset(e * 0.5f, e * 0.4f), androidx.compose.ui.geometry.Size(w - e, size.height - e * 1.2f), CornerRadius(w * 0.12f))
+                                        drawRoundRect(Color.White.copy(alpha = 0.35f), Offset(e, e * 0.8f), androidx.compose.ui.geometry.Size(w - e * 2, e * 0.6f), CornerRadius(e))
                                     }
                                     if (hinted) drawRect(c.highlight, style = Stroke(w * 0.12f))
                                 }
@@ -399,9 +404,10 @@ private fun CheckersBoard(s: CheckersState, hint: Move?, play: (Move) -> Unit) {
     if (s.forced != null) InfoChip("Keep jumping with the same piece", emphasized = true)
     ZoomBox(Modifier.fillMaxWidth()) {
         BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            val frame = tableFrame(8, with(display) { maxWidth.toPx() }, peakZ = 0.9f)
+            // The same seat behind your side as chess, so the pieces stand up as solids.
+            val frame = tableFrame(8, with(display) { maxWidth.toPx() }, peakZ = 0.9f, view = BoardViews.behind, margin = 0.6f)
             val top = 0.22f
-            val order = (0 until 64).sortedBy { (it / 8) + (it % 8) }
+            val order = (0 until 64).sortedByDescending { frame.depth((it % 8) + 0.5f, (it / 8) + 0.5f, top) }
             val playing = s.turn == 1 && s.result == GameResult.PLAYING
             Box(Modifier.size(with(display) { frame.width.toDp() }, with(display) { frame.height.toDp() })) {
                 order.forEach { i ->
@@ -431,14 +437,14 @@ private fun CheckersBoard(s: CheckersState, hint: Move?, play: (Move) -> Unit) {
                         val hit = order.asReversed().firstOrNull { i ->
                             val piece = s.board[i]
                             val tall = if (piece == 0) top else top + if (kotlin.math.abs(piece) == 2) 0.7f else 0.3f
-                            coversCell(frame, pos, i % 8, i / 8, top, tall, frame.cell * 0.36f)
+                            coversCell(frame, pos, i % 8, i / 8, top, tall, frame.unitAt(i % 8 + 0.5f, i / 8 + 0.5f, top) * 0.36f)
                         } ?: return@detectTapGestures
                         val dest = legal.firstOrNull { it.from == selected && it.to == hit }
                         if (dest != null) { play(dest); selected = null }
                         else if (legal.any { it.from == hit }) selected = hit
                     }
                 }) {
-                    drawBoardSlab(frame, top, lerp(c.boardDark, Color.Black, 0.35f))
+                    drawBoardFrame(frame, top, Color(0xFF5B3A24), border = 0.5f)
                     order.forEach { i ->
                         val row = i / 8
                         val col = i % 8
@@ -446,6 +452,7 @@ private fun CheckersBoard(s: CheckersState, hint: Move?, play: (Move) -> Unit) {
                         val marked = selected == i || hint?.from == i || hint?.to == i
                         val fill = if (dark) c.boardDark else c.boardLight
                         drawSquareTop(frame, col, row, top, if (marked) lerp(fill, c.highlight, 0.45f) else fill)
+                        drawSquareGrain(frame, col, row, top, fill)
                         val piece = s.board[i]
                         val dest = legal.firstOrNull { it.from == selected && it.to == i }
                         if (piece != 0) drawPuck(frame, col + 0.5f, row + 0.5f, top, if (piece > 0) c.playerOne else c.playerTwo, king = kotlin.math.abs(piece) == 2)

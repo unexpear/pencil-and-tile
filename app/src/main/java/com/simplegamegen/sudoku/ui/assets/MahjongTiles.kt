@@ -1,5 +1,15 @@
 package com.simplegamegen.sudoku.ui.assets
 
+import com.simplegamegen.sudoku.ui.screens.rememberBoardCamera
+import com.simplegamegen.sudoku.ui.screens.BoardWithViews
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -86,17 +96,29 @@ internal fun DrawScope.drawMahjongBrick(
     faceColor: Color, edgeColor: Color, backColor: Color, highlight: Color,
     free: Boolean, selected: Boolean, hinted: Boolean,
 ) {
-    val dx = d * 0.72f
+    val dx = d * 0.5f
     val dy = d
-    fun out(p: Offset) = p + Offset(dx, dy)
+    fun out(p: Offset, t: Float = 1f) = p + Offset(dx * t, dy * t)
     val tr = origin + Offset(w, 0f)
     val br = origin + Offset(w, h)
     val bl = origin + Offset(0f, h)
-    drawPath(quad(tr, out(tr), out(br), br), lerp(edgeColor, Color.Black, 0.28f))
-    drawPath(quad(bl, br, out(br), out(bl)), lerp(edgeColor, backColor, 0.35f))
     val corner = CornerRadius(w * 0.12f)
-    drawRoundRect(Brush.linearGradient(listOf(faceColor, lerp(faceColor, edgeColor, 0.35f)), origin, origin + Offset(w, h)),
+    // A soft shadow on the table, cast down and to the right.
+    drawRoundRect(Color.Black.copy(alpha = 0.16f), origin + Offset(dx * 1.5f, dy * 1.5f), Size(w, h), corner)
+    // The thickness: an ivory layer under the face and the coloured back beneath it, like a real tile.
+    val ivory = lerp(faceColor, edgeColor, 0.3f)
+    val split = 0.5f
+    drawPath(quad(tr, out(tr, split), out(br, split), br), lerp(ivory, Color.Black, 0.22f))
+    drawPath(quad(out(tr, split), out(tr), out(br), out(br, split)), lerp(backColor, Color.Black, 0.3f))
+    drawPath(quad(bl, br, out(br, split), out(bl, split)), lerp(ivory, Color.Black, 0.08f))
+    drawPath(quad(out(bl, split), out(br, split), out(br), out(bl)), lerp(backColor, Color.Black, 0.12f))
+    drawLine(lerp(backColor, Color.Black, 0.45f), out(tr), out(br), strokeWidth = maxOf(1f, w * 0.015f))
+    drawLine(lerp(backColor, Color.Black, 0.45f), out(bl), out(br), strokeWidth = maxOf(1f, w * 0.015f))
+    // The face, lit from the upper left, with a bevel that catches the light.
+    drawRoundRect(Brush.linearGradient(listOf(lerp(faceColor, Color.White, 0.25f), faceColor, lerp(faceColor, edgeColor, 0.3f)), origin, origin + Offset(w, h)),
         topLeft = origin, size = Size(w, h), cornerRadius = corner)
+    val bevel = maxOf(1f, w * 0.035f)
+    drawRoundRect(Color.White.copy(alpha = 0.55f), origin + Offset(bevel, bevel), Size(w - bevel * 2, h - bevel * 2), corner, style = Stroke(bevel * 0.8f))
     drawRoundRect(edgeColor, topLeft = origin, size = Size(w, h), cornerRadius = corner, style = Stroke(maxOf(1f, w * 0.025f)))
     val inner = Rect(origin.x + w * 0.1f, origin.y + h * 0.08f, origin.x + w * 0.9f, origin.y + h * 0.92f)
     drawTileFace(face, inner, measurer)
@@ -231,9 +253,26 @@ private fun DrawScope.drawBird(b: Rect) {
     drawLine(TileInk, at(.58f, .74f), at(.62f, .9f), strokeWidth = b.width * .03f)
 }
 
+/** The 3D tile: a green back layer under an ivory top, each a rounded slab, in squares (a tile is one wide). */
+private const val TileThick = 0.5f
+private const val BackShare = 0.38f
+private val TileBack by lazy { slabMesh(0.96f, TILE_ASPECT * 0.97f, TileThick * BackShare, 0.1f, 0.02f) }
+private val TileTop by lazy { slabMesh(0.96f, TILE_ASPECT * 0.97f, TileThick * (1 - BackShare), 0.1f, 0.05f) }
+
+/** Mahjong's own camera presets: from the front, from a corner, and straight down. */
+internal val MahjongViews = listOf(
+    BoardView("Front", yaw = 0f, pitch = 60f, distance = 1.7f),
+    BoardView("Corner", yaw = 32f, pitch = 54f, distance = 1.8f),
+    BoardView("Top", yaw = 0f, pitch = 90f, distance = 2f),
+)
+
+/** A matched pair on its way out: the tiles and when they left. */
+private class Leaving(val tiles: List<StackTile>)
+
 /**
- * The pile seen from above and to the side. Each tile is a brick; a tile on a higher
- * layer sits up and to the left, on top of the one below.
+ * The pile in 3D, on a roomy felt table, with the same cameras as the chess board (presets, a free camera to turn and
+ * pinch, saved views). Every tile is a real brick: a green back under an ivory top with its face painted on. A
+ * matched pair lifts out of the pile, drifts together and bursts into sparkles.
  */
 @Composable
 fun MahjongBoard(
@@ -247,68 +286,140 @@ fun MahjongBoard(
 ) {
     val look = LocalGameLook.current
     val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    val visible = tiles.filter { it.id !in removed }.sortedWith(compareBy({ it.z }, { it.y }, { it.x }))
-    if (visible.isEmpty()) return
-    BoxWithConstraints(modifier.fillMaxWidth()) {
+    val camera = rememberBoardCamera("mahjong_views", MahjongViews)
+    val visible = tiles.filter { it.id !in removed }
+    // Watch for pairs leaving the pile, so they can be shown going.
+    var before by remember { mutableStateOf(removed) }
+    var leaving by remember { mutableStateOf<Leaving?>(null) }
+    val out = remember { Animatable(1f) }
+    LaunchedEffect(removed) {
+        val gone = removed - before
+        before = removed
+        if (gone.isEmpty() || gone.size > 2) return@LaunchedEffect
+        leaving = Leaving(tiles.filter { it.id in gone })
+        out.snapTo(0f)
+        out.animateTo(1f, tween(1150, easing = LinearEasing))
+        leaving = null
+    }
+    if (tiles.isEmpty()) return
+    BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         val maxX = tiles.maxOf { it.x }
         val maxY = tiles.maxOf { it.y }
         val maxZ = tiles.maxOf { it.z }
-        val depthRatio = 0.34f
-        val shear = 0.16f
-        val dxR = depthRatio * 0.72f
-        val dyR = depthRatio
-        val xUnits = maxX * (1f + dxR) / 2f + maxY * shear + maxZ * dxR + 1f + dxR
-        val yUnits = maxY * (TILE_ASPECT + dyR) / 2f + maxZ * dyR + TILE_ASPECT + dyR
-        val faceW = minOf(with(density) { maxWidth.toPx() } * 0.96f / xUnits, with(density) { 54.dp.toPx() })
-        val faceH = faceW * TILE_ASPECT
-        val dx = faceW * dxR
-        val dy = faceW * dyR
-        val xStep = (faceW + dx) / 2f
-        val yStep = (faceH + dy) / 2f
-        val pad = faceW * 0.08f
-        fun origin(tile: StackTile) = Offset(
-            pad + tile.x * xStep + tile.y * faceW * shear + (maxZ - tile.z) * dx,
-            pad + tile.y * yStep + (maxZ - tile.z) * dy,
-        )
-        val boardW = pad * 2 + xUnits * faceW
-        val boardH = pad * 2 + yUnits * faceW
-        val c = look.colors
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Box(Modifier.size(with(density) { boardW.toDp() }, with(density) { boardH.toDp() })) {
-            visible.forEach { tile ->
-                val at = origin(tile)
+        val wide = (maxX + 2) * 0.5f + 0.5f
+        val deep = (maxY + 2) * 0.5f * TILE_ASPECT + 0.5f
+        val n = kotlin.math.ceil(wide).toInt()
+        val offX = (n - (maxX + 2) * 0.5f) / 2f
+        val offY = 0.25f
+        // A roomy table: the pile has space round it, and the camera can zoom in when it's needed.
+        BoardWithViews(camera, n, peakZ = (maxZ + 1) * TileThick + 1.5f, margin = 0.25f, rows = deep, height = maxWidth * 1.15f) { frame ->
+            fun cx(t: StackTile) = offX + t.x * 0.5f + 0.5f
+            fun cy(t: StackTile) = offY + t.y * 0.5f * TILE_ASPECT + TILE_ASPECT / 2f
+            fun base(t: StackTile) = t.z * TileThick
+            fun face(x: Float, y: Float, z: Float): List<Offset> {
+                val hw = 0.42f; val hd = TILE_ASPECT * 0.45f
+                return listOf(frame.at(x - hw, y - hd, z), frame.at(x + hw, y - hd, z), frame.at(x + hw, y + hd, z), frame.at(x - hw, y + hd, z))
+            }
+            fun face(t: StackTile) = face(cx(t), cy(t), base(t) + TileThick)
+            fun front(t: StackTile): List<Offset> {
+                val y = cy(t) + TILE_ASPECT * 0.485f
+                return listOf(frame.at(cx(t) - 0.48f, y, base(t) + TileThick), frame.at(cx(t) + 0.48f, y, base(t) + TileThick),
+                    frame.at(cx(t) + 0.48f, y, base(t)), frame.at(cx(t) - 0.48f, y, base(t)))
+            }
+            // Lower layers first; in a layer, far tiles before near ones.
+            val order = visible.sortedWith(compareBy<StackTile>({ it.z }, { -frame.depth(cx(it), cy(it), base(it)) }))
+            val c = look.colors
+            order.forEach { tile ->
+                val at = frame.at(cx(tile), cy(tile), base(tile) + TileThick)
                 val free = MahjongRules.free(tiles, removed, tile.id)
-                Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }
-                    .size(with(density) { faceW.toDp() }, with(density) { faceH.toDp() })
+                Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp)
                     .semantics {
                         contentDescription = say("${mahjongName(tile.face)}, ${if (free) "free" else "blocked"}")
                         if (tile.id == selected) stateDescription = say("Selected")
                         if (free && enabled) onClick { onSelect(tile.id); true }
                     })
             }
-            Canvas(Modifier.matchParentSize().pointerInput(faceW, removed, enabled) {
+            Canvas(Modifier.matchParentSize().pointerInput(frame, removed, enabled) {
                 detectTapGestures { pos ->
                     if (!enabled) return@detectTapGestures
-                    val hit = visible.asReversed().firstOrNull { tile ->
-                        val at = origin(tile)
-                        pos.x in at.x..at.x + faceW && pos.y in at.y..at.y + faceH
+                    val hit = order.asReversed().firstOrNull { tile ->
+                        val f = face(tile); val fr = front(tile)
+                        pointInQuad(pos, f[0], f[1], f[2], f[3]) || pointInQuad(pos, fr[0], fr[1], fr[2], fr[3])
                     } ?: return@detectTapGestures
                     onSelect(hit.id)
                 }
             }) {
-                drawRoundRect(c.table, Offset(pad * 0.3f, pad * 0.3f), Size(boardW - pad * 0.6f, boardH - pad * 0.6f), CornerRadius(faceW * 0.2f))
-                visible.forEach { tile ->
-                    drawMahjongBrick(
-                        tile.face, origin(tile), faceW, faceH, faceW * depthRatio, measurer,
-                        c.pieceFace, c.pieceEdge, c.tileBack, c.highlight,
-                        free = MahjongRules.free(tiles, removed, tile.id),
-                        selected = tile.id == selected,
-                        hinted = tile.id in hinted,
-                    )
+                // The felt the tiles lie on, with a little room all round.
+                val g = 0.6f
+                drawPath(quad(frame.at(-g, -g, 0f), frame.at(n + g, -g, 0f), frame.at(n + g, deep + g, 0f), frame.at(-g, deep + g, 0f)), c.table)
+                order.forEach { tile ->
+                    val free = MahjongRules.free(tiles, removed, tile.id)
+                    drawTile3d(frame, tile.face, cx(tile), cy(tile), base(tile), 1f, measurer, c.tileBack, c.pieceFace)
+                    val q = face(tile).let { f -> quad(f[0], f[1], f[2], f[3]) }
+                    if (!free) drawPath(q, Color.Black.copy(alpha = 0.26f))
+                    if (tile.id == selected || tile.id in hinted) {
+                        val w = frame.unitAt(cx(tile), cy(tile), base(tile)) * 0.07f
+                        drawPath(q, c.highlight, style = Stroke(w, pathEffect = if (tile.id in hinted && tile.id != selected) PathEffect.dashPathEffect(floatArrayOf(w * 1.6f, w)) else null))
+                        if (tile.id == selected) drawPath(q, c.highlight.copy(alpha = 0.18f))
+                    }
+                }
+                // The pair that's leaving: pulled up out of the pile, drawn together, then gone in a burst of sparkles.
+                leaving?.let { l ->
+                    val t = out.value
+                    val mx = l.tiles.map(::cx).average().toFloat()
+                    val my = l.tiles.map(::cy).average().toFloat()
+                    val top = l.tiles.maxOf { base(it) } + TileThick
+                    // Pulled straight up out of the pile, then drawn together above it, then gone.
+                    val rise = (t / 0.4f).coerceIn(0f, 1f)
+                    val lift = (1 - (1 - rise) * (1 - rise)) * 2.2f
+                    val gather = ((t - 0.25f) / 0.4f).coerceIn(0f, 1f).let { it * it * (3 - 2 * it) }
+                    val fade = 1f - ((t - 0.66f) / 0.14f).coerceIn(0f, 1f)
+                    l.tiles.forEach { tile ->
+                        val x = cx(tile) + (mx - cx(tile)) * gather * 0.85f
+                        val y = cy(tile) + (my - cy(tile)) * gather * 0.85f
+                        if (fade > 0f) drawTile3d(frame, tile.face, x, y, base(tile) + lift, fade, measurer, c.tileBack, c.pieceFace)
+                    }
+                    if (t > 0.64f) drawSparkles(frame, mx, my, top + 2.2f, (t - 0.64f) / 0.36f, c.highlight, l.tiles.first().id)
                 }
             }
         }
-        }
     }
+}
+
+/** One tile at ([x], [y]) standing on height [z]: its two layers and its face. */
+private fun DrawScope.drawTile3d(frame: TableFrame, face: Int, x: Float, y: Float, z: Float, alpha: Float, measurer: TextMeasurer, back: Color, ivory: Color) {
+    if (alpha >= 0.999f) drawDiscOnPlane(frame, floatArrayOf(x + 0.08f, y + 0.1f, z + 0.002f), floatArrayOf(0.55f, 0f, 0f), floatArrayOf(0f, 0.75f, 0f), 1f, Color.Black.copy(alpha = 0.18f))
+    drawMesh(frame, TileBack, Pose(x, y, z), back, Satin, alpha = alpha)
+    drawMesh(frame, TileTop, Pose(x, y, z + TileThick * BackShare), ivory, Satin, alpha = alpha)
+    val hw = 0.42f; val hd = TILE_ASPECT * 0.45f; val zt = z + TileThick
+    val q = listOf(frame.at(x - hw, y - hd, zt), frame.at(x + hw, y - hd, zt), frame.at(x + hw, y + hd, zt), frame.at(x - hw, y + hd, zt))
+    drawOnQuad(q, 100f, 132f, alpha) { drawTileFace(face, Rect(8f, 8f, 92f, 124f), measurer) }
+}
+
+/** A burst of sparks and glints from a point above the table, falling and fading as [t] runs 0 to 1. */
+private fun DrawScope.drawSparkles(frame: TableFrame, x: Float, y: Float, z: Float, t: Float, color: Color, seed: Int) {
+    val center = frame.at(x, y, z)
+    val unit = frame.unitAt(x, y, z)
+    val r = java.util.Random(seed * 31L)
+    val gold = Color(0xFFFFD166)
+    // A ring of light that spreads and thins.
+    val ring = unit * (0.4f + 2.2f * t)
+    drawCircle(gold.copy(alpha = (1f - t) * 0.8f), ring, center, style = Stroke(unit * 0.12f * (1f - t) + 1f))
+    repeat(36) { k ->
+        val a = r.nextDouble() * 2 * Math.PI
+        val speed = unit * (1.2f + 2.4f * r.nextFloat())
+        val ease = 1 - (1 - t) * (1 - t)
+        val px = center.x + (kotlin.math.cos(a) * speed * ease).toFloat()
+        val py = center.y + (kotlin.math.sin(a) * speed * ease).toFloat() + unit * 1.4f * t * t
+        val size = unit * (0.1f + 0.14f * r.nextFloat()) * (1f - t * 0.5f)
+        val tint = when (k % 3) { 0 -> gold; 1 -> Color.White; else -> color }
+        val alpha = (1f - t).coerceIn(0f, 1f)
+        // A four-pointed glint: two thin crossed strokes and a bright core.
+        drawLine(tint.copy(alpha = alpha), Offset(px - size * 2, py), Offset(px + size * 2, py), strokeWidth = size * 0.5f)
+        drawLine(tint.copy(alpha = alpha), Offset(px, py - size * 2), Offset(px, py + size * 2), strokeWidth = size * 0.5f)
+        drawCircle(Color.White.copy(alpha = alpha), size * 0.6f, Offset(px, py))
+    }
+    // A soft flash where the tiles vanished.
+    val flash = (1f - t * 2f).coerceIn(0f, 1f)
+    if (flash > 0f) drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.7f * flash), Color.Transparent), center, unit * 1.4f), unit * 1.4f, center)
 }

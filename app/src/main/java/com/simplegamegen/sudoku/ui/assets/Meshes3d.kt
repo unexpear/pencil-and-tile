@@ -1,0 +1,391 @@
+package com.simplegamegen.sudoku.ui.assets
+
+import android.graphics.Canvas as NativeCanvas
+import android.graphics.Paint
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
+
+// ---------------- Real 3D pieces ----------------
+//
+// Each piece is a small triangle mesh: positions and smooth normals in squares, z up. To draw one, every vertex is
+// placed on the board and projected through the board's camera, lit (a key light from the camera's upper left, a
+// fill from the right, a rim that separates dark pieces from dark squares, and a polished highlight), and the
+// triangles that face the camera are painted far to near with per-vertex colours, so the shading is smooth.
+
+/** A triangle mesh. Positions and normals are x, y, z triples; [tris] index them three at a time. */
+internal class Mesh(val pos: FloatArray, val nrm: FloatArray, val tris: ShortArray) {
+    val count get() = pos.size / 3
+}
+
+/** How shiny a surface is. */
+internal class Finish(val spec: Float, val shine: Float, val rim: Float = 0.18f)
+
+internal val Polished = Finish(spec = 0.55f, shine = 48f)
+internal val Satin = Finish(spec = 0.2f, shine = 22f)
+internal val Glassy = Finish(spec = 0.8f, shine = 90f, rim = 0.1f)
+
+private class Builder {
+    val pos = ArrayList<Float>()
+    val nrm = ArrayList<Float>()
+    val tris = ArrayList<Short>()
+    fun vertex(x: Float, y: Float, z: Float, nx: Float, ny: Float, nz: Float): Int {
+        val l = sqrt(nx * nx + ny * ny + nz * nz).coerceAtLeast(1e-5f)
+        pos += x; pos += y; pos += z; nrm += nx / l; nrm += ny / l; nrm += nz / l
+        return pos.size / 3 - 1
+    }
+    fun tri(a: Int, b: Int, c: Int) { tris += a.toShort(); tris += b.toShort(); tris += c.toShort() }
+    fun build() = Mesh(pos.toFloatArray(), nrm.toFloatArray(), tris.toShortArray())
+}
+
+/**
+ * A turned solid: [profile] gives (height, radius) from the base up, in squares. Normals follow the profile, so
+ * curves are smooth; a corner of more than about 50 degrees is kept sharp. The top is closed if it has a radius.
+ */
+internal fun latheMesh(profile: List<Pair<Float, Float>>, segments: Int = 28): Mesh {
+    val b = Builder()
+    val turn = (2 * PI / segments).toFloat()
+    // Each profile point gets the normal of the edge below and above it; a sharp corner keeps both.
+    fun edge(i: Int): Pair<Float, Float> {
+        val (z0, r0) = profile[i]; val (z1, r1) = profile[i + 1]
+        val dz = z1 - z0; val dr = r1 - r0
+        val l = sqrt(dz * dz + dr * dr).coerceAtLeast(1e-5f)
+        return dz / l to -dr / l              // (radial, up)
+    }
+    val rows = ArrayList<IntArray>()          // vertex rows, two per profile point where a corner is sharp
+    for (i in 0 until profile.lastIndex) {
+        val e = edge(i)
+        val below = if (i > 0) edge(i - 1) else e
+        val above = if (i + 1 < profile.lastIndex) edge(i + 1) else e
+        val smoothLow = below.first * e.first + below.second * e.second > 0.64f
+        val smoothHigh = above.first * e.first + above.second * e.second > 0.64f
+        val nLow = if (smoothLow) (below.first + e.first) to (below.second + e.second) else e
+        val nHigh = if (smoothHigh) (above.first + e.first) to (above.second + e.second) else e
+        for ((k, n) in listOf(i to nLow, (i + 1) to nHigh)) {
+            val (z, r) = profile[k]
+            rows += IntArray(segments + 1) { s ->
+                val a = s * turn
+                b.vertex(cos(a) * r, sin(a) * r, z, cos(a) * n.first, sin(a) * n.first, n.second)
+            }
+        }
+        val lo = rows[rows.size - 2]; val hi = rows[rows.size - 1]
+        for (s in 0 until segments) { b.tri(lo[s], lo[s + 1], hi[s + 1]); b.tri(lo[s], hi[s + 1], hi[s]) }
+    }
+    val (zt, rt) = profile.last()
+    if (rt > 0.004f) {
+        val center = b.vertex(0f, 0f, zt, 0f, 0f, 1f)
+        val rim = IntArray(segments + 1) { s -> val a = s * turn; b.vertex(cos(a) * rt, sin(a) * rt, zt, 0f, 0f, 1f) }
+        for (s in 0 until segments) b.tri(center, rim[s], rim[s + 1])
+    }
+    return b.build()
+}
+
+/** A ball of radius [r] centred at height [r]. */
+internal fun sphereMesh(r: Float, rings: Int = 10): Mesh =
+    latheMesh((0..rings).map { k -> val a = (PI * k / rings - PI / 2).toFloat(); (r + sin(a) * r) to (cos(a) * r).coerceAtLeast(0.0005f) }, segments = 16)
+
+/** A box [w] across (x), [d] deep (y) and [h] tall, standing on z = 0 and centred on x and y; flat faces. */
+internal fun boxMesh(w: Float, d: Float, h: Float): Mesh {
+    val b = Builder()
+    val x = w / 2; val y = d / 2
+    fun face(nx: Float, ny: Float, nz: Float, vararg c: Float) {
+        val v = IntArray(4) { k -> b.vertex(c[k * 3], c[k * 3 + 1], c[k * 3 + 2], nx, ny, nz) }
+        b.tri(v[0], v[1], v[2]); b.tri(v[0], v[2], v[3])
+    }
+    face(0f, 0f, 1f, -x, -y, h, x, -y, h, x, y, h, -x, y, h)
+    face(1f, 0f, 0f, x, -y, 0f, x, y, 0f, x, y, h, x, -y, h)
+    face(-1f, 0f, 0f, -x, y, 0f, -x, -y, 0f, -x, -y, h, -x, y, h)
+    face(0f, 1f, 0f, x, y, 0f, -x, y, 0f, -x, y, h, x, y, h)
+    face(0f, -1f, 0f, -x, -y, 0f, x, -y, 0f, x, -y, h, -x, -y, h)
+    return b.build()
+}
+
+/**
+ * A carved piece: the outline [poly] (u forward, v up, in squares) cut [half] thick on each side, with a rounded
+ * bevel [bevel] so it catches the light like a real carving. The thickness is along local y.
+ */
+internal fun carvedMesh(poly: List<Pair<Float, Float>>, half: Float, bevel: Float): Mesh {
+    val b = Builder()
+    val n = poly.size
+    // Make the outline run anticlockwise.
+    var area = 0f
+    for (i in 0 until n) { val (u0, v0) = poly[i]; val (u1, v1) = poly[(i + 1) % n]; area += u0 * v1 - u1 * v0 }
+    val pts = if (area < 0f) poly.reversed() else poly
+    // Outward normal at each point: the average of its two edges' normals.
+    val normals = pts.indices.map { i ->
+        val (ua, va) = pts[(i - 1 + n) % n]; val (ub, vb) = pts[i]; val (uc, vc) = pts[(i + 1) % n]
+        fun out(du: Float, dv: Float): Pair<Float, Float> { val l = sqrt(du * du + dv * dv).coerceAtLeast(1e-5f); return dv / l to -du / l }
+        val e1 = out(ub - ua, vb - va); val e2 = out(uc - ub, vc - vb)
+        val su = e1.first + e2.first; val sv = e1.second + e2.second
+        val l = sqrt(su * su + sv * sv).coerceAtLeast(1e-5f)
+        su / l to sv / l
+    }
+    val inset = pts.indices.map { i -> (pts[i].first - normals[i].first * bevel) to (pts[i].second - normals[i].second * bevel) }
+    // Four layers across the thickness: the inset face edge, the full outline twice, the inset back edge.
+    val layers = listOf(half to 0.75f, (half - bevel) to 0f, -(half - bevel) to 0f, -half to -0.75f)
+    val rows = layers.map { (y, tilt) ->
+        val outline = if (tilt == 0f) pts else inset
+        IntArray(n) { i ->
+            val (nu, nv) = normals[i]
+            b.vertex(outline[i].first, y, outline[i].second, nu * (1f - abs(tilt)), tilt, nv * (1f - abs(tilt)))
+        }
+    }
+    for (layer in 0 until rows.lastIndex) {
+        val a = rows[layer]; val c = rows[layer + 1]
+        for (i in 0 until n) { val j = (i + 1) % n; b.tri(a[i], a[j], c[j]); b.tri(a[i], c[j], c[i]) }
+    }
+    // The two flat faces, triangulated by clipping ears.
+    for ((y, ny) in listOf(half to 1f, -half to -1f)) {
+        val ids = IntArray(n) { i -> b.vertex(inset[i].first, y, inset[i].second, 0f, ny, 0f) }
+        for ((p, q, r) in earClip(inset)) b.tri(ids[p], ids[q], ids[r])
+    }
+    return b.build()
+}
+
+private fun abs(f: Float) = if (f < 0) -f else f
+
+/** Triangles of a simple anticlockwise polygon. */
+private fun earClip(pts: List<Pair<Float, Float>>): List<Triple<Int, Int, Int>> {
+    val idx = pts.indices.toMutableList()
+    val out = ArrayList<Triple<Int, Int, Int>>()
+    fun cross(o: Int, a: Int, c: Int): Float {
+        val (ox, oy) = pts[o]; val (ax, ay) = pts[a]; val (cx, cy) = pts[c]
+        return (ax - ox) * (cy - oy) - (ay - oy) * (cx - ox)
+    }
+    fun inside(p: Int, a: Int, b: Int, c: Int) = cross(a, b, p) >= 0 && cross(b, c, p) >= 0 && cross(c, a, p) >= 0
+    var guard = 0
+    while (idx.size > 3 && guard++ < 1000) {
+        var cut = false
+        for (k in idx.indices) {
+            val a = idx[(k - 1 + idx.size) % idx.size]; val b = idx[k]; val c = idx[(k + 1) % idx.size]
+            if (cross(a, b, c) <= 0f) continue
+            if (idx.any { it != a && it != b && it != c && inside(it, a, b, c) }) continue
+            out += Triple(a, b, c); idx.removeAt(k); cut = true; break
+        }
+        if (!cut) break
+    }
+    if (idx.size == 3) out += Triple(idx[0], idx[1], idx[2])
+    return out
+}
+
+// ---------------- Drawing ----------------
+
+private val paint = Paint().apply { isAntiAlias = true }
+
+/**
+ * Where a mesh stands on the board and how it is turned: first by [rot] (a 3×3 rotation, row by row, or null), then
+ * about the vertical so its local x points along ([fx], [fy]), then scaled by [scale] and moved to ([x], [y], [z]).
+ */
+internal class Pose(val x: Float, val y: Float, val z: Float, val fx: Float = 1f, val fy: Float = 0f, val rot: FloatArray? = null, val scale: Float = 1f) {
+    /** A local point or direction turned into board space (without the move, if [direction]). */
+    fun apply(lx: Float, ly: Float, lz: Float, direction: Boolean = false): FloatArray {
+        val m = rot
+        val ax = if (m == null) lx else m[0] * lx + m[1] * ly + m[2] * lz
+        val ay = if (m == null) ly else m[3] * lx + m[4] * ly + m[5] * lz
+        val az = if (m == null) lz else m[6] * lx + m[7] * ly + m[8] * lz
+        val s = if (direction) 1f else scale
+        val wx = (ax * fx - ay * fy) * s
+        val wy = (ax * fy + ay * fx) * s
+        val wz = az * s
+        return if (direction) floatArrayOf(wx, wy, wz) else floatArrayOf(x + wx, y + wy, z + wz)
+    }
+}
+
+/** A rotation of [angle] radians about the axis ([ax], [ay], [az]), as nine numbers. */
+internal fun rotation(ax: Float, ay: Float, az: Float, angle: Float): FloatArray {
+    val l = sqrt(ax * ax + ay * ay + az * az).coerceAtLeast(1e-5f)
+    val x = ax / l; val y = ay / l; val z = az / l
+    val c = cos(angle); val s = sin(angle); val t = 1 - c
+    return floatArrayOf(
+        t * x * x + c, t * x * y - s * z, t * x * z + s * y,
+        t * x * y + s * z, t * y * y + c, t * y * z - s * x,
+        t * x * z - s * y, t * y * z + s * x, t * z * z + c,
+    )
+}
+
+/**
+ * Draws [mesh] standing at ([x], [y], [z]) on the board, turned so its local x points along ([fx], [fy]), scaled by
+ * [scale], in [color] with a [finish]. Hidden faces are skipped and the rest painted far to near.
+ */
+internal fun DrawScope.drawMesh(
+    frame: TableFrame, mesh: Mesh, x: Float, y: Float, z: Float, color: Color, finish: Finish,
+    fx: Float = 1f, fy: Float = 0f, scale: Float = 1f, shade: Float = 1f,
+) = drawMesh(frame, mesh, Pose(x, y, z, fx, fy, null, scale), color, finish, shade)
+
+/** Draws [mesh] at [pose]; see [Pose]. */
+internal fun DrawScope.drawMesh(frame: TableFrame, mesh: Mesh, pose: Pose, color: Color, finish: Finish, shade: Float = 1f, alpha: Float = 1f) {
+    if (alpha <= 0.003f) return
+    val n = mesh.count
+    val basis = frame.basis()
+    // Lights, in board space: a key from the camera's left and a little above, so the sides of a piece are modelled
+    // and its flat tops don't burn out, and a fill from its right.
+    val key = norm(-0.72f * basis[0] + 0.42f * basis[3] - 0.55f * basis[6], -0.72f * basis[1] + 0.42f * basis[4] - 0.55f * basis[7],
+        -0.72f * basis[2] + 0.42f * basis[5] - 0.55f * basis[8])
+    val fill = norm(0.8f * basis[0] + 0.1f * basis[3] - 0.6f * basis[6], 0.8f * basis[1] + 0.1f * basis[4] - 0.6f * basis[7],
+        0.8f * basis[2] + 0.1f * basis[5] - 0.6f * basis[8])
+    val wx = FloatArray(n); val wy = FloatArray(n); val wz = FloatArray(n)
+    val screen = FloatArray(n * 2)
+    // Android reads one colour per number in the vertex array, so the colour array is as long as that.
+    val colors = IntArray(n * 2)
+    val depth = FloatArray(n)
+    val r = color.red; val g = color.green; val bl = color.blue
+    val wn = FloatArray(n * 3)
+    for (i in 0 until n) {
+        val w = pose.apply(mesh.pos[i * 3], mesh.pos[i * 3 + 1], mesh.pos[i * 3 + 2])
+        wx[i] = w[0]; wy[i] = w[1]; wz[i] = w[2]
+        val lz = wz[i] - pose.z
+        val p = frame.at(wx[i], wy[i], wz[i])
+        screen[i * 2] = p.x; screen[i * 2 + 1] = p.y
+        depth[i] = frame.depth(wx[i], wy[i], wz[i])
+        val nn = pose.apply(mesh.nrm[i * 3], mesh.nrm[i * 3 + 1], mesh.nrm[i * 3 + 2], direction = true)
+        val nx = nn[0]; val ny = nn[1]; val nz = nn[2]
+        wn[i * 3] = nx; wn[i * 3 + 1] = ny; wn[i * 3 + 2] = nz
+        val v = frame.toCamera(wx[i], wy[i], wz[i])
+        val diffuse = max(0f, nx * key[0] + ny * key[1] + nz * key[2])
+        val fillLight = max(0f, nx * fill[0] + ny * fill[1] + nz * fill[2]) * 0.35f
+        val facing = max(0f, nx * v[0] + ny * v[1] + nz * v[2])
+        val rim = (1f - facing).pow(3) * finish.rim
+        // Blinn highlight: halfway between the key light and the eye.
+        val h = norm(key[0] + v[0], key[1] + v[1], key[2] + v[2])
+        val spec = max(0f, nx * h[0] + ny * h[1] + nz * h[2]).pow(finish.shine) * finish.spec
+        // A little darker close to the board, where light is blocked.
+        val occlusion = (0.78f + 0.22f * (lz / 0.12f).coerceIn(0f, 1f)) * shade
+        val light = (0.34f + 0.66f * diffuse + fillLight) * occlusion
+        val cr = (r * light + spec + rim).coerceIn(0f, 1f)
+        val cg = (g * light + spec + rim).coerceIn(0f, 1f)
+        val cb = (bl * light + spec + rim * 1.05f).coerceIn(0f, 1f)
+        colors[i] = Color(cr, cg, cb).toArgb()
+    }
+    // Faces that look toward the camera, far to near.
+    val t = mesh.tris
+    val keep = ArrayList<Int>(t.size / 3)
+    for (k in 0 until t.size / 3) {
+        val a = t[k * 3].toInt(); val b = t[k * 3 + 1].toInt(); val c = t[k * 3 + 2].toInt()
+        val nx = wn[a * 3] + wn[b * 3] + wn[c * 3]
+        val ny = wn[a * 3 + 1] + wn[b * 3 + 1] + wn[c * 3 + 1]
+        val nz = wn[a * 3 + 2] + wn[b * 3 + 2] + wn[c * 3 + 2]
+        val cx = (wx[a] + wx[b] + wx[c]) / 3; val cy = (wy[a] + wy[b] + wy[c]) / 3; val cz = (wz[a] + wz[b] + wz[c]) / 3
+        val v = frame.toCamera(cx, cy, cz)
+        if (nx * v[0] + ny * v[1] + nz * v[2] > -0.15f) keep += k
+    }
+    keep.sortByDescending { k -> depth[t[k * 3].toInt()] + depth[t[k * 3 + 1].toInt()] + depth[t[k * 3 + 2].toInt()] }
+    val order = ShortArray(keep.size * 3)
+    keep.forEachIndexed { j, k -> order[j * 3] = t[k * 3]; order[j * 3 + 1] = t[k * 3 + 1]; order[j * 3 + 2] = t[k * 3 + 2] }
+    // A fading mesh is drawn whole into a layer and then faded, so its own faces don't show through each other.
+    val canvas = drawContext.canvas.nativeCanvas
+    val layered = alpha < 0.999f
+    if (layered) canvas.saveLayerAlpha(null, (alpha * 255).toInt())
+    canvas.drawVertices(NativeCanvas.VertexMode.TRIANGLES, screen.size, screen, 0, null, 0, colors, 0, order, 0, order.size, paint)
+    if (layered) canvas.restore()
+}
+
+private fun norm(x: Float, y: Float, z: Float): FloatArray {
+    val l = sqrt(x * x + y * y + z * z).coerceAtLeast(1e-5f)
+    return floatArrayOf(x / l, y / l, z / l)
+}
+
+// ---------------- More shapes ----------------
+
+/**
+ * A cube [size] across with rounded edges and corners of radius [round], centred on the origin. Each face is a grid
+ * of [k] × [k] squares pushed out onto the rounded shape, so the light rolls smoothly over the edges.
+ */
+internal fun roundedCubeMesh(size: Float, round: Float, k: Int = 6): Mesh {
+    val b = Builder()
+    val h = size / 2
+    val inner = h - round
+    // Each face: its normal axis and two in-plane axes, chosen so triangles wind outward.
+    val faces = listOf(
+        floatArrayOf(0f, 0f, 1f, 1f, 0f, 0f, 0f, 1f, 0f), floatArrayOf(0f, 0f, -1f, 0f, 1f, 0f, 1f, 0f, 0f),
+        floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f), floatArrayOf(-1f, 0f, 0f, 0f, 0f, 1f, 0f, 1f, 0f),
+        floatArrayOf(0f, 1f, 0f, 0f, 0f, 1f, 1f, 0f, 0f), floatArrayOf(0f, -1f, 0f, 1f, 0f, 0f, 0f, 0f, 1f),
+    )
+    for (f in faces) {
+        val ids = Array(k + 1) { i -> IntArray(k + 1) { j ->
+            val u = -h + size * i / k; val v = -h + size * j / k
+            val px = f[0] * h + f[3] * u + f[6] * v
+            val py = f[1] * h + f[4] * u + f[7] * v
+            val pz = f[2] * h + f[5] * u + f[8] * v
+            val cx = px.coerceIn(-inner, inner); val cy = py.coerceIn(-inner, inner); val cz = pz.coerceIn(-inner, inner)
+            var nx = px - cx; var ny = py - cy; var nz = pz - cz
+            val l = sqrt(nx * nx + ny * ny + nz * nz).coerceAtLeast(1e-5f)
+            nx /= l; ny /= l; nz /= l
+            b.vertex(cx + nx * round, cy + ny * round, cz + nz * round, nx, ny, nz)
+        } }
+        for (i in 0 until k) for (j in 0 until k) {
+            b.tri(ids[i][j], ids[i + 1][j], ids[i + 1][j + 1]); b.tri(ids[i][j], ids[i + 1][j + 1], ids[i][j + 1])
+        }
+    }
+    return b.build()
+}
+
+/**
+ * A slab: a rounded rectangle [w] by [d] (corner radius [r]) standing [h] tall on z = 0, with a rounded bevel [bevel]
+ * along its top edge and a flat top. Centred on x and y.
+ */
+internal fun slabMesh(w: Float, d: Float, h: Float, r: Float, bevel: Float): Mesh {
+    val b = Builder()
+    // The outline, anticlockwise, with its outward normals.
+    val outline = ArrayList<FloatArray>()
+    val corners = listOf(floatArrayOf(w / 2 - r, d / 2 - r, 0f), floatArrayOf(-w / 2 + r, d / 2 - r, 90f),
+        floatArrayOf(-w / 2 + r, -d / 2 + r, 180f), floatArrayOf(w / 2 - r, -d / 2 + r, 270f))
+    for (c in corners) for (s in 0..4) {
+        val a = Math.toRadians((c[2] + s * 22.5f).toDouble()).toFloat()
+        outline += floatArrayOf(c[0] + cos(a) * r, c[1] + sin(a) * r, cos(a), sin(a))
+    }
+    val n = outline.size
+    // Layers up the side: the foot, the start of the bevel, the bevel's top edge pulled in.
+    val rows = listOf(0f to 0f, (h - bevel) to 0f, h to 1f).map { (z, t) ->
+        IntArray(n) { i ->
+            val o = outline[i]
+            val inset = bevel * t
+            b.vertex(o[0] - o[2] * inset, o[1] - o[3] * inset, z, o[2] * (1 - 0.7f * t), o[3] * (1 - 0.7f * t), 0.9f * t)
+        }
+    }
+    for (layer in 0 until rows.lastIndex) {
+        val lo = rows[layer]; val hi = rows[layer + 1]
+        for (i in 0 until n) { val j = (i + 1) % n; b.tri(lo[i], lo[j], hi[j]); b.tri(lo[i], hi[j], hi[i]) }
+    }
+    val center = b.vertex(0f, 0f, h, 0f, 0f, 1f)
+    val top = IntArray(n) { i -> val o = outline[i]; b.vertex(o[0] - o[2] * bevel, o[1] - o[3] * bevel, h, 0f, 0f, 1f) }
+    for (i in 0 until n) b.tri(center, top[i], top[(i + 1) % n])
+    return b.build()
+}
+
+// ---------------- Painting on faces ----------------
+
+/**
+ * Paints flat art onto a quad in the scene: [art] draws in a [w] × [h] box (x right, y down) and the box is mapped
+ * onto the four screen points [quad] (top left, top right, bottom right, bottom left), with perspective.
+ */
+internal fun DrawScope.drawOnQuad(quad: List<androidx.compose.ui.geometry.Offset>, w: Float, h: Float, alpha: Float = 1f, art: DrawScope.() -> Unit) {
+    val m = android.graphics.Matrix()
+    val ok = m.setPolyToPoly(floatArrayOf(0f, 0f, w, 0f, w, h, 0f, h), 0,
+        floatArrayOf(quad[0].x, quad[0].y, quad[1].x, quad[1].y, quad[2].x, quad[2].y, quad[3].x, quad[3].y), 0, 4)
+    if (!ok) return
+    val canvas = drawContext.canvas.nativeCanvas
+    if (alpha < 0.999f) canvas.saveLayerAlpha(null, (alpha * 255).toInt()) else canvas.save()
+    canvas.concat(m)
+    art()
+    canvas.restore()
+}
+
+/** A flat disc lying in the plane spanned by [u] and [v] (unit directions) around [c], all in board space. */
+internal fun DrawScope.drawDiscOnPlane(frame: TableFrame, c: FloatArray, u: FloatArray, v: FloatArray, r: Float, color: Color, steps: Int = 14) {
+    val path = androidx.compose.ui.graphics.Path()
+    for (i in 0 until steps) {
+        val a = (2 * PI * i / steps).toFloat()
+        val ca = cos(a) * r; val sa = sin(a) * r
+        val p = frame.at(c[0] + u[0] * ca + v[0] * sa, c[1] + u[1] * ca + v[1] * sa, c[2] + u[2] * ca + v[2] * sa)
+        if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
+    }
+    path.close()
+    drawPath(path, color)
+}

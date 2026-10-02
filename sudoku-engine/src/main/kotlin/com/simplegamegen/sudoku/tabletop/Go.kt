@@ -123,10 +123,18 @@ data class Go(
 
     /** Stones in the group, and how many distinct empty neighbors it has. */
     fun groupAndLibs(on: List<Int>, start: Int): Pair<List<Int>, Int> {
+        val (stones, libs) = groupPoints(on, start)
+        return stones to libs.size
+    }
+
+    /** Stones in the group at [start], and the empty points beside them. */
+    fun groupPoints(start: Int): Pair<List<Int>, List<Int>> = groupPoints(board, start)
+
+    private fun groupPoints(on: List<Int>, start: Int): Pair<List<Int>, List<Int>> {
         val color = on[start]
-        if (color == 0) return emptyList<Int>() to neighbors(start).count { on[it] == 0 }
+        if (color == 0) return emptyList<Int>() to neighbors(start).filter { on[it] == 0 }
         val seen = LinkedHashSet<Int>()
-        val libs = HashSet<Int>()
+        val libs = LinkedHashSet<Int>()
         val stack = ArrayDeque<Int>()
         stack.add(start)
         seen.add(start)
@@ -139,7 +147,7 @@ data class Go(
                 }
             }
         }
-        return seen.toList() to libs.size
+        return seen.toList() to libs.toList()
     }
 
     /** An empty point whose every neighbor is [color]. The bot will not fill these. */

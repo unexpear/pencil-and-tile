@@ -280,9 +280,12 @@ fun MemoryScreen(nav: NavController, vm: PlayViewModel<MemoryGame>, factory: Puz
             ZoomBox(Modifier.fillMaxWidth()) {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     val gap = 6.dp
-                    val w = minOf((maxWidth - gap * (g.cols - 1)) / g.cols - 4.dp, 72.dp)
+                    // Tiles are tall, so the board is laid the wide way round (a 3 × 4 deal shows 4 across); where a tile
+                    // sits doesn't matter to the game, and this way the whole board fits on a phone without scrolling.
+                    val across = maxOf(g.cols, g.faces.size / g.cols)
+                    val w = minOf((maxWidth - gap * (across - 1)) / across - 4.dp, 72.dp)
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap), horizontalAlignment = Alignment.CenterHorizontally) {
-                        g.faces.indices.chunked(g.cols).forEach { row ->
+                        g.faces.indices.chunked(across).forEach { row ->
                             Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                                 row.forEach { i ->
                                     val up = i in g.matched || i in g.open

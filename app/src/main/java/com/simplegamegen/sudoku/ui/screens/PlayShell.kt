@@ -1,12 +1,23 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -89,7 +100,8 @@ fun <S : Any> PlayShell(
     ReportPlay(id, key = game?.let(setup.identity), level = game?.let { setup.settings[setup.settingOf(it)] } ?: "",
         levelIndex = game?.let(setup.settingOf) ?: 0, inProgress = game != null && setup.inProgress(game), outcome = game?.let(setup.outcome))
     GameScaffold(
-        title = id.title, game = id, tutorial = id, onBack = { nav.popBackStack() }, busy = s.busy || s.thinking, scroll = scroll,
+        title = id.title, game = id, tutorial = id, onBack = { nav.popBackStack() }, busy = s.busy || s.thinking,
+        scroll = game == null || scroll,
         subtitle = game?.let { setup.subtitle(it) ?: setup.settings[setup.settingOf(it)] },
         actions = { HeaderAction(GameIcons.Rules, "Rules") { rules = true } },
         menu = if (game == null) emptyList() else listOf(
@@ -131,6 +143,41 @@ fun <S : Any> PlayShell(
         containerColor = look.colors.surface)
     if (confirm) ConfirmDialog("Start a new game?", "This replaces your saved ${id.title} game.", "New game",
         onConfirm = ::begin, onDismiss = { confirm = false })
+}
+
+/**
+ * The board fills the play area. [full] covers the header and tool bar so the same board
+ * uses the whole screen, with a way back and undo.
+ */
+@Composable
+fun ColumnScope.PlayBoard(
+    full: Boolean,
+    onExit: () -> Unit,
+    canUndo: Boolean,
+    onUndo: () -> Unit,
+    bar: @Composable RowScope.() -> Unit = {},
+    board: @Composable BoxScope.() -> Unit,
+) {
+    if (full) {
+        val colors = LocalGameLook.current.colors
+        Dialog(
+            onDismissRequest = onExit,
+            properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        ) {
+            Column(
+                Modifier.fillMaxSize().background(colors.background).systemBarsPadding().padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(onClick = onExit, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Exit full screen") }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (canUndo) OutlinedButton(onClick = onUndo, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text("Undo") }
+                    bar()
+                }
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center, content = board)
+            }
+        }
+    }
+    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center, content = board)
 }
 
 val LevelNames = listOf("Easy", "Medium", "Hard", "Expert")

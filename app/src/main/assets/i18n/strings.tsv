@@ -2554,3 +2554,18 @@ Six dice to 10,000 × 4 computer strengths. The first bank has to be at least 50
 Each turn's dice come from the game's seed.	每一轮的骰子由这局的种子决定。	各手番のサイコロはその対局の種から出ます。	Los dados de cada turno salen de la semilla de la partida.	Die Würfel jedes Zugs kommen aus dem Samen der Partie.
 Five dice, up to three rolls, five hands × 4 computer strengths. A 6, then a 5, then a 4, and the other two dice are cargo. The higher cargo wins.	五颗骰子，最多三次，五手，四种电脑强度。先 6，再 5，再 4，另外两颗是货。货多的赢。	サイコロ5つ、3回まで、5手番、強さは4段階。6、次に5、次に4、残り2つが荷物。荷物が多い方が勝ちです。	Cinco dados, hasta tres tiradas, cinco manos × 4 fuerzas. Un 6, luego un 5, luego un 4, y los otros dos son la carga. Gana la carga más alta.	Fünf Würfel, bis zu drei Würfe, fünf Runden × 4 Stärken. Eine 6, dann eine 5, dann eine 4, die anderen beiden sind die Ladung. Die höhere Ladung gewinnt.
 Each hand's dice come from the game's seed.	每一手的骰子由这局的种子决定。	各手番のサイコロはその対局の種から出ます。	Los dados de cada mano salen de la semilla de la partida.	Die Würfel jeder Runde kommen aus dem Samen der Partie.
+Full screen	全屏	全画面	Pantalla completa	Vollbild
+Exit full screen	退出全屏	全画面を終了	Salir de pantalla completa	Vollbild beenden
+Tap a stone to see its liberties.	点一颗棋子，看它的气。	石をタップすると、その呼吸点が見えます。	Toca una piedra para ver sus libertades.	Tippe einen Stein, um seine Freiheiten zu sehen.
+Behind	己方身后	自陣の後ろ	Detrás	Dahinter
+Corner	角落	角	Esquina	Ecke
+Top	俯视	真上	Desde arriba	Von oben
+Free camera	自由镜头	自由カメラ	Cámara libre	Freie Kamera
+View details	视角数值	視点の数値	Datos de la vista	Ansichtswerte
+Save view	保存视角	視点を保存	Guardar vista	Ansicht speichern
+Replace {0}	替换{0}	{0}を置き換え	Reemplazar {0}	{0} ersetzen
+Reset views	恢复预设视角	視点を初期化	Restablecer vistas	Ansichten zurücksetzen
+Remove view	删除视角	視点を削除	Quitar vista	Ansicht entfernen
+yaw {0}° · pitch {1}° · distance {2}	偏航 {0}° · 俯仰 {1}° · 距离 {2}	ヨー {0}° · ピッチ {1}° · 距離 {2}	rumbo {0}° · inclinación {1}° · distancia {2}	Gier {0}° · Neigung {1}° · Abstand {2}
+Drag to look around. Pinch to move closer.	拖动环视。双指拉近。	ドラッグで見回し、ピンチで近づきます。	Arrastra para mirar. Pellizca para acercarte.	Ziehen zum Umschauen. Mit zwei Fingern näher ziehen.
+View {0}	视角 {0}	視点 {0}	Vista {0}	Ansicht {0}

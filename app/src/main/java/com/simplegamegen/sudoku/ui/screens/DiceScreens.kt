@@ -1,5 +1,6 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import com.simplegamegen.sudoku.ui.assets.DiceTray
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -267,23 +268,8 @@ private fun Tiles(up: List<Boolean>, picked: Set<Int>, enabled: Boolean, onTile:
 
 @Composable
 private fun DiceStrip(faces: List<Int>, marked: List<Boolean>, enabled: Boolean, onDie: (Int) -> Unit) {
-    val accent = LocalGameLook.current.colors.accent
-    TablePanel {
-        BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            val gap = 8.dp
-            val die = minOf((maxWidth - gap * (faces.size - 1)) / faces.size, 72.dp)
-            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
-                faces.forEachIndexed { i, face ->
-                    val spoken = if (marked.getOrElse(i) { false }) "Die showing $face, held" else "Die showing $face"
-                    Box(
-                        Modifier.size(die)
-                            .clickable(enabled = enabled, role = Role.Button) { onDie(i) }
-                            .semantics { contentDescription = say(spoken) },
-                    ) { Canvas(Modifier.fillMaxSize()) { drawFaceDie(face, marked.getOrElse(i) { false }, accent) } }
-                }
-            }
-        }
-    }
+    // Real dice on a felt tray; they tumble whenever the faces change.
+    DiceTray(faces, marked, enabled, rollKey = faces, onDie = onDie)
 }
 
 private fun DrawScope.drawFaceDie(face: Int, marked: Boolean, accent: Color) {

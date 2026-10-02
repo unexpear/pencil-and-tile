@@ -1,5 +1,17 @@
 package com.simplegamegen.sudoku.ui.screens
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import com.simplegamegen.sudoku.ui.assets.drawDiscOnPlane
+import com.simplegamegen.sudoku.ui.assets.drawMesh
+import com.simplegamegen.sudoku.ui.assets.boxMesh
+import com.simplegamegen.sudoku.ui.assets.Satin
+import com.simplegamegen.sudoku.ui.assets.Pose
+import com.simplegamegen.sudoku.ui.assets.TableFrame
+import com.simplegamegen.sudoku.ui.assets.BoardView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -97,22 +110,29 @@ fun BridgesScreen(nav: NavController, vm: PlayViewModel<BridgesGame>, factory: P
         ZoomBox(Modifier.fillMaxWidth()) {
             BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 val n = g.size
-                val side = min(maxWidth / n, 46.dp)
-                Box(Modifier.size(side * n)) {
+                // Only the stretch of sea the islands use is shown, so a small puzzle fills the screen.
+                val isles = (0 until n * n).filter { g.clue[it] > 0 }
+                val r0 = isles.minOf { it / n }; val r1 = isles.maxOf { it / n }
+                val c0 = isles.minOf { it % n }; val c1 = isles.maxOf { it % n }
+                val rows = r1 - r0 + 1; val cols = c1 - c0 + 1
+                val side = min(maxWidth / cols, 64.dp)
+                Box(Modifier.size(side * cols, side * rows).clip(RoundedCornerShape(12.dp)).background(Color(0xFFCFE6EF))) {
                     Canvas(Modifier.matchParentSize()) {
-                        val cell = size.width / n
+                        val cell = size.width / cols
+                        // Faint dots where islands could be, so the grid can be read.
+                        for (r in 0 until rows) for (col in 0 until cols) drawCircle(Color(0xFF7FA9BC), cell * 0.04f, Offset((col + 0.5f) * cell, (r + 0.5f) * cell))
                         for (i in 0 until g.edges) if (g.built[i] > 0) {
                             val (a, b) = g.edge(i)
-                            val start = Offset((a % n + 0.5f) * cell, (a / n + 0.5f) * cell)
-                            val end = Offset((b % n + 0.5f) * cell, (b / n + 0.5f) * cell)
+                            val start = Offset((a % n - c0 + 0.5f) * cell, (a / n - r0 + 0.5f) * cell)
+                            val end = Offset((b % n - c0 + 0.5f) * cell, (b / n - r0 + 0.5f) * cell)
                             val shift = if (a / n == b / n) Offset(0f, cell * 0.08f) else Offset(cell * 0.08f, 0f)
                             drawLine(c.accent, start, end, strokeWidth = cell * 0.08f)
                             if (g.built[i] == 2) drawLine(c.accent, start + shift, end + shift, strokeWidth = cell * 0.08f)
                         }
                     }
                     Column {
-                        for (r in 0 until n) Row {
-                            for (col in 0 until n) {
+                        for (r in r0..r1) Row {
+                            for (col in c0..c1) {
                                 val i = r * n + col
                                 val island = g.clue[i] > 0
                                 Box(Modifier.size(side).clickable(enabled = island && !g.complete && !s.busy, role = Role.Button) {
@@ -167,15 +187,18 @@ fun SlitherlinkScreen(nav: NavController, vm: PlayViewModel<SlitherlinkGame>, fa
         ZoomBox(Modifier.fillMaxWidth()) {
             BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 val n = g.size
-                val side = min(maxWidth / n, 52.dp)
-                Canvas(Modifier.size(side * n).pointerInput(g.seed, g.markH, g.markV) {
+                // A small margin round the grid so the dots and lines on its edge aren't cut in half.
+                val side = min((maxWidth - 16.dp) / n, 52.dp)
+                Canvas(Modifier.size(side * n + 16.dp).pointerInput(g.seed, g.markH, g.markV) {
                     detectTapGestures { pos ->
                         val cell = side.toPx()
-                        val edge = nearestLine(pos, n, cell) ?: return@detectTapGestures
+                        val edge = nearestLine(pos - Offset(8.dp.toPx(), 8.dp.toPx()), n, cell) ?: return@detectTapGestures
                         vm.play { if (edge.first) it.toggleH(edge.second, edge.third) else it.toggleV(edge.second, edge.third) }
                     }
                 }) {
-                    val cell = size.width / n
+                    val pad = 8.dp.toPx()
+                    val cell = (size.width - pad * 2) / n
+                    translate(pad, pad) {
                     for (r in 0..n) for (col in 0 until n) if (g.markH[r * n + col] == '1') {
                         drawLine(c.accent, Offset(col * cell, r * cell), Offset((col + 1) * cell, r * cell), strokeWidth = cell * 0.12f)
                     }
@@ -186,9 +209,11 @@ fun SlitherlinkScreen(nav: NavController, vm: PlayViewModel<SlitherlinkGame>, fa
                     for (r in 0 until n) for (col in 0 until n) {
                         val clue = g.clue[r * n + col]
                         if (clue >= 0) {
-                            val layout = measurer.measure(clue.toString(), TextStyle(color = c.text, fontWeight = FontWeight.Bold, fontSize = (cell * 0.45f).sp))
+                            // The cell is in pixels; a font size in sp is scaled by density again, so divide it out.
+                            val layout = measurer.measure(clue.toString(), TextStyle(color = c.text, fontWeight = FontWeight.Bold, fontSize = (cell * 0.45f / density).sp))
                             drawText(layout, topLeft = Offset(col * cell + (cell - layout.size.width) / 2, r * cell + (cell - layout.size.height) / 2))
                         }
+                    }
                     }
                 }
             }
@@ -232,107 +257,90 @@ fun TowersScreen(nav: NavController, vm: PlayViewModel<TowersGame>, factory: Puz
         HintButton(GameId.TOWERS, enabled = !g.complete && !s.busy) { vm.play("One height filled.") { it.hint() } }
     }) { g, s ->
         if (g.complete) WinBanner("The skyline matches every clue.")
-        ZoomBox(Modifier.fillMaxWidth()) {
-            TowersCity(g, enabled = !g.complete && !s.busy) { index -> vm.play { it.cycle(index) } }
-        }
+        // Pinch to zoom; the camera chips under the city turn it.
+        TowersCity(g, enabled = !g.complete && !s.busy) { index -> vm.play { it.cycle(index) } }
     }
 }
 
+/** How tall one storey is, in squares. */
+private const val Storey = 0.5f
+
+private val TowerViews = listOf(
+    BoardView("Street", yaw = 0f, pitch = 58f, distance = 1.6f),
+    BoardView("Corner", yaw = 40f, pitch = 42f, distance = 1.9f),
+    BoardView("Top", yaw = 0f, pitch = 90f, distance = 2f),
+)
+
+/**
+ * The puzzle as a little city in 3D: every entered height is a real building, one storey per level, with windows on
+ * each side, a roof and a parapet. Clues stand on round badges round the plot. The same cameras as the chess board:
+ * presets, a free camera to turn it, and pinch to zoom.
+ */
 @Composable
 private fun TowersCity(g: TowersGame, enabled: Boolean, onTap: (Int) -> Unit) {
     val c = LocalGameLook.current.colors
     val measurer = rememberTextMeasurer()
-    val display = LocalDensity.current
+    val camera = rememberBoardCamera("towers_views", TowerViews)
     val n = g.size
-    BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        val cell = minOf(with(display) { maxWidth.toPx() } / (n * 2.15f + 2.4f), with(display) { 34.dp.toPx() })
-        val rise = cell * 0.78f
-        fun at(x: Float, y: Float, z: Float) = iso(x, y, z, cell, rise)
-        val samples = buildList {
-            for (x in 0..n) for (y in 0..n) add(at(x.toFloat(), y.toFloat(), n.toFloat()))
-            for (i in 0 until n) {
-                add(at(i + 0.5f, -1.25f, 0f))
-                add(at(i + 0.5f, n + 1.25f, 0f))
-                add(at(-1.35f, i + 0.5f, 0f))
-                add(at(n + 1.35f, i + 0.5f, 0f))
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        BoardWithViews(camera, n, peakZ = n * Storey + 0.3f, margin = 1.55f, height = maxWidth * 1.05f) { frame ->
+            fun h(i: Int) = g.entered[i] * Storey
+            fun roof(i: Int): List<Offset> {
+                val x = (i % n).toFloat(); val y = (i / n).toFloat(); val z = h(i) + 0.02f
+                return listOf(frame.at(x + 0.06f, y + 0.06f, z), frame.at(x + 0.94f, y + 0.06f, z), frame.at(x + 0.94f, y + 0.94f, z), frame.at(x + 0.06f, y + 0.94f, z))
             }
-        }
-        val minX = samples.minOf { it.x }
-        val minY = samples.minOf { it.y }
-        val pad = cell * 0.35f
-        fun p(x: Float, y: Float, z: Float) = at(x, y, z) - Offset(minX - pad, minY - pad)
-        val boardW = samples.maxOf { it.x } - minX + pad * 2
-        val boardH = samples.maxOf { it.y } - minY + pad * 2
-        val order = (0 until n * n).sortedBy { (it / n) + (it % n) }
-        Box(Modifier.size(with(display) { boardW.toDp() }, with(display) { boardH.toDp() })) {
+            // Far buildings first, so near ones stand in front of them.
+            val order = (0 until n * n).sortedByDescending { frame.depth((it % n) + 0.5f, (it / n) + 0.5f, h(it) / 2) }
             order.forEach { i ->
-                val row = i / n
-                val col = i % n
-                val h = g.entered[i]
-                val top = p(col + 0.5f, row + 0.5f, if (h == 0) 0.16f else h.toFloat())
+                val row = i / n; val col = i % n; val height = g.entered[i]
+                val top = frame.at(col + 0.5f, row + 0.5f, h(i) + 0.05f)
                 Box(Modifier.offset { IntOffset(top.x.roundToInt(), top.y.roundToInt()) }.size(1.dp).semantics {
-                    contentDescription = say("Row ${row + 1}, column ${col + 1}" + if (h == 0) ", empty" else ", height $h")
+                    contentDescription = say("Row ${row + 1}, column ${col + 1}" + if (height == 0) ", empty" else ", height $height")
                     if (enabled) onClick { onTap(i); true }
                 })
             }
-            Canvas(Modifier.matchParentSize().pointerInput(cell, g.entered, enabled) {
+            Canvas(Modifier.matchParentSize().pointerInput(g.entered, enabled, frame) {
                 detectTapGestures { pos ->
                     if (!enabled) return@detectTapGestures
+                    // The nearest building whose roof or side is under the finger.
                     val hit = order.asReversed().firstOrNull { i ->
-                        val row = i / n
-                        val col = i % n
-                        val h = if (g.entered[i] == 0) 0.16f else g.entered[i].toFloat()
-                        val topA = p(col.toFloat(), row.toFloat(), h)
-                        val topB = p(col + 1f, row.toFloat(), h)
-                        val topC = p(col + 1f, row + 1f, h)
-                        val topD = p(col.toFloat(), row + 1f, h)
-                        val footB = p(col + 1f, row.toFloat(), 0f)
-                        val footC = p(col + 1f, row + 1f, 0f)
-                        val footD = p(col.toFloat(), row + 1f, 0f)
-                        pointInQuad(pos, topA, topB, topC, topD) ||
-                            pointInQuad(pos, topB, topC, footC, footB) ||
-                            pointInQuad(pos, topD, topC, footC, footD)
+                        val x = (i % n).toFloat(); val y = (i / n).toFloat(); val z = h(i)
+                        val r = roof(i)
+                        if (pointInQuad(pos, r[0], r[1], r[2], r[3])) return@firstOrNull true
+                        if (z <= 0f) return@firstOrNull false
+                        listOf(0f to 0f, 1f to 0f, 1f to 1f, 0f to 1f).let { cs ->
+                            (0 until 4).any { k ->
+                                val (ax, ay) = cs[k]; val (bx, by) = cs[(k + 1) % 4]
+                                pointInQuad(pos, frame.at(x + ax, y + ay, z), frame.at(x + bx, y + by, z), frame.at(x + bx, y + by, 0f), frame.at(x + ax, y + ay, 0f))
+                            }
+                        }
                     } ?: return@detectTapGestures
                     onTap(hit)
                 }
             }) {
-                val ground = listOf(p(0f, 0f, 0f), p(n.toFloat(), 0f, 0f), p(n.toFloat(), n.toFloat(), 0f), p(0f, n.toFloat(), 0f))
-                drawPath(quad(ground[0], ground[1], ground[2], ground[3]), c.table)
-                order.forEach { i ->
-                    val row = i / n
-                    val col = i % n
-                    val height = g.entered[i]
-                    val h = if (height == 0) 0.16f else height.toFloat()
-                    val x = col.toFloat()
-                    val y = row.toFloat()
-                    val topA = p(x, y, h)
-                    val topB = p(x + 1f, y, h)
-                    val topC = p(x + 1f, y + 1f, h)
-                    val topD = p(x, y + 1f, h)
-                    val footB = p(x + 1f, y, 0f)
-                    val footC = p(x + 1f, y + 1f, 0f)
-                    val footD = p(x, y + 1f, 0f)
-                    val roof = if (height == 0) c.tableInset else lerp(c.pieceFace, c.boardLight, (height - 1f) / n.coerceAtLeast(1))
-                    drawPath(quad(topB, topC, footC, footB), lerp(c.boardDark, Color.Black, 0.18f))
-                    drawPath(quad(topD, topC, footC, footD), c.boardDark)
-                    drawPath(quad(topA, topB, topC, topD), roof)
-                    drawPath(quad(topA, topB, topC, topD), c.pieceEdge, style = Stroke(maxOf(1f, cell * 0.04f)))
-                    if (height > 1) {
-                        for (step in 1 until height) {
-                            drawLine(c.pieceEdge.copy(alpha = 0.55f), p(x, y + 1f, step.toFloat()), p(x + 1f, y + 1f, step.toFloat()), strokeWidth = maxOf(1f, cell * 0.035f))
-                        }
-                    }
-                    if (height > 0) {
-                        val label = measurer.measure("$height", TextStyle(color = c.text, fontSize = (cell * 0.42f / this.density).sp, fontWeight = FontWeight.Bold))
-                        val center = Offset((topA.x + topC.x) / 2f, (topA.y + topC.y) / 2f)
-                        drawText(label, topLeft = center - Offset(label.size.width / 2f, label.size.height / 2f))
-                    }
+                // The plot: a lawn with paving between the lots, and a kerb round it.
+                val k = 0.25f
+                drawPath(quad(frame.at(-k, -k, 0f), frame.at(n + k, -k, 0f), frame.at(n + k, n + k, 0f), frame.at(-k, n + k, 0f)), Color(0xFF8C8273))
+                for (i in 0 until n * n) {
+                    val x = (i % n).toFloat(); val y = (i / n).toFloat()
+                    drawPath(quad(frame.at(x + 0.05f, y + 0.05f, 0.002f), frame.at(x + 0.95f, y + 0.05f, 0.002f), frame.at(x + 0.95f, y + 0.95f, 0.002f),
+                        frame.at(x + 0.05f, y + 0.95f, 0.002f)), Color(0xFF4F8A55))
                 }
-                val clueStyle = TextStyle(color = c.muted, fontSize = (cell * 0.38f / this.density).sp, fontWeight = FontWeight.Bold)
+                order.forEach { i -> drawBuilding(frame, i % n, i / n, g.entered[i], n, measurer, c) }
+                // Clue badges round the plot, each with a short line to its row or column.
+                val clueStyle = TextStyle(color = c.text, fontSize = (frame.cell * 0.36f / density).sp, fontWeight = FontWeight.Bold)
                 for (i in 0 until n) {
-                    listOf(g.top[i] to p(i + 0.5f, -1.15f, 0f), g.bottom[i] to p(i + 0.5f, n + 1.15f, 0f),
-                        g.left[i] to p(-1.2f, i + 0.5f, 0f), g.right[i] to p(n + 1.2f, i + 0.5f, 0f)).forEach { (value, at) ->
+                    listOf(
+                        Triple(g.top[i], frame.at(i + 0.5f, -1.2f, 0f), frame.at(i + 0.5f, -0.3f, 0f)),
+                        Triple(g.bottom[i], frame.at(i + 0.5f, n + 1.2f, 0f), frame.at(i + 0.5f, n + 0.3f, 0f)),
+                        Triple(g.left[i], frame.at(-1.2f, i + 0.5f, 0f), frame.at(-0.3f, i + 0.5f, 0f)),
+                        Triple(g.right[i], frame.at(n + 1.2f, i + 0.5f, 0f), frame.at(n + 0.3f, i + 0.5f, 0f)),
+                    ).forEach { (value, at, toward) ->
                         if (value > 0) {
+                            val r = frame.cell * 0.3f
+                            drawLine(c.muted.copy(alpha = 0.6f), at, toward, strokeWidth = maxOf(1f, r * 0.12f), cap = StrokeCap.Round)
+                            drawCircle(c.surface, r, at)
+                            drawCircle(c.muted.copy(alpha = 0.85f), r, at, style = Stroke(maxOf(1f, r * 0.14f)))
                             val label = measurer.measure("$value", clueStyle)
                             drawText(label, topLeft = at - Offset(label.size.width / 2f, label.size.height / 2f))
                         }
@@ -341,6 +349,46 @@ private fun TowersCity(g: TowersGame, enabled: Boolean, onTap: (Int) -> Unit) {
             }
         }
     }
+}
+
+private val Buildings = HashMap<Int, com.simplegamegen.sudoku.ui.assets.Mesh>()
+private val RoofMesh by lazy { boxMesh(0.88f, 0.88f, 0.06f) }
+
+/** One building of [height] storeys on lot ([col], [row]): walls, windows on the sides you can see, a roof and its number. */
+private fun DrawScope.drawBuilding(frame: TableFrame, col: Int, row: Int, height: Int, n: Int, measurer: TextMeasurer, c: com.simplegamegen.sudoku.ui.theme.GamePalette) {
+    val x = col + 0.5f; val y = row + 0.5f
+    if (height == 0) {
+        drawPath(quad(frame.at(x - 0.41f, y - 0.41f, 0.004f), frame.at(x + 0.41f, y - 0.41f, 0.004f), frame.at(x + 0.41f, y + 0.41f, 0.004f),
+            frame.at(x - 0.41f, y + 0.41f, 0.004f)), Color(0xFF6FA572))
+        return
+    }
+    val tall = height * Storey
+    val wall = lerp(Color(0xFFC9A27A), Color(0xFF7D8CA8), (height - 1f) / (n - 1).coerceAtLeast(1))
+    drawDiscOnPlane(frame, floatArrayOf(x + 0.12f, y + 0.1f, 0.003f), floatArrayOf(0.6f, 0f, 0f), floatArrayOf(0f, 0.6f, 0f), 1f, Color.Black.copy(alpha = 0.2f))
+    drawMesh(frame, Buildings.getOrPut(height) { boxMesh(0.82f, 0.82f, tall) }, Pose(x, y, 0f), wall, Satin)
+    // Windows on each wall that faces the camera: two per storey, some lit.
+    val sides = listOf(floatArrayOf(0f, 1f), floatArrayOf(0f, -1f), floatArrayOf(1f, 0f), floatArrayOf(-1f, 0f))
+    for ((k, s) in sides.withIndex()) {
+        val nx = s[0]; val ny = s[1]
+        val fx = x + nx * 0.411f; val fy = y + ny * 0.411f
+        if (!frame.facing(nx, ny, 0f, fx, fy, tall / 2)) continue
+        val ux = -ny; val uy = nx
+        val light = if (nx + ny > 0f) 0.85f else 1f
+        for (floor in 0 until height) for (w in 0..1) {
+            val u0 = -0.28f + w * 0.34f; val u1 = u0 + 0.22f
+            val z0 = floor * Storey + Storey * 0.3f; val z1 = floor * Storey + Storey * 0.75f
+            val lit = (floor * 3 + w + col * 5 + row * 7 + k) % 4 == 0
+            val glass = if (lit) Color(0xFFFFE6A6) else lerp(Color(0xFF2B3A52), Color(0xFF7FA6C9), 0.25f * light)
+            drawPath(quad(frame.at(fx + ux * u0, fy + uy * u0, z0), frame.at(fx + ux * u1, fy + uy * u1, z0),
+                frame.at(fx + ux * u1, fy + uy * u1, z1), frame.at(fx + ux * u0, fy + uy * u0, z1)), glass)
+        }
+    }
+    drawMesh(frame, RoofMesh, Pose(x, y, tall), lerp(wall, Color.White, 0.35f), Satin)
+    val r = listOf(frame.at(x - 0.3f, y - 0.3f, tall + 0.062f), frame.at(x + 0.3f, y - 0.3f, tall + 0.062f), frame.at(x + 0.3f, y + 0.3f, tall + 0.062f), frame.at(x - 0.3f, y + 0.3f, tall + 0.062f))
+    drawPath(quad(r[0], r[1], r[2], r[3]), lerp(wall, Color.White, 0.6f))
+    val label = measurer.measure("$height", TextStyle(color = Color(0xFF1E1A14), fontSize = (frame.unitAt(x, y, tall) * 0.34f / density).sp, fontWeight = FontWeight.Bold))
+    val at = frame.at(x, y, tall + 0.07f)
+    drawText(label, topLeft = at - Offset(label.size.width / 2f, label.size.height / 2f))
 }
 
 val LightsSetup: (PuzzleFactory) -> PlaySetup<LightsGame> = { factory ->
