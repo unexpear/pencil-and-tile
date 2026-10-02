@@ -62,6 +62,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.LocalContentColor
 import com.simplegamegen.sudoku.ui.GameId
@@ -111,6 +112,8 @@ fun GameScaffold(
     tutorial: GameId? = null,
     /** Shows the running clock of a timed game in the header. */
     showClock: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    itemSpacing: Dp = 12.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val look = LocalGameLook.current
@@ -158,8 +161,8 @@ fun GameScaffold(
     ) { padding ->
         Column(
             Modifier.padding(padding).fillMaxSize().then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(contentPadding),
+            verticalArrangement = Arrangement.spacedBy(itemSpacing),
             content = content,
         )
     }

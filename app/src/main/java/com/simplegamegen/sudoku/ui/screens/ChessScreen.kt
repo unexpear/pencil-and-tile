@@ -101,24 +101,29 @@ fun ChessScreen(nav: NavController, vm: PlayViewModel<Chess>, factory: PuzzleFac
     PlayShell(
         nav, vm, GameId.CHESS, remember(factory) { ChessSetup(factory) },
         scroll = false,
+        tight = true,
         tools = { _, _ ->
             ToolButton(GameIcons.Fit, if (full) "Exit full screen" else "Full screen") { full = !full }
         },
     ) { g, s ->
-        DuelStatus(g.over, g.winner, g.turn, s.thinking, "You (white)", "Computer (black)")
-        if (!g.ended && g.inCheck()) InfoChip("Check!", emphasized = true)
         val playable = !g.ended && g.turn == 1 && !s.thinking && !s.busy
         var selected by remember(g) { mutableStateOf<Int?>(null) }
         val legal = remember(g) { g.legalMoves() }
-        // What each side has taken, above and below the board, the computer's side on top as on the board.
-        Captures(g, byYou = false)
-        PlayBoard(full, { full = false }, s.canUndo && !s.busy, vm::undo) {
+        // Captures sit tight against the board and stay on screen in full screen.
+        PlayBoard(
+            full, { full = false }, s.canUndo && !s.busy, vm::undo,
+            above = {
+                DuelStatus(g.over, g.winner, g.turn, s.thinking, "You (white)", "Computer (black)", oneLine = true)
+                if (!g.ended && g.inCheck()) InfoChip("Check!", emphasized = true)
+                Captures(g, byYou = false)
+            },
+            below = { Captures(g, byYou = true) },
+        ) {
             ChessTable(camera, g, legal, selected, playable, onSelect = { selected = it }, onPlay = { move ->
                 vm.play { it.play(move) }
                 selected = null
             })
         }
-        Captures(g, byYou = true)
     }
 }
 
@@ -134,7 +139,7 @@ private fun ChessTable(
 ) {
     val c = LocalGameLook.current.colors
     val measurer = rememberTextMeasurer()
-    BoardWithViews(camera, n = 8, peakZ = 1.5f, margin = 0.62f) { frame ->
+    BoardWithViews(camera, n = 8, peakZ = 1.5f, margin = 0.5f) { frame ->
         val top = 0.22f
         val order = (0 until 64).sortedByDescending { frame.depth((it % 8) + 0.5f, (it / 8) + 0.5f, top) }
             order.forEach { i ->
@@ -151,7 +156,7 @@ private fun ChessTable(
                             piece < 0 -> "computer ${Chess.pieceName(piece)}"
                             dest != null -> "legal move"
                             else -> "empty"
-                        },
+                        } + if (piece != 0 && dest != null) ", legal move" else "",
                     )
                     if (selected == i) stateDescription = say("Selected")
                     if (playable && (dest != null || movable)) onClick {
@@ -168,7 +173,7 @@ private fun ChessTable(
                     if (!playable) return@detectTapGestures
                     val hit = order.asReversed().firstOrNull { i ->
                         val piece = g.board[i]
-                        val lift = if (selected == i) 0.4f else 0f
+                        val lift = if (selected == i) SelectedLift else 0f
                         val tall = if (piece == 0) top else top + lift + chessRise(piece)
                         coversCell(frame, pos, i % 8, i / 8, top, tall, frame.unitAt(i % 8 + 0.5f, i / 8 + 0.5f, top) * 0.32f)
                     } ?: return@detectTapGestures
@@ -188,10 +193,14 @@ private fun ChessTable(
                     val light = (row + col) % 2 == 0
                     val base = if (light) c.boardLight else c.boardDark
                     val dest = legal.firstOrNull { it.from == selected && it.to == i }
-                    val marked = selected == i || g.lastFrom == i || g.lastTo == i || dest != null
-                    drawSquareTop(frame, col, row, top, if (marked) lerp(base, c.highlight, 0.45f) else base)
+                    val tint = when {
+                        selected == i -> 0.62f
+                        dest != null -> 0.32f
+                        g.lastFrom == i || g.lastTo == i -> 0.38f
+                        else -> 0f
+                    }
+                    drawSquareTop(frame, col, row, top, if (tint > 0f) lerp(base, c.highlight, tint) else base)
                     drawSquareGrain(frame, col, row, top, base)
-                    if (dest != null && g.board[i] == 0) drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
                 }
                 val from = g.lastFrom
                 val to = g.lastTo
@@ -221,12 +230,18 @@ private fun ChessTable(
                     val row = i / 8
                     val col = i % 8
                     if (piece != 0) {
-                        val lift = if (selected == i) 0.4f else 0f
+                        val lift = if (selected == i) SelectedLift else 0f
                         drawChessMan(frame, col + 0.5f, row + 0.5f, top, piece, if (piece > 0) ChessIvory else ChessEbony, lift)
                     }
                     val dest = legal.firstOrNull { it.from == selected && it.to == i }
-                    if (selected == i || (dest != null && piece != 0)) {
-                        drawRing(frame, col + 0.5f, row + 0.5f, top, c.highlight)
+                    when {
+                        selected == i && piece != 0 -> drawRing(
+                            frame, col + 0.5f, row + 0.5f, top + SelectedLift + chessRise(piece) * 0.55f, c.highlight, radiusScale = 0.52f,
+                        )
+                        dest != null && piece != 0 -> drawRing(
+                            frame, col + 0.5f, row + 0.5f, top + chessRise(piece) * 0.5f, c.highlight,
+                        )
+                        dest != null -> drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
                     }
                 }
                 if (!g.ended && g.inCheck()) {
@@ -241,6 +256,8 @@ private fun ChessTable(
         }
     }
 }
+
+private const val SelectedLift = 0.62f
 
 private val PieceValue = mapOf(1 to 1, 2 to 3, 3 to 3, 4 to 5, 5 to 9)
 
@@ -259,7 +276,8 @@ private fun Captures(g: Chess, byYou: Boolean) {
     }
     fun worth(side: Int) = (1..5).sumOf { k -> (Chess.OPENING.count { it == side * k } - g.board.count { it == side * k }).coerceAtLeast(0) * PieceValue.getValue(k) }
     val lead = worth(sign) - worth(-sign)
-    Row(Modifier.fillMaxWidth().heightIn(min = 30.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    if (taken.isEmpty() && lead <= 0) return
+    Row(Modifier.fillMaxWidth().heightIn(min = 28.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (taken.isNotEmpty()) Text(if (byYou) "You took" else "Computer took", style = MaterialTheme.typography.bodySmall, color = c.muted)
         if (taken.isNotEmpty()) Surface(color = if (byYou) Color(0xFF6D5A4A) else Color(0xFF3A2F2B), shape = RoundedCornerShape(8.dp),
             modifier = Modifier.semantics { contentDescription = say(taken.joinToString(", ") { Chess.pieceName(sign * it) }) }) {

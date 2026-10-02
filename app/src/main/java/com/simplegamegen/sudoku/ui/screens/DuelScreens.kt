@@ -7,9 +7,11 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,15 +65,33 @@ import com.simplegamegen.sudoku.ui.i18n.say
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun DuelStatus(over: Boolean, winner: Int, turn: Int, thinking: Boolean, you: String, cpu: String) {
+internal fun DuelStatus(
+    over: Boolean,
+    winner: Int,
+    turn: Int,
+    thinking: Boolean,
+    you: String,
+    cpu: String,
+    /** One scrolling row, so the chips don't wrap and steal a line from the board. */
+    oneLine: Boolean = false,
+) {
     val c = LocalGameLook.current.colors
-    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val chips: @Composable () -> Unit = {
         when {
             over -> InfoChip(when (winner) { 1 -> "You won!"; -1 -> "Computer won"; else -> "Draw" }, emphasized = true)
             turn == 1 -> InfoChip("Your turn", emphasized = true)
             else -> InfoChip(if (thinking) "Computer is thinking…" else "Computer's turn")
         }
         InfoChip(you); InfoChip(cpu)
+    }
+    if (oneLine) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) { chips() }
+    } else {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { chips() }
     }
     if (over) Text(when (winner) { 1 -> "Well played! Start a new game to go again."; -1 -> "The computer won this one."; else -> "It's a draw." },
         color = if (winner == 1) c.success else c.muted, style = MaterialTheme.typography.titleMedium)

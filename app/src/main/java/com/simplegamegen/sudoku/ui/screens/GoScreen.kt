@@ -2,6 +2,8 @@ package com.simplegamegen.sudoku.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -39,12 +41,13 @@ import com.simplegamegen.sudoku.tabletop.Go
 import com.simplegamegen.sudoku.ui.GameId
 import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.GameIcons
-import com.simplegamegen.sudoku.ui.assets.coversCell
 import com.simplegamegen.sudoku.ui.assets.drawBoardLabel
 import com.simplegamegen.sudoku.ui.assets.drawBoardFrame
 import com.simplegamegen.sudoku.ui.assets.drawDot
+import com.simplegamegen.sudoku.ui.assets.drawRing
 import com.simplegamegen.sudoku.ui.assets.drawSquareTop
 import com.simplegamegen.sudoku.ui.assets.drawStone
+import com.simplegamegen.sudoku.ui.assets.nearestCell
 import com.simplegamegen.sudoku.ui.components.InfoChip
 import com.simplegamegen.sudoku.ui.components.ToolButton
 import com.simplegamegen.sudoku.ui.i18n.Text
@@ -67,7 +70,7 @@ val GoSetup: (PuzzleFactory) -> PlaySetup<Go> = { factory ->
             "Pass when you are done. Two passes in a row stop play. Mark every group that cannot live, then count. " +
             "Resume if you want to keep playing. " +
             "Your score is your stones plus every empty region that touches only your color. White receives 7.5 points. " +
-            "Tap an empty intersection to play.",
+            "Tap an empty intersection to play. Tap a stone to see that group and its liberties.",
         settingTitle = "Computer strength",
         settings = Go.NAMES,
         describe = { GoStrength[it] },
@@ -90,29 +93,23 @@ val GoSetup: (PuzzleFactory) -> PlaySetup<Go> = { factory ->
 fun GoScreen(nav: NavController, vm: PlayViewModel<Go>, factory: PuzzleFactory) {
     val c = LocalGameLook.current.colors
     // A 19×19 board has small points, so Go starts from high above, where every point is big enough to tap.
-    val camera = rememberBoardCamera("go_views", GoViews)
+    val camera = rememberBoardCamera("go_views", GoViews, GoPrevious)
     var full by rememberSaveable { mutableStateOf(false) }
     PlayShell(
         nav, vm, GameId.GO, remember(factory) { GoSetup(factory) },
         scroll = false,
-        tools = { _, _ ->
+        tight = true,
+        tools = { game, session ->
             ToolButton(GameIcons.Fit, if (full) "Exit full screen" else "Full screen") { full = !full }
+            if (!game.ended && !game.counting) {
+                ToolButton(
+                    GameIcons.Pass,
+                    "Pass",
+                    enabled = game.turn == Go.BLACK && !session.thinking && !session.busy,
+                ) { vm.play { it.pass() } }
+            }
         },
     ) { g, s ->
-        if (!g.counting) DuelStatus(g.over, g.winner, g.turn, s.thinking, "You (black)", "Computer (white)")
-        else {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                InfoChip("You (black)")
-                InfoChip("Computer (white)")
-            }
-            InfoChip("Read from this board. Tap a group to change it.", emphasized = true)
-        }
-        if (g.ended) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                InfoChip("You ${g.blackArea}", emphasized = g.winner == Go.BLACK)
-                InfoChip("Computer ${g.whiteArea} + 7.5", emphasized = g.winner == Go.WHITE)
-            }
-        }
         val playable = !g.ended && !g.counting && g.turn == Go.BLACK && !s.thinking && !s.busy
         val marking = g.counting && !s.busy
         val legal = remember(g) { g.legalPlacements().toSet() }
@@ -125,22 +122,39 @@ fun GoScreen(nav: NavController, vm: PlayViewModel<Go>, factory: PuzzleFactory) 
         PlayBoard(
             full, { full = false }, s.canUndo && !s.busy, vm::undo,
             bar = {
-                if (playable) OutlinedButton(onClick = { vm.play { it.pass() } }, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text("Pass") }
+                if (playable) OutlinedButton(onClick = { vm.play { it.pass() } }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Pass") }
+            },
+            above = {
+                if (!g.counting) DuelStatus(g.over, g.winner, g.turn, s.thinking, "You (black)", "Computer (white)", oneLine = true)
+                else {
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        InfoChip("You (black)")
+                        InfoChip("Computer (white)")
+                        InfoChip("Tap a group to mark it", emphasized = true)
+                    }
+                }
+                if (g.ended) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        InfoChip("You ${g.blackArea}", emphasized = g.winner == Go.BLACK)
+                        InfoChip("Computer ${g.whiteArea} + 7.5", emphasized = g.winner == Go.WHITE)
+                    }
+                }
+            },
+            below = {
+                if (g.counting) {
+                    Text(
+                        "Tap a group that cannot live, then count. Resume to keep playing.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = c.muted,
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { vm.play { it.count() } }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Count") }
+                        OutlinedButton(onClick = { vm.play { it.resume() } }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Resume") }
+                    }
+                }
             },
         ) {
             GoTable(camera, g, legal, playable, marking, group.first.toSet(), group.second.toSet(), onPlace = { i -> vm.play { it.place(i) } }, onMark = { i -> vm.play { it.mark(i) } }, onSelect = { selected = it })
-        }
-        if (playable) {
-            OutlinedButton(onClick = { vm.play { it.pass() } }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Pass") }
-        }
-        if (g.counting) {
-            Text(
-                "Tap a group that cannot live. Count when the marks are right. Resume to keep playing.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = c.muted,
-            )
-            Button(onClick = { vm.play { it.count() } }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Count the board") }
-            OutlinedButton(onClick = { vm.play { it.resume() } }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Resume play") }
         }
     }
 }
@@ -161,7 +175,7 @@ private fun GoTable(
     val c = LocalGameLook.current.colors
     val measurer = rememberTextMeasurer()
     val n = g.size
-    BoardWithViews(camera, n = n, peakZ = 0.55f, margin = 0.9f) { frame ->
+    BoardWithViews(camera, n = n, peakZ = 0.55f, margin = 0.78f) { frame ->
         val top = 0.18f
         val order = (0 until n * n).sortedByDescending { frame.depth((it % n) + 0.5f, (it / n) + 0.5f, top) }
             order.forEach { i ->
@@ -172,13 +186,18 @@ private fun GoTable(
                 val canMark = marking && stone != 0
                 val canSelect = stone != 0 && !marking
                 val at = frame.at(col + 0.5f, row + 0.5f, top)
+                val detail = buildList {
+                    if (i in g.dead) add("marked dead")
+                    if (i in liberties) add("liberty")
+                    if (g.last == i) add("last move")
+                }.joinToString(", ").let { if (it.isEmpty()) "" else ", $it" }
                 Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
                     contentDescription = say(
                         "Row ${row + 1}, column ${col + 1}, " + when (stone) {
                             Go.BLACK -> "your stone"
                             Go.WHITE -> "computer stone"
-                            else -> "empty"
-                        } + (if (i in g.dead) ", marked dead" else "") + (if (i in liberties) ", liberty" else ""),
+                            else -> if (canPlay) "legal move" else "empty"
+                        } + detail,
                     )
                     if (i in group) stateDescription = say("Selected")
                     if (canPlay) onClick { onPlace(i); true }
@@ -188,9 +207,8 @@ private fun GoTable(
             }
             Canvas(Modifier.matchParentSize().pointerInput(g, playable, marking, group) {
                 detectTapGestures { pos ->
-                    val hit = order.asReversed().firstOrNull { i ->
-                        coversCell(frame, pos, i % n, i / n, top, if (g.board[i] == 0) top else top + 0.2f, frame.unitAt(i % n + 0.5f, i / n + 0.5f, top) * 0.4f)
-                    } ?: return@detectTapGestures
+                    // Closest intersection, including a margin past the rim, so a 19×19 point is easy to tap.
+                    val hit = nearestCell(frame, pos, n, top, reach = 0.82f) ?: return@detectTapGestures
                     when {
                         playable && hit in legal -> onPlace(hit)
                         marking && g.board[hit] != 0 -> onMark(hit)
@@ -205,9 +223,7 @@ private fun GoTable(
                     val q = listOf(frame.at(0f, 0f, top), frame.at(n.toFloat(), 0f, top), frame.at(n.toFloat(), n.toFloat(), top), frame.at(0f, n.toFloat(), top))
                     moveTo(q[0].x, q[0].y); q.drop(1).forEach { lineTo(it.x, it.y) }; close()
                 }, GoWood)
-                order.forEach { i ->
-                    if (i in group || i in liberties) drawSquareTop(frame, i % n, i / n, top, lerp(GoWood, c.highlight, 0.4f))
-                }
+                group.forEach { i -> drawSquareTop(frame, i % n, i / n, top, lerp(GoWood, c.highlight, 0.55f)) }
                 val ink = Color(0xFF2B1D12).copy(alpha = 0.8f)
                 for (i in 0 until n) {
                     drawLine(ink, frame.at(0.5f, i + 0.5f, top + 0.01f), frame.at(n - 0.5f, i + 0.5f, top + 0.01f), strokeWidth = 1.5f)
@@ -228,16 +244,24 @@ private fun GoTable(
                     drawBoardLabel(measurer, frame, mark, -0.55f, i + 0.5f, top, label)
                     drawBoardLabel(measurer, frame, mark, n + 0.55f, i + 0.5f, top, label)
                 }
-                liberties.forEach { i -> drawDot(frame, (i % n) + 0.5f, (i / n) + 0.5f, top, c.highlight) }
                 order.forEach { i ->
                     if (g.board[i] != 0) {
                         // Slate and shell, whatever the theme: Go stones are black and white.
+                        val x = (i % n) + 0.5f
+                        val y = (i / n) + 0.5f
                         val stone = if (g.board[i] == Go.BLACK) Color(0xFF1F1F23) else Color(0xFFF2EFE6)
-                        val marked = g.last == i || i in group
-                        val markColor = if (i in group) c.highlight else if (g.board[i] == Go.BLACK) Color(0xFFF2EFE6) else Color(0xFF1F1F23)
-                        drawStone(frame, (i % n) + 0.5f, (i / n) + 0.5f, top, stone, mark = marked, markColor = markColor, dead = i in g.dead)
+                        drawStone(frame, x, y, top, stone, mark = false, markColor = stone, dead = i in g.dead)
+                        if (i in group) drawRing(frame, x, y, top + 0.16f, c.highlight, radiusScale = 0.58f)
+                        if (g.last == i) {
+                            val at = frame.at(x, y, top + 0.2f)
+                            val unit = frame.unitAt(x, y, top)
+                            val ink = if (g.board[i] == Go.BLACK) Color(0xFFF7F4EC) else Color(0xFF1A1A1E)
+                            drawCircle(Color.Black.copy(alpha = 0.35f), unit * 0.16f, at)
+                            drawCircle(ink, unit * 0.12f, at)
+                        }
                     }
                 }
+                liberties.forEach { i -> drawDot(frame, (i % n) + 0.5f, (i / n) + 0.5f, top, c.highlight, radius = 0.2f) }
             }
         }
     }
@@ -245,8 +269,15 @@ private fun GoTable(
 /** Kaya-coloured board wood. */
 private val GoWood = Color(0xFFE2B46C)
 
-private val GoViews = listOf(
+private val GoPrevious = listOf(
     com.simplegamegen.sudoku.ui.assets.BoardView("Above", yaw = 0f, pitch = 72f, distance = 1.6f),
-    com.simplegamegen.sudoku.ui.assets.BoardViews.behind,
+    com.simplegamegen.sudoku.ui.assets.BoardView("Behind", yaw = 0f, pitch = 52f, distance = 1.55f),
+    com.simplegamegen.sudoku.ui.assets.BoardViews.top.copy(distance = 2f),
+)
+
+private val GoViews = listOf(
+    // High enough that a 19×19 point stays large, still a seat at the table rather than straight down.
+    com.simplegamegen.sudoku.ui.assets.BoardView("Above", yaw = 0f, pitch = 76f, distance = 1.28f),
+    com.simplegamegen.sudoku.ui.assets.BoardView("Behind", yaw = 0f, pitch = 64f, distance = 1.42f),
     com.simplegamegen.sudoku.ui.assets.BoardViews.top,
 )
