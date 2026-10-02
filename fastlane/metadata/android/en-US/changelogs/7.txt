@@ -1,0 +1,1 @@
+New game: Shogi, with promotion, drops, and the full repetition and counting rules. Shogi and checkers share the 3D board, with cameras and full screen. Checker kings wear a gold crown.

@@ -1,0 +1,1 @@
+Neues Spiel: Shogi, mit Beförderung, Einwürfen und den vollen Wiederholungs- und Zählregeln. Shogi und Dame teilen sich das 3D-Brett, mit Kameras und Vollbild. Dame-Könige tragen eine goldene Krone.

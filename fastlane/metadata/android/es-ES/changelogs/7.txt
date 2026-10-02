@@ -1,0 +1,1 @@
+Juego nuevo: shogi, con promoción, drops y las reglas completas de repetición y recuento. Shogi y las damas comparten el tablero 3D, con cámaras y pantalla completa. Los reyes de las damas llevan una corona de oro.
