@@ -214,7 +214,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**59 games, 69 rule variants, 420 setting combinations**. These are not unique
+**60 games, 70 rule variants, 424 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
@@ -254,7 +254,7 @@ corner roundness and home layout, and share or import it as a text code. See
   games' rules, generators, computer players and versioned saves.
 - `sudoku-engine/.../logic/` — Samurai Sudoku, Calcudoku, Kakuro and Futoshiki: shared model,
   counting solver, seeded generators, uniqueness verifier and save format.
-- `app/` — Compose UI for all 59 games and Sudoku statistics, backed by the
+- `app/` — Compose UI for all 60 games and Sudoku statistics, backed by the
   engine. `ui/theme/` holds the theme model, storage and Compose theme;
   `ui/assets/` the drawn game pieces and icons; `ui/components/` shared chrome.
 

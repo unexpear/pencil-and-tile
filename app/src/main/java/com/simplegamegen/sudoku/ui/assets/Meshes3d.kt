@@ -175,6 +175,139 @@ private fun earClip(pts: List<Pair<Float, Float>>): List<Triple<Int, Int, Int>> 
     return out
 }
 
+/**
+ * Height of the sloped face at local [y]. The tip is toward negative y and is the low end,
+ * so the face tilts back toward the owner.
+ */
+internal fun shogiFaceZ(localY: Float): Float {
+    val t = ((localY + 0.42f) / 0.84f).coerceIn(0f, 1f)
+    return 0.18f + 0.28f * t
+}
+
+/** A little extra height in the middle of the face, so the wood catches a highlight. */
+internal fun shogiCrown(x: Float, y: Float): Float {
+    val dx = x / 0.30f
+    val dy = (y - 0.02f) / 0.36f
+    val falloff = (1f - (dx * dx + dy * dy)).coerceIn(0f, 1f)
+    return shogiFaceZ(y) + 0.02f * falloff
+}
+
+private fun shogiPlan(): List<Pair<Float, Float>> {
+    val corners = listOf(
+        0f to -0.44f,
+        0.36f to -0.02f,
+        0.27f to 0.42f,
+        -0.27f to 0.42f,
+        -0.36f to -0.02f,
+    )
+    val radii = listOf(0.055f, 0.10f, 0.075f, 0.075f, 0.10f)
+    val out = ArrayList<Pair<Float, Float>>()
+    val n = corners.size
+    val steps = 6
+    for (i in 0 until n) {
+        val prev = corners[(i + n - 1) % n]
+        val cur = corners[i]
+        val next = corners[(i + 1) % n]
+        fun toward(from: Pair<Float, Float>, to: Pair<Float, Float>): Pair<Float, Float> {
+            val dx = to.first - from.first
+            val dy = to.second - from.second
+            val l = sqrt(dx * dx + dy * dy).coerceAtLeast(1e-5f)
+            return dx / l to dy / l
+        }
+        val back = toward(cur, prev)
+        val fore = toward(cur, next)
+        val cut = radii[i]
+        val start = (cur.first + back.first * cut) to (cur.second + back.second * cut)
+        val end = (cur.first + fore.first * cut) to (cur.second + fore.second * cut)
+        for (s in 0 until steps) {
+            val t = s / steps.toFloat()
+            val u = 1f - t
+            out += (u * u * start.first + 2f * u * t * cur.first + t * t * end.first) to
+                (u * u * start.second + 2f * u * t * cur.second + t * t * end.second)
+        }
+    }
+    return out
+}
+
+/**
+ * A boxwood shogi piece. Rounded pentagon, tall at the base, low at the tip, with a bevel
+ * where the sides meet the face so the edge catches the light.
+ */
+internal fun shogiWedge(): Mesh {
+    val b = Builder()
+    val plan = shogiPlan()
+    val n = plan.size
+    val edge = Array(n) { i ->
+        val a = plan[i]
+        val c = plan[(i + 1) % n]
+        val ex = c.first - a.first
+        val ey = c.second - a.second
+        val len = sqrt(ex * ex + ey * ey).coerceAtLeast(1e-4f)
+        var nx = ey / len
+        var ny = -ex / len
+        val mx = (a.first + c.first) / 2f
+        val my = (a.second + c.second) / 2f
+        if (nx * mx + ny * my < 0f) {
+            nx = -nx
+            ny = -ny
+        }
+        nx to ny
+    }
+    val outward = Array(n) { i ->
+        val p = edge[(i + n - 1) % n]
+        val q = edge[i]
+        val x = p.first + q.first
+        val y = p.second + q.second
+        val l = sqrt(x * x + y * y).coerceAtLeast(1e-4f)
+        x / l to y / l
+    }
+    val bevel = 0.042f
+    fun inset(i: Int): Pair<Float, Float> {
+        val (x, y) = plan[i]
+        val (nx, ny) = outward[i]
+        return (x - nx * bevel) to (y - ny * bevel)
+    }
+    val sole = IntArray(n) { i ->
+        val (x, y) = plan[i]
+        val (nx, ny) = outward[i]
+        b.vertex(x, y, 0f, nx, ny, 0.2f)
+    }
+    val wall = IntArray(n) { i ->
+        val (x, y) = plan[i]
+        val (nx, ny) = outward[i]
+        b.vertex(x, y, (shogiFaceZ(y) - 0.07f).coerceAtLeast(0.08f), nx, ny, 0.04f)
+    }
+    val rim = IntArray(n) { i ->
+        val (x, y) = inset(i)
+        val (nx, ny) = outward[i]
+        b.vertex(x, y, shogiCrown(x, y), nx * 0.65f, ny * 0.65f - 0.22f, 0.72f)
+    }
+    fun link(lo: IntArray, hi: IntArray) {
+        for (i in 0 until n) {
+            val j = (i + 1) % n
+            b.tri(lo[i], lo[j], hi[j])
+            b.tri(lo[i], hi[j], hi[i])
+        }
+    }
+    link(sole, wall)
+    link(wall, rim)
+    val cap = IntArray(n) { i ->
+        val (x, y) = inset(i)
+        val tiltX = x * 0.28f
+        val tiltY = -0.28f + (y - 0.02f) * 0.18f
+        b.vertex(x, y, shogiCrown(x, y), tiltX, tiltY, 0.95f)
+    }
+    val center = b.vertex(0f, 0.04f, shogiCrown(0f, 0.04f), 0f, -0.28f, 0.96f)
+    for (i in 0 until n) b.tri(center, cap[i], cap[(i + 1) % n])
+    val under = IntArray(n) { i ->
+        val (x, y) = plan[i]
+        b.vertex(x, y, 0f, 0f, 0f, -1f)
+    }
+    val bc = b.vertex(0f, 0f, 0f, 0f, 0f, -1f)
+    for (i in 0 until n) b.tri(bc, under[(i + 1) % n], under[i])
+    return b.build()
+}
+
 // ---------------- Drawing ----------------
 
 private val paint = Paint().apply { isAntiAlias = true }

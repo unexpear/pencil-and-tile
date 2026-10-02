@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -280,6 +281,18 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                         drawCircle(Color(0xFF1B5E20), die * 0.08f, Offset(x * size.width + die * 0.75f, y + die * 0.75f))
                     }
                 }
+            }
+            GameId.SHOGI -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFC4A574), cornerRadius = CornerRadius(8f))
+                val path = Path().apply {
+                    moveTo(size.width * 0.5f, size.height * 0.16f)
+                    lineTo(size.width * 0.78f, size.height * 0.82f)
+                    lineTo(size.width * 0.22f, size.height * 0.82f)
+                    close()
+                }
+                drawPath(path, Color(0xFFF6E7C1))
+                drawLine(Color(0xFF5D4037), Offset(size.width * 0.5f, size.height * 0.28f), Offset(size.width * 0.5f, size.height * 0.62f), strokeWidth = 3f)
+                drawLine(Color(0xFF5D4037), Offset(size.width * 0.36f, size.height * 0.42f), Offset(size.width * 0.64f, size.height * 0.42f), strokeWidth = 3f)
             }
             GameId.SHIP_CREW -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFF0D47A1), cornerRadius = CornerRadius(8f))

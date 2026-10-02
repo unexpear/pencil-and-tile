@@ -127,6 +127,12 @@ turns.
   has one more turn.
 - **Ship, Captain, Crew** (`duels/ShipCrew.kt`): five dice, three rolls, five hands.
   A 6, then a 5, then a 4. The other two dice are cargo. The higher cargo wins.
+- **Shogi** (`tabletop/Shogi.kt`): 9×9. You play Sente. Pieces promote in the far
+  three rows. Captures return to the hand and can be dropped. A pawn drop that
+  checkmates is illegal. No legal move loses. The same position four times draws,
+  unless one side gave check on every move of the repeat, in which case that side
+  loses. When both kings are in the enemy camp, either side may count: a rook or
+  bishop is 5, every other piece except the king is 1. Under 24 loses as declared.
 - **Word ladder** (`wordplay/WordLadder.kt`): change one letter at a time
   between two everyday words. Steps may use any accepted word. Easy is three
   letters; Expert is five. The par is the shortest route. Saves are versioned text.

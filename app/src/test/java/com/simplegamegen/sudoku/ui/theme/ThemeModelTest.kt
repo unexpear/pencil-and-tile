@@ -37,7 +37,8 @@ class ThemeModelTest {
         assertEquals(GameId.YACHT.ordinal + 1, GameId.SHUT_BOX.ordinal)
         assertEquals(GameId.SHUT_BOX.ordinal + 1, GameId.TEN_THOUSAND.ordinal)
         assertEquals(GameId.TEN_THOUSAND.ordinal + 1, GameId.SHIP_CREW.ordinal)
-        assertEquals(GameId.SHIP_CREW.ordinal, GAME_COUNT - 1)
+        assertEquals(GameId.SHIP_CREW.ordinal + 1, GameId.SHOGI.ordinal)
+        assertEquals(GameId.SHOGI.ordinal, GAME_COUNT - 1)
         assertSame(BuiltInThemes.table, BuiltInThemes.default)
     }
 

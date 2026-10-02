@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **59 games, 69 rule variants, 420 selectable setting
+Current implementation: **60 games, 70 rule variants, 424 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
@@ -34,6 +34,7 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Shut the Box | 1 | 4 | Nine tiles. Flip a set that adds up to the dice. One die once every tile left is 6 or less |
 | Ten Thousand | 1 | 4 | Six dice to 10,000. The first bank is at least 500. One more turn after 10,000 |
 | Ship, Captain, Crew | 1 | 4 | Five dice, three rolls, five hands. A 6, then a 5, then a 4; the other two dice are cargo |
+| Shogi | 1 | 4 | 9×9. You play Sente. Promotion, drops, no pawn-drop mate. Four repeats draw unless one side checked every move. Both kings in camp can be counted |
 | Reversi | 1 | 4 | **1 standard opening**, 4 computer strengths, varying match continuations |
 | Cryptogram | 1 | 4 | Original sayings plus Tatoeba sentences, each in a fresh letter code |
 | Word scramble | 1 | 4 | Rounds of 8 everyday words; any real anagram counts |

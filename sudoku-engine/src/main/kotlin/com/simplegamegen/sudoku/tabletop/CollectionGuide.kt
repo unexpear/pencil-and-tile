@@ -67,5 +67,6 @@ object CollectionGuide {
         GameCapacity("Shut the Box", 1, 4, "Nine tiles, 1 through 9, × 4 computer strengths. Flip a set that adds up to the roll. One die once every tile still up is 6 or less. The lower score wins.", "Each player has one box. Dice come from the game's seed."),
         GameCapacity("Ten Thousand", 1, 4, "Six dice to 10,000 × 4 computer strengths. The first bank has to be at least 500. A roll that scores nothing loses the turn. The other player gets one more turn after 10,000.", "Each turn's dice come from the game's seed."),
         GameCapacity("Ship, Captain, Crew", 1, 4, "Five dice, up to three rolls, five hands × 4 computer strengths. A 6, then a 5, then a 4, and the other two dice are cargo. The higher cargo wins.", "Each hand's dice come from the game's seed."),
+        GameCapacity("Shogi", 1, 4, "9×9 shogi × 4 computer strengths. You play Sente. Pieces promote in the far three rows. Captures can be dropped. No legal move loses. Four repeats draw, unless one side checked on every move of the repeat. Both kings in camp can be counted: rook and bishop 5, other pieces 1, 24 to draw.", "1 opening board; matches differ by play."),
     )
 }

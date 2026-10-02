@@ -65,5 +65,6 @@ object Tutorials {
         GameId.SHUT_BOX -> DiceTutorials.shutBox
         GameId.TEN_THOUSAND -> DiceTutorials.tenThousand
         GameId.SHIP_CREW -> DiceTutorials.shipCrew
+        GameId.SHOGI -> BoardTutorials.shogi
     }
 }

@@ -605,6 +605,42 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val shogi: Tutorial get() {
+        fun scene(pieces: Map<String, String>, selected: String? = null, targets: Set<String> = emptySet()): Scene {
+            val items = gridItems(3, 3) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = if ((r + c) % 2 == 0) Fill.LIGHT else Fill.DARK,
+                    text = pieces[id].orEmpty(),
+                    mark = if (id in targets) Mark.CIRCLE else Mark.NONE,
+                )
+            }.map { if (it.id == selected) it.copy(tone = Tone.SELECTED) else it }
+            return Scene(3f, 3f, items, Backdrop.BOARD, maxUnit = 72)
+        }
+        val start = mapOf("r2c1" to "P", "r0c1" to "k")
+        return Tutorial(
+            GameId.SHOGI,
+            "Shogi. You play Sente from the bottom and move first.",
+            rules = listOf(
+                "Tap one of your pieces, then a highlighted square. Pawns move and capture one square forward.",
+                "In the far three rows a piece may promote. A pawn, lance, or knight that could not move again must promote.",
+                "Captured pieces go into your hand. Tap one, then an empty square, to drop it.",
+                "A side with no legal move loses. The same position four times is a draw, unless one side gave check on every move of that repeat, in which case that side loses.",
+            ),
+            tips = listOf(
+                "A dropped pawn cannot share a file with one of your unpromoted pawns.",
+                "A pawn drop that checkmates is not allowed.",
+            ),
+            steps = listOf(
+                Step("You play from the bottom. Tap your pawn.", scene(start), tap = setOf("r2c1"),
+                    after = scene(start, selected = "r2c1", targets = setOf("r1c1")), help = "The pawn."),
+                Step("It moves one square forward. Tap that square.", scene(start, selected = "r2c1", targets = setOf("r1c1")),
+                    tap = setOf("r1c1"), after = scene(mapOf("r1c1" to "P", "r0c1" to "k"))),
+                Step("Pieces taken from the board can be dropped back onto an empty square.", scene(mapOf("r1c1" to "P", "r0c1" to "k"))),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {

@@ -40,6 +40,9 @@ import com.simplegamegen.sudoku.duels.MancalaCodec
 import com.simplegamegen.sudoku.tabletop.Chess
 import com.simplegamegen.sudoku.tabletop.ChessAi
 import com.simplegamegen.sudoku.tabletop.ChessCodec
+import com.simplegamegen.sudoku.tabletop.Shogi
+import com.simplegamegen.sudoku.tabletop.ShogiAi
+import com.simplegamegen.sudoku.tabletop.ShogiCodec
 import com.simplegamegen.sudoku.tabletop.Go
 import com.simplegamegen.sudoku.tabletop.GoAi
 import com.simplegamegen.sudoku.tabletop.GoCodec
@@ -91,6 +94,7 @@ import com.simplegamegen.sudoku.grids.TowersGame
 import com.simplegamegen.sudoku.ui.screens.BridgesScreen
 import com.simplegamegen.sudoku.ui.screens.HoneycombScreen
 import com.simplegamegen.sudoku.ui.screens.ChessScreen
+import com.simplegamegen.sudoku.ui.screens.ShogiScreen
 import com.simplegamegen.sudoku.ui.screens.FreeCellScreen
 import com.simplegamegen.sudoku.ui.screens.GoScreen
 import com.simplegamegen.sudoku.ui.screens.LightsScreen
@@ -179,6 +183,16 @@ object MancalaComputer : ComputerPlayer<Mancala> {
 object ChessComputer : ComputerPlayer<Chess> {
     override fun needsMove(state: Chess) = !state.ended && state.turn == -1
     override fun move(state: Chess) = state.play(ChessAi.choose(state))!!
+    override val pauseMs = 350L
+}
+
+object ShogiComputer : ComputerPlayer<Shogi> {
+    override fun needsMove(state: Shogi) = !state.ended && state.turn == -1
+    override fun move(state: Shogi): Shogi {
+        val claim = state.declareImpasse()
+        if (claim != null && claim.winner != 1) return claim
+        return state.play(ShogiAi.choose(state))!!
+    }
     override val pauseMs = 350L
 }
 
@@ -400,5 +414,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.SHIP_CREW.route) {
         ShipCrewScreen(nav, playModel<ShipCrew>(GameId.SHIP_CREW, store, codecOf(ShipCrewCodec::encode, ShipCrewCodec::decode), ShipCrewComputer), factory)
+    }
+    composable(GameId.SHOGI.route) {
+        ShogiScreen(nav, playModel<Shogi>(GameId.SHOGI, store, codecOf(ShogiCodec::encode, ShogiCodec::decode), ShogiComputer), factory)
     }
 }

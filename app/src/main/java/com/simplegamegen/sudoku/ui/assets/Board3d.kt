@@ -10,10 +10,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.toArgb
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
@@ -411,43 +413,41 @@ internal fun DrawScope.drawSquareTop(frame: TableFrame, col: Int, row: Int, z: F
     drawPath(quad(q[0], q[1], q[2], q[3]), color)
 }
 
-/** A checker: a milled disc with grooves on its face. A king is two discs with a gold crown on top. */
-internal fun DrawScope.drawPuck(frame: TableFrame, x: Float, y: Float, baseZ: Float, color: Color, king: Boolean) {
-    contactShadow(frame, x, y, baseZ, 0.4f)
-    val step = 0.17f
-    puckDisc(frame, x, y, baseZ, color)
-    if (king) puckDisc(frame, x, y, baseZ + step, color)
-    val topZ = baseZ + if (king) step * 2 else step
-    if (king) crownMark(frame, x, y, topZ, Color(0xFFF2C14E))
+/** A thick milled checker. A king is two discs with a gold crown standing on the top one. */
+internal fun DrawScope.drawPuck(frame: TableFrame, x: Float, y: Float, baseZ: Float, color: Color, king: Boolean, lift: Float = 0f) {
+    val foot = baseZ + lift
+    contactShadow(frame, x, y, baseZ, 0.42f)
+    val finish = if (color.luminance() > 0.55f) Satin else Polished
+    drawMesh(frame, CheckerMesh, x, y, foot, color, finish)
+    if (!king) return
+    drawMesh(frame, CheckerMesh, x, y, foot + 0.15f, color, finish)
+    checkerCrown(frame, x, y, foot + 0.32f)
 }
 
-private val PuckMesh by lazy { latheMesh(listOf(0f to 0.33f, 0.02f to 0.37f, 0.05f to 0.38f, 0.12f to 0.38f, 0.15f to 0.37f, 0.17f to 0.34f, 0.17f to 0.3f,
-    0.155f to 0.27f, 0.16f to 0.24f, 0.165f to 0.0f)) }
+/** Height of one disc, and of a king including the crown. Used so a tap on the piece counts. */
+internal fun checkerRise(king: Boolean) = if (king) 0.48f else 0.22f
 
-private fun DrawScope.puckDisc(frame: TableFrame, x: Float, y: Float, z: Float, color: Color) {
-    drawMesh(frame, PuckMesh, x, y, z, color, Satin)
-    val unit = frame.unitAt(x, y, z)
-    val groove = lerp(color, Color.Black, 0.4f).copy(alpha = 0.55f)
-    drawFlatDisk(frame, x, y, z + 0.168f, 0.17f, groove, strokePx = (unit * 0.014f).coerceAtLeast(1f))
+private val CheckerMesh by lazy {
+    latheMesh(listOf(
+        0f to 0.26f, 0.02f to 0.36f, 0.035f to 0.40f, 0.09f to 0.40f, 0.11f to 0.35f,
+        0.125f to 0.31f, 0.14f to 0.35f, 0.155f to 0.28f, 0.175f to 0.26f, 0.19f to 0.24f,
+    ), segments = 32)
 }
 
-/** A small gold crown lying on a king's face. */
-private fun DrawScope.crownMark(frame: TableFrame, x: Float, y: Float, z: Float, gold: Color) {
-    val c = frame.at(x, y, z + 0.01f)
-    val u = frame.unitAt(x, y, z) * 0.2f
-    val flat = ((frame.at(x, y + 0.3f, z).y - frame.at(x, y - 0.3f, z).y) / (frame.unitAt(x, y, z) * 0.6f)).coerceIn(0.35f, 1f)
-    val p = Path().apply {
-        moveTo(c.x - u, c.y + u * 0.55f * flat)
-        lineTo(c.x - u, c.y - u * 0.35f * flat)
-        lineTo(c.x - u * 0.5f, c.y + u * 0.05f * flat)
-        lineTo(c.x, c.y - u * 0.6f * flat)
-        lineTo(c.x + u * 0.5f, c.y + u * 0.05f * flat)
-        lineTo(c.x + u, c.y - u * 0.35f * flat)
-        lineTo(c.x + u, c.y + u * 0.55f * flat)
-        close()
-    }
-    drawPath(p, gold)
-    drawPath(p, lerp(gold, Color.Black, 0.5f), style = Stroke(u * 0.12f))
+private val CheckerBand by lazy {
+    latheMesh(listOf(0f to 0.08f, 0.02f to 0.15f, 0.055f to 0.16f, 0.08f to 0.10f, 0.10f to 0.05f), segments = 20)
+}
+
+private val CheckerKnob by lazy { sphereMesh(0.042f) }
+
+private fun DrawScope.checkerCrown(frame: TableFrame, x: Float, y: Float, z: Float) {
+    val gold = Color(0xFFE8B923)
+    drawMesh(frame, CheckerBand, x, y, z, gold, Polished)
+    val ring = 0.12f
+    (0 until 5).map { k -> (PI / 2 + k * 2 * PI / 5).toFloat() }
+        .sortedByDescending { a -> frame.depth(x + cos(a) * ring, y + sin(a) * ring, z + 0.08f) }
+        .forEach { a -> drawMesh(frame, CheckerKnob, x + cos(a) * ring, y + sin(a) * ring, z + 0.05f, gold, Polished) }
+    drawMesh(frame, CheckerKnob, x, y, z + 0.07f, gold, Polished)
 }
 
 /** A soft shadow where a piece meets the board, a little away from the light. */
@@ -630,6 +630,75 @@ internal fun chessRise(piece: Int) = when (abs(piece)) {
     4 -> 0.78f
     5 -> 1.1f
     else -> 1.22f
+}
+
+private val ShogiWedge by lazy { shogiWedge() }
+private val ShogiWood = Color(0xFFF3D7A6)
+private val ShogiFinish = Finish(spec = 0.34f, shine = 28f, rim = 0.26f)
+private val shogiInk by lazy {
+    android.graphics.Paint().apply {
+        isAntiAlias = true
+        textAlign = android.graphics.Paint.Align.CENTER
+        typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.BOLD)
+    }
+}
+
+/** King largest, pawn smallest. [base] is the unpromoted kind, 1 through 8. */
+internal fun shogiScale(base: Int) = when (base) {
+    8 -> 1.08f
+    7 -> 1.0f
+    6 -> 0.97f
+    5 -> 0.94f
+    4 -> 0.92f
+    3 -> 0.88f
+    2 -> 0.86f
+    else -> 0.78f
+}
+
+/** How tall the tallest wedge stands, for taps that land on the piece rather than its square. */
+internal fun shogiRise() = 0.52f
+
+/**
+ * A boxwood shogi piece. [yours] points the tip toward the far side. The character sits on the sloped face,
+ * red when [promoted]. [scale] is the piece's size: a king is larger than a pawn.
+ */
+internal fun DrawScope.drawShogiPiece(
+    frame: TableFrame,
+    x: Float,
+    y: Float,
+    baseZ: Float,
+    yours: Boolean,
+    glyph: String,
+    promoted: Boolean,
+    scale: Float,
+    lift: Float = 0f,
+) {
+    val fx = if (yours) 1f else -1f
+    val foot = baseZ + lift
+    contactShadow(frame, x, y, baseZ, 0.38f * scale)
+    val pose = Pose(x, y, foot, fx = fx, fy = 0f, scale = scale)
+    drawMesh(frame, ShogiWedge, pose, ShogiWood, ShogiFinish)
+    fun onFace(lx: Float, ly: Float): Offset {
+        val at = pose.apply(lx, ly, shogiCrown(lx, ly) + 0.012f)
+        return frame.at(at[0], at[1], at[2])
+    }
+    val quad = listOf(
+        onFace(-0.20f, -0.16f),
+        onFace(0.20f, -0.16f),
+        onFace(0.20f, 0.26f),
+        onFace(-0.20f, 0.26f),
+    )
+    val ink = if (promoted) Color(0xFFB71C1C) else Color(0xFF1C1208)
+    drawOnQuad(quad, 200f, 260f) {
+        val native = drawContext.canvas.nativeCanvas
+        shogiInk.textSize = 168f
+        val fm = shogiInk.fontMetrics
+        val baseline = 130f - (fm.ascent + fm.descent) / 2f
+        shogiInk.color = android.graphics.Color.argb(90, 40, 24, 8)
+        native.drawText(glyph, 102f, baseline + 5f, shogiInk)
+        shogiInk.color = ink.toArgb()
+        native.drawText(glyph, 100f, baseline, shogiInk)
+    }
 }
 
 internal fun chessSymbol(piece: Int): String = when (abs(piece)) {

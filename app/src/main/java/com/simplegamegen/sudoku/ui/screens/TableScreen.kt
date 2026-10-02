@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -56,6 +57,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
@@ -82,14 +84,15 @@ import com.simplegamegen.sudoku.ui.GameId
 import com.simplegamegen.sudoku.ui.TableViewModel
 import com.simplegamegen.sudoku.ui.assets.CardSlot
 import com.simplegamegen.sudoku.ui.assets.CheckerPiece
+import com.simplegamegen.sudoku.ui.assets.checkerRise
 import com.simplegamegen.sudoku.ui.assets.coversCell
 import com.simplegamegen.sudoku.ui.assets.drawBoardFrame
-import com.simplegamegen.sudoku.ui.assets.drawSquareGrain
-import com.simplegamegen.sudoku.ui.assets.BoardViews
+import com.simplegamegen.sudoku.ui.assets.drawBoardLabel
 import com.simplegamegen.sudoku.ui.assets.drawDot
 import com.simplegamegen.sudoku.ui.assets.drawPuck
+import com.simplegamegen.sudoku.ui.assets.drawRing
+import com.simplegamegen.sudoku.ui.assets.drawSquareGrain
 import com.simplegamegen.sudoku.ui.assets.drawSquareTop
-import com.simplegamegen.sudoku.ui.assets.tableFrame
 import com.simplegamegen.sudoku.ui.assets.DominoTile
 import com.simplegamegen.sudoku.ui.assets.GameArt
 import com.simplegamegen.sudoku.ui.assets.GameIcons
@@ -126,6 +129,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
     var setting by rememberSaveable { mutableIntStateOf(0) }
     var confirm by rememberSaveable { mutableStateOf("") }
     var flagMode by rememberSaveable { mutableStateOf(false) }
+    var full by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(match?.seed) { match?.let { setting = it.setting } }
     val state = match?.state
     val playing = state?.result == GameResult.PLAYING
@@ -146,6 +150,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
             MenuAction("Restart", GameIcons.Restart, enabled = match.moves.isNotEmpty()) { confirm = "restart" },
             MenuAction("Save now", GameIcons.Save) { vm.save(true) },
         ),
+        scroll = vm.game != TableGame.CHECKERS || match == null,
         bottomBar = if (match == null) null else {
             {
                 ToolBar {
@@ -153,6 +158,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
                         ToolButton(GameIcons.Search, "Reveal", active = !flagMode) { flagMode = false }
                         ToolButton(GameIcons.Flag, "Flag", active = flagMode) { flagMode = true }
                     }
+                    if (vm.game == TableGame.CHECKERS) ToolButton(GameIcons.Fit, if (full) "Exit full screen" else "Full screen") { full = !full }
                     ToolButton(GameIcons.Undo, "Undo", enabled = canAct && match.moves.isNotEmpty(), onClick = vm::undo)
                     HintButton(id, enabled = canAct && playing && state?.turn == 1 && !s.thinking, onClick = vm::hint)
                     if (state !is MinesState) ToolButton(GameIcons.Restart, "Restart", enabled = canAct && match.moves.isNotEmpty()) { confirm = "restart" }
@@ -176,7 +182,7 @@ fun TableScreen(nav: NavController, vm: TableViewModel) {
                 when (st) {
                     is SolitaireState -> SolitaireBoard(st, s.hint, vm::play)
                     is MinesState -> MinesBoard(st, s.hint, flagMode, vm::play)
-                    is CheckersState -> CheckersBoard(st, s.hint, vm::play)
+                    is CheckersState -> CheckersBoard(st, s.hint, full, { full = false }, canAct && match.moves.isNotEmpty(), vm::undo, vm::play)
                     is ReversiState -> ReversiBoard(st, s.hint, vm::play)
                     is DominoState -> DominoBoard(st, s.hint, vm::play)
                 }
@@ -396,75 +402,128 @@ private fun MinesBoard(s: MinesState, hint: Move?, flagMode: Boolean, play: (Mov
 // ---------------- Checkers ----------------
 
 @Composable
-private fun CheckersBoard(s: CheckersState, hint: Move?, play: (Move) -> Unit) {
+private fun ColumnScope.CheckersBoard(
+    s: CheckersState,
+    hint: Move?,
+    full: Boolean,
+    onExit: () -> Unit,
+    canUndo: Boolean,
+    onUndo: () -> Unit,
+    play: (Move) -> Unit,
+) {
     val c = LocalGameLook.current.colors
+    val camera = rememberBoardCamera("checkers_views")
     var selected by remember(s) { mutableStateOf(s.forced) }
     val legal = remember(s) { s.legalMoves() }
-    val display = LocalDensity.current
     if (s.forced != null) InfoChip("Keep jumping with the same piece", emphasized = true)
-    ZoomBox(Modifier.fillMaxWidth()) {
-        BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            // The same seat behind your side as chess, so the pieces stand up as solids.
-            val frame = tableFrame(8, with(display) { maxWidth.toPx() }, peakZ = 0.9f, view = BoardViews.behind, margin = 0.6f)
-            val top = 0.22f
-            val order = (0 until 64).sortedByDescending { frame.depth((it % 8) + 0.5f, (it / 8) + 0.5f, top) }
-            val playing = s.turn == 1 && s.result == GameResult.PLAYING
-            Box(Modifier.size(with(display) { frame.width.toDp() }, with(display) { frame.height.toDp() })) {
-                order.forEach { i ->
-                    val row = i / 8
-                    val col = i % 8
-                    val piece = s.board[i]
-                    val dest = legal.firstOrNull { it.from == selected && it.to == i }
-                    val movable = legal.any { it.from == i }
-                    val at = frame.at(col + 0.5f, row + 0.5f, top)
-                    Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
-                        contentDescription = say("Row ${row + 1}, column ${col + 1}, " + when {
-                            piece > 0 -> "your ${if (piece == 2) "king" else "man"}"
-                            piece < 0 -> "computer ${if (piece == -2) "king" else "man"}"
-                            dest != null -> "legal move"
-                            else -> "empty"
-                        })
-                        if (selected == i) stateDescription = say("Selected")
-                        if (playing && (dest != null || movable)) onClick {
-                            if (dest != null) { play(dest); selected = null } else selected = i
-                            true
-                        }
-                    })
-                }
-                Canvas(Modifier.matchParentSize().pointerInput(s, selected) {
-                    detectTapGestures { pos ->
-                        if (!playing) return@detectTapGestures
-                        val hit = order.asReversed().firstOrNull { i ->
-                            val piece = s.board[i]
-                            val tall = if (piece == 0) top else top + if (kotlin.math.abs(piece) == 2) 0.7f else 0.3f
-                            coversCell(frame, pos, i % 8, i / 8, top, tall, frame.unitAt(i % 8 + 0.5f, i / 8 + 0.5f, top) * 0.36f)
-                        } ?: return@detectTapGestures
-                        val dest = legal.firstOrNull { it.from == selected && it.to == hit }
-                        if (dest != null) { play(dest); selected = null }
-                        else if (legal.any { it.from == hit }) selected = hit
-                    }
-                }) {
-                    drawBoardFrame(frame, top, Color(0xFF5B3A24), border = 0.5f)
-                    order.forEach { i ->
-                        val row = i / 8
-                        val col = i % 8
-                        val dark = (row + col) % 2 == 1
-                        val marked = selected == i || hint?.from == i || hint?.to == i
-                        val fill = if (dark) c.boardDark else c.boardLight
-                        drawSquareTop(frame, col, row, top, if (marked) lerp(fill, c.highlight, 0.45f) else fill)
-                        drawSquareGrain(frame, col, row, top, fill)
-                        val piece = s.board[i]
-                        val dest = legal.firstOrNull { it.from == selected && it.to == i }
-                        if (piece != 0) drawPuck(frame, col + 0.5f, row + 0.5f, top, if (piece > 0) c.playerOne else c.playerTwo, king = kotlin.math.abs(piece) == 2)
-                        else if (dest != null) drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
-                    }
-                }
-            }
-        }
+    PlayBoard(full, onExit, canUndo, onUndo, bar = {
+        if (s.forced != null) InfoChip("Keep jumping with the same piece", emphasized = true)
+    }) {
+        CheckersTable(camera, s, legal, selected, hint, onSelect = { selected = it }, onPlay = { move ->
+            play(move)
+            selected = null
+        })
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         CheckerPiece(1, false, size = 20.dp); Text("You move first, up the board", style = MaterialTheme.typography.bodySmall, color = c.muted)
         CheckerPiece(-1, false, size = 20.dp); Text("Computer", style = MaterialTheme.typography.bodySmall, color = c.muted)
+    }
+}
+
+@Composable
+private fun CheckersTable(
+    camera: BoardCamera,
+    s: CheckersState,
+    legal: List<Move>,
+    selected: Int?,
+    hint: Move?,
+    onSelect: (Int?) -> Unit,
+    onPlay: (Move) -> Unit,
+) {
+    val c = LocalGameLook.current.colors
+    val measurer = rememberTextMeasurer()
+    val playing = s.turn == 1 && s.result == GameResult.PLAYING
+    BoardWithViews(camera, n = 8, peakZ = 1.35f, margin = 0.62f) { frame ->
+        val top = 0.22f
+        val order = (0 until 64).sortedByDescending { frame.depth((it % 8) + 0.5f, (it / 8) + 0.5f, top) }
+        order.forEach { i ->
+            val row = i / 8
+            val col = i % 8
+            val piece = s.board[i]
+            val dest = legal.firstOrNull { it.from == selected && it.to == i }
+            val movable = legal.any { it.from == i }
+            val at = frame.at(col + 0.5f, row + 0.5f, top)
+            Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
+                contentDescription = say(
+                    "Row ${8 - row}, column ${col + 1}, " + when {
+                        piece > 0 -> "your ${if (piece == 2) "king" else "man"}"
+                        piece < 0 -> "computer ${if (piece == -2) "king" else "man"}"
+                        dest != null -> "legal move"
+                        else -> "empty"
+                    },
+                )
+                if (selected == i) stateDescription = say("Selected")
+                if (playing && (dest != null || movable)) onClick {
+                    if (dest != null) onPlay(dest) else onSelect(i)
+                    true
+                }
+            })
+        }
+        Canvas(Modifier.matchParentSize().pointerInput(s, selected, playing) {
+            detectTapGestures { pos ->
+                if (!playing) return@detectTapGestures
+                val hit = order.asReversed().firstOrNull { i ->
+                    val piece = s.board[i]
+                    val lift = if (selected == i) 0.28f else 0f
+                    val tall = if (piece == 0) top else top + lift + checkerRise(kotlin.math.abs(piece) == 2)
+                    coversCell(frame, pos, i % 8, i / 8, top, tall, frame.unitAt(i % 8 + 0.5f, i / 8 + 0.5f, top) * 0.38f)
+                } ?: return@detectTapGestures
+                val dest = legal.firstOrNull { it.from == selected && it.to == hit }
+                when {
+                    dest != null -> onPlay(dest)
+                    legal.any { it.from == hit } -> onSelect(hit)
+                    selected != null -> onSelect(null)
+                }
+            }
+        }) {
+            drawBoardFrame(frame, top, Color(0xFF5B3A24), border = 0.5f)
+            order.forEach { i ->
+                val row = i / 8
+                val col = i % 8
+                val dark = (row + col) % 2 == 1
+                val marked = selected == i || hint?.from == i || hint?.to == i
+                val fill = if (dark) c.boardDark else c.boardLight
+                drawSquareTop(frame, col, row, top, if (marked) lerp(fill, c.highlight, 0.45f) else fill)
+                drawSquareGrain(frame, col, row, top, fill)
+            }
+            val ink = Color(0xFFF1DFC0)
+            for (col in 0 until 8) {
+                val file = ('a' + col).toString()
+                drawBoardLabel(measurer, frame, file, col + 0.5f, -0.27f, top, ink)
+                drawBoardLabel(measurer, frame, file, col + 0.5f, 8.27f, top, ink)
+            }
+            for (row in 0 until 8) {
+                val rank = (8 - row).toString()
+                drawBoardLabel(measurer, frame, rank, -0.27f, row + 0.5f, top, ink)
+                drawBoardLabel(measurer, frame, rank, 8.27f, row + 0.5f, top, ink)
+            }
+            order.forEach { i ->
+                val piece = s.board[i]
+                val row = i / 8
+                val col = i % 8
+                if (piece != 0) {
+                    drawPuck(
+                        frame, col + 0.5f, row + 0.5f, top,
+                        if (piece > 0) c.playerOne else c.playerTwo,
+                        king = kotlin.math.abs(piece) == 2,
+                        lift = if (selected == i) 0.28f else 0f,
+                    )
+                }
+                val dest = legal.firstOrNull { it.from == selected && it.to == i }
+                if (dest != null && piece == 0) drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
+                if (selected == i) drawRing(frame, col + 0.5f, row + 0.5f, top, c.highlight)
+            }
+        }
     }
 }
 
