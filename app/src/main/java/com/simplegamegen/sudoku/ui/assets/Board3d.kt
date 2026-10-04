@@ -28,9 +28,24 @@ import kotlin.math.sqrt
 /**
  * One saved camera. [yaw] 0 looks from the near side (your side) toward the far side.
  * [pitch] 90 is straight down. [distance] is in board widths: smaller is a stronger perspective.
- * These built-in numbers are what Reset views restores.
+ * [zoom] magnifies the fitted picture without moving the camera, so perspective and tilt stay put.
+ * [panX] and [panY] slide that picture in pixels. Zoom 1 and pan 0 are the fitted view, which
+ * Reset views restores.
  */
-internal data class BoardView(val name: String, val yaw: Float, val pitch: Float, val distance: Float)
+internal data class BoardView(
+    val name: String,
+    val yaw: Float,
+    val pitch: Float,
+    val distance: Float,
+    val zoom: Float = 1f,
+    val panX: Float = 0f,
+    val panY: Float = 0f,
+) {
+    val fitted: Boolean get() = abs(zoom - 1f) < 0.01f && abs(panX) < 0.5f && abs(panY) < 0.5f
+}
+
+internal const val MIN_BOARD_ZOOM = 1f
+internal const val MAX_BOARD_ZOOM = 4f
 
 internal object BoardViews {
     /** Player's seat on a phone: steep enough that squares stay large, still looking along the table. */
@@ -46,9 +61,62 @@ internal object BoardViews {
         BoardView("Top", yaw = 0f, pitch = 90f, distance = 2f),
     )
 
-    fun line(view: BoardView) = "yaw ${one(view.yaw)}° · pitch ${one(view.pitch)}° · distance ${one(view.distance)}"
+    fun line(view: BoardView) =
+        "yaw ${one(view.yaw)}° · pitch ${one(view.pitch)}° · distance ${one(view.distance)} · zoom ${one(view.zoom)} · pan ${one(view.panX)}, ${one(view.panY)}"
 
     private fun one(value: Float) = String.format(Locale.US, "%.1f", value)
+}
+
+/** A saved line. Older lines have only name, yaw, pitch and distance; those load fitted. */
+internal fun encodeBoardView(view: BoardView): String = listOf(
+    view.name,
+    boardNum(view.yaw),
+    boardNum(view.pitch),
+    boardNum(view.distance),
+    boardNum(view.zoom),
+    boardNum(view.panX),
+    boardNum(view.panY),
+).joinToString("|")
+
+internal fun decodeBoardView(line: String): BoardView? {
+    val parts = line.split('|')
+    if (parts[0].isBlank() || (parts.size != 4 && parts.size != 7)) return null
+    val yaw = parts[1].toFloatOrNull() ?: return null
+    val pitch = parts[2].toFloatOrNull() ?: return null
+    val distance = parts[3].toFloatOrNull() ?: return null
+    if (parts.size == 4) return BoardView(parts[0], yaw, pitch, distance)
+    val zoom = parts[4].toFloatOrNull() ?: return null
+    val panX = parts[5].toFloatOrNull() ?: return null
+    val panY = parts[6].toFloatOrNull() ?: return null
+    if (!zoom.isFinite() || zoom <= 0f || !panX.isFinite() || !panY.isFinite()) return null
+    return BoardView(parts[0], yaw, pitch, distance, zoom, panX, panY)
+}
+
+private fun boardNum(value: Float) = String.format(Locale.US, "%.2f", value)
+
+/**
+ * Magnifies around a screen point (the pinch centroid), in pixels. The camera does not move:
+ * [zoom] only scales the fitted picture, and pan keeps the focus where it was.
+ */
+internal fun magnifyAround(
+    zoom: Float,
+    panX: Float,
+    panY: Float,
+    factor: Float,
+    focusX: Float,
+    focusY: Float,
+    width: Float,
+    height: Float,
+): Triple<Float, Float, Float> {
+    val safe = if (zoom.isFinite() && zoom > 0f) zoom else 1f
+    val next = (safe * factor).coerceIn(MIN_BOARD_ZOOM, MAX_BOARD_ZOOM)
+    if (next == safe) return Triple(safe, panX, panY)
+    val applied = next / safe
+    return Triple(
+        next,
+        (focusX - width / 2f) * (1f - applied) + panX * applied,
+        (focusY - height / 2f) * (1f - applied) + panY * applied,
+    )
 }
 
 /**
@@ -214,18 +282,35 @@ internal class OrbitCam(
     val ox: Float, val oy: Float,
 )
 
-private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Float, view: BoardView, margin: Float, rows: Float = n.toFloat()): TableFrame {
-    val cx = n / 2f
-    val cy = rows / 2f
-    val lookZ = peakZ * 0.35f
-    val yaw = Math.toRadians(view.yaw.toDouble())
-    val pitchDeg = view.pitch.coerceIn(16f, 90f)
+private class OrbitBasis(
+    val camX: Float, val camY: Float, val camZ: Float,
+    val fx: Float, val fy: Float, val fz: Float,
+    val rx: Float, val ry: Float, val rz: Float,
+    val ux: Float, val uy: Float, val uz: Float,
+    val focal: Float,
+    val ortho: Boolean,
+) {
+    fun raw(x: Float, y: Float, z: Float): Offset {
+        val dx = x - camX
+        val dy = y - camY
+        val dz = z - camZ
+        return if (ortho) {
+            Offset(dx * rx + dy * ry + dz * rz, -(dx * ux + dy * uy + dz * uz))
+        } else {
+            val depth = (dx * fx + dy * fy + dz * fz).coerceAtLeast(0.25f)
+            val focal = this.focal / depth
+            Offset((dx * rx + dy * ry + dz * rz) * focal, -(dx * ux + dy * uy + dz * uz) * focal)
+        }
+    }
+}
+
+private fun orbitBasis(cx: Float, cy: Float, lookZ: Float, yawDeg: Float, pitchDeg: Float, dist: Float): OrbitBasis {
+    val yaw = Math.toRadians(yawDeg.toDouble())
     val pitch = Math.toRadians(pitchDeg.toDouble())
     val cosP = cos(pitch).toFloat()
     val sinP = sin(pitch).toFloat()
     val cosY = cos(yaw).toFloat()
     val sinY = sin(yaw).toFloat()
-    val dist = view.distance.coerceIn(1.05f, 4f) * maxOf(n.toFloat(), rows)
     val camX = cx + dist * cosP * sinY
     val camY = cy + dist * cosP * cosY
     val camZ = lookZ + dist * sinP
@@ -260,18 +345,21 @@ private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Flo
         uy = fz * rx - fx * rz
         uz = fx * ry - fy * rx
     }
-    fun raw(x: Float, y: Float, z: Float): Offset {
-        val dx = x - camX
-        val dy = y - camY
-        val dz = z - camZ
-        return if (ortho) {
-            Offset(dx * rx + dy * ry + dz * rz, -(dx * ux + dy * uy + dz * uz))
-        } else {
-            val depth = (dx * fx + dy * fy + dz * fz).coerceAtLeast(0.25f)
-            val focal = dist / depth
-            Offset((dx * rx + dy * ry + dz * rz) * focal, -(dx * ux + dy * uy + dz * uz) * focal)
-        }
-    }
+    return OrbitBasis(camX, camY, camZ, fx, fy, fz, rx, ry, rz, ux, uy, uz, dist, ortho)
+}
+
+/** How the head-on picture fits the screen. Turning reuses this scale so a square does not resize. */
+private class FrontalFit(val scale: Float, val ox: Float, val oy: Float, val frameW: Float, val frameH: Float)
+
+private fun frontalFit(
+    raw: (Float, Float, Float) -> Offset,
+    n: Int,
+    rows: Float,
+    peakZ: Float,
+    margin: Float,
+    maxWidthPx: Float,
+    maxHeightPx: Float,
+): FrontalFit {
     val edge = n.toFloat()
     val deep = rows
     val gutter = margin.coerceAtLeast(0f)
@@ -297,21 +385,45 @@ private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Flo
     val drawnH = rawH * scale
     val frameW = if (maxHeightPx.isFinite()) maxWidthPx else drawnW + pad * 2
     val frameH = if (maxHeightPx.isFinite()) maxHeightPx else drawnH + pad * 2
-    val basis = OrbitCam(
-        camX, camY, camZ, fx, fy, fz, rx, ry, rz, ux, uy, uz, dist, ortho, scale,
+    return FrontalFit(
+        scale,
         (frameW - drawnW) / 2f - minX * scale,
         (frameH - drawnH) / 2f - minY * scale,
+        frameW,
+        frameH,
     )
-    val mid = Offset(
-        (raw(cx, cy, 0f).x - minX) * scale + (frameW - drawnW) / 2f,
-        (raw(cx, cy, 0f).y - minY) * scale + (frameH - drawnH) / 2f,
+}
+
+private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Float, view: BoardView, margin: Float, rows: Float = n.toFloat()): TableFrame {
+    val cx = n / 2f
+    val cy = rows / 2f
+    val lookZ = peakZ * 0.35f
+    val pitchDeg = view.pitch.coerceIn(16f, 90f)
+    val dist = view.distance.coerceIn(1.05f, 4f) * maxOf(n.toFloat(), rows)
+    val actual = orbitBasis(cx, cy, lookZ, view.yaw, pitchDeg, dist)
+    // Head-on fit (yaw 0) sets the square size and where the board sits. Turning keeps both,
+    // so a square does not grow and shrink and the board does not slide off center.
+    val frontal = if (view.yaw == 0f) actual else orbitBasis(cx, cy, lookZ, 0f, pitchDeg, dist)
+    val fit = frontalFit(frontal::raw, n, rows, peakZ, margin, maxWidthPx, maxHeightPx)
+    val anchor = frontal.raw(cx, cy, 0f)
+    val anchorScreen = Offset(anchor.x * fit.scale + fit.ox, anchor.y * fit.scale + fit.oy)
+    val here = actual.raw(cx, cy, 0f)
+    var ox = anchorScreen.x - here.x * fit.scale
+    var oy = anchorScreen.y - here.y * fit.scale
+    val zoom = if (view.zoom.isFinite() && view.zoom > 0f) view.zoom.coerceIn(MIN_BOARD_ZOOM, MAX_BOARD_ZOOM) else 1f
+    val scale = fit.scale * zoom
+    ox = (ox - fit.frameW / 2f) * zoom + fit.frameW / 2f + view.panX
+    oy = (oy - fit.frameH / 2f) * zoom + fit.frameH / 2f + view.panY
+    val basis = OrbitCam(
+        actual.camX, actual.camY, actual.camZ, actual.fx, actual.fy, actual.fz,
+        actual.rx, actual.ry, actual.rz, actual.ux, actual.uy, actual.uz,
+        actual.focal, actual.ortho, scale, ox, oy,
     )
-    val step = Offset(
-        (raw(cx + 1f, cy, 0f).x - minX) * scale + (frameW - drawnW) / 2f,
-        (raw(cx + 1f, cy, 0f).y - minY) * scale + (frameH - drawnH) / 2f,
-    )
+    val mid = Offset(here.x * scale + ox, here.y * scale + oy)
+    val stepRaw = actual.raw(cx + 1f, cy, 0f)
+    val step = Offset(stepRaw.x * scale + ox, stepRaw.y * scale + oy)
     val cell = sqrt((step.x - mid.x) * (step.x - mid.x) + (step.y - mid.y) * (step.y - mid.y)).coerceAtLeast(1f)
-    return TableFrame(n, cell, cell * 0.62f, 0f, 1f, 1f, Offset.Zero, frameW, frameH, basis)
+    return TableFrame(n, cell, cell * 0.62f, 0f, 1f, 1f, Offset.Zero, fit.frameW, fit.frameH, basis)
 }
 
 internal fun DrawScope.drawBoardSlab(frame: TableFrame, top: Float, wood: Color) {

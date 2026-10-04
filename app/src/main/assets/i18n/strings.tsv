@@ -2566,8 +2566,8 @@ Save view	保存视角	視点を保存	Guardar vista	Ansicht speichern
 Replace {0}	替换{0}	{0}を置き換え	Reemplazar {0}	{0} ersetzen
 Reset views	恢复预设视角	視点を初期化	Restablecer vistas	Ansichten zurücksetzen
 Remove view	删除视角	視点を削除	Quitar vista	Ansicht entfernen
-yaw {0}° · pitch {1}° · distance {2}	偏航 {0}° · 俯仰 {1}° · 距离 {2}	ヨー {0}° · ピッチ {1}° · 距離 {2}	rumbo {0}° · inclinación {1}° · distancia {2}	Gier {0}° · Neigung {1}° · Abstand {2}
-Drag to look around. Pinch to move closer.	拖动环视。双指拉近。	ドラッグで見回し、ピンチで近づきます。	Arrastra para mirar. Pellizca para acercarte.	Ziehen zum Umschauen. Mit zwei Fingern näher ziehen.
+yaw {0}° · pitch {1}° · distance {2} · zoom {3} · pan {4}, {5}	偏航 {0}° · 俯仰 {1}° · 距离 {2} · 缩放 {3} · 平移 {4}, {5}	ヨー {0}° · ピッチ {1}° · 距離 {2} · ズーム {3} · パン {4}, {5}	rumbo {0}° · inclinación {1}° · distancia {2} · zoom {3} · desplazamiento {4}, {5}	Gier {0}° · Neigung {1}° · Abstand {2} · Zoom {3} · Verschiebung {4}, {5}
+Drag to look around. Pinch to zoom. Slide with two fingers.	拖动环视。双指缩放。双指滑动。	ドラッグで見回し、ピンチで拡大し、2本の指でずらします。	Arrastra para mirar. Pellizca para ampliar. Desliza con dos dedos.	Ziehen zum Umschauen. Mit zwei Fingern zoomen. Mit zwei Fingern verschieben.
 View {0}	视角 {0}	視点 {0}	Vista {0}	Ansicht {0}
 Looks one move ahead	往前看一步	1手先を読む	Mira un movimiento adelante	Schaut einen Zug voraus
 You (Sente)	你（先手）	あなた（先手）	Tú (Sente)	Du (Sente)
