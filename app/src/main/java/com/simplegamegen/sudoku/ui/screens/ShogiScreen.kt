@@ -5,12 +5,12 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -102,6 +102,7 @@ val ShogiSetup: (PuzzleFactory) -> PlaySetup<Shogi> = { factory ->
 private val ShogiBoardWood = Color(0xFFE4B56A)
 private val ShogiLine = Color(0xFF3E2723)
 private val ShogiLabel = Color(0xFFF1DFC0)
+private const val SelectedLift = 0.46f
 
 @Composable
 fun ShogiScreen(nav: NavController, vm: PlayViewModel<Shogi>, factory: PuzzleFactory) {
@@ -111,12 +112,11 @@ fun ShogiScreen(nav: NavController, vm: PlayViewModel<Shogi>, factory: PuzzleFac
     PlayShell(
         nav, vm, GameId.SHOGI, remember(factory) { ShogiSetup(factory) },
         scroll = false,
+        tight = true,
         tools = { _, _ ->
             ToolButton(GameIcons.Fit, if (full) "Exit full screen" else "Full screen") { full = !full }
         },
     ) { g, s ->
-        DuelStatus(g.over, g.winner, g.turn, s.thinking, "You (Sente)", "Computer (Gote)")
-        if (!g.ended && g.inCheck()) InfoChip("Check!", emphasized = true)
         val playable = !g.ended && g.turn == 1 && !s.thinking && !s.busy
         var selected by remember(g) { mutableIntStateOf(-1) }
         var drop by remember(g) { mutableIntStateOf(0) }
@@ -148,26 +148,35 @@ fun ShogiScreen(nav: NavController, vm: PlayViewModel<Shogi>, factory: PuzzleFac
                 }
             }
         }
-        HandRow("Computer's captures", g.goteHand, 0, false) {}
-        PlayBoard(full, { full = false }, s.canUndo && !s.busy, vm::undo, bar = {
-            if (playable && g.canImpasse()) {
-                Button(
-                    onClick = { vm.play { it.declareImpasse() } },
-                    modifier = Modifier.weight(1f).heightIn(min = 52.dp),
-                ) { Text("Count the pieces") }
-            }
-        }) {
+        PlayBoard(
+            full, { full = false }, s.canUndo && !s.busy, vm::undo,
+            bar = {
+                if (playable && g.canImpasse()) {
+                    Button(
+                        onClick = { vm.play { it.declareImpasse() } },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    ) { Text("Count", maxLines = 1) }
+                }
+            },
+            above = {
+                DuelStatus(g.over, g.winner, g.turn, s.thinking, "You (Sente)", "Computer (Gote)", oneLine = true)
+                if (!g.ended && g.inCheck()) InfoChip("Check!", emphasized = true)
+                HandRow("Computer", g.goteHand, 0, false) {}
+            },
+            below = {
+                HandRow("Your hand", g.senteHand, drop, playable) { type ->
+                    drop = if (drop == type) 0 else type
+                    selected = -1
+                }
+                if (playable && g.canImpasse()) {
+                    Button(
+                        onClick = { vm.play { it.declareImpasse() } },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    ) { Text("Count the pieces") }
+                }
+            },
+        ) {
             ShogiTable(camera, g, legal, selected, drop, playable, onTap = ::tap)
-        }
-        HandRow("Your captures", g.senteHand, drop, playable) { type ->
-            drop = if (drop == type) 0 else type
-            selected = -1
-        }
-        if (playable && g.canImpasse()) {
-            Button(
-                onClick = { vm.play { it.declareImpasse() } },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-            ) { Text("Count the pieces") }
         }
         if (ask != null) {
             AlertDialog(
@@ -203,7 +212,7 @@ private fun ShogiTable(
         selected >= 0 -> legal.filter { it.from == selected && it.drop == 0 }.map { it.to }.toSet()
         else -> emptySet()
     }
-    BoardWithViews(camera, n = 9, peakZ = 1.2f, margin = 0.7f) { frame ->
+    BoardWithViews(camera, n = 9, peakZ = 1.2f, margin = 0.55f) { frame ->
         val top = 0.18f
         val order = (0 until 81).sortedByDescending { frame.depth((it % 9) + 0.5f, (it / 9) + 0.5f, top) }
         order.forEach { i ->
@@ -220,7 +229,7 @@ private fun ShogiTable(
                         piece < 0 -> "computer ${Shogi.pieceName(piece)}"
                         dest -> "legal move"
                         else -> "empty"
-                    },
+                    } + if (piece != 0 && dest) ", legal move" else "",
                 )
                 if (selected == i) stateDescription = say("Selected")
                 if (playable && (dest || movable)) onClick { onTap(i); true }
@@ -231,7 +240,7 @@ private fun ShogiTable(
                 if (!playable) return@detectTapGestures
                 val hit = order.asReversed().firstOrNull { i ->
                     val piece = g.board[i]
-                    val lift = if (selected == i) 0.22f else 0f
+                    val lift = if (selected == i) SelectedLift else 0f
                     val tall = if (piece == 0) top else top + lift + shogiRise()
                     coversCell(frame, pos, i % 9, i / 9, top, tall, frame.unitAt(i % 9 + 0.5f, i / 9 + 0.5f, top) * 0.34f)
                 } ?: return@detectTapGestures
@@ -246,8 +255,13 @@ private fun ShogiTable(
                 close()
             }, ShogiBoardWood)
             order.forEach { i ->
-                val marked = selected == i || g.lastFrom == i || g.lastTo == i || i in targets
-                if (marked) drawSquareTop(frame, i % 9, i / 9, top + 0.002f, lerp(ShogiBoardWood, c.highlight, 0.45f))
+                val tint = when {
+                    selected == i -> 0.62f
+                    i in targets -> 0.32f
+                    g.lastFrom == i || g.lastTo == i -> 0.38f
+                    else -> 0f
+                }
+                if (tint > 0f) drawSquareTop(frame, i % 9, i / 9, top + 0.002f, lerp(ShogiBoardWood, c.highlight, tint))
             }
             val z = top + 0.008f
             val stroke = (frame.cell * 0.04f).coerceAtLeast(1f)
@@ -281,22 +295,28 @@ private fun ShogiTable(
             }
             order.forEach { i ->
                 val piece = g.board[i]
-                if (piece == 0) return@forEach
                 val row = i / 9
                 val col = i % 9
-                val lift = if (selected == i) 0.22f else 0f
-                drawShogiPiece(
-                    frame, col + 0.5f, row + 0.5f, top,
-                    yours = piece > 0,
-                    glyph = Shogi.glyph(piece),
-                    promoted = Shogi.promoted(piece),
-                    scale = shogiScale(Shogi.baseOf(piece)),
-                    lift = lift,
-                )
-                if (selected == i || (i in targets && piece != 0)) drawRing(frame, col + 0.5f, row + 0.5f, top, c.highlight)
-            }
-            targets.filter { g.board[it] == 0 }.forEach { i ->
-                drawDot(frame, i % 9 + 0.5f, i / 9 + 0.5f, top, c.highlight)
+                if (piece != 0) {
+                    val lift = if (selected == i) SelectedLift else 0f
+                    drawShogiPiece(
+                        frame, col + 0.5f, row + 0.5f, top,
+                        yours = piece > 0,
+                        glyph = Shogi.glyph(piece),
+                        promoted = Shogi.promoted(piece),
+                        scale = shogiScale(Shogi.baseOf(piece)),
+                        lift = lift,
+                    )
+                }
+                when {
+                    selected == i && piece != 0 -> drawRing(
+                        frame, col + 0.5f, row + 0.5f, top + SelectedLift + shogiRise() * 0.55f, c.highlight, radiusScale = 0.52f,
+                    )
+                    i in targets && piece != 0 -> drawRing(
+                        frame, col + 0.5f, row + 0.5f, top + shogiRise() * 0.45f, c.highlight,
+                    )
+                    i in targets -> drawDot(frame, col + 0.5f, row + 0.5f, top, c.highlight)
+                }
             }
             if (!g.ended && g.inCheck()) {
                 val king = g.board.indexOfFirst { it == Shogi.KING * g.turn }
@@ -315,9 +335,9 @@ private fun ShogiTable(
 @Composable
 private fun HandRow(label: String, pieces: List<Int>, selected: Int, enabled: Boolean, onPick: (Int) -> Unit) {
     val c = LocalGameLook.current.colors
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = c.muted)
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = c.muted, modifier = Modifier.widthIn(max = 88.dp), maxLines = 2)
+        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (pieces.isEmpty()) Text("empty", style = MaterialTheme.typography.bodyMedium, color = c.muted)
             pieces.distinct().sorted().forEach { type ->
                 val count = pieces.count { it == type }
@@ -325,8 +345,9 @@ private fun HandRow(label: String, pieces: List<Int>, selected: Int, enabled: Bo
                 OutlinedButton(
                     onClick = { onPick(type) },
                     enabled = enabled,
-                    modifier = Modifier.heightIn(min = 48.dp).semantics {
+                    modifier = Modifier.heightIn(min = 44.dp).semantics {
                         contentDescription = say("Drop ${Shogi.pieceName(type)}")
+                        if (on) stateDescription = say("Selected")
                     },
                 ) {
                     Canvas(Modifier.size(36.dp, 44.dp)) {

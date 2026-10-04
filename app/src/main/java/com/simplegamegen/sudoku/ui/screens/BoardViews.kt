@@ -48,7 +48,12 @@ import java.util.Locale
 
 /** Saved cameras for the chess and Go boards. The numbers on screen are what a later build can bake in. */
 /** [defaults] are this game's built-in views, which Reset views restores. */
-internal class BoardCamera(private val prefs: SharedPreferences, private val defaults: List<BoardView> = BoardViews.defaults) {
+internal class BoardCamera(
+    private val prefs: SharedPreferences,
+    private val defaults: List<BoardView> = BoardViews.defaults,
+    /** When the saved list is still exactly this, it is the old built-in set and should become [defaults]. */
+    private val replaced: List<BoardView> = BoardViews.previous,
+) {
     var views by mutableStateOf(load())
     var index by mutableIntStateOf(0)
     var free by mutableStateOf(false)
@@ -128,7 +133,12 @@ internal class BoardCamera(private val prefs: SharedPreferences, private val def
 
     private fun load(): List<BoardView> {
         val raw = prefs.getString(VIEWS, null) ?: return defaults
-        return raw.lineSequence().mapNotNull(::decode).toList().ifEmpty { defaults }
+        val saved = raw.lineSequence().mapNotNull(::decode).toList().ifEmpty { return defaults }
+        if (replaced.isNotEmpty() && saved == replaced) {
+            prefs.edit().remove(VIEWS).apply()
+            return defaults
+        }
+        return saved
     }
 
     private fun encode(view: BoardView) =
@@ -157,10 +167,14 @@ internal class BoardCamera(private val prefs: SharedPreferences, private val def
 }
 
 @Composable
-internal fun rememberBoardCamera(store: String = "board_views", defaults: List<BoardView> = BoardViews.defaults): BoardCamera {
+internal fun rememberBoardCamera(
+    store: String = "board_views",
+    defaults: List<BoardView> = BoardViews.defaults,
+    replaced: List<BoardView> = BoardViews.previous,
+): BoardCamera {
     val context = LocalContext.current
     return remember {
-        BoardCamera(context.getSharedPreferences(store, Context.MODE_PRIVATE), defaults)
+        BoardCamera(context.getSharedPreferences(store, Context.MODE_PRIVATE), defaults, replaced)
     }
 }
 
@@ -181,11 +195,11 @@ internal fun BoardWithViews(
     val chipScroll = rememberScrollState()
     val actionScroll = rememberScrollState()
     // The board first, then the camera controls under it, where a thumb reaches them on a phone.
-    Column(if (height == null) Modifier.fillMaxSize() else Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(if (height == null) Modifier.fillMaxSize() else Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Box((if (height == null) Modifier.weight(1f) else Modifier.height(height)).fillMaxWidth()) { BoardFrame(camera, n, peakZ, margin, rows, content) }
         Row(
             Modifier.fillMaxWidth().horizontalScroll(chipScroll),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             camera.views.forEachIndexed { i, view ->
@@ -194,7 +208,7 @@ internal fun BoardWithViews(
                     onClick = { camera.select(i) },
                     label = { Text(view.name) },
                     colors = FilterChipDefaults.filterChipColors(containerColor = colors.surface),
-                    modifier = Modifier.heightIn(min = 40.dp),
+                    modifier = Modifier.heightIn(min = 36.dp),
                 )
             }
             FilterChip(
@@ -202,14 +216,14 @@ internal fun BoardWithViews(
                 onClick = camera::armFree,
                 label = { Text("Free camera") },
                 colors = FilterChipDefaults.filterChipColors(containerColor = colors.surface),
-                modifier = Modifier.heightIn(min = 40.dp),
+                modifier = Modifier.heightIn(min = 36.dp),
             )
             FilterChip(
                 selected = camera.details,
                 onClick = camera::toggleDetails,
                 label = { Text("View details") },
                 colors = FilterChipDefaults.filterChipColors(containerColor = colors.surface),
-                modifier = Modifier.heightIn(min = 40.dp),
+                modifier = Modifier.heightIn(min = 36.dp),
             )
         }
         if (camera.details) {

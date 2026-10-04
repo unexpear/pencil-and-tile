@@ -33,10 +33,18 @@ import kotlin.math.sqrt
 internal data class BoardView(val name: String, val yaw: Float, val pitch: Float, val distance: Float)
 
 internal object BoardViews {
-    val behind = BoardView("Behind", yaw = 0f, pitch = 52f, distance = 1.55f)
-    val corner = BoardView("Corner", yaw = 36f, pitch = 50f, distance = 1.7f)
-    val top = BoardView("Top", yaw = 0f, pitch = 90f, distance = 2f)
+    /** Player's seat on a phone: steep enough that squares stay large, still looking along the table. */
+    val behind = BoardView("Behind", yaw = 0f, pitch = 70f, distance = 1.4f)
+    val corner = BoardView("Corner", yaw = 28f, pitch = 62f, distance = 1.55f)
+    val top = BoardView("Top", yaw = 0f, pitch = 90f, distance = 1.75f)
     val defaults = listOf(behind, corner, top)
+
+    /** Cameras shipped before the phone seat. Reset replaces a list that is still exactly these. */
+    val previous = listOf(
+        BoardView("Behind", yaw = 0f, pitch = 52f, distance = 1.55f),
+        BoardView("Corner", yaw = 36f, pitch = 50f, distance = 1.7f),
+        BoardView("Top", yaw = 0f, pitch = 90f, distance = 2f),
+    )
 
     fun line(view: BoardView) = "yaw ${one(view.yaw)}° · pitch ${one(view.pitch)}° · distance ${one(view.distance)}"
 
@@ -476,14 +484,25 @@ internal fun DrawScope.drawFlatDisk(
     if (strokePx > 0f) drawPath(path, color, style = Stroke(strokePx)) else drawPath(path, color)
 }
 
-/** A small token on an empty square, for a legal move. */
-internal fun DrawScope.drawDot(frame: TableFrame, x: Float, y: Float, z: Float, color: Color) {
-    drawFlatDisk(frame, x, y, z + 0.04f, 0.13f, color)
+/** A destination marker lying on the board. Larger and rimmed so it reads on a tilted square. */
+internal fun DrawScope.drawDot(frame: TableFrame, x: Float, y: Float, z: Float, color: Color, radius: Float = 0.24f) {
+    drawFlatDisk(frame, x, y, z + 0.03f, radius + 0.05f, Color.Black.copy(alpha = 0.4f))
+    drawFlatDisk(frame, x, y, z + 0.05f, radius, color)
 }
 
-/** A ring on a square, for a selected piece or a capture. */
-internal fun DrawScope.drawRing(frame: TableFrame, x: Float, y: Float, z: Float, color: Color) {
-    drawFlatDisk(frame, x, y, z + 0.05f, 0.38f, color, strokePx = frame.unitAt(x, y, z) * 0.07f)
+/**
+ * A camera-facing ring around a piece. Stays round when the board is tilted, for a selection or a capture.
+ * [radiusScale] is in squares.
+ */
+internal fun DrawScope.drawRing(
+    frame: TableFrame, x: Float, y: Float, z: Float, color: Color, radiusScale: Float = 0.5f,
+) {
+    val at = frame.at(x, y, z)
+    val unit = frame.unitAt(x, y, z)
+    val radius = unit * radiusScale
+    val stroke = (unit * 0.1f).coerceAtLeast(2.8f)
+    drawCircle(Color.Black.copy(alpha = 0.55f), radius, at, style = Stroke(stroke + unit * 0.05f))
+    drawCircle(color, radius, at, style = Stroke(stroke))
 }
 
 /** A biconvex Go stone: polished slate or shell, a lens that catches the light. */
@@ -708,6 +727,29 @@ internal fun chessSymbol(piece: Int): String = when (abs(piece)) {
     4 -> if (piece > 0) "♖" else "♜"
     5 -> if (piece > 0) "♕" else "♛"
     else -> if (piece > 0) "♔" else "♚"
+}
+
+/**
+ * The board point whose center is closest to [pos], measured in that point's own square.
+ * [reach] is how many squares away a tap still counts, so a small far point stays easy to hit.
+ */
+internal fun nearestCell(frame: TableFrame, pos: Offset, n: Int, z: Float, reach: Float = 0.8f): Int? {
+    var best = -1
+    var bestScore = Float.MAX_VALUE
+    for (i in 0 until n * n) {
+        val col = i % n
+        val row = i / n
+        val at = frame.at(col + 0.5f, row + 0.5f, z)
+        val dx = pos.x - at.x
+        val dy = pos.y - at.y
+        val unit = frame.unitAt(col + 0.5f, row + 0.5f, z)
+        val score = sqrt(dx * dx + dy * dy) / unit
+        if (score < bestScore) {
+            bestScore = score
+            best = i
+        }
+    }
+    return if (best >= 0 && bestScore <= reach) best else null
 }
 
 internal fun coversCell(frame: TableFrame, pos: Offset, col: Int, row: Int, topZ: Float, pieceTop: Float, rx: Float): Boolean {
