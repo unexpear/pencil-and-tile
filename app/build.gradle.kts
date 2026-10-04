@@ -48,8 +48,8 @@ android {
         applicationId = "com.simplegamegen.puzzles"
         minSdk = 26
         targetSdk = 36
-        versionCode = playVersionCode ?: 8
-        versionName = if (playVersionCode != null) "1.1.6.$playVersionCode" else "1.1.6"
+        versionCode = playVersionCode ?: 9
+        versionName = if (playVersionCode != null) "1.1.7.$playVersionCode" else "1.1.7"
     }
 
     signingConfigs {

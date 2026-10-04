@@ -3,6 +3,7 @@ package com.simplegamegen.sudoku.ui.screens
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.horizontalScroll
@@ -32,6 +33,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -41,10 +43,12 @@ import androidx.compose.ui.unit.dp
 import com.simplegamegen.sudoku.ui.assets.BoardView
 import com.simplegamegen.sudoku.ui.assets.BoardViews
 import com.simplegamegen.sudoku.ui.assets.TableFrame
+import com.simplegamegen.sudoku.ui.assets.decodeBoardView
+import com.simplegamegen.sudoku.ui.assets.encodeBoardView
+import com.simplegamegen.sudoku.ui.assets.magnifyAround
 import com.simplegamegen.sudoku.ui.assets.tableFrame
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
-import java.util.Locale
 
 /** Saved cameras for the chess and Go boards. The numbers on screen are what a later build can bake in. */
 /** [defaults] are this game's built-in views, which Reset views restores. */
@@ -77,11 +81,24 @@ internal class BoardCamera(
         live = live.copy(yaw = yaw, pitch = pitch)
     }
 
-    fun pinch(zoom: Float) {
-        if (zoom == 1f) return
-        val distance = (live.distance / zoom).coerceIn(1.05f, 4f)
-        if (distance == live.distance) return
-        live = live.copy(distance = distance)
+    /** Magnifies around [focus] (a point in the board view, in pixels). The camera stays put. */
+    fun zoomBy(factor: Float, focus: Offset, width: Float, height: Float) {
+        if (factor == 1f) return
+        val (zoom, panX, panY) = magnifyAround(live.zoom, live.panX, live.panY, factor, focus.x, focus.y, width, height)
+        if (zoom == live.zoom && panX == live.panX && panY == live.panY) return
+        live = live.copy(zoom = zoom, panX = panX, panY = panY)
+    }
+
+    /** Slides the picture by [dx] and [dy] pixels. */
+    fun slide(dx: Float, dy: Float) {
+        if (dx == 0f && dy == 0f) return
+        live = live.copy(panX = live.panX + dx, panY = live.panY + dy)
+    }
+
+    /** Puts zoom and pan back to the fitted view. The orbit camera is left as it is. */
+    fun fit() {
+        if (live.fitted) return
+        live = live.copy(zoom = 1f, panX = 0f, panY = 0f)
     }
 
     fun save() {
@@ -95,7 +112,7 @@ internal class BoardCamera(
 
     fun replace() {
         val i = index.coerceIn(views.indices)
-        val next = views[i].copy(yaw = live.yaw, pitch = live.pitch, distance = live.distance)
+        val next = live.copy(name = views[i].name)
         views = views.toMutableList().also { it[i] = next }
         live = next
         free = false
@@ -141,22 +158,13 @@ internal class BoardCamera(
         return saved
     }
 
-    private fun encode(view: BoardView) =
-        listOf(view.name, num(view.yaw), num(view.pitch), num(view.distance)).joinToString("|")
+    private fun encode(view: BoardView) = encodeBoardView(view)
 
-    private fun decode(line: String): BoardView? {
-        val parts = line.split('|')
-        if (parts.size != 4 || parts[0].isBlank()) return null
-        val yaw = parts[1].toFloatOrNull() ?: return null
-        val pitch = parts[2].toFloatOrNull() ?: return null
-        val distance = parts[3].toFloatOrNull() ?: return null
-        return BoardView(parts[0], yaw, pitch, distance)
-    }
+    private fun decode(line: String): BoardView? = decodeBoardView(line)
 
     companion object {
         private const val VIEWS = "views"
         private const val DETAILS = "details"
-        private fun num(value: Float) = String.format(Locale.US, "%.2f", value)
         private fun wrap(deg: Float): Float {
             var d = deg % 360f
             if (d > 180f) d -= 360f
@@ -239,10 +247,13 @@ internal fun BoardWithViews(
                 TextButton(onClick = camera::replace, modifier = Modifier.heightIn(min = 40.dp)) { Text("Replace ${camera.selectedName}") }
                 if (camera.canRemove) TextButton(onClick = camera::remove, modifier = Modifier.heightIn(min = 40.dp)) { Text("Remove view") }
                 TextButton(onClick = camera::reset, modifier = Modifier.heightIn(min = 40.dp)) { Text("Reset views") }
+                TextButton(onClick = camera::fit, modifier = Modifier.heightIn(min = 40.dp)) { Text("Fit the board") }
             }
+        } else if (!camera.live.fitted) {
+            TextButton(onClick = camera::fit, modifier = Modifier.heightIn(min = 40.dp)) { Text("Fit the board") }
         }
         if (camera.free) {
-            Text("Drag to look around. Pinch to move closer.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
+            Text("Drag to look around. Pinch to zoom. Slide with two fingers.", style = MaterialTheme.typography.bodySmall, color = colors.muted)
         }
     }
 }
@@ -258,22 +269,27 @@ private fun BoardFrame(
 ) {
     val current = rememberUpdatedState(camera)
     BoxWithConstraints(
-        // Pinch zooms in any view; dragging turns the board only with the free camera, so taps on pieces still work.
-        Modifier.fillMaxSize().pointerInput(Unit) {
+        // Pinch zooms around the fingers in any view, and two fingers slide the picture.
+        // One finger turns the board only with the free camera. A finger left down after a pinch must not turn it.
+        Modifier.fillMaxSize().clipToBounds().pointerInput(Unit) {
                         val slop = viewConfiguration.touchSlop
                         awaitEachGesture {
                             var dragged = false
+                            var sawTwo = false
                             var total = Offset.Zero
                             while (true) {
                                 val event = awaitPointerEvent(PointerEventPass.Initial)
                                 val pressed = event.changes.filter { it.pressed }
                                 if (pressed.isEmpty()) break
                                 if (pressed.size >= 2) {
+                                    sawTwo = true
                                     val zoom = event.calculateZoom()
-                                    if (zoom != 1f) current.value.pinch(zoom)
+                                    val pan = event.calculatePan()
+                                    val centroid = event.calculateCentroid(useCurrent = true)
+                                    if (zoom != 1f) current.value.zoomBy(zoom, centroid, size.width.toFloat(), size.height.toFloat())
+                                    if (pan != Offset.Zero) current.value.slide(pan.x, pan.y)
                                     event.changes.forEach { it.consume() }
-                                    dragged = true
-                                } else if (current.value.free) {
+                                } else if (!sawTwo && current.value.free) {
                                     val pan = event.calculatePan()
                                     total += pan
                                     if (!dragged && total.getDistance() > slop) dragged = true
@@ -281,6 +297,8 @@ private fun BoardFrame(
                                         current.value.drag(pan.x, pan.y)
                                         event.changes.forEach { it.consume() }
                                     }
+                                } else if (sawTwo) {
+                                    event.changes.forEach { it.consume() }
                                 }
                             }
                         }
