@@ -71,7 +71,8 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     SHUT_BOX("Shut the Box", "play_SHUT_BOX", "Flip tiles that add up", GameGroup.CLASSICS),
     TEN_THOUSAND("Ten Thousand", "play_TEN_THOUSAND", "Six dice to 10,000", GameGroup.CLASSICS),
     SHIP_CREW("Ship, Captain, Crew", "play_SHIP_CREW", "Six, five, four, then cargo", GameGroup.CLASSICS),
-    SHOGI("Shogi", "play_SHOGI", "Promote and drop", GameGroup.BOARD);
+    SHOGI("Shogi", "play_SHOGI", "Promote and drop", GameGroup.BOARD),
+    HEX("Hex", "play_HEX", "Connect opposite sides", GameGroup.CLASSICS);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {

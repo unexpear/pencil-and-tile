@@ -49,6 +49,9 @@ import com.simplegamegen.sudoku.tabletop.GoCodec
 import com.simplegamegen.sudoku.duels.ConnectFour
 import com.simplegamegen.sudoku.duels.ConnectFourAi
 import com.simplegamegen.sudoku.duels.ConnectFourCodec
+import com.simplegamegen.sudoku.duels.Hex
+import com.simplegamegen.sudoku.duels.HexAi
+import com.simplegamegen.sudoku.duels.HexCodec
 import com.simplegamegen.sudoku.duels.Mastermind
 import com.simplegamegen.sudoku.duels.MastermindCodec
 import com.simplegamegen.sudoku.duels.ShipAi
@@ -109,6 +112,7 @@ import com.simplegamegen.sudoku.ui.screens.TowersScreen
 import com.simplegamegen.sudoku.ui.screens.LetterDrawScreen
 import com.simplegamegen.sudoku.ui.screens.WordLadderScreen
 import com.simplegamegen.sudoku.ui.screens.ConnectFourScreen
+import com.simplegamegen.sudoku.ui.screens.HexScreen
 import com.simplegamegen.sudoku.ui.screens.MastermindScreen
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
 import com.simplegamegen.sudoku.ui.screens.MagnetScreen
@@ -232,6 +236,12 @@ object ShipCrewComputer : ComputerPlayer<ShipCrew> {
 object FiveRowComputer : ComputerPlayer<FiveRow> {
     override fun needsMove(state: FiveRow) = !state.over && state.turn == -1
     override fun move(state: FiveRow) = state.place(FiveRowAi.choose(state))!!
+    override val pauseMs = 280L
+}
+
+object HexComputer : ComputerPlayer<Hex> {
+    override fun needsMove(state: Hex) = !state.passAndPlay && !state.over && state.turn == -1
+    override fun move(state: Hex) = state.apply(HexAi.choose(state))!!
     override val pauseMs = 280L
 }
 
@@ -417,5 +427,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.SHOGI.route) {
         ShogiScreen(nav, playModel<Shogi>(GameId.SHOGI, store, codecOf(ShogiCodec::encode, ShogiCodec::decode), ShogiComputer), factory)
+    }
+    composable(GameId.HEX.route) {
+        HexScreen(nav, playModel<Hex>(GameId.HEX, store, codecOf(HexCodec::encode, HexCodec::decode), HexComputer), factory)
     }
 }

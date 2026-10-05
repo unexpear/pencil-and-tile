@@ -641,6 +641,64 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val hex: Tutorial get() {
+        fun scene(n: Int, stones: Map<Pair<Int, Int>, Int>, mark: Pair<Int, Int>? = null, good: Set<Pair<Int, Int>> = emptySet()): Scene {
+            val radius = 0.62f
+            val cell = 0.8f
+            val items = (0 until n).flatMap { row ->
+                (0 until n).map { col ->
+                    val cx = radius + radius * 1.5f * col
+                    val cy = radius * 0.9f + radius * 0.9f * (row + col / 2f)
+                    val who = stones[row to col]
+                    Item(
+                        cellId(row, col),
+                        cx - cell / 2f,
+                        cy - cell / 2f,
+                        cell,
+                        cell,
+                        Cell(
+                            fill = Fill.OPEN,
+                            piece = who?.let { Piece(PieceKind.STONE, it) },
+                            mark = if (mark == row to col) Mark.CIRCLE else Mark.NONE,
+                        ),
+                        tone = if (row to col in good) Tone.GOOD else Tone.PLAIN,
+                    )
+                }
+            }
+            return Scene(items.maxOf { it.x + it.w } + 0.06f, items.maxOf { it.y + it.h } + 0.06f, items, Backdrop.BOARD, maxUnit = 40)
+        }
+        val n = 4
+        val opening = scene(n, emptyMap(), 0 to 2)
+        val placed = scene(n, mapOf(0 to 2 to 1))
+        val swapped = scene(n, mapOf(2 to 0 to -1))
+        val threat = scene(n, mapOf(0 to 1 to 1, 1 to 1 to 1, 3 to 1 to 1, 0 to 0 to -1, 1 to 3 to -1), 2 to 1)
+        val won = scene(n, mapOf(0 to 1 to 1, 1 to 1 to 1, 2 to 1 to 1, 3 to 1 to 1, 0 to 0 to -1, 1 to 3 to -1), good = (0 until n).map { it to 1 }.toSet())
+        return Tutorial(
+            GameId.HEX,
+            "Join your two opposite sides.",
+            rules = listOf(
+                "Take turns placing one stone on an empty hex. Stones never move or get captured.",
+                "Red joins the top and bottom edges. Blue joins the left and right. The edges are tinted to match.",
+                "Two hexes touch when they share a side. Each hex has six neighbors, so a square diagonal does not connect.",
+                "After the first stone, the second player may swap. The stone flips across the long diagonal and becomes theirs.",
+                "You play red against the computer and move first, or pass the phone for two players. A full board always has a winner.",
+            ),
+            tips = listOf(
+                "Swap when the first stone sits near the middle. A corner stone is usually worth leaving.",
+                "Two of your stones with a single gap between them are hard to cut off.",
+            ),
+            steps = listOf(
+                Step("Red owns the top and bottom. Blue owns the left and right. Tap a hex to place a stone.", opening),
+                Step("Tap the circled hex.", opening, tap = setOf(cellId(0, 2)), after = placed,
+                    then = "Red's stone is down. It stays there unless Blue swaps.", help = "The circled hex."),
+                Step("Blue may take that stone instead of placing. Swap flips it across the long diagonal.", placed.choices("Swap"),
+                    pick = "Swap", after = swapped, then = "The stone moved to the mirror hex and turned blue."),
+                Step("Red needs one more stone to join top and bottom. Tap the gap.", threat, tap = setOf(cellId(2, 1)),
+                    after = won, then = "Red's chain meets both edges. Red wins!", help = "The empty hex between the red stones."),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {
