@@ -116,6 +116,30 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                     drawText(l, topLeft = o + Offset((cell - l.size.width) / 2, (cell - l.size.height) / 2))
                 }
             }
+            GameId.HEX -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFF6EBD2), cornerRadius = CornerRadius(8f))
+                val radius = size.minDimension * 0.13f
+                fun center(col: Int, row: Int) = Offset(
+                    size.width * 0.28f + col * radius * 1.45f,
+                    size.height * 0.16f + row * radius * 1.55f + col * radius * 0.72f,
+                )
+                fun hex(at: Offset, fill: Color) {
+                    val path = Path()
+                    for (i in 0 until 6) {
+                        val angle = Math.toRadians((60.0 * i).toDouble())
+                        val x = at.x + radius * kotlin.math.cos(angle).toFloat()
+                        val y = at.y + radius * kotlin.math.sin(angle).toFloat()
+                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+                    path.close()
+                    drawPath(path, fill)
+                    drawPath(path, Color(0xFF8D6E63), style = Stroke(1.5f))
+                }
+                for (row in 0 until 3) for (col in 0 until 3) hex(center(col, row), Color(0xFFFFF8EC))
+                drawCircle(Color(0xFFE53935), radius * 0.55f, center(1, 0))
+                drawCircle(Color(0xFF1565C0), radius * 0.55f, center(0, 1))
+                drawCircle(Color(0xFFE53935), radius * 0.55f, center(1, 2))
+            }
             GameId.CONNECT_FOUR -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFF1565C0), cornerRadius = CornerRadius(8f))
                 val cols = 4
