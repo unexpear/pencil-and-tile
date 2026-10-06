@@ -46,7 +46,7 @@ data class Raumschach(
         require(winner in -1..1 && halfmove >= 0)
         require(lastFrom == -1 || lastFrom in board.indices)
         require(lastTo == -1 || lastTo in board.indices)
-        require(board.count { it == KING } == 1 && board.count { it == -KING } == 1)
+        require(board.count { it == KING } <= 1 && board.count { it == -KING } <= 1)
         if (ended && winner != 0) require(inCheck(turn))
     }
 

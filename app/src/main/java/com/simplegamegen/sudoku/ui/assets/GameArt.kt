@@ -429,6 +429,22 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 val layout = measurer.measure("2", TextStyle(color = mineNumberColor(2, look.dark), fontSize = 13.sp, fontWeight = FontWeight.Bold))
                 drawText(layout, topLeft = Offset(s * 0.5f - layout.size.width / 2, s * 1.5f - layout.size.height / 2))
             }
+            GameId.TRID -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF1A237E), cornerRadius = CornerRadius(8f))
+                listOf(0.62f to 0xFF5C6BC0, 0.40f to 0xFF7986CB, 0.18f to 0xFFE8EAF6).forEach { (y, col) ->
+                    drawRoundRect(Color(col), Offset(size.width * 0.16f, size.height * y), Size(size.width * 0.68f, size.height * 0.18f), CornerRadius(3f))
+                }
+                drawCircle(Color(0xFFFFF8E1), size.width * 0.07f, Offset(size.width * 0.34f, size.height * 0.71f))
+                drawCircle(Color(0xFF212121), size.width * 0.07f, Offset(size.width * 0.66f, size.height * 0.27f))
+            }
+            GameId.RAUMSCHACH -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF004D40), cornerRadius = CornerRadius(8f))
+                listOf(0.72f, 0.58f, 0.44f, 0.30f, 0.16f).forEachIndexed { i, y ->
+                    val shade = if (i % 2 == 0) Color(0xFF80CBC4) else Color(0xFF00695C)
+                    drawRoundRect(shade, Offset(size.width * 0.22f, size.height * y), Size(size.width * 0.56f, size.height * 0.12f), CornerRadius(2f))
+                }
+                drawCircle(Color(0xFFFFF8E1), size.width * 0.06f, Offset(size.width * 0.38f, size.height * 0.78f))
+            }
             else -> Canvas(Modifier.fillMaxSize()) {
                 val side = minOf(size.width, size.height) * 0.86f
                 val o = Offset((size.width - side) / 2, (size.height - side) / 2)

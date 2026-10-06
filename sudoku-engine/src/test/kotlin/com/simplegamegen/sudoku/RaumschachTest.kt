@@ -33,14 +33,19 @@ class RaumschachTest {
         val center = Raumschach.idx(2, 2, 2)
         fun lone(kind: Int) = Raumschach(0, 1, MutableList(125) { 0 }.also {
             it[center] = kind
-            it[Raumschach.idx(0, 0, 0)] = -Raumschach.KING
-            it[Raumschach.idx(4, 4, 4)] = Raumschach.KING
+            // Off every queen ray from Cc3, so the empty-board counts stay intact.
+            it[Raumschach.idx(0, 4, 1)] = -Raumschach.KING
+            if (kind != Raumschach.KING) it[Raumschach.idx(4, 0, 1)] = Raumschach.KING
         })
         assertEquals(12, lone(Raumschach.ROOK).movesFrom(center).size)
         assertEquals(24, lone(Raumschach.BISHOP).movesFrom(center).size)
         assertEquals(16, lone(Raumschach.UNICORN).movesFrom(center).size)
         assertEquals(52, lone(Raumschach.QUEEN).movesFrom(center).size)
-        assertEquals(26, lone(Raumschach.KING).movesFrom(center).size)
+        // Every square of the cube is within two king steps of the center, so the enemy king
+        // watches two of the 26 neighbor squares. The other 24 are legal.
+        val king = lone(Raumschach.KING)
+        assertEquals(24, king.movesFrom(center).size)
+        assertTrue(king.movesFrom(center).any { it.to == Raumschach.idx(2, 3, 2) })
         assertEquals(24, lone(Raumschach.KNIGHT).movesFrom(center).size)
     }
 
@@ -71,8 +76,8 @@ class RaumschachTest {
         val board = MutableList(125) { 0 }
         board[u] = Raumschach.UNICORN
         board[Raumschach.idx(2, 2, 2)] = -Raumschach.PAWN
-        board[Raumschach.idx(4, 4, 3)] = Raumschach.KING
-        board[Raumschach.idx(4, 3, 4)] = -Raumschach.KING
+        board[Raumschach.idx(0, 4, 4)] = Raumschach.KING
+        board[Raumschach.idx(4, 0, 0)] = -Raumschach.KING
         val g = Raumschach(0, 1, board)
         val far = Raumschach.idx(4, 4, 4)
         assertTrue(g.movesFrom(u).none { it.to == far }, "the pawn on Cc3 blocks Ee5")

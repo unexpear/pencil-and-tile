@@ -40,6 +40,12 @@ import com.simplegamegen.sudoku.duels.MancalaCodec
 import com.simplegamegen.sudoku.tabletop.Chess
 import com.simplegamegen.sudoku.tabletop.ChessAi
 import com.simplegamegen.sudoku.tabletop.ChessCodec
+import com.simplegamegen.sudoku.tabletop.Raumschach
+import com.simplegamegen.sudoku.tabletop.RaumschachAi
+import com.simplegamegen.sudoku.tabletop.RaumschachCodec
+import com.simplegamegen.sudoku.tabletop.TriD
+import com.simplegamegen.sudoku.tabletop.TriDAi
+import com.simplegamegen.sudoku.tabletop.TriDCodec
 import com.simplegamegen.sudoku.tabletop.Shogi
 import com.simplegamegen.sudoku.tabletop.ShogiAi
 import com.simplegamegen.sudoku.tabletop.ShogiCodec
@@ -121,6 +127,8 @@ import com.simplegamegen.sudoku.ui.screens.ConnectFourScreen
 import com.simplegamegen.sudoku.ui.screens.HexScreen
 import com.simplegamegen.sudoku.ui.screens.RpsScreen
 import com.simplegamegen.sudoku.ui.screens.TicTacToeScreen
+import com.simplegamegen.sudoku.ui.screens.RaumschachScreen
+import com.simplegamegen.sudoku.ui.screens.TriDScreen
 import com.simplegamegen.sudoku.ui.screens.MastermindScreen
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
 import com.simplegamegen.sudoku.ui.screens.MagnetScreen
@@ -263,6 +271,18 @@ object TicTacToeComputer : ComputerPlayer<TicTacToe> {
     override fun needsMove(state: TicTacToe) = !state.passAndPlay && !state.over && state.turn == -1
     override fun move(state: TicTacToe) = state.place(TicTacToeAi.choose(state))!!
     override val pauseMs = 280L
+}
+
+object TriDComputer : ComputerPlayer<TriD> {
+    override fun needsMove(state: TriD) = !state.passAndPlay && !state.ended && state.turn == -1
+    override fun move(state: TriD) = state.play(TriDAi.choose(state))!!
+    override val pauseMs = 350L
+}
+
+object RaumschachComputer : ComputerPlayer<Raumschach> {
+    override fun needsMove(state: Raumschach) = !state.passAndPlay && !state.ended && state.turn == -1
+    override fun move(state: Raumschach) = state.play(RaumschachAi.choose(state))!!
+    override val pauseMs = 350L
 }
 
 object DotsComputer : ComputerPlayer<DotsGame> {
@@ -456,5 +476,11 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.TIC_TAC_TOE.route) {
         TicTacToeScreen(nav, playModel<TicTacToe>(GameId.TIC_TAC_TOE, store, codecOf(TicTacToeCodec::encode, TicTacToeCodec::decode), TicTacToeComputer), factory)
+    }
+    composable(GameId.TRID.route) {
+        TriDScreen(nav, playModel<TriD>(GameId.TRID, store, codecOf(TriDCodec::encode, TriDCodec::decode), TriDComputer), factory)
+    }
+    composable(GameId.RAUMSCHACH.route) {
+        RaumschachScreen(nav, playModel<Raumschach>(GameId.RAUMSCHACH, store, codecOf(RaumschachCodec::encode, RaumschachCodec::decode), RaumschachComputer), factory)
     }
 }

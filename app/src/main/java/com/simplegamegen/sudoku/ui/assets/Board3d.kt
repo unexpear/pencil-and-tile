@@ -533,6 +533,42 @@ internal fun DrawScope.drawSquareTop(frame: TableFrame, col: Int, row: Int, z: F
     drawPath(quad(q[0], q[1], q[2], q[3]), color)
 }
 
+/** A floating square with a thin edge. (x, y) is the center, so stacked boards can sit between the grid lines. */
+internal fun DrawScope.drawFloatSquare(frame: TableFrame, x: Float, y: Float, z: Float, color: Color, thick: Float = 0.16f) {
+    val x0 = x - 0.5f; val x1 = x + 0.5f
+    val y0 = y - 0.5f; val y1 = y + 0.5f
+    val z0 = (z - thick).coerceAtLeast(0.02f)
+    val side = lerp(color, Color.Black, 0.32f)
+    data class Face(val nx: Float, val ny: Float, val cx: Float, val cy: Float, val cz: Float, val path: Path)
+    val faces = listOf(
+        Face(0f, -1f, x, y0, (z + z0) / 2f, quad(frame.at(x0, y0, z), frame.at(x1, y0, z), frame.at(x1, y0, z0), frame.at(x0, y0, z0))),
+        Face(0f, 1f, x, y1, (z + z0) / 2f, quad(frame.at(x1, y1, z), frame.at(x0, y1, z), frame.at(x0, y1, z0), frame.at(x1, y1, z0))),
+        Face(1f, 0f, x1, y, (z + z0) / 2f, quad(frame.at(x1, y0, z), frame.at(x1, y1, z), frame.at(x1, y1, z0), frame.at(x1, y0, z0))),
+        Face(-1f, 0f, x0, y, (z + z0) / 2f, quad(frame.at(x0, y1, z), frame.at(x0, y0, z), frame.at(x0, y0, z0), frame.at(x0, y1, z0))),
+    )
+    faces.filter { frame.facing(it.nx, it.ny, 0f, it.cx, it.cy, it.cz) }
+        .sortedByDescending { frame.depth(it.cx, it.cy, it.cz) }
+        .forEach { drawPath(it.path, side) }
+    drawPath(quad(frame.at(x0, y0, z), frame.at(x1, y0, z), frame.at(x1, y1, z), frame.at(x0, y1, z)), color)
+}
+
+/** True when [pos] hits the top of a floating square, or the piece standing on it. */
+internal fun floatSquareHit(frame: TableFrame, pos: Offset, x: Float, y: Float, z: Float, pieceTop: Float, rx: Float): Boolean {
+    val x0 = x - 0.5f; val x1 = x + 0.5f
+    val y0 = y - 0.5f; val y1 = y + 0.5f
+    if (pointInQuad(pos, frame.at(x0, y0, z), frame.at(x1, y0, z), frame.at(x1, y1, z), frame.at(x0, y1, z))) return true
+    if (pieceTop <= z) return false
+    val base = frame.at(x, y, z)
+    val crown = frame.at(x, y, pieceTop)
+    return pointInQuad(
+        pos,
+        Offset(base.x - rx, base.y + rx * 0.3f),
+        Offset(base.x + rx, base.y + rx * 0.3f),
+        Offset(crown.x + rx, crown.y - rx * 0.2f),
+        Offset(crown.x - rx, crown.y - rx * 0.2f),
+    )
+}
+
 /** A thick milled checker. A king is two discs with a gold crown standing on the top one. */
 internal fun DrawScope.drawPuck(frame: TableFrame, x: Float, y: Float, baseZ: Float, color: Color, king: Boolean, lift: Float = 0f) {
     val foot = baseZ + lift
@@ -706,16 +742,25 @@ internal fun DrawScope.drawChessMan(
             drawMesh(frame, CrossUpright, x, y, top + 0.05f, color, finish, fx = rightX, fy = rightY)
             drawMesh(frame, CrossBar, x, y, top + 0.14f, color, finish, fx = rightX, fy = rightY)
         }
+        7 -> {
+            val dir = if (piece > 0) -1f else 1f
+            drawMesh(frame, KnightHead, x, y, foot + height * 0.28f, color, finish, fx = rightX * dir, fy = rightY * dir, scale = 1.08f)
+            drawMesh(
+                frame, UnicornHorn,
+                x + rightX * dir * 0.16f, y + rightY * dir * 0.16f, foot + height * 0.78f,
+                color, finish, fx = rightX * dir, fy = rightY * dir,
+            )
+        }
     }
 }
 
-internal fun chessRadius(kind: Int) = when (kind) { 1 -> 0.29f; 4 -> 0.33f; 2 -> 0.35f; else -> 0.37f }
+internal fun chessRadius(kind: Int) = when (kind) { 1 -> 0.29f; 4 -> 0.33f; 2, 7 -> 0.35f; else -> 0.37f }
 
 private val Bodies = HashMap<Int, Mesh>()
 
 /** The turned part of each man, built once. */
 private fun chessBody(kind: Int): Mesh = Bodies.getOrPut(kind) {
-    val h = chessRise(kind) * if (kind == 2) 0.32f else 1f
+    val h = chessRise(kind) * if (kind == 2 || kind == 7) 0.32f else 1f
     val r = chessRadius(kind)
     latheMesh(profile(kind).map { (a, b) -> a * h to b * r })
 }
@@ -734,6 +779,7 @@ private val CrownBall by lazy { sphereMesh(0.06f) }
 private val CrossFoot by lazy { sphereMesh(0.045f) }
 private val CrossUpright by lazy { boxMesh(0.06f, 0.06f, 0.2f) }
 private val CrossBar by lazy { boxMesh(0.17f, 0.06f, 0.06f) }
+private val UnicornHorn by lazy { boxMesh(0.05f, 0.05f, 0.34f) }
 
 /** Height from the base, radius as a share of the widest ring. A Staunton column. */
 private fun profile(kind: Int): List<Pair<Float, Float>> = when (kind) {
@@ -743,7 +789,7 @@ private fun profile(kind: Int): List<Pair<Float, Float>> = when (kind) {
     // A tower that widens to its battlements.
     4 -> listOf(0f to 1f, 0.07f to 1f, 0.1f to 0.88f, 0.16f to 0.82f, 0.22f to 0.68f, 0.66f to 0.6f, 0.72f to 0.82f, 0.78f to 0.86f, 1f to 0.86f)
     // The knight's plinth; the head is drawn on it.
-    2 -> listOf(0f to 1f, 0.12f to 1f, 0.2f to 0.86f, 0.42f to 0.78f, 0.6f to 0.62f, 0.8f to 0.46f, 1f to 0.42f)
+    2, 7 -> listOf(0f to 1f, 0.12f to 1f, 0.2f to 0.86f, 0.42f to 0.78f, 0.6f to 0.62f, 0.8f to 0.46f, 1f to 0.42f)
     // A stem, a collar and an egg-shaped mitre.
     3 -> listOf(0f to 1f, 0.06f to 1f, 0.09f to 0.86f, 0.14f to 0.8f, 0.18f to 0.6f, 0.48f to 0.34f, 0.52f to 0.58f, 0.56f to 0.6f,
         0.6f to 0.32f, 0.64f to 0.4f, 0.72f to 0.5f, 0.8f to 0.48f, 0.88f to 0.36f, 0.95f to 0.16f, 1f to 0.03f)
@@ -757,6 +803,7 @@ private fun profile(kind: Int): List<Pair<Float, Float>> = when (kind) {
 internal fun chessRise(piece: Int) = when (abs(piece)) {
     1 -> 0.66f
     2 -> 0.9f
+    7 -> 0.98f
     3 -> 0.94f
     4 -> 0.78f
     5 -> 1.1f

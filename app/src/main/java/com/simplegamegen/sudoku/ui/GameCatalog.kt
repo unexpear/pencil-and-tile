@@ -74,7 +74,9 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     SHOGI("Shogi", "play_SHOGI", "Promote and drop", GameGroup.BOARD),
     HEX("Hex", "play_HEX", "Connect opposite sides", GameGroup.CLASSICS),
     RPS("Rock Paper Scissors", "play_RPS", "Capture on hexes", GameGroup.CLASSICS),
-    TIC_TAC_TOE("Tic-Tac-Toe", "play_TIC_TAC_TOE", "Noughts and crosses", GameGroup.CLASSICS);
+    TIC_TAC_TOE("Tic-Tac-Toe", "play_TIC_TAC_TOE", "Noughts and crosses", GameGroup.CLASSICS),
+    TRID("Tri-D Chess", "play_TRID", "Movable attack boards", GameGroup.BOARD),
+    RAUMSCHACH("Raumschach", "play_RAUMSCHACH", "5×5×5 with a unicorn", GameGroup.BOARD);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {

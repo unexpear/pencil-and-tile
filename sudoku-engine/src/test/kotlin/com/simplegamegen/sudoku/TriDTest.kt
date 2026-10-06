@@ -64,24 +64,17 @@ class TriDTest {
     }
 
     @Test fun `an attack board moves one or two posts and can carry one pawn`() {
-        var g = TriD.start(1, 1)
-        val queen = TriD.Sq(1, 0, 3)
-        val away = g.movesFrom(queen).filterIsInstance<TriMove.Slide>().first { it.to.r > 0 && it.to.f in 1..4 }
-        g = g.play(away)!!
-        val rook = TriD.Sq(0, 0, 3)
-        val rookTo = g.movesFrom(rook).filterIsInstance<TriMove.Slide>().first()
-        g = g.play(g.legalMoves().first { it is TriMove.Slide && (it as TriMove.Slide).from.z == 7 })!!
-        g = g.play(rookTo)!!
-        while (g.turn != 1) g = g.play(g.legalMoves().first())!!
-        val shifts = g.shifts(0)
-        assertTrue(shifts.isNotEmpty())
-        val step = shifts.filterIsInstance<TriMove.Shift>().first { it.pin == 1 && !it.inverted }
-        val pawnBefore = g.squares.filter { g.pieceAt(it) == TriD.PAWN && it.z == 3 && it.f <= 1 }
-        assertEquals(1, pawnBefore.size)
+        val board = TriD.OPENING.toMutableList()
+        board[TriD.Sq(0, 0, 3).key] = 0
+        board[TriD.Sq(1, 0, 3).key] = 0
+        board[TriD.Sq(0, 1, 3).key] = 0
+        val g = TriD(0, 1, board, fresh = TriD.FRESH, castling = 0)
+        val step = g.shifts(0).filterIsInstance<TriMove.Shift>().first { it.pin == 1 && !it.inverted }
+        assertEquals(1, g.squares.count { g.pieceAt(it) == TriD.PAWN && it.z == 3 && it.f <= 1 })
         val next = g.play(step)!!
         assertEquals(1, next.pins[0])
-        assertEquals(1, next.landing(step).count { next.pieceAt(it) == TriD.PAWN })
-        assertTrue(next.shifts(0).isEmpty() || next.turn == -1)
+        assertEquals(TriD.PAWN, next.pieceAt(TriD.Sq(1, 3, 5)))
+        assertEquals(0, next.pieceAt(TriD.Sq(1, 1, 3)))
     }
 
     @Test fun `capturing the last man takes the attack board`() {
@@ -103,28 +96,25 @@ class TriDTest {
     @Test fun `king-side castling swaps the king and rook`() {
         val board = TriD.OPENING.toMutableList()
         val g = TriD(0, 1, board, fresh = TriD.FRESH, castling = TriD.ALL_CASTLE)
-        val castle = g.legalMoves().filterIsInstance<TriMove.Castle>().singleOrNull { it.kingSide }
-        if (castle != null) {
-            val after = g.play(castle)!!
-            assertEquals(TriD.KING, after.pieceAt(TriD.WR_HOME))
-            assertEquals(TriD.ROOK, after.pieceAt(TriD.WK_HOME))
-            assertTrue(after.legalMoves().none { it is TriMove.Castle && it.kingSide })
-        } else {
-            assertTrue(g.inCheck(1) || g.attackExposed())
-        }
+        val castle = g.legalMoves().filterIsInstance<TriMove.Castle>().single { it.kingSide }
+        val after = g.play(castle)!!
+        assertEquals(TriD.KING, after.pieceAt(TriD.WR_HOME))
+        assertEquals(TriD.ROOK, after.pieceAt(TriD.WK_HOME))
+        assertEquals(0, after.castling and TriD.WK)
     }
 
     @Test fun `checkmate ends the game and saves round-trip`() {
         val board = MutableList(480) { 0 }
-        board[TriD.Sq(1, 1, 2).key] = -TriD.KING
-        board[TriD.Sq(1, 3, 2).key] = TriD.ROOK
-        board[TriD.WK_HOME.key] = TriD.KING
+        board[TriD.Sq(0, 0, 3).key] = -TriD.KING
+        board[TriD.Sq(1, 2, 2).key] = TriD.ROOK
+        board[TriD.Sq(2, 1, 2).key] = TriD.KING
+        board[TriD.Sq(2, 2, 2).key] = TriD.KNIGHT
         val g = TriD(0, 1, board, turn = 1, fresh = emptyList(), castling = 0)
-        val mate = g.play(TriMove.Slide(TriD.Sq(1, 3, 2), TriD.Sq(1, 2, 2)))
-        if (mate != null && mate.ended && mate.winner == 1) {
-            assertTrue(mate.inCheck())
-            assertTrue(mate.legalMoves().isEmpty())
-        }
+        val mate = g.play(TriMove.Slide(TriD.Sq(1, 2, 2), TriD.Sq(1, 0, 3)))!!
+        assertTrue(mate.ended)
+        assertEquals(1, mate.winner)
+        assertTrue(mate.inCheck())
+        assertTrue(mate.legalMoves().isEmpty())
         val live = TriD.start(3, 0).play(TriD.start(3, 0).legalMoves().first())!!
         assertEquals(live, TriDCodec.decode(TriDCodec.encode(live)))
         assertNull(TriDCodec.decode("nope"))
@@ -168,6 +158,3 @@ class TriDTest {
         return TriD(0, 1, board, fresh = emptyList(), castling = 0)
     }
 }
-
-/** Used only if king-side castling is illegal in the opening, so the test still states why. */
-private fun TriD.attackExposed(): Boolean = true

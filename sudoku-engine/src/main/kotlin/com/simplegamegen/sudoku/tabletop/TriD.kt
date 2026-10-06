@@ -74,7 +74,7 @@ data class TriD(
         require(squares.size == squares.toSet().size) { "attack boards overlap" }
         val live = squares.map { it.key }.toSet()
         for (i in board.indices) if (board[i] != 0) require(i in live) { "man off the boards" }
-        require(board.count { it == KING } == 1 && board.count { it == -KING } == 1)
+        require(board.count { it == KING } <= 1 && board.count { it == -KING } <= 1)
         require(castling in 0..ALL_CASTLE)
         require((epLand == -1) == (epVictim == -1))
         require(fresh.all { it in board.indices })
