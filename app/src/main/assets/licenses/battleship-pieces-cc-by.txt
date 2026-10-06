@@ -1,0 +1,16 @@
+Original Battleship Pieces by MZimb
+https://www.thingiverse.com/thing:5190846
+
+The Battleship hulls and hit/miss pins in this app are adapted from that model.
+The hulls were scaled onto the classic fleet. Measured by length, the pack's
+Aircraft Carrier is the carrier (5), its Cruiser is the battleship (4), its
+Destroyer is the cruiser (3), its Sub is the submarine (3), and its Mine
+Sweeper is the destroyer (2). Pegs under the hulls were left off so the ships
+sit on the water.
+
+This thing was created by Thingiverse user MZimb, and is licensed under
+Creative Commons - Attribution.
+
+You must give appropriate credit, link to the source, and say when you change it.
+Credit: MZimb, "Original Battleship Pieces", https://www.thingiverse.com/thing:5190846,
+Creative Commons Attribution.

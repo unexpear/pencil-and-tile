@@ -54,7 +54,9 @@ in-range values; anything else is rejected without changes.
 
 ## Game art
 
-All pieces are drawn in code (`ui/assets/`) with no image files or third-party art:
+Pieces are drawn in code (`ui/assets/`). The Battleship hulls and pins are the one
+third-party set: MZimb's Original Battleship Pieces, Creative Commons Attribution,
+Thingiverse thing 5190846, scaled onto the classic fleet. Everything else is original:
 
 - **Cards:** traditional red/black suits, standard pip layouts for 2–10, rank
   and suit indices in both corners, and double-headed J/Q/K court portraits. The
@@ -67,3 +69,5 @@ All pieces are drawn in code (`ui/assets/`) with no image files or third-party a
   black and white discs on a green board.
 - **Minesweeper:** raised covered squares, classic number colors (lightened in
   dark mode), drawn flags and mines.
+- **Battleship:** a navy grid with the adapted carrier, battleship, cruiser,
+  submarine and destroyer, plus white miss pins and red hit pins.
