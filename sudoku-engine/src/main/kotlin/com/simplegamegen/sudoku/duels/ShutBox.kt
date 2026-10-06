@@ -135,9 +135,30 @@ object ShutAi {
     }
 
     fun choose(g: ShutBox, choices: List<List<Int>>): List<Int> {
-        if (g.setting == 0) return choices.random(Random(g.seed xor g.drawn.toLong()))
-        if (g.setting == 1) return choices.maxBy { it.max() * 10 + it.size }
-        if (g.setting == 2) return choices.maxBy { flexibility(without(g.cpuUp, it)) }
+        val random = Random(g.seed xor g.drawn.toLong())
+        if (g.setting == 0) {
+            val ranked = choices.sortedByDescending { it.max() * 10 + it.size }
+            if (random.nextInt(100) < 22) return ranked.random(random)
+            val n = minOf(3, ranked.size)
+            val weights = intArrayOf(5, 2, 1)
+            var total = (0 until n).sumOf { weights[it] }
+            var roll = random.nextInt(total)
+            for (i in 0 until n) {
+                roll -= weights[i]
+                if (roll < 0) return ranked[i]
+            }
+            return ranked.first()
+        }
+        if (g.setting == 1) return choices.maxBy { flexibility(without(g.cpuUp, it)) * 3 + it.max() }
+        if (g.setting == 2) {
+            return choices.minBy { tiles ->
+                val up = without(g.cpuUp, tiles)
+                val limit = if (ShutBox.diceNeeded(up) == 1) 6 else 12
+                val open = flexibility(up)
+                val busts = limit - open
+                busts * ShutBox.sumOf(up) - open * 4
+            }
+        }
         val memo = HashMap<Int, Double>()
         return choices.minBy { expected(mask(without(g.cpuUp, it)), memo) }
     }

@@ -111,25 +111,31 @@ data class Mancala(
 }
 
 object MancalaAi {
-    /** A pit for the player about to move. Stronger settings look further ahead. */
+    /**
+     * A pit for the player about to move.
+     * Easy prefers an extra turn or a capture, with some noise.
+     * Medium and above always look ahead. Hard and Expert search deeper, then stop on a short time cap.
+     */
     fun choose(g: Mancala): Int {
         checkpoint()
         val legal = g.legalPits()
         require(legal.isNotEmpty())
+        if (legal.size == 1) return legal.first()
         val random = Random(g.seed xor (g.pits.fold(0) { n, stones -> n * 31 + stones }.toLong() shl 1) xor g.turn.toLong())
-        if (g.setting == 0) return legal.random(random)
         val ordered = legal.sortedByDescending { onePly(g, it) }
-        if (g.setting == 1) {
-            val best = onePly(g, ordered.first())
-            return ordered.filter { onePly(g, it) == best }.random(random)
+        if (g.setting == 0) {
+            if (random.nextInt(100) < 18) return legal.random(random)
+            return noisy(ordered, random)
         }
-        val depth = if (g.setting == 2) 4 else 6
+        val depth = when (g.setting) { 1 -> 4; 2 -> 7; else -> 9 }
+        val deadline = System.nanoTime() + when (g.setting) { 1 -> 40L; 2 -> 90L; else -> 150L } * 1_000_000L
         var alpha = Int.MIN_VALUE / 4
         var pick = ordered.first()
         var pickScore = Int.MIN_VALUE / 4
         for (pit in ordered) {
+            if (System.nanoTime() > deadline && pickScore > Int.MIN_VALUE / 4) break
             val next = g.sow(pit)!!
-            val score = scoreFor(next, g.turn, depth - 1, alpha, Int.MAX_VALUE / 4)
+            val score = scoreFor(next, g.turn, depth - 1, alpha, Int.MAX_VALUE / 4, deadline)
             if (score > pickScore) {
                 pickScore = score
                 pick = pit
@@ -139,23 +145,46 @@ object MancalaAi {
         return pick
     }
 
-    private fun onePly(g: Mancala, pit: Int) = standing(g.sow(pit)!!, g.turn)
-
-    /** Higher is better for [player]. */
-    private fun standing(g: Mancala, player: Int): Int {
-        val mine = if (player == 1) g.pits[Mancala.YOU] else g.pits[Mancala.CPU]
-        val opp = if (player == 1) g.pits[Mancala.CPU] else g.pits[Mancala.YOU]
-        val finish = when (g.winner) {
-            player -> 400
-            -player -> -400
-            else -> 0
+    private fun noisy(pits: List<Int>, random: Random): Int {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, pits.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total)
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return pits[i]
         }
-        return finish + mine - opp
+        return pits.first()
     }
 
-    private fun scoreFor(g: Mancala, player: Int, depth: Int, alpha0: Int, beta0: Int): Int {
+    private fun onePly(g: Mancala, pit: Int): Int {
+        val next = g.sow(pit)!!
+        var score = standing(next, g.turn)
+        if (!next.ended && next.turn == g.turn) score += 35
+        return score
+    }
+
+    /** Higher is better for [player]. Stores matter most; stones still on your side are a smaller reserve. */
+    private fun standing(g: Mancala, player: Int): Int {
+        val mineStore = if (player == 1) Mancala.YOU else Mancala.CPU
+        val oppStore = if (player == 1) Mancala.CPU else Mancala.YOU
+        val mine = g.pits[mineStore]
+        val opp = g.pits[oppStore]
+        val finish = when (g.winner) {
+            player -> 500
+            -player -> -500
+            else -> 0
+        }
+        val own = if (player == 1) 0 until Mancala.PITS else Mancala.CPU_PITS
+        val reserve = own.sumOf { g.pits[it] }
+        val enemy = (if (player == 1) Mancala.CPU_PITS else 0 until Mancala.PITS).sumOf { g.pits[it] }
+        return finish + (mine - opp) * 4 + reserve - enemy
+    }
+
+    private fun scoreFor(g: Mancala, player: Int, depth: Int, alpha0: Int, beta0: Int, deadline: Long): Int {
         checkpoint()
-        if (g.ended || depth == 0) return standing(g, player)
+        if (g.ended || depth == 0 || System.nanoTime() > deadline) return standing(g, player)
         val moves = g.legalPits()
         if (moves.isEmpty()) return standing(g, player)
         val mine = g.turn == player
@@ -164,7 +193,7 @@ object MancalaAi {
         var best = if (mine) Int.MIN_VALUE / 4 else Int.MAX_VALUE / 4
         for (pit in moves.sortedByDescending { onePly(g, it) }) {
             val next = g.sow(pit)!!
-            val score = scoreFor(next, player, depth - 1, alpha, beta)
+            val score = scoreFor(next, player, depth - 1, alpha, beta, deadline)
             if (mine) {
                 if (score > best) best = score
                 if (best > alpha) alpha = best

@@ -117,8 +117,18 @@ object ShipAi {
         if (ship != null) held[ship] = true
         if (captain != null) held[captain] = true
         if (crew != null) held[crew] = true
-        if (crew != null && g.setting > 0) {
-            val floor = if (g.setting >= 3 && g.rolls == 1) 5 else 4
+        if (crew != null && g.setting == 0 && (g.seed xor g.drawn.toLong()).toInt() % 4 == 0) {
+            held[crew] = false
+            return held.toList()
+        }
+        if (crew != null) {
+            // Once the ship is crewed, keep cargo that is unlikely to improve with the rolls left.
+            val floor = when (g.setting) {
+                0 -> 6
+                1 -> 5
+                2 -> if (g.rolls >= 2) 4 else 5
+                else -> if (g.rolls >= 2) 3 else 4
+            }
             g.dice.indices.filter { !held[it] }.forEach { if (g.dice[it] >= floor) held[it] = true }
         }
         return held.toList()

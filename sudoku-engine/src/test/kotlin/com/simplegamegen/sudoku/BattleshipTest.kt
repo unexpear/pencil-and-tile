@@ -210,6 +210,10 @@ class BattleshipTest {
         val hard = BattleshipAi.choose(line)
         assertTrue(hard in setOf(0, 3), "hard fired at $hard")
 
+        val mediumLine = aiTurn(1, listOf(miss(99), miss(98), miss(97)), listOf(Shot(1, Mark.HIT, null), Shot(2, Mark.HIT, null)))
+        val extended = BattleshipAi.choose(mediumLine)
+        assertTrue(extended in setOf(0, 3), "medium fired at $extended")
+
         val parity = (0 until 20).map { seed ->
             val game = aiTurn(2, listOf(miss(99)), emptyList(), seed = seed.toLong())
             BattleshipAi.choose(game)

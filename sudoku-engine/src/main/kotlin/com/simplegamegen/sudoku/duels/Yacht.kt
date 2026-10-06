@@ -258,10 +258,7 @@ object YachtAi {
             if (best >= 25 || (four && best >= 18)) return null
             return release(heuristic(dice, sheet, 0))
         }
-        if (g.setting == 1) {
-            if (finished(dice, sheet)) return null
-            return release(heuristic(dice, sheet, 1))
-        }
+        if (g.setting == 1 && finished(dice, sheet)) return null
         val stand = Yacht.legalBoxes(sheet, dice).maxOf { Yacht.worth(dice, sheet, it) }
         var bestEv = stand.toDouble()
         var bestHold: List<Boolean>? = null
@@ -297,8 +294,12 @@ object YachtAi {
         val count = counts(dice)
         val mode = (1..6).maxBy { count[it] * 10 + it }
         if (count[mode] >= 3) return dice.map { it == mode }
-        if (setting >= 1) straightHold(dice)?.let { return it }
+        straightHold(dice)?.let { return it }
         if (count[mode] >= 2) return dice.map { it == mode }
+        if (setting == 0) {
+            val high = dice.max()
+            return dice.map { it == high }
+        }
         return List(Yacht.DICE) { false }
     }
 

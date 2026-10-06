@@ -333,41 +333,87 @@ private val Int.sign: Int get() = when {
 
 object ChessAi {
     private val VALUE = intArrayOf(0, 100, 320, 330, 500, 900, 20_000)
-    private val CENTER = setOf(27, 28, 35, 36)
-    private val BUDGET = intArrayOf(0, 800, 4_000, 12_000)
 
-    /** A legal move for the side about to move. */
+    /**
+     * A legal move for the side about to move.
+     * Easy develops toward the centre and usually takes a mate or a free piece.
+     * Medium always takes a mate and will not hand a piece to a cheaper attacker.
+     * Hard and Expert search with a piece-square evaluation and stop after a short time cap.
+     */
     fun choose(g: Chess): ChessMove {
         checkpoint()
         val legal = g.legalMoves()
         require(legal.isNotEmpty())
+        if (legal.size == 1) return legal.first()
         val random = Random(g.seed xor g.board.fold(0L) { n, p -> n * 31 + p } xor (g.turn.toLong() shl 17) xor g.castling.toLong())
-        if (g.setting == 0) return legal.random(random)
-        val ordered = legal.sortedByDescending { onePly(g, it) }
+        val ordered = legal.sortedByDescending { quiet(g, it) }
+        val mates = ordered.take(12).filter { move -> g.play(move)!!.let { it.ended && it.winner == g.turn } }
+        if (mates.isNotEmpty() && (g.setting > 0 || random.nextInt(100) < 85)) return mates.first()
+        if (g.setting == 0) return noisy(ordered, random)
         if (g.setting == 1) {
-            val best = onePly(g, ordered.first())
-            return ordered.filter { onePly(g, it) == best }.random(random)
+            val ranked = legal.sortedByDescending { guarded(g, it) }
+            val best = guarded(g, ranked.first())
+            return ranked.filter { guarded(g, it) == best }.let { ties -> if (ties.size == 1) ties.first() else ties.random(random) }
         }
         val depth = if (g.setting == 2) 2 else 3
-        val nodes = intArrayOf(0)
-        val budget = BUDGET[g.setting]
-        var alpha = Int.MIN_VALUE / 4
+        val deadline = System.nanoTime() + (if (g.setting == 2) 80L else 150L) * 1_000_000L
         var pick = ordered.first()
-        var pickScore = Int.MIN_VALUE / 4
-        for (move in ordered) {
-            val next = g.play(move)!!
-            val score = scoreFor(next, g.turn, depth - 1, alpha, Int.MAX_VALUE / 4, nodes, budget)
-            if (score > pickScore) {
-                pickScore = score
-                pick = move
+        for (ply in 1..depth) {
+            if (System.nanoTime() > deadline) break
+            var local = pick
+            var best = Int.MIN_VALUE / 4
+            var a = Int.MIN_VALUE / 4
+            var stopped = false
+            val seq = listOf(pick) + ordered.filter { it != pick }
+            for (move in seq) {
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                val next = g.play(move)!!
+                val score = if (next.ended) standing(next, g.turn) else -scoreFor(next, -g.turn, ply - 1, -20_000, -a, deadline)
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                if (score > best) { best = score; local = move }
+                if (best > a) a = best
             }
-            if (score > alpha) alpha = score
-            if (nodes[0] >= budget) break
+            if (stopped) break
+            pick = local
         }
         return pick
     }
 
-    private fun onePly(g: Chess, move: ChessMove) = standing(g.play(move)!!, g.turn)
+    private fun noisy(moves: List<ChessMove>, random: Random): ChessMove {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, moves.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return moves[i]
+        }
+        return moves.first()
+    }
+
+    /** Capture value, centre, and a step toward the enemy, without looking at the reply. */
+    private fun quiet(g: Chess, move: ChessMove): Int {
+        val attacker = abs(g.board[move.from])
+        val victim = abs(g.board[move.to])
+        var score = if (victim != 0) VALUE[victim] * 8 - VALUE[attacker] else 0
+        score += place(g.board[move.from], move.to) - place(g.board[move.from], move.from) / 2
+        if (attacker == Chess.PAWN && move.to / 8 == if (g.turn == 1) 0 else 7) score += VALUE[Chess.QUEEN]
+        return score
+    }
+
+    /** Material after the move, minus the most valuable piece the opponent can take at once. */
+    private fun guarded(g: Chess, move: ChessMove): Int {
+        val next = g.play(move)!!
+        val base = standing(next, g.turn)
+        if (next.ended) return base
+        var worst = 0
+        for (reply in next.legalMoves()) {
+            val victim = next.board[reply.to]
+            if (victim.sign == g.turn) worst = maxOf(worst, VALUE[abs(victim)])
+        }
+        return base - worst
+    }
 
     /** Higher is better for [player]. */
     private fun standing(g: Chess, player: Int): Int {
@@ -380,35 +426,44 @@ object ChessAi {
         for (i in g.board.indices) {
             val p = g.board[i]
             if (p == 0) continue
-            val v = VALUE[abs(p)] + if (i in CENTER) 8 else 0
+            val v = VALUE[abs(p)] + place(p, i)
             score += if (p.sign == player) v else -v
         }
         return score
     }
 
-    private fun scoreFor(
-        g: Chess, player: Int, depth: Int, alpha0: Int, beta0: Int, nodes: IntArray, budget: Int,
-    ): Int {
+    private fun place(piece: Int, index: Int): Int {
+        val row = index / 8
+        val col = index % 8
+        val type = abs(piece)
+        val forward = if (piece > 0) 7 - row else row
+        val file = 3 - abs(col * 2 - 7) / 2
+        return when (type) {
+            Chess.PAWN -> forward * 4 + file
+            Chess.KNIGHT -> file * 3 + if (row in 2..5 && col in 2..5) 6 else 0
+            Chess.BISHOP -> file * 2 + forward
+            Chess.ROOK -> if (forward >= 4) 4 else 0
+            Chess.QUEEN -> file
+            Chess.KING -> if (forward <= 1) 8 else -forward
+            else -> 0
+        }
+    }
+
+    private fun scoreFor(g: Chess, player: Int, depth: Int, alpha0: Int, beta0: Int, deadline: Long): Int {
         checkpoint()
-        if (++nodes[0] >= budget || g.ended || depth == 0) return standing(g, player)
+        if (System.nanoTime() > deadline || g.ended || depth <= 0) return standing(g, player)
         val moves = g.legalMoves()
         if (moves.isEmpty()) return standing(g, player)
-        val mine = g.turn == player
+        val ordered = moves.sortedByDescending { quiet(g, it) }.take(8)
         var alpha = alpha0
-        var beta = beta0
-        var best = if (mine) Int.MIN_VALUE / 4 else Int.MAX_VALUE / 4
-        for (move in moves.sortedByDescending { onePly(g, it) }) {
+        var best = Int.MIN_VALUE / 4
+        for (move in ordered) {
+            if (System.nanoTime() > deadline) return best
             val next = g.play(move)!!
-            val score = scoreFor(next, player, depth - 1, alpha, beta, nodes, budget)
-            if (mine) {
-                if (score > best) best = score
-                if (best > alpha) alpha = best
-                if (alpha >= beta || nodes[0] >= budget) break
-            } else {
-                if (score < best) best = score
-                if (best < beta) beta = best
-                if (alpha >= beta || nodes[0] >= budget) break
-            }
+            val score = if (next.ended) standing(next, player) else -scoreFor(next, -player, depth - 1, -beta0, -alpha, deadline)
+            if (score > best) best = score
+            if (best > alpha) alpha = best
+            if (alpha >= beta0) break
         }
         return best
     }
