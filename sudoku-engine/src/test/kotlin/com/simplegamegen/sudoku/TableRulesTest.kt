@@ -184,9 +184,9 @@ class TableRulesTest {
         assertNull(TableSaveCodec.decode("bad"))
     }
     @Test fun `capacity totals distinguish rules settings and distinct hangman answers`() {
-        assertEquals(63, CollectionGuide.entries.size)
-        assertEquals(73, CollectionGuide.entries.sumOf { it.variants })
-        assertEquals(464, CollectionGuide.entries.sumOf { it.setups })
+        assertEquals(65, CollectionGuide.entries.size)
+        assertEquals(75, CollectionGuide.entries.sumOf { it.variants })
+        assertEquals(474, CollectionGuide.entries.sumOf { it.setups })
         assertTrue(CollectionGuide.hangmanWords > 100)
         println("Distinct Hangman answers: ${CollectionGuide.hangmanWords}")
     }

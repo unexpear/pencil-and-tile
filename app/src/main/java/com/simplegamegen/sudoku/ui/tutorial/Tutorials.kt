@@ -69,5 +69,7 @@ object Tutorials {
         GameId.HEX -> BoardTutorials.hex
         GameId.RPS -> BoardTutorials.rps
         GameId.TIC_TAC_TOE -> BoardTutorials.ticTacToe
+        GameId.TRID -> BoardTutorials.trid
+        GameId.RAUMSCHACH -> BoardTutorials.raumschach
     }
 }

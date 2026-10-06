@@ -16,9 +16,9 @@ class ClassicsCatalogTest {
         assertEquals("play_TIC_TAC_TOE", GameId.TIC_TAC_TOE.route)
         assertEquals("PLAY_TIC_TAC_TOE", "PLAY_${GameId.TIC_TAC_TOE.name}")
         assertEquals(GameId.entries.size, GAME_COUNT)
-        assertEquals(63, CollectionGuide.entries.size)
-        assertEquals(73, CollectionGuide.entries.sumOf { it.variants })
-        assertEquals(464, CollectionGuide.entries.sumOf { it.setups })
+        assertEquals(65, CollectionGuide.entries.size)
+        assertEquals(75, CollectionGuide.entries.sumOf { it.variants })
+        assertEquals(474, CollectionGuide.entries.sumOf { it.setups })
         assertEquals(1, CollectionGuide.entries.count { it.title == "Battleship" })
         val entry = CollectionGuide.entries.single { it.title == "Battleship" }
         assertEquals(1, entry.variants)

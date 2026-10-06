@@ -839,6 +839,87 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val trid: Tutorial get() {
+        fun scene(pieces: Map<String, String>, selected: String? = null, targets: Set<String> = emptySet()): Scene {
+            val items = gridItems(4, 4) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = if ((r + c) % 2 == 0) Fill.LIGHT else Fill.DARK,
+                    text = pieces[id].orEmpty(),
+                    mark = if (id in targets) Mark.CIRCLE else Mark.NONE,
+                )
+            }.map { if (it.id == selected) it.copy(tone = Tone.SELECTED) else it }
+            return Scene(4f, 4f, items, Backdrop.BOARD, maxUnit = 64)
+        }
+        val start = mapOf("r2c1" to "♙", "r3c0" to "♔", "r0c2" to "♚")
+        val stepped = mapOf("r1c1" to "♙", "r3c0" to "♔", "r0c2" to "♚")
+        val check = mapOf("r0c3" to "♚", "r2c3" to "♕", "r3c1" to "♔")
+        return Tutorial(
+            GameId.TRID,
+            "Three main boards and four attack boards that can move.",
+            rules = listOf(
+                "Pieces use ordinary chess steps in file and rank, and may finish on any level. A move cannot stay on the same square and go straight up.",
+                "The path uses the highest square between the two boards. A second, higher path is allowed when an attack board sits just above a main board.",
+                "You may move an attack board you own, one or two ranks along its file, and you may flip it, when it is empty or carries only one of your pawns.",
+                "Pawns promote to a queen, rook, bishop, or knight on rank 8 or 9 for White and rank 0 or 1 for Black. Checkmate wins. Stalemate, a repeated position, or 50 quiet moves is a draw.",
+            ),
+            tips = listOf(
+                "Leave only one pawn on an attack board when you want to move that board.",
+                "Pinch to zoom and drag to see the boards underneath.",
+            ),
+            steps = listOf(
+                Step("White plays from the low boards. Tap your pawn.", scene(start), tap = setOf("r2c1"),
+                    after = scene(start, selected = "r2c1", targets = setOf("r1c1")), help = "The white pawn."),
+                Step("It steps one rank forward, on this board or another. Tap the square.", scene(start, selected = "r2c1", targets = setOf("r1c1")),
+                    tap = setOf("r1c1"), after = scene(stepped), then = "The pawn moved forward."),
+                Step("Attack boards start with the king, queen and rooks. They can move once a single pawn is all that remains on them.", scene(stepped)),
+                Step("The white queen looks along the file at the black king. That is check.", scene(check)),
+            ),
+        )
+    }
+
+    val raumschach: Tutorial get() {
+        fun scene(pieces: Map<String, String>, selected: String? = null, targets: Set<String> = emptySet()): Scene {
+            val items = gridItems(4, 4) { r, c ->
+                val id = cellId(r, c)
+                Cell(
+                    fill = if ((r + c) % 2 == 0) Fill.LIGHT else Fill.DARK,
+                    text = pieces[id].orEmpty(),
+                    mark = if (id in targets) Mark.CIRCLE else Mark.NONE,
+                )
+            }.map { if (it.id == selected) it.copy(tone = Tone.SELECTED) else it }
+            return Scene(4f, 4f, items, Backdrop.BOARD, maxUnit = 64)
+        }
+        val start = mapOf("r3c0" to "U", "r1c2" to "♟", "r3c3" to "♔")
+        val taken = mapOf("r1c2" to "U", "r3c3" to "♔")
+        val pawn = mapOf("r2c1" to "♙", "r0c1" to "♚")
+        val stepped = mapOf("r1c1" to "♙", "r0c1" to "♚")
+        return Tutorial(
+            GameId.RAUMSCHACH,
+            "A 5×5×5 cube. The unicorn moves through the corners.",
+            rules = listOf(
+                "Levels A to E stack into a cube. A rook slides on one axis, a bishop on two, and a unicorn on all three. The queen uses every one of those moves.",
+                "A pawn steps one empty square forward through a face, and captures one square diagonally forward through an edge. It does not capture through a corner.",
+                "There is no double step and no castling. A pawn promotes to a queen, rook, bishop, unicorn, or knight on White's E5 or Black's A1.",
+                "Checkmate wins. Stalemate, the same position three times, or 50 moves each with no capture and no pawn move, is a draw.",
+            ),
+            tips = listOf(
+                "U is the unicorn. It is blocked by a man standing in a corner of its path.",
+                "Use the Side camera when a piece is hidden under the board above.",
+            ),
+            steps = listOf(
+                Step("The unicorn on the corner can reach the black pawn. Tap the unicorn.", scene(start), tap = setOf("r3c0"),
+                    after = scene(start, selected = "r3c0", targets = setOf("r1c2")), help = "The white unicorn, marked U."),
+                Step("Take the pawn through the corner.", scene(start, selected = "r3c0", targets = setOf("r1c2")),
+                    tap = setOf("r1c2"), after = scene(taken), then = "Captured. A rook could not have made that step."),
+                Step("A pawn steps one square forward through a face. Tap your pawn.", scene(pawn), tap = setOf("r2c1"),
+                    after = scene(pawn, selected = "r2c1", targets = setOf("r1c1")), help = "The white pawn."),
+                Step("Tap the square in front of it.", scene(pawn, selected = "r2c1", targets = setOf("r1c1")),
+                    tap = setOf("r1c1"), after = scene(stepped), then = "Forward through a face. A corner step would not be a pawn move."),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {
