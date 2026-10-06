@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.first
 interface WordGameStore {
     suspend fun load(game: WordGame): WordProgress?
     suspend fun save(progress: WordProgress)
+    /** Removes every crossword and word-search save. */
+    suspend fun clear() {}
 }
 
 class DataStoreWordGames(private val dataStore: DataStore<Preferences>) : WordGameStore {
@@ -24,5 +26,9 @@ class DataStoreWordGames(private val dataStore: DataStore<Preferences>) : WordGa
 
     override suspend fun save(progress: WordProgress) {
         dataStore.edit { it[stringPreferencesKey(progress.puzzle.game.name)] = WordSaveCodec.encode(progress) }
+    }
+
+    override suspend fun clear() {
+        dataStore.edit { it.clear() }
     }
 }

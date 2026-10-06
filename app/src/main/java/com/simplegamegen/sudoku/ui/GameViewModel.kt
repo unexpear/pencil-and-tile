@@ -101,9 +101,28 @@ class GameViewModel(
     private var gameVersion = 0L
     private var boardRevision = 0L
     private var playing = false
+    private var saveEpoch = 0
 
     init {
+        OpenBoards.watch(viewModelScope) { forget() }
         refreshHasSave()
+    }
+
+    /** Drops the board without writing it. In-flight saves that have not started are skipped. */
+    suspend fun forget() {
+        saveEpoch++
+        val epoch = saveEpoch
+        gameVersion++
+        playing = false
+        drainChildren(viewModelScope)
+        if (epoch != saveEpoch) return
+        val keep = _state.value
+        puzzle = null
+        board = Board.empty(keep.size)
+        noteSets = MutableList(keep.size * keep.size) { mutableSetOf() }
+        undoStack.clear()
+        winRecorded = false
+        _state.value = GameUiState(size = keep.size, difficulty = keep.difficulty, variant = keep.variant)
     }
 
     // ---- game lifecycle ----
@@ -458,9 +477,11 @@ class GameViewModel(
 
     /** Queue saves, clears and statistics in request order, including across games. */
     private fun persist(action: suspend () -> Unit) {
+        val epoch = saveEpoch
         val previous = persistenceJob
         persistenceJob = viewModelScope.launch {
             previous?.join()
+            if (epoch != saveEpoch) return@launch
             try {
                 action()
             } catch (e: CancellationException) {

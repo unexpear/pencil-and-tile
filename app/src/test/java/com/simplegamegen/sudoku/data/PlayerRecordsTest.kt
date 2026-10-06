@@ -78,6 +78,21 @@ class PlayerRecordsTest {
         assertEquals(1 to 2, r.streaks("SUDOKU"), "newest first: the Hard win, then a loss, then two wins")
     }
 
+    @Test fun `clearing started and finished games keeps the account`() {
+        var r = PlayerRecords(wallet = 4, timedChoice = mapOf("DOTS" to false), tutorialsRewarded = setOf("SUDOKU"))
+            .copy(settings = PlayerSettings(name = "Ana", language = Language.DE, earnHints = true))
+        r = r.start("DOTS", "1", "Easy", 0, 1).finish("DOTS", "1", Outcome(Result.WON), 2)
+        r = r.start("MINES", "2", "Hard", 2, 3)
+        val cleared = r.clearStartedAndFinished()
+        assertTrue(cleared.sessions.isEmpty())
+        assertTrue(cleared.history.isEmpty())
+        assertEquals(r.settings, cleared.settings)
+        assertEquals(r.wallet, cleared.wallet)
+        assertEquals(r.timedChoice, cleared.timedChoice)
+        assertEquals(r.tutorialsRewarded, cleared.tutorialsRewarded)
+        assertEquals(cleared, PlayerCodec.decode(PlayerCodec.encode(cleared)))
+    }
+
     @Test fun `codec round-trips and survives damage`() {
         var r = PlayerRecords(wallet = 7, timedChoice = mapOf("DOTS" to false), tutorialsRewarded = setOf("SUDOKU", "MINES"))
             .copy(settings = PlayerSettings(name = "Ana\tB", language = Language.JA, timedByDefault = false, showTimer = false, earnHints = true, keepScreenOn = true, offerTutorials = false))

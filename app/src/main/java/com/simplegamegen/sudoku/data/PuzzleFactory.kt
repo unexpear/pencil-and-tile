@@ -37,6 +37,12 @@ interface PuzzleLedger {
 interface ArcadeStore {
     suspend fun load(key: String): String?
     suspend fun save(key: String, encoded: String)
+
+    /**
+     * Removes saved games and finished-game progress (trail, daily, discovered words, earned heroes).
+     * Leaves the player's own grids, Blotwords themes and the Wordsworn blood display choice.
+     */
+    suspend fun clearPlaySaves() {}
 }
 
 class CollectionStore(private val data: DataStore<Preferences>) : PuzzleLedger, ArcadeStore {
@@ -66,6 +72,28 @@ class CollectionStore(private val data: DataStore<Preferences>) : PuzzleLedger, 
     }
     override suspend fun load(key: String): String? = data.data.first()[stringPreferencesKey("save:$key")]
     override suspend fun save(key: String, encoded: String) { data.edit { it[stringPreferencesKey("save:$key")] = encoded } }
+
+    override suspend fun clearPlaySaves() {
+        data.edit { prefs ->
+            val drop = prefs.asMap().keys.filter { key ->
+                val name = key.name
+                name.startsWith(SAVE_PREFIX) && name.removePrefix(SAVE_PREFIX) !in KEPT_SAVES
+            }
+            drop.forEach { prefs.remove(it) }
+        }
+    }
+
+    companion object {
+        private const val SAVE_PREFIX = "save:"
+
+        /**
+         * Collection keys that are not a started or finished game.
+         * Cleared keys include `PLAY_*`, `TABLE_*`, `LOGIC_*`, `HANGMAN`, `MAHJONG`,
+         * `PLAY_SUDOKU_GRID`, `blotwords:trail`, `blotwords:known`, `blotwords:daily`
+         * and `wordsworn:core-unlock:*`. `recent:*` and `generation_sequence` stay.
+         */
+        val KEPT_SAVES = setOf("GRID_DRAFTS", "blotwords:themes", "blotwords:theme", "wordsworn:blood")
+    }
 }
 
 /** An open-ended sequence, with proof checks and a bounded persistent repeat window. */

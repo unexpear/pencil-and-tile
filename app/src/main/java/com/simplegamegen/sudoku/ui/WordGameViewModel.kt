@@ -38,16 +38,28 @@ class WordGameViewModel(
     private val mutable = MutableStateFlow(WordGameState())
     val state: StateFlow<WordGameState> = mutable
     private var saveJob: Job? = null
+    private var saveEpoch = 0
 
     init {
+        OpenBoards.watch(viewModelScope) { forget() }
         viewModelScope.launch {
+            val epoch = saveEpoch
             try {
-                mutable.value = WordGameState(progress = store.load(game), busy = false)
+                val progress = store.load(game)
+                if (epoch != saveEpoch) return@launch
+                mutable.value = WordGameState(progress = progress, busy = false)
             } catch (e: CancellationException) { throw e
             } catch (_: Exception) {
                 mutable.value = WordGameState(busy = false, message = "Couldn't restore this game. You can start a new puzzle.")
             }
         }
+    }
+
+    /** Drops the puzzle without writing it. */
+    suspend fun forget() {
+        saveEpoch++
+        drainChildren(viewModelScope)
+        mutable.value = WordGameState(busy = false)
     }
 
     fun newGame(theme: Int = 0, difficulty: WordDifficulty = WordDifficulty.EASY) {
@@ -136,10 +148,12 @@ class WordGameViewModel(
     fun retrySave() = save(confirm = true)
 
     private fun save(confirm: Boolean = false) {
+        val epoch = saveEpoch
         val progress = mutable.value.progress ?: return
         val previous = saveJob
         saveJob = viewModelScope.launch {
             previous?.join()
+            if (epoch != saveEpoch) return@launch
             try {
                 store.save(progress)
                 if (mutable.value.progress == progress && (confirm || mutable.value.message == "Couldn't save progress. Tap Save to retry.")) {

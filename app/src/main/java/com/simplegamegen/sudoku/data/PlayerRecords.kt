@@ -128,6 +128,12 @@ data class PlayerRecords(
 
     fun resetHistory(): PlayerRecords = copy(history = emptyList())
 
+    /**
+     * Drops every started session and every finished game. High scores are read from that history,
+     * so they go too. Settings, the hint wallet, per-game timed choices and tutorial rewards stay.
+     */
+    fun clearStartedAndFinished(): PlayerRecords = copy(sessions = emptyMap(), history = emptyList())
+
     companion object {
         const val STARTING_HINTS = 3
         const val WALLET_LIMIT = 99

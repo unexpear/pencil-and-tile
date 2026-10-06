@@ -161,7 +161,7 @@ class MainActivity : ComponentActivity() {
                         composable("profile") { ProfileScreen(nav) }
                         composable("grids") { GridListScreen(nav, gridEditor) }
                         composable("grid_edit") { GridEditorScreen(nav, gridEditor) }
-                        composable("settings") { SettingsScreen(nav) }
+                        composable("settings") { SettingsScreen(nav) { app.wipeStartedAndFinishedGames() } }
                         composable("credits") { com.simplegamegen.sudoku.ui.screens.CreditsScreen(nav) }
                         composable("tutorial/{game}?hub={hub}", arguments = listOf(
                             navArgument("game") { type = NavType.StringType },

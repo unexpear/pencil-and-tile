@@ -34,6 +34,11 @@ class StatsStore(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    /** Removes played, solved and best-time counts. This store holds nothing else. */
+    suspend fun clear() {
+        dataStore.edit { it.clear() }
+    }
+
     suspend fun recordWin(variant: VariantType, size: Int, difficulty: Difficulty, elapsedSec: Long) {
         dataStore.edit { prefs ->
             val wonKey = key("won", variant, size, difficulty)

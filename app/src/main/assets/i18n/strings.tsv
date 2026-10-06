@@ -241,7 +241,10 @@ Circles hold odd digits.	圆圈里填奇数。	丸には奇数が入ります。
 Classic	经典	クラシック	Clásico	Klassisch
 Classics	经典	クラシック	Clásicos	Klassiker
 Clear	清除	クリア	Borrar	Leeren
+Clear all games	全部清除	すべて消去	Borrar todo	Alles löschen
+Clear all started and finished games	清除所有已开始和已完成的游戏	始めたゲームと終わったゲームをすべて消去	Borrar todas las partidas empezadas y terminadas	Alle begonnenen und beendeten Spiele löschen
 Clear digits	清除所有数字	数字をすべて消す	Borrar números	Ziffern leeren
+Clear every started and finished game?	清除所有已开始和已完成的游戏？	始めたゲームと終わったゲームをすべて消去しますか？	¿Borrar todas las partidas empezadas y terminadas?	Alle begonnenen und beendeten Spiele löschen?
 Clear every tile to win. If no free pair is left, the game is stuck; use Undo or start again.	清空所有牌就赢了。如果已经没有可配对的自由牌，就卡住了；可以撤销或重新开始。	すべての牌を取れば勝ちです。取れるペアがなくなったら手詰まり。元に戻すか、やり直しましょう。	Retira todas las fichas para ganar. Si no queda ninguna pareja libre, te has atascado; usa Deshacer o empieza de nuevo.	Räume alle Steine ab, um zu gewinnen. Gibt es kein freies Paar mehr, steckst du fest; nimm Züge zurück oder fang neu an.
 Clear finished games and high scores	清除已完成的游戏和最高纪录	終わったゲームとハイスコアを消去	Borrar partidas terminadas y récords	Beendete Spiele und Bestleistungen löschen
 Clear regions	清除区域	ブロックを消す	Borrar regiones	Regionen leeren
@@ -557,6 +560,7 @@ Game table	游戏桌	ゲームテーブル	Mesa de juego	Spieltisch
 Game-colored headers	按游戏配色的标题栏	ゲームごとの色のヘッダー	Cabeceras con el color del juego	Kopfzeilen in Spielfarbe
 games	款游戏	ゲーム	juegos	Spiele
 Games and possibilities	游戏与可能性	ゲームと遊び方の数	Juegos y posibilidades	Spiele und Möglichkeiten
+Games in progress, finished games, high scores and Sudoku statistics are removed. Your name, settings, hint wallet, custom grids and themes stay.	进行中的游戏、已完成的游戏、最高纪录和数独统计会被删除。你的名字、设置、提示次数、自定义盘面和主题会保留。	プレイ中のゲーム、終わったゲーム、ハイスコア、ナンプレの統計は消えます。あなたの名前、設定、ヒントの残り回数、自作の盤とテーマは残ります。	Se quitan las partidas en curso, las partidas terminadas, los récords y las estadísticas de sudoku. Se conservan tu nombre, los ajustes, tus pistas, las cuadrículas propias y los temas.	Laufende Spiele, beendete Spiele, Bestleistungen und die Sudoku-Statistik werden entfernt. Dein Name, die Einstellungen, dein Tipp-Vorrat, eigene Gitter und Designs bleiben.
 Games in progress, saves and your hint wallet are kept.	进行中的游戏、存档和提示次数会保留。	プレイ中のゲーム、セーブ、ヒントの残り回数は残ります。	Se conservan las partidas en curso, las partidas guardadas y tus pistas.	Laufende Spiele, Spielstände und dein Tipp-Vorrat bleiben erhalten.
 Games you won	你赢的游戏	勝ったゲーム	Partidas ganadas	Gewonnene Spiele
 Garden	花园	庭	Jardín	Garten
@@ -1396,6 +1400,7 @@ This is a small 4×4 Sudoku. Every row, column and 2×2 box needs 1, 2, 3 and 4 
 This map shows the five grids, each drawn as its 3×3 boxes. The starred boxes belong to two grids at once.	这张总览图显示了五个盘面，每个都画成 3×3 个宫。带星号的宫同时属于两个盘面。	この全体図は5つの盤を、それぞれ3×3のボックスで表しています。星のついたボックスは2つの盤に属します。	Este mapa muestra las cinco cuadrículas, cada una dibujada como sus cajas de 3×3. Las cajas con estrella pertenecen a dos cuadrículas a la vez.	Diese Übersicht zeigt die fünf Gitter, jeweils als ihre 3×3-Kästen. Die Kästen mit Stern gehören zu zwei Gittern zugleich.
 This position cannot be cleared. Undo a move or restart the deal.	这个局面已无法清空。撤销一步或重新开始本局。	この状態からは全部取れません。1手戻すか、配牌をやり直してください。	Esta posición no se puede vaciar. Deshaz un movimiento o reinicia el reparto.	Diese Stellung lässt sich nicht mehr leeren. Nimm einen Zug zurück oder beginne die Runde neu.
 This removes every finished game and all high scores. It can't be undone.	这会删除所有已完成的游戏和最高纪录，且无法撤销。	終わったゲームとハイスコアがすべて消えます。元に戻せません。	Se borrarán todas las partidas terminadas y todos los récords. No se puede deshacer.	Damit werden alle beendeten Spiele und Bestleistungen gelöscht. Das lässt sich nicht rückgängig machen.
+This removes every game in progress, every finished game, high scores and Sudoku statistics. It can't be undone.	这会删除所有进行中的游戏、已完成的游戏、最高纪录和数独统计，且无法撤销。	プレイ中のゲーム、終わったゲーム、ハイスコア、ナンプレの統計がすべて消えます。元に戻せません。	Se borrarán todas las partidas en curso, todas las partidas terminadas, los récords y las estadísticas de sudoku. No se puede deshacer.	Damit werden alle laufenden Spiele, alle beendeten Spiele, Bestleistungen und die Sudoku-Statistik gelöscht. Das lässt sich nicht rückgängig machen.
 This replaces your current {0} game.	这会替换你当前的{0}进度。	今の「{0}」のゲームが置き換わります。	Esto reemplaza tu partida actual de {0}.	Dein aktuelles Spiel ({0}) wird ersetzt.
 This replaces your saved puzzle.	这会替换你保存的谜题。	保存しているパズルが置き換わります。	Esto reemplaza tu puzzle guardado.	Dein gespeichertes Rätsel wird ersetzt.
 This replaces your saved {0} game.	这会替换你保存的{0}进度。	保存している「{0}」のゲームが置き換わります。	Esto reemplaza tu partida guardada de {0}.	Dein gespeichertes Spiel ({0}) wird ersetzt.

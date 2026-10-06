@@ -15,6 +15,9 @@ import com.simplegamegen.sudoku.data.PuzzleFactory
 import com.simplegamegen.sudoku.data.DataStorePlayer
 import com.simplegamegen.sudoku.data.PlayerService
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import com.simplegamegen.sudoku.ui.OpenBoards
 import com.simplegamegen.sudoku.ui.theme.DataStoreAppearance
 
 private val Context.statsDataStore: DataStore<Preferences> by preferencesDataStore("stats")
@@ -24,6 +27,8 @@ private val Context.appearanceDataStore: DataStore<Preferences> by preferencesDa
 private val Context.playerDataStore: DataStore<Preferences> by preferencesDataStore("player")
 
 class SudokuApp : Application() {
+    private val jobs = MainScope()
+    private val wipeLock = Mutex()
     val wordGames by lazy { DataStoreWordGames(wordGamesDataStore) }
     val collection by lazy { CollectionStore(collectionDataStore) }
     val puzzles by lazy { PuzzleFactory(collection) }
@@ -42,5 +47,27 @@ class SudokuApp : Application() {
 
     val repository: GameRepository by lazy {
         GameRepository(database, statsStore)
+    }
+
+    /**
+     * Drops every started and finished game, including a board still open on screen.
+     * Leaves the name, settings, hint wallet, custom grids, themes and camera views.
+     * Leaving Settings does not cancel the wipe.
+     */
+    fun wipeStartedAndFinishedGames() {
+        jobs.launch {
+            if (!wipeLock.tryLock()) return@launch
+            try {
+                OpenBoards.forgetAll()
+                player.update { records, _ -> records.clearStartedAndFinished() }
+                player.flush()
+                repository.clear()
+                statsStore.clear()
+                wordGames.clear()
+                collection.clearPlaySaves()
+            } finally {
+                wipeLock.unlock()
+            }
+        }
     }
 }
