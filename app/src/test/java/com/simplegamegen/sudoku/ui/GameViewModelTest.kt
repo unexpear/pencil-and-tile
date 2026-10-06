@@ -271,6 +271,25 @@ class GameViewModelTest {
         assertEquals(vm.state.value.current, store.saved!!.current)
     }
 
+    @Test fun `forget drops the board and does not write it back`() = runTest {
+        val store = FakeStore()
+        val vm = model(store)
+        runCurrent()
+        vm.newGame(4, Difficulty.EASY, VariantType.CLASSIC)
+        runCurrent()
+        assertTrue(vm.state.value.hasGame)
+        assertNotNull(store.saved)
+        vm.forget()
+        assertFalse(vm.state.value.hasGame)
+        assertFalse(vm.state.value.hasSave)
+        assertEquals(4, vm.state.value.size)
+        store.clear()
+        advanceTimeBy(6_000)
+        runCurrent()
+        assertNull(store.saved)
+        assertFalse(vm.state.value.hasGame)
+    }
+
     private class FakeStore(var saved: PlaySnapshot? = null) : GameStore {
         override val statRows = flowOf(emptyList<StatsStore.StatRow>())
         var starts = 0

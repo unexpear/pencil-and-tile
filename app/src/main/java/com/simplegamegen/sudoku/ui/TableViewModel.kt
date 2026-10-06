@@ -20,17 +20,29 @@ class TableViewModel(val game: TableGame, private val store: ArcadeStore, privat
     private var computation: Job? = null
     private var writes: Job? = null
     private var revision = 0L
+    private var saveEpoch = 0
     private val key = "TABLE_${game.name}"
     init {
+        OpenBoards.watch(viewModelScope) { forget() }
         viewModelScope.launch {
+            val epoch = saveEpoch
             try {
                 val raw = store.load(key)
                 val restored = raw?.let { runInterruptible(worker) { requireNotNull(TableSaveCodec.decode(it)).also { m -> require(m.game == game) } } }
+                if (epoch != saveEpoch) return@launch
                 mutable.value = TableUiState(restored, busy = false)
                 computerTurn()
             } catch (e: CancellationException) { throw e
             } catch (_: Exception) { mutable.value = TableUiState(busy = false, message = "Couldn't restore this game. Start a new one to recover.") }
         }
+    }
+
+    /** Drops the match without writing it. */
+    suspend fun forget() {
+        saveEpoch++
+        revision++
+        drainChildren(viewModelScope)
+        mutable.value = TableUiState(busy = false)
     }
     private fun invalidate() { revision++; computation?.cancel(); mutable.value = mutable.value.copy(thinking = false, hint = null) }
     fun newGame(setting: Int) {
@@ -128,10 +140,12 @@ class TableViewModel(val game: TableGame, private val store: ArcadeStore, privat
         }
     }
     fun save(confirm: Boolean = false) {
+        val epoch = saveEpoch
         val encoded = mutable.value.match?.let(TableSaveCodec::encode) ?: return
         val previous = writes
         writes = viewModelScope.launch {
             previous?.join()
+            if (epoch != saveEpoch) return@launch
             try {
                 store.save(key, encoded)
                 if (confirm || mutable.value.message == "Couldn't save. Tap Save to retry.") mutable.value = mutable.value.copy(message = "Progress saved.")

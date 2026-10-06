@@ -28,16 +28,28 @@ class ArcadeViewModel(val game: ArcadeGame, private val store: ArcadeStore, priv
     private var saveJob: Job? = null
     private var hintJob: Job? = null
     private var revision = 0L
+    private var saveEpoch = 0
     init {
+        OpenBoards.watch(viewModelScope) { forget() }
         viewModelScope.launch {
+            val epoch = saveEpoch
             try {
                 val encoded = store.load(game.name)
                 val hangman = if (game == ArcadeGame.HANGMAN && encoded != null) checkNotNull(HangmanSaveCodec.decode(encoded)) else null
                 val mahjong = if (game == ArcadeGame.MAHJONG && encoded != null) checkNotNull(MahjongSaveCodec.decode(encoded)) else null
+                if (epoch != saveEpoch) return@launch
                 mutable.value = ArcadeState(hangman, mahjong, busy = false)
             } catch (e: CancellationException) { throw e
             } catch (_: Exception) { mutable.value = ArcadeState(busy = false, message = "Couldn't restore this game. You can start a new one.") }
         }
+    }
+
+    /** Drops the deal without writing it. */
+    suspend fun forget() {
+        saveEpoch++
+        revision++
+        drainChildren(viewModelScope)
+        mutable.value = ArcadeState(busy = false)
     }
 
     fun newGame(theme: Int, difficulty: WordDifficulty) {
@@ -134,11 +146,13 @@ class ArcadeViewModel(val game: ArcadeGame, private val store: ArcadeStore, priv
 
     fun retrySave() = save(true)
     private fun save(confirm: Boolean = false) {
+        val epoch = saveEpoch
         val s = mutable.value
         val encoded = s.hangman?.let(HangmanSaveCodec::encode) ?: s.mahjong?.let(MahjongSaveCodec::encode) ?: return
         val previous = saveJob
         saveJob = viewModelScope.launch {
             previous?.join()
+            if (epoch != saveEpoch) return@launch
             try {
                 store.save(game.name, encoded)
                 if (confirm || mutable.value.message == "Couldn't save progress. Tap Save to retry.")

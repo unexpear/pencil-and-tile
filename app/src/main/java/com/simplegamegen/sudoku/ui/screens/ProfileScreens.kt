@@ -285,12 +285,13 @@ private fun ScoreLine(level: String, value: String) {
 // ---------------- Settings ----------------
 
 @Composable
-fun SettingsScreen(nav: NavController) {
+fun SettingsScreen(nav: NavController, wipeGames: () -> Unit = {}) {
     val player = LocalPlayer.current
     val records = playerRecords() ?: PlayerRecords()
     val settings = records.settings
     val c = LocalGameLook.current.colors
     var confirmClear by rememberSaveable { mutableStateOf(false) }
+    var confirmWipe by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val version = remember { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "" }
     fun change(transform: (com.simplegamegen.sudoku.data.PlayerSettings) -> com.simplegamegen.sudoku.data.PlayerSettings) {
@@ -332,6 +333,9 @@ fun SettingsScreen(nav: NavController) {
         SectionTitle("Your data")
         OutlinedButton(onClick = { confirmClear = true }, modifier = Modifier.fillMaxWidth()) { Text("Clear finished games and high scores") }
         Text("Games in progress, saves and your hint wallet are kept.", style = MaterialTheme.typography.bodySmall, color = c.muted)
+        OutlinedButton(onClick = { confirmWipe = true }, modifier = Modifier.fillMaxWidth()) { Text("Clear all started and finished games") }
+        Text("Games in progress, finished games, high scores and Sudoku statistics are removed. Your name, settings, hint wallet, custom grids and themes stay.",
+            style = MaterialTheme.typography.bodySmall, color = c.muted)
 
         SectionTitle("About")
         OutlinedButton(onClick = { nav.navigate("credits") }, modifier = Modifier.fillMaxWidth()) { Text("Credits and licenses") }
@@ -345,7 +349,12 @@ fun SettingsScreen(nav: NavController) {
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp), textAlign = TextAlign.Center)
     }
     if (confirmClear) ConfirmDialog("Clear your history?", "This removes every finished game and all high scores. It can't be undone.", "Clear",
-        onConfirm = { player?.update { r, _ -> r.resetHistory() }; confirmClear = false }, onDismiss = { confirmClear = false }, dismiss = "Cancel")
+        onConfirm = { player?.update { r, _ -> r.resetHistory() }; confirmClear = false }, onDismiss = { confirmClear = false }, dismiss = "Cancel", destructive = true)
+    if (confirmWipe) ConfirmDialog(
+        "Clear every started and finished game?",
+        "This removes every game in progress, every finished game, high scores and Sudoku statistics. It can't be undone.",
+        "Clear all games",
+        onConfirm = { wipeGames(); confirmWipe = false }, onDismiss = { confirmWipe = false }, dismiss = "Cancel", destructive = true)
 }
 
 const val PRIVACY_URL = "https://github.com/unexpear/pencil-and-tile/blob/main/PRIVACY.md"

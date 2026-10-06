@@ -52,16 +52,29 @@ class PlayViewModel<S : Any>(
     private var revision = 0L
     private var computerJob: Job? = null
     private var saveJob: Job? = null
+    private var saveEpoch = 0
 
     init {
+        OpenBoards.watch(viewModelScope) { forget() }
         viewModelScope.launch {
+            val epoch = saveEpoch
             try {
                 val restored = store.load(key)?.let { checkNotNull(codec.decode(it)) }
+                if (epoch != saveEpoch) return@launch
                 mutable.value = PlaySession(restored, busy = false)
                 computerTurn()
             } catch (e: CancellationException) { throw e
             } catch (_: Exception) { mutable.value = PlaySession(busy = false, message = "Couldn't restore this game. Start a new one to recover.") }
         }
+    }
+
+    /** Drops the board without writing it. */
+    suspend fun forget() {
+        saveEpoch++
+        revision++
+        drainChildren(viewModelScope)
+        undoStack.clear()
+        mutable.value = PlaySession(busy = false)
     }
 
     /** Replaces the game with a freshly created one. */
@@ -144,10 +157,12 @@ class PlayViewModel<S : Any>(
     }
 
     private fun save(confirm: Boolean = false) {
+        val epoch = saveEpoch
         val encoded = mutable.value.game?.let(codec::encode) ?: return
         val previous = saveJob
         saveJob = viewModelScope.launch {
             previous?.join()
+            if (epoch != saveEpoch) return@launch
             try {
                 store.save(key, encoded)
                 if (confirm || mutable.value.message == SAVE_FAILED) mutable.value = mutable.value.copy(message = "Progress saved.")

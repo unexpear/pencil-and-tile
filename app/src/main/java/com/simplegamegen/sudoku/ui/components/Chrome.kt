@@ -296,11 +296,13 @@ fun NewGameSheet(title: String, startLabel: String = "Start game", onDismiss: ()
 }
 
 @Composable
-fun ConfirmDialog(title: String, text: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit, dismiss: String = "Keep playing") {
+fun ConfirmDialog(title: String, text: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit, dismiss: String = "Keep playing",
+    destructive: Boolean = false) {
+    val danger = LocalGameLook.current.colors.danger
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) }, text = { Text(text) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(confirm) } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(confirm, color = if (destructive) danger else Color.Unspecified) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(dismiss) } },
         containerColor = LocalGameLook.current.colors.surface,
     )

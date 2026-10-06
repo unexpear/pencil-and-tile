@@ -34,16 +34,28 @@ class LogicViewModel(val kind: LogicKind, private val store: ArcadeStore, privat
     val state: StateFlow<LogicState> = mutable
     private val undoStack = ArrayDeque<LogicProgress>()
     private var saveJob: Job? = null
+    private var saveEpoch = 0
     private val key = "LOGIC_${kind.name}"
 
     init {
+        OpenBoards.watch(viewModelScope) { forget() }
         viewModelScope.launch {
+            val epoch = saveEpoch
             try {
                 val restored = store.load(key)?.let { checkNotNull(LogicSaveCodec.decode(it)).also { p -> check(p.puzzle.kind == kind) } }
+                if (epoch != saveEpoch) return@launch
                 mutable.value = LogicState(restored, busy = false)
             } catch (e: CancellationException) { throw e
             } catch (_: Exception) { mutable.value = LogicState(busy = false, message = "Couldn't restore this puzzle. Start a new one to recover.") }
         }
+    }
+
+    /** Drops the puzzle without writing it. */
+    suspend fun forget() {
+        saveEpoch++
+        drainChildren(viewModelScope)
+        undoStack.clear()
+        mutable.value = LogicState(busy = false)
     }
 
     fun newGame(level: LogicLevel) {
@@ -120,10 +132,12 @@ class LogicViewModel(val kind: LogicKind, private val store: ArcadeStore, privat
     }
 
     private fun save(confirm: Boolean = false) {
+        val epoch = saveEpoch
         val encoded = mutable.value.progress?.let(LogicSaveCodec::encode) ?: return
         val previous = saveJob
         saveJob = viewModelScope.launch {
             previous?.join()
+            if (epoch != saveEpoch) return@launch
             try {
                 store.save(key, encoded)
                 if (confirm || mutable.value.message == SAVE_FAILED) mutable.value = mutable.value.copy(message = "Progress saved.")

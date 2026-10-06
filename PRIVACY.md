@@ -1,6 +1,6 @@
 # Pencil & Tile: Privacy Policy
 
-Last updated: 25 September 2026
+Last updated: 6 October 2026
 
 Pencil & Tile ("the app") is made by TryingToDo ("we"). This policy explains what the app does with
 information. The short version: **the app collects nothing, and it has no way to send anything.**
@@ -30,8 +30,9 @@ turn backup off in your device's settings.
 
 ## Deleting your information
 
-You can clear your finished games and records in the app (Settings → Your data), or remove everything by
-clearing the app's storage in Android settings or uninstalling the app.
+You can clear finished games and high scores, or every started and finished game, in the app
+(Settings → Your data). You can remove everything by clearing the app's storage in Android settings
+or uninstalling the app.
 
 ## Children
 
