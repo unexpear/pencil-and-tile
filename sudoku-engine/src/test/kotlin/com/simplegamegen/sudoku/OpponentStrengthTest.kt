@@ -4,6 +4,8 @@ import com.simplegamegen.sudoku.duels.ConnectFour
 import com.simplegamegen.sudoku.duels.ConnectFourAi
 import com.simplegamegen.sudoku.duels.FiveRow
 import com.simplegamegen.sudoku.duels.FiveRowAi
+import com.simplegamegen.sudoku.duels.TicTacToe
+import com.simplegamegen.sudoku.duels.TicTacToeAi
 import com.simplegamegen.sudoku.duels.Mancala
 import com.simplegamegen.sudoku.duels.MancalaAi
 import com.simplegamegen.sudoku.duels.ShipAi
@@ -62,6 +64,19 @@ class OpponentStrengthTest {
             assertEquals(0, next.winner, "setting $setting")
             val threats = (0 until FiveRow.CELLS).count { next.wouldWin(it, -1) }
             assertTrue(threats >= 2, "setting $setting move $move opened $threats threats")
+            assertTrue(millis < 2_000, "setting $setting took ${millis}ms")
+        }
+    }
+
+    @Test fun `tic tac toe medium and above take the winning mark`() {
+        val cells = listOf(1, -1, 1, 0, -1, 0, 1, 0, 0)
+        val game = TicTacToe(1, 2, cells, turn = -1, last = 6)
+        for (setting in 1..3) {
+            val started = System.nanoTime()
+            val move = TicTacToeAi.choose(game.copy(setting = setting))
+            val millis = (System.nanoTime() - started) / 1_000_000
+            assertEquals(7, move, "setting $setting")
+            assertEquals(-1, checkNotNull(game.place(move)).winner)
             assertTrue(millis < 2_000, "setting $setting took ${millis}ms")
         }
     }

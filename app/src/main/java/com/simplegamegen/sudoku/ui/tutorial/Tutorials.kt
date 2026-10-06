@@ -68,5 +68,6 @@ object Tutorials {
         GameId.SHOGI -> BoardTutorials.shogi
         GameId.HEX -> BoardTutorials.hex
         GameId.RPS -> BoardTutorials.rps
+        GameId.TIC_TAC_TOE -> BoardTutorials.ticTacToe
     }
 }

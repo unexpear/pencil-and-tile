@@ -792,6 +792,53 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val ticTacToe: Tutorial get() {
+        fun scene(rows: List<String>, mark: String? = null, good: Set<String> = emptySet()): Scene {
+            val items = gridItems(rows.size, rows[0].length) { r, c ->
+                Cell(
+                    fill = Fill.OPEN,
+                    text = when (rows[r][c]) {
+                        'X' -> "X"
+                        'O' -> "O"
+                        else -> ""
+                    },
+                    mark = if (cellId(r, c) == mark) Mark.CIRCLE else Mark.NONE,
+                )
+            }
+            val base = Scene(rows[0].length.toFloat(), rows.size.toFloat(), items, Backdrop.BOARD, maxUnit = 72)
+            return if (good.isEmpty()) base else base.tone(Tone.GOOD, *good.toTypedArray())
+        }
+        val empty = listOf("...", "...", "...")
+        val placed = listOf("...", ".X.", "...")
+        val answered = listOf("..O", ".X.", "...")
+        val threat = listOf("X.X", ".O.", "..O")
+        val won = listOf("XXX", ".O.", "..O")
+        val line = (0 until 3).map { cellId(0, it) }.toSet()
+        return Tutorial(
+            GameId.TIC_TAC_TOE,
+            "Place X and O until one line is full.",
+            rules = listOf(
+                "Take turns placing one mark on an empty square. Marks do not move.",
+                "The board is 3×3, 4×4 or 5×5. You need that many marks in a line — across, down or diagonal — to win.",
+                "Filling the board with no complete line is a draw.",
+                "You play X against the computer and move first, or pass the phone so the other player is O.",
+            ),
+            tips = listOf(
+                "On 3×3, the center square is in four lines and each corner is in three.",
+                "Two threats at once cannot both be blocked on the next turn.",
+            ),
+            steps = listOf(
+                Step("X goes first. A line can run across, down or diagonally.", scene(empty)),
+                Step("Tap the center square.", scene(empty, mark = "r1c1"), tap = setOf("r1c1"),
+                    after = scene(placed), then = "Your X is down.", help = "The circled square."),
+                Step("O answers in a corner.", scene(answered)),
+                Step("Two of your marks sit on the top row. Tap the gap.", scene(threat, mark = "r0c1"),
+                    tap = setOf("r0c1"), after = scene(won, good = line),
+                    then = "Three in a row. You win!", help = "The empty square in your line."),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {

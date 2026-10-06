@@ -2711,3 +2711,42 @@ your scissors	你的剪刀	自分のはさみ	tu tijera	deine Schere
 blue scissors	蓝方的剪刀	青のはさみ	tijera azul	blaue Schere
 the circled hex	有圆圈的六边形	丸のついた六角形	el hexágono marcado	das eingekreiste Sechseck
 empty hex	空的六边形	空いた六角形	hexágono vacío	leeres Sechseck
+Tic-Tac-Toe	井字棋	三目並べ	Tres en raya	Tic Tac Toe
+Noughts and crosses	画圈打叉	まるばつ	Ceros y cruces	Kreise und Kreuze
+Places almost at random, and sometimes misses a line	几乎随机落子，有时会漏掉一条线	ほぼ適当に置き、ときどき列を見逃す	Coloca casi al azar y a veces no ve una línea	Setzt fast zufällig und übersieht manchmal eine Linie
+Takes a line and blocks yours	会连成一线，也会挡住你的	自分の列を完成させ、相手の列も止める	Completa una línea y bloquea la tuya	Vervollständigt eine Linie und blockt deine
+Looks ahead for two threats at once	会提前寻找同时出现的两处威胁	同時に二つの脅威を先読みする	Busca dos amenazas a la vez	Sucht voraus nach zwei Drohungen zugleich
+Plays perfectly on 3×3, and searches on larger boards	在 3×3 上完美落子，更大的棋盘则会搜索	3×3では完璧に打ち、大きい盤では読む	Juega perfecto en 3×3 y busca en tableros mayores	Spielt auf 3×3 perfekt und sucht auf größeren Brettern
+Pass the phone. X moves first.	把手机传给对方。X 先下。	スマホを渡して交代する。Xが先手。	Pásate el teléfono. X empieza.	Gebt das Telefon weiter. X beginnt.
+Take turns placing one mark on an empty square. On 3×3, three in a row wins. On 4×4 you need four, and on 5×5 you need five, across, down or diagonally. Marks stay where they are put. A full board with no line is a draw. You play X against the computer and move first. Or pass the phone for two players.	轮流在空格上放一枚棋子。3×3 连成三个即获胜。4×4 需要四个，5×5 需要五个，横、竖、斜都可以。棋子放下去就不再移动。棋盘放满且没有连线则平局。对电脑时你执 X 先行。也可以传手机双人对下。	空きマスに印を1つずつ置く。3×3は3つ、4×4は4つ、5×5は5つを縦・横・斜めにそろえると勝ち。印は動かない。埋まって列がなければ引き分け。コンピューター戦ではXの先手。スマホを渡して二人でも遊べる。	Por turnos, coloca una marca en una casilla vacía. En 3×3 ganas con tres en línea. En 4×4 hacen falta cuatro, y en 5×5 cinco, en horizontal, vertical o diagonal. Las marcas se quedan donde se ponen. Un tablero lleno sin línea es un empate. Contra el ordenador juegas con X y empiezas. O pásate el teléfono para dos jugadores.	Setzt abwechselnd ein Zeichen auf ein leeres Feld. Auf 3×3 gewinnt drei in einer Reihe. Auf 4×4 brauchst du vier, auf 5×5 fünf, waagerecht, senkrecht oder diagonal. Die Zeichen bleiben liegen. Ein volles Brett ohne Linie ist unentschieden. Gegen den Computer spielst du X und beginnst. Oder gebt das Telefon für zwei Spieler weiter.
+{0}×{0} {1} · X {2}, O {3}	{0}×{0} {1} · X {2}，O {3}	{0}×{0} {1} · X {2}、O {3}	{0}×{0} {1} · X {2}, O {3}	{0}×{0} {1} · X {2}, O {3}
+two players	双人	交互	dos jugadores	zwei Spieler
+X marks {0}	X 有 {0} 枚	Xは{0}個	X tiene {0}	X hat {0}
+Your X {0}	你的 X {0}	自分のX {0}	Tu X {0}	Dein X {0}
+O marks {0}	O 有 {0} 枚	Oは{0}個	O tiene {0}	O hat {0}
+Computer O {0}	电脑的 O {0}	コンピューターのO {0}	O del ordenador {0}	O des Computers {0}
+X wins	X 获胜	Xの勝ち	Gana X	X gewinnt
+O wins	O 获胜	Oの勝ち	Gana O	O gewinnt
+X's turn	轮到 X	Xの番	Turno de X	X ist dran
+O's turn	轮到 O	Oの番	Turno de O	O ist dran
+X has a line.	X 连成了一线。	Xが列を完成させた。	X tiene una línea.	X hat eine Linie.
+O has a line.	O 连成了一线。	Oが列を完成させた。	O tiene una línea.	O hat eine Linie.
+X's turn. Tap an empty square.	轮到 X。点一个空格。	Xの番。空きマスをタップ。	Turno de X. Toca una casilla vacía.	X ist dran. Tippe ein leeres Feld an.
+O's turn. Tap an empty square.	轮到 O。点一个空格。	Oの番。空きマスをタップ。	Turno de O. Toca una casilla vacía.	O ist dran. Tippe ein leeres Feld an.
+your X	你的 X	自分のX	tu X	dein X
+computer's O	电脑的 O	コンピューターのO	la O del ordenador	O des Computers
+empty, place a mark	空格，放一枚棋子	空き、印を置く	vacía, coloca una marca	leer, setze ein Zeichen
+3×3, 4×4 or 5×5 × 4 computer strengths, plus pass-and-play on each size. Get the whole row, column or diagonal — 3, 4 or 5 marks — to win. A full board with no line is a draw. You play X and move first.	3×3、4×4 或 5×5，每种 4 档电脑强度，另有同尺寸的双人轮流传机。整行、整列或整条对角线连成 3、4 或 5 枚即获胜。棋盘放满且没有连线则平局。你执 X 先行。	3×3、4×4、5×5。それぞれコンピューターの強さ4段階と、同じ大きさの交互プレイ。縦・横・斜めを3、4、5個そろえると勝ち。埋まって列がなければ引き分け。あなたはXで先手。	3×3, 4×4 o 5×5 × 4 niveles del ordenador, y pasar el teléfono en cada tamaño. Gana quien completa la fila, la columna o la diagonal: 3, 4 o 5 marcas. Un tablero lleno sin línea es un empate. Juegas con X y empiezas.	3×3, 4×4 oder 5×5 × 4 Computerstärken, plus abwechselndes Spiel auf jeder Größe. Wer die ganze Reihe, Spalte oder Diagonale schafft — 3, 4 oder 5 Zeichen — gewinnt. Ein volles Brett ohne Linie ist unentschieden. Du spielst X und beginnst.
+Place X and O until one line is full.	放下 X 和 O，直到一条线被填满。	XとOを置き、一つの列を埋めよう。	Coloca X y O hasta llenar una línea.	Setze X und O, bis eine Linie voll ist.
+Take turns placing one mark on an empty square. Marks do not move.	轮流在空格上放一枚棋子。棋子不会移动。	空きマスに印を1つずつ置く。印は動かない。	Por turnos, coloca una marca en una casilla vacía. Las marcas no se mueven.	Setzt abwechselnd ein Zeichen auf ein leeres Feld. Die Zeichen bewegen sich nicht.
+The board is 3×3, 4×4 or 5×5. You need that many marks in a line — across, down or diagonal — to win.	棋盘是 3×3、4×4 或 5×5。横、竖或斜向连成同样多的棋子即获胜。	盤は3×3、4×4、5×5。その数だけ縦・横・斜めにそろえると勝ち。	El tablero es de 3×3, 4×4 o 5×5. Hacen falta esas marcas en línea — en horizontal, vertical o diagonal — para ganar.	Das Brett ist 3×3, 4×4 oder 5×5. So viele Zeichen in einer Linie — waagerecht, senkrecht oder diagonal — gewinnen.
+Filling the board with no complete line is a draw.	棋盘放满且没有完整的连线则平局。	列ができないまま埋まれば引き分け。	Llenar el tablero sin una línea completa es un empate.	Ein volles Brett ohne komplette Linie ist unentschieden.
+You play X against the computer and move first, or pass the phone so the other player is O.	对电脑时你执 X 先行，也可以传手机，让对方执 O。	コンピューター戦ではXの先手。スマホを渡せば相手がO。	Contra el ordenador juegas con X y empiezas, o pásate el teléfono para que el otro juegue con O.	Gegen den Computer spielst du X und beginnst, oder ihr gebt das Telefon weiter, damit der andere O ist.
+On 3×3, the center square is in four lines and each corner is in three.	在 3×3 上，中心格属于四条线，每个角属于三条线。	3×3では中央は4本の列に入り、角はそれぞれ3本に入る。	En 3×3, la casilla central entra en cuatro líneas y cada esquina en tres.	Auf 3×3 liegt das Mittelfeld in vier Linien und jede Ecke in drei.
+Two threats at once cannot both be blocked on the next turn.	同时两处威胁，对方下一步只能挡住一处。	同時に二つの脅威は、次の一手では両方止められない。	Dos amenazas a la vez no se pueden bloquear ambas en el turno siguiente.	Zwei Drohungen zugleich lassen sich im nächsten Zug nicht beide stoppen.
+X goes first. A line can run across, down or diagonally.	X 先行。连线可以是横、竖或斜。	Xが先手。列は縦・横・斜め。	X empieza. Una línea puede ir en horizontal, vertical o diagonal.	X beginnt. Eine Linie kann waagerecht, senkrecht oder diagonal verlaufen.
+Tap the center square.	点中心格。	中央のマスをタップ。	Toca la casilla central.	Tippe das mittlere Feld an.
+Your X is down.	你的 X 已经放下。	あなたのXを置きました。	Tu X ya está puesta.	Dein X liegt.
+O answers in a corner.	O 应在一个角上。	Oが角に返す。	O responde en una esquina.	O antwortet in einer Ecke.
+Two of your marks sit on the top row. Tap the gap.	你有两枚棋子在最上面一行。点那个空位。	自分の印が上の行に2つある。空きをタップ。	Dos de tus marcas están en la fila de arriba. Toca el hueco.	Zwei deiner Zeichen liegen in der oberen Reihe. Tippe die Lücke.
+Three in a row. You win!	连成三个。你赢了！	三つそろった。あなたの勝ち！	Tres en línea. ¡Has ganado!	Drei in einer Reihe. Du gewinnst!

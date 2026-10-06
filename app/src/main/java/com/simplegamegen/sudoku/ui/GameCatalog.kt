@@ -73,7 +73,8 @@ enum class GameId(val title: String, val route: String, val blurb: String, val g
     SHIP_CREW("Ship, Captain, Crew", "play_SHIP_CREW", "Six, five, four, then cargo", GameGroup.CLASSICS),
     SHOGI("Shogi", "play_SHOGI", "Promote and drop", GameGroup.BOARD),
     HEX("Hex", "play_HEX", "Connect opposite sides", GameGroup.CLASSICS),
-    RPS("Rock Paper Scissors", "play_RPS", "Capture on hexes", GameGroup.CLASSICS);
+    RPS("Rock Paper Scissors", "play_RPS", "Capture on hexes", GameGroup.CLASSICS),
+    TIC_TAC_TOE("Tic-Tac-Toe", "play_TIC_TAC_TOE", "Noughts and crosses", GameGroup.CLASSICS);
 
     /** Variants are reached inside their family rather than duplicated on the home screen. */
     val parent: GameId? get() = when (this) {

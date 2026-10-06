@@ -287,6 +287,12 @@ class TutorialContentTest {
         assertEquals(1, again.turn)
     }
 
+    @Test fun `tic tac toe tutorial ends on three crosses`() {
+        val scene = last(GameId.TIC_TAC_TOE)
+        val top = (0 until 3).map { (scene.item(cellId(0, it))!!.look as Cell).text }
+        assertEquals(listOf("X", "X", "X"), top)
+    }
+
     @Test fun `five in a row tutorial ends on five dark stones`() {
         val scene = last(GameId.FIVE_ROW)
         val line = (0 until 5).map { (scene.item(cellId(1, it))!!.look as Cell).piece }

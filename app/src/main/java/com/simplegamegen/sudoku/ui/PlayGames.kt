@@ -55,6 +55,9 @@ import com.simplegamegen.sudoku.duels.HexCodec
 import com.simplegamegen.sudoku.duels.Rps
 import com.simplegamegen.sudoku.duels.RpsAi
 import com.simplegamegen.sudoku.duels.RpsCodec
+import com.simplegamegen.sudoku.duels.TicTacToe
+import com.simplegamegen.sudoku.duels.TicTacToeAi
+import com.simplegamegen.sudoku.duels.TicTacToeCodec
 import com.simplegamegen.sudoku.duels.Mastermind
 import com.simplegamegen.sudoku.duels.MastermindCodec
 import com.simplegamegen.sudoku.duels.ShipAi
@@ -117,6 +120,7 @@ import com.simplegamegen.sudoku.ui.screens.WordLadderScreen
 import com.simplegamegen.sudoku.ui.screens.ConnectFourScreen
 import com.simplegamegen.sudoku.ui.screens.HexScreen
 import com.simplegamegen.sudoku.ui.screens.RpsScreen
+import com.simplegamegen.sudoku.ui.screens.TicTacToeScreen
 import com.simplegamegen.sudoku.ui.screens.MastermindScreen
 import com.simplegamegen.sudoku.ui.screens.DotsScreen
 import com.simplegamegen.sudoku.ui.screens.MagnetScreen
@@ -252,6 +256,12 @@ object HexComputer : ComputerPlayer<Hex> {
 object RpsComputer : ComputerPlayer<Rps> {
     override fun needsMove(state: Rps) = !state.passAndPlay && !state.over && state.turn == -1
     override fun move(state: Rps) = state.play(RpsAi.choose(state))!!
+    override val pauseMs = 280L
+}
+
+object TicTacToeComputer : ComputerPlayer<TicTacToe> {
+    override fun needsMove(state: TicTacToe) = !state.passAndPlay && !state.over && state.turn == -1
+    override fun move(state: TicTacToe) = state.place(TicTacToeAi.choose(state))!!
     override val pauseMs = 280L
 }
 
@@ -443,5 +453,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.RPS.route) {
         RpsScreen(nav, playModel<Rps>(GameId.RPS, store, codecOf(RpsCodec::encode, RpsCodec::decode), RpsComputer), factory)
+    }
+    composable(GameId.TIC_TAC_TOE.route) {
+        TicTacToeScreen(nav, playModel<TicTacToe>(GameId.TIC_TAC_TOE, store, codecOf(TicTacToeCodec::encode, TicTacToeCodec::decode), TicTacToeComputer), factory)
     }
 }

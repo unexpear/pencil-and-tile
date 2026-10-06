@@ -171,6 +171,31 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 drawLine(Color(0xFFFFF8EC), cut + Offset(-radius * 0.22f, -radius * 0.22f), cut + Offset(radius * 0.22f, radius * 0.22f), strokeWidth = radius * 0.12f, cap = StrokeCap.Round)
                 drawLine(Color(0xFFFFF8EC), cut + Offset(radius * 0.22f, -radius * 0.22f), cut + Offset(-radius * 0.22f, radius * 0.22f), strokeWidth = radius * 0.12f, cap = StrokeCap.Round)
             }
+            GameId.TIC_TAC_TOE -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFF6EBD2), cornerRadius = CornerRadius(8f))
+                val n = 3
+                val cw = size.width / n
+                val ink = Color(0xFF3E2723)
+                for (i in 1 until n) {
+                    drawLine(ink, Offset(i * cw, cw * 0.12f), Offset(i * cw, size.height - cw * 0.12f), 2.5f)
+                    drawLine(ink, Offset(cw * 0.12f, i * cw), Offset(size.width - cw * 0.12f, i * cw), 2.5f)
+                }
+                fun cross(col: Int, row: Int) {
+                    val x = col * cw
+                    val y = row * cw
+                    val m = cw * 0.28f
+                    drawLine(Color(0xFF1565C0), Offset(x + m, y + m), Offset(x + cw - m, y + cw - m), 4f, StrokeCap.Round)
+                    drawLine(Color(0xFF1565C0), Offset(x + cw - m, y + m), Offset(x + m, y + cw - m), 4f, StrokeCap.Round)
+                }
+                fun nought(col: Int, row: Int) {
+                    drawCircle(Color(0xFFE53935), cw * 0.22f, Offset((col + 0.5f) * cw, (row + 0.5f) * cw), style = Stroke(4f))
+                }
+                cross(0, 0)
+                nought(1, 0)
+                cross(1, 1)
+                nought(2, 1)
+                cross(2, 2)
+            }
             GameId.CONNECT_FOUR -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFF1565C0), cornerRadius = CornerRadius(8f))
                 val cols = 4
