@@ -18,9 +18,11 @@ import kotlin.random.Random
  * unicorn. The king is one queen step. A knight leaps (0,1,2) on any two axes and may jump.
  * A pawn steps one square rookwise forward — up a rank, or up a level for White — onto an
  * empty cell, and captures one square bishopwise forward. There is no double step, no en
- * passant and no castling. A White pawn promotes to a queen on rank 5 of level E; a Black
- * pawn promotes to a queen on rank 1 of level A. (Maack allowed any piece; this app promotes
- * to a queen only, the same choice as its flat chess.)
+ * passant and no castling. A White pawn that reaches rank 5 of level E, or a Black pawn that
+ * reaches rank 1 of level A, promotes to a queen, rook, bishop, unicorn, or knight, as the
+ * International Raumschach Federation states. This is Dawson's 5×5×5 normal form, not Maack's
+ * 8×8×8 game, where a pawn may move in every direction and promotion is on ranks 1 and 8 of
+ * every level.
  *
  * Checkmate wins. Stalemate, the same position three times, and 50 moves by each side with
  * no capture and no pawn move are draws. [setting] is Easy–Expert, then pass-and-play.
@@ -97,7 +99,7 @@ data class Raumschach(
         val piece = next[move.from]
         val captured = next[move.to] != 0
         next[move.from] = 0
-        next[move.to] = if (abs(piece) == PAWN && promotes(turn, move.to)) QUEEN * turn else piece
+        next[move.to] = crowned(piece, move.to, move.promo)
         return copy(
             board = next,
             lastFrom = move.from,
@@ -126,13 +128,24 @@ data class Raumschach(
         val quiet = if (side == 1) listOf(D(0, 1, 0), D(0, 0, 1)) else listOf(D(0, -1, 0), D(0, 0, -1))
         for (d in quiet) {
             val to = at(l + d.l, r + d.r, f + d.f) ?: continue
-            if (board[to] == 0) add(RaumMove(from, to))
+            if (board[to] == 0) addAll(pawnMoves(from, to, side))
         }
         val caps = if (side == 1) WHITE_CAP else WHITE_CAP.map { D(-it.f, -it.r, -it.l) }
         for (d in caps) {
             val to = at(l + d.l, r + d.r, f + d.f) ?: continue
-            if (sideOf(board[to]) == -side) add(RaumMove(from, to))
+            if (sideOf(board[to]) == -side) addAll(pawnMoves(from, to, side))
         }
+    }
+
+    private fun pawnMoves(from: Int, to: Int, side: Int): List<RaumMove> {
+        if (!promotes(side, to)) return listOf(RaumMove(from, to))
+        return PROMO.map { RaumMove(from, to, it) }
+    }
+
+    private fun crowned(piece: Int, to: Int, promo: Int): Int {
+        if (abs(piece) != PAWN || !promotes(sideOf(piece), to)) return piece
+        val kind = if (promo in PROMO) promo else QUEEN
+        return kind * sideOf(piece)
     }
 
     private fun leaps(from: Int, side: Int): List<RaumMove> = buildList {
@@ -216,6 +229,7 @@ data class Raumschach(
         private val QUEEN_DIRS = axis(1) + axis(2) + axis(3)
         private val WHITE_CAP = listOf(D(1, 1, 0), D(-1, 1, 0), D(0, 1, 1), D(1, 0, 1), D(-1, 0, 1))
         private val KNIGHT_DELTAS = knightDeltas()
+        private val PROMO = listOf(QUEEN, ROOK, BISHOP, UNICORN, KNIGHT)
 
         val OPENING: List<Int> = MutableList(125) { 0 }.apply {
             val back = intArrayOf(ROOK, KNIGHT, KING, KNIGHT, ROOK)
@@ -289,7 +303,7 @@ data class Raumschach(
     }
 }
 
-data class RaumMove(val from: Int, val to: Int)
+data class RaumMove(val from: Int, val to: Int, val promo: Int = Raumschach.QUEEN)
 
 private data class D(val f: Int, val r: Int, val l: Int)
 

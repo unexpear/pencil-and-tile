@@ -5,10 +5,14 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +55,7 @@ import com.simplegamegen.sudoku.ui.assets.drawRing
 import com.simplegamegen.sudoku.ui.assets.floatSquareHit
 import com.simplegamegen.sudoku.ui.components.InfoChip
 import com.simplegamegen.sudoku.ui.components.ToolButton
+import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 import kotlin.math.roundToInt
@@ -70,12 +75,13 @@ private val RaumStrength = listOf(
 )
 
 private const val RaumRules =
-    "Raumschach on a 5×5×5 cube, in Maack's array as kept by the International Raumschach Federation. Levels are A to E, files a to e, ranks 1 to 5. " +
-        "You play White and move first, or pass the phone. A rook moves through the faces, a bishop through the edges, and a unicorn through the corners. " +
+    "Raumschach on a 5×5×5 cube, the normal form kept by the International Raumschach Federation from Dawson's reading of Maack. This is not Maack's 8×8×8 game, where a pawn may move in every direction. " +
+        "Levels are A to E, files a to e, ranks 1 to 5. You play White and move first, or pass the phone. A rook moves through the faces, a bishop through the edges, and a unicorn through the corners. " +
         "The queen uses all three, the king one step of the queen, and the knight leaps two squares on one axis and one on another. " +
         "A pawn steps one empty square forward through a face — up a rank, or up a level for White — and captures one square diagonally forward through an edge. " +
-        "It does not capture through a corner, and it has no double step and no en passant. A pawn promotes to a queen on White's rank 5 of level E, or Black's rank 1 of level A. " +
-        "Checkmate wins. Stalemate, the same position three times, or 50 moves each with no capture and no pawn move, is a draw. Tap a piece, then a highlighted square."
+        "It does not capture through a corner, and it has no double step, no en passant, and no castling. " +
+        "A pawn promotes to a queen, rook, bishop, unicorn, or knight on White's rank 5 of level E, or Black's rank 1 of level A. " +
+        "Checkmate wins. Stalemate, the same position three times, or 50 moves each with no capture and no pawn move, is a draw. Tap a piece, then a highlighted square. When a pawn promotes, choose the piece."
 
 val RaumschachSetup: (PuzzleFactory) -> PlaySetup<Raumschach> = { factory ->
     PlaySetup(
@@ -115,6 +121,7 @@ fun RaumschachScreen(nav: NavController, vm: PlayViewModel<Raumschach>, factory:
         val human = g.passAndPlay || g.turn == 1
         val playable = !g.ended && human && !s.thinking && !s.busy
         var selected by remember(g) { mutableStateOf<Int?>(null) }
+        var ask by remember(g) { mutableStateOf<List<RaumMove>?>(null) }
         val legal = remember(g) { g.legalMoves() }
         PlayBoard(
             full, { full = false }, s.canUndo && !s.busy, vm::undo,
@@ -132,11 +139,50 @@ fun RaumschachScreen(nav: NavController, vm: PlayViewModel<Raumschach>, factory:
             },
         ) {
             RaumTable(camera, g, legal, selected, playable, onSelect = { selected = it }, onPlay = { move ->
-                vm.play { it.play(move) }
-                selected = null
+                val choices = legal.filter { it.from == move.from && it.to == move.to }
+                if (choices.size > 1) ask = choices
+                else {
+                    vm.play { it.play(move) }
+                    selected = null
+                }
             })
         }
+        val pending = ask
+        if (pending != null) {
+            val order = listOf(Raumschach.QUEEN, Raumschach.ROOK, Raumschach.BISHOP, Raumschach.UNICORN, Raumschach.KNIGHT)
+            AlertDialog(
+                onDismissRequest = { ask = null },
+                title = { Text("Promote the pawn") },
+                text = { Text("Choose the piece.") },
+                confirmButton = {
+                    Column {
+                        pending.sortedBy { order.indexOf(it.promo) }.forEach { move ->
+                            TextButton(
+                                onClick = {
+                                    vm.play { it.play(move) }
+                                    ask = null
+                                    selected = null
+                                },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                            ) { Text(raumPromo(move.promo)) }
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { ask = null }) { Text("Cancel") }
+                },
+            )
+        }
     }
+}
+
+private fun raumPromo(kind: Int) = when (kotlin.math.abs(kind)) {
+    Raumschach.QUEEN -> "Queen"
+    Raumschach.ROOK -> "Rook"
+    Raumschach.BISHOP -> "Bishop"
+    Raumschach.UNICORN -> "Unicorn"
+    Raumschach.KNIGHT -> "Knight"
+    else -> "Queen"
 }
 
 @Composable

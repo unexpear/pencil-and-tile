@@ -69,7 +69,9 @@ class TriDTest {
         board[TriD.Sq(1, 0, 3).key] = 0
         board[TriD.Sq(0, 1, 3).key] = 0
         val g = TriD(0, 1, board, fresh = TriD.FRESH, castling = 0)
-        val step = g.shifts(0).filterIsInstance<TriMove.Shift>().first { it.pin == 1 && !it.inverted }
+        val shifts = g.shifts(0).filterIsInstance<TriMove.Shift>()
+        assertTrue(shifts.none { it.pin == 2 }, "rank 1 to rank 4 is three ranks, past Roth's limit")
+        val step = shifts.first { it.pin == 1 && !it.inverted }
         assertEquals(1, g.squares.count { g.pieceAt(it) == TriD.PAWN && it.z == 3 && it.f <= 1 })
         val next = g.play(step)!!
         assertEquals(1, next.pins[0])
@@ -118,6 +120,35 @@ class TriDTest {
         val live = TriD.start(3, 0).play(TriD.start(3, 0).legalMoves().first())!!
         assertEquals(live, TriDCodec.decode(TriDCodec.encode(live)))
         assertNull(TriDCodec.decode("nope"))
+    }
+
+    @Test fun `a pawn promotes to a queen, rook, bishop, or knight`() {
+        val from = TriD.Sq(1, 7, 6)
+        val to = TriD.Sq(1, 8, 6)
+        val board = MutableList(480) { 0 }
+        board[from.key] = TriD.PAWN
+        board[TriD.Sq(2, 1, 2).key] = TriD.KING
+        board[TriD.Sq(2, 8, 6).key] = -TriD.KING
+        val g = TriD(0, 1, board, fresh = listOf(from.key), castling = 0)
+        val choices = g.movesFrom(from).filterIsInstance<TriMove.Slide>().filter { it.to == to }
+        assertEquals(setOf(TriD.QUEEN, TriD.ROOK, TriD.BISHOP, TriD.KNIGHT), choices.map { it.promo }.toSet())
+        val rook = g.play(TriMove.Slide(from, to, TriD.ROOK))!!
+        assertEquals(TriD.ROOK, rook.pieceAt(to))
+        assertEquals(0, rook.pieceAt(from))
+    }
+
+    @Test fun `a board that carries a pawn onto the last ranks offers every promotion`() {
+        val pawn = TriD.Sq(1, 7, 5)
+        val board = MutableList(480) { 0 }
+        board[pawn.key] = TriD.PAWN
+        board[TriD.WK_HOME.key] = TriD.KING
+        board[TriD.BK_HOME.key] = -TriD.KING
+        val g = TriD(0, 1, board, pins = listOf(4, 0, 0, 5), fresh = listOf(pawn.key), castling = 0)
+        val shifts = g.shifts(0).filterIsInstance<TriMove.Shift>().filter { it.pin == 5 && !it.inverted }
+        assertEquals(setOf(TriD.QUEEN, TriD.ROOK, TriD.BISHOP, TriD.KNIGHT), shifts.map { it.promo }.toSet())
+        val knight = g.play(shifts.first { it.promo == TriD.KNIGHT })!!
+        assertEquals(TriD.KNIGHT, knight.pieceAt(TriD.Sq(1, 9, 7)))
+        assertEquals(5, knight.pins[0])
     }
 
     @Test fun `the computer only plays a legal move`() {

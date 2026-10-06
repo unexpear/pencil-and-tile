@@ -5,11 +5,14 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -74,13 +77,15 @@ private val TriDStrength = listOf(
 )
 
 private const val TriDRules =
-    "Tri-dimensional chess on Charles Roth's Federation Revised Standard 5.0 board: three fixed 4×4 main boards and four movable 2×2 attack boards. " +
-        "You play White and move first, or pass the phone. Pieces use ordinary chess moves in file and rank and may finish on any level. They cannot move straight up. " +
+    "Tri-dimensional chess follows Charles Roth's Federation Revised Standard 5.0 (2012), his reading of Andrew Bartmess's Federation Standard for the television board. There is no Paramount ruleset. " +
+        "This app leaves out Bartmess's rook-pawn sideways step, which Roth treats as optional, and it does not use Michael Grant's attack-board rules. " +
+        "Three fixed 4×4 main boards and four movable 2×2 attack boards. You play White and move first, or pass the phone. " +
+        "Pieces use ordinary chess moves in file and rank and may finish on any level. They cannot move straight up. " +
         "The path is the highest square between them that is not above the higher board. When that board is a main board with an attack board just above it, a higher path is also allowed. Knights jump. " +
-        "An attack board you own may move instead of a piece when it is empty or carries only one of your pawns, and you still have a pawn: slide it one or two posts along its file, and you may flip it. " +
-        "Capturing the last enemy man on an attack board takes that board. " +
-        "Pawns move one rank forward, or two on their first move, and capture one file diagonally onto any level. They promote to a queen on rank 8 or 9 for White and rank 0 or 1 for Black. There is no sideways rook-pawn move. " +
-        "Castling and en passant follow Roth's rules. Checkmate wins. Stalemate, the same position three times, or 50 moves each with no capture and no pawn move, is a draw. Tap a piece, then a highlighted square."
+        "An attack board you own may move instead of a piece when it is empty or carries only one of your pawns, and you still have a pawn: slide it one or two ranks along its file, and you may flip it. A three-rank gap between posts is too far. " +
+        "Capturing the last enemy man on an attack board takes that board. An empty board stays with its owner. " +
+        "Pawns move one rank forward, or two on their first move, and capture one file diagonally onto any level. They promote to a queen, rook, bishop, or knight on rank 8 or 9 for White and rank 0 or 1 for Black. " +
+        "Castling and en passant follow Roth's rules. Checkmate wins. Stalemate, the same position three times, or 50 moves each with no capture and no pawn move, is a draw. Tap a piece, then a highlighted square. When a pawn promotes, choose the piece."
 
 val TriDSetup: (PuzzleFactory) -> PlaySetup<TriD> = { factory ->
     PlaySetup(
@@ -120,6 +125,7 @@ fun TriDScreen(nav: NavController, vm: PlayViewModel<TriD>, factory: PuzzleFacto
         val human = g.passAndPlay || g.turn == 1
         val playable = !g.ended && human && !s.thinking && !s.busy
         var pick by remember(g) { mutableStateOf<TriPick?>(null) }
+        var ask by remember(g) { mutableStateOf<List<TriMove>?>(null) }
         val legal = remember(g) { g.legalMoves() }
         val shifts = remember(legal) { legal.filterIsInstance<TriMove.Shift>().groupBy { it.board } }
         PlayBoard(
@@ -155,14 +161,17 @@ fun TriDScreen(nav: NavController, vm: PlayViewModel<TriD>, factory: PuzzleFacto
                         }
                         val board = (pick as? TriPick.Board)?.index
                         if (board != null) {
-                            shifts[board].orEmpty().forEach { move ->
+                            shifts[board].orEmpty().groupBy { it.pin to it.inverted }.values.forEach { group ->
                                 FilterChip(
                                     selected = false,
                                     onClick = {
-                                        vm.play { it.play(move) }
-                                        pick = null
+                                        if (group.size > 1) ask = group
+                                        else {
+                                            vm.play { it.play(group.first()) }
+                                            pick = null
+                                        }
                                     },
-                                    label = { Text(shiftName(g, move)) },
+                                    label = { Text(shiftName(g, group.first())) },
                                     modifier = Modifier.heightIn(min = 40.dp),
                                 )
                             }
@@ -172,11 +181,63 @@ fun TriDScreen(nav: NavController, vm: PlayViewModel<TriD>, factory: PuzzleFacto
             },
         ) {
             TriDTable(camera, g, legal, shifts, pick, playable, onPick = { pick = it }, onPlay = { move ->
-                vm.play { it.play(move) }
-                pick = null
+                val choices = triChoices(legal, move)
+                if (choices.size > 1) ask = choices
+                else {
+                    vm.play { it.play(move) }
+                    pick = null
+                }
             })
         }
+        val pending = ask
+        if (pending != null) {
+            val order = listOf(TriD.QUEEN, TriD.ROOK, TriD.BISHOP, TriD.KNIGHT)
+            AlertDialog(
+                onDismissRequest = { ask = null },
+                title = { Text("Promote the pawn") },
+                text = { Text("Choose the piece.") },
+                confirmButton = {
+                    Column {
+                        pending.sortedBy { order.indexOf(triPromo(it)) }.forEach { move ->
+                            TextButton(
+                                onClick = {
+                                    vm.play { it.play(move) }
+                                    ask = null
+                                    pick = null
+                                },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                            ) { Text(triPromoWord(triPromo(move))) }
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { ask = null }) { Text("Cancel") }
+                },
+            )
+        }
     }
+}
+
+private fun triChoices(legal: List<TriMove>, move: TriMove): List<TriMove> = when (move) {
+    is TriMove.Slide -> legal.filter { it is TriMove.Slide && it.from == move.from && it.to == move.to }
+    is TriMove.Passant -> legal.filter { it is TriMove.Passant && it.from == move.from && it.land == move.land }
+    is TriMove.Shift -> legal.filter { it is TriMove.Shift && it.board == move.board && it.pin == move.pin && it.inverted == move.inverted }
+    else -> listOf(move)
+}
+
+private fun triPromo(move: TriMove): Int = when (move) {
+    is TriMove.Slide -> move.promo
+    is TriMove.Passant -> move.promo
+    is TriMove.Shift -> move.promo
+    is TriMove.Castle -> TriD.QUEEN
+}
+
+private fun triPromoWord(kind: Int) = when (kotlin.math.abs(kind)) {
+    TriD.QUEEN -> "Queen"
+    TriD.ROOK -> "Rook"
+    TriD.BISHOP -> "Bishop"
+    TriD.KNIGHT -> "Knight"
+    else -> "Queen"
 }
 
 @Composable
@@ -230,7 +291,7 @@ private fun TriDTable(
         }) {
             val ink = Color(0xFFF1DFC0)
             order.forEach { cell ->
-                val light = (cell.sq.f + cell.sq.r) % 2 == 0
+                val light = (cell.sq.f + cell.sq.r) % 2 == 1
                 val base = if (light) c.boardLight else c.boardDark
                 val marked = destOn(g, legal, shifts, pick, cell.sq) != null
                 val selected = pick is TriPick.Man && pick.sq == cell.sq
@@ -345,7 +406,9 @@ private fun land(move: TriMove, turn: Int): TriD.Sq? = when (move) {
 
 private fun shiftName(g: TriD, move: TriMove.Shift): String {
     val white = g.owners[move.board] == 1
-    val ahead = if (white) move.pin - g.pins[move.board] else g.pins[move.board] - move.pin
+    val fromRank = TriD.PINS[g.pins[move.board]].rank
+    val toRank = TriD.PINS[move.pin].rank
+    val ahead = if (white) toRank - fromRank else fromRank - toRank
     val flipped = move.inverted != ((g.flip and (1 shl move.board)) != 0)
     val step = when (ahead) {
         1 -> "Ahead 1"

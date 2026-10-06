@@ -861,8 +861,8 @@ internal object BoardTutorials {
             rules = listOf(
                 "Pieces use ordinary chess steps in file and rank, and may finish on any level. A move cannot stay on the same square and go straight up.",
                 "The path uses the highest square between the two boards. A second, higher path is allowed when an attack board sits just above a main board.",
-                "You may move an attack board you own, one or two posts along its file, and you may flip it, when it is empty or carries only one of your pawns.",
-                "Pawns promote to a queen on rank 8 or 9 for White and rank 0 or 1 for Black. Checkmate wins. Stalemate, a repeated position, or 50 quiet moves is a draw.",
+                "You may move an attack board you own, one or two ranks along its file, and you may flip it, when it is empty or carries only one of your pawns.",
+                "Pawns promote to a queen, rook, bishop, or knight on rank 8 or 9 for White and rank 0 or 1 for Black. Checkmate wins. Stalemate, a repeated position, or 50 quiet moves is a draw.",
             ),
             tips = listOf(
                 "Leave only one pawn on an attack board when you want to move that board.",
@@ -901,7 +901,7 @@ internal object BoardTutorials {
             rules = listOf(
                 "Levels A to E stack into a cube. A rook slides on one axis, a bishop on two, and a unicorn on all three. The queen uses every one of those moves.",
                 "A pawn steps one empty square forward through a face, and captures one square diagonally forward through an edge. It does not capture through a corner.",
-                "There is no double step and no castling. A pawn promotes to a queen on White's E5 or Black's A1.",
+                "There is no double step and no castling. A pawn promotes to a queen, rook, bishop, unicorn, or knight on White's E5 or Black's A1.",
                 "Checkmate wins. Stalemate, the same position three times, or 50 moves each with no capture and no pawn move, is a draw.",
             ),
             tips = listOf(

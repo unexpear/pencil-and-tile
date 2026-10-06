@@ -27,13 +27,16 @@ import kotlin.random.Random
  *
  * Instead of moving a man, a player may move an attack board they own, if it is empty or carries
  * only one of their pawns, and they still have a pawn somewhere. The board slides one or two
- * posts along its own file (queen's boards stay on the b-file posts, king's boards on the e-file
- * posts), and it may invert, hanging from the post instead of standing on it. Inverting in place
- * is a move. A pawn riding the board has used its first move. Boards do not capture men on the
- * main boards. Capturing the last enemy man on an attack board takes ownership of that board.
+ * ranks along its own file (queen's boards stay on the b-file posts, king's boards on the e-file
+ * posts). Posts three ranks apart, such as rank 1 to rank 4, are out of range. It may also
+ * invert, hanging from the post instead of standing on it. Inverting in place is a move. A pawn
+ * riding the board has used its first move. Boards do not capture men on the main boards.
+ * Capturing the last enemy man on an attack board takes ownership of that board. An empty board
+ * stays with its owner.
  *
- * Pawns promote to a queen on rank 8 or 9 for White and rank 0 or 1 for Black, including when a
- * board carries them there. The optional rook-pawn sideways step is not used. Castling: king-side
+ * Pawns promote to a queen, rook, bishop, or knight on rank 8 or 9 for White and rank 0 or 1 for
+ * Black, including when a board carries them there. Roth's "normally" is ordinary chess
+ * promotion. The optional rook-pawn sideways step from Bartmess is not used. Castling: king-side
  * swaps the king with its rook; queen-side, once the queen has left home, teleports the king to
  * the queen's square and the queen's rook to the king's square. Neither may have moved, and the
  * king may not be in check on the square it leaves or the square it lands. A pawn's first move
@@ -176,13 +179,15 @@ data class TriD(
             fun offer(np: Int, nf: Boolean) {
                 if (np == pin && nf == inv) return
                 if (!fits(i, np, nf)) return
-                val move = TriMove.Shift(i, np, nf)
-                if (!apply(move).inCheck(turn)) add(move)
+                for (promo in shiftPromos(i, np, nf)) {
+                    val move = TriMove.Shift(i, np, nf, promo)
+                    if (!apply(move).inCheck(turn)) add(move)
+                }
             }
             offer(pin, !inv)
-            for (d in intArrayOf(-2, -1, 1, 2)) {
-                val np = pin + d
-                if (np !in PINS.indices) continue
+            for (np in PINS.indices) {
+                val delta = abs(PINS[np].rank - PINS[pin].rank)
+                if (delta !in 1..2) continue
                 offer(np, inv)
                 offer(np, !inv)
             }
@@ -207,7 +212,9 @@ data class TriD(
             if (to == from) continue
             if (sideOf(at(to)) == side) continue
             if (kind == PAWN) {
-                if (pawnQuiet(from, to, side) || pawnCapture(from, to, side)) out += TriMove.Slide(from, to)
+                if (pawnQuiet(from, to, side) || pawnCapture(from, to, side)) {
+                    out += crownChoices(piece, to).map { TriMove.Slide(from, to, it) }
+                }
             } else if (canHit(from, to, piece)) out += TriMove.Slide(from, to)
         }
         if (kind == PAWN && epLand >= 0) {
@@ -215,7 +222,7 @@ data class TriD(
             val victim = Sq.of(epVictim)
             if (land in squares && at(land) == 0 && at(victim) == -side * PAWN &&
                 land.r - from.r == side && abs(land.f - from.f) == 1
-            ) out += TriMove.Passant(from, land, victim)
+            ) out += crownChoices(piece, land).map { TriMove.Passant(from, land, victim, it) }
         }
         return out
     }
@@ -309,10 +316,11 @@ data class TriD(
         val piece = next[move.from.key]
         val captured = next[move.to.key]
         next[move.from.key] = 0
-        next[move.to.key] = crowned(piece, move.to)
+        next[move.to.key] = crowned(piece, move.to, move.promo)
         val owners2 = owners.toMutableList()
         if (captured != 0) transfer(move.to, sideOf(captured), next, owners2)
-        val double = abs(piece) == PAWN && abs(move.to.r - move.from.r) == 2 && move.to.f == move.from.f
+        val double = abs(piece) == PAWN && abs(move.to.r - move.from.r) == 2 && move.to.f == move.from.f &&
+            !promotes(piece, move.to)
         val mid = if (double) highest(move.from.f, move.from.r + sideOf(piece), max(move.from.z, move.to.z)) else null
         return copy(
             board = next,
@@ -332,7 +340,7 @@ data class TriD(
         val piece = next[move.from.key]
         next[move.from.key] = 0
         next[move.victim.key] = 0
-        next[move.land.key] = crowned(piece, move.land)
+        next[move.land.key] = crowned(piece, move.land, move.promo)
         val owners2 = owners.toMutableList()
         transfer(move.victim, -sideOf(piece), next, owners2)
         return copy(
@@ -387,7 +395,7 @@ data class TriD(
         }
         for ((uv, p) in carried) {
             val dest = spot(track, move.pin, move.inverted, uv.first, uv.second)
-            next[dest.key] = crowned(p, dest)
+            next[dest.key] = crowned(p, dest, move.promo)
         }
         val pins2 = pins.toMutableList()
         pins2[move.board] = move.pin
@@ -419,10 +427,33 @@ data class TriD(
         }
     }
 
-    private fun crowned(piece: Int, to: Sq): Int {
-        if (abs(piece) != PAWN) return piece
+    private fun shiftPromos(index: Int, pin: Int, inverted: Boolean): List<Int> {
+        val track = index % 2
+        val oldPin = pins[index]
+        val oldFlip = flipped(index)
+        for (u in 0..1) for (v in 0..1) {
+            val sq = spot(track, oldPin, oldFlip, u, v)
+            val p = at(sq)
+            if (abs(p) != PAWN) continue
+            val dest = spot(track, pin, inverted, u, v)
+            if (promotes(p, dest)) return PROMO
+        }
+        return listOf(QUEEN)
+    }
+
+    private fun crownChoices(piece: Int, to: Sq): List<Int> =
+        if (promotes(piece, to)) PROMO else listOf(QUEEN)
+
+    private fun promotes(piece: Int, to: Sq): Boolean {
+        if (abs(piece) != PAWN) return false
         val side = sideOf(piece)
-        return if ((side == 1 && to.r >= 8) || (side == -1 && to.r <= 1)) QUEEN * side else piece
+        return (side == 1 && to.r >= 8) || (side == -1 && to.r <= 1)
+    }
+
+    private fun crowned(piece: Int, to: Sq, promo: Int): Int {
+        if (!promotes(piece, to)) return piece
+        val kind = if (abs(promo) in PROMO) abs(promo) else QUEEN
+        return kind * sideOf(piece)
     }
 
     private fun rights(next: List<Int>): Int {
@@ -475,6 +506,7 @@ data class TriD(
             Pin(1, 2), Pin(3, 4), Pin(4, 2), Pin(5, 6), Pin(6, 4), Pin(8, 6),
         )
         private val MAIN_LEVELS = intArrayOf(2, 4, 6)
+        private val PROMO = listOf(QUEEN, ROOK, BISHOP, KNIGHT)
         private val MAIN: List<Sq> = buildList {
             for (f in 1..4) {
                 for (r in 1..4) add(Sq(f, r, 2))
@@ -548,10 +580,10 @@ data class TriD(
 }
 
 sealed class TriMove {
-    data class Slide(val from: TriD.Sq, val to: TriD.Sq) : TriMove()
-    data class Passant(val from: TriD.Sq, val land: TriD.Sq, val victim: TriD.Sq) : TriMove()
+    data class Slide(val from: TriD.Sq, val to: TriD.Sq, val promo: Int = TriD.QUEEN) : TriMove()
+    data class Passant(val from: TriD.Sq, val land: TriD.Sq, val victim: TriD.Sq, val promo: Int = TriD.QUEEN) : TriMove()
     data class Castle(val kingSide: Boolean) : TriMove()
-    data class Shift(val board: Int, val pin: Int, val inverted: Boolean) : TriMove()
+    data class Shift(val board: Int, val pin: Int, val inverted: Boolean, val promo: Int = TriD.QUEEN) : TriMove()
 }
 
 private fun sideOf(piece: Int) = when {

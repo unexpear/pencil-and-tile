@@ -88,8 +88,17 @@ class RaumschachTest {
         promo[u] = 0
         promo[Raumschach.idx(2, 2, 2)] = 0
         promo[pawn] = Raumschach.PAWN
-        val after = Raumschach(0, 1, promo).play(pawn, Raumschach.idx(4, 4, 2))!!
-        assertEquals(Raumschach.QUEEN, after.board[Raumschach.idx(4, 4, 2)])
+        val to = Raumschach.idx(4, 4, 2)
+        val game = Raumschach(0, 1, promo)
+        val choices = game.movesFrom(pawn).filter { it.to == to }
+        assertEquals(
+            setOf(Raumschach.QUEEN, Raumschach.ROOK, Raumschach.BISHOP, Raumschach.UNICORN, Raumschach.KNIGHT),
+            choices.map { it.promo }.toSet(),
+        )
+        val after = game.play(pawn, to)!!
+        assertEquals(Raumschach.QUEEN, after.board[to])
+        val horn = game.play(RaumMove(pawn, to, Raumschach.UNICORN))!!
+        assertEquals(Raumschach.UNICORN, horn.board[to])
     }
 
     @Test fun `a corner king dies to a protected unicorn-step queen`() {
