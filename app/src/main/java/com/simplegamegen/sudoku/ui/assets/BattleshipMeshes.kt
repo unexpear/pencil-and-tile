@@ -6,7 +6,8 @@ import java.nio.ByteOrder
 
 /**
  * Hulls and pegs adapted from Original Battleship Pieces by MZimb (CC BY),
- * Thingiverse thing 5190846. Measured along the hull, that pack is a 5, a 4,
+ * Thingiverse thing 5190846, resized from Mattwall's Battleship Game Spare Ships
+ * (CC BY, thing 4244260). Measured along the hull, that pack is a 5, a 4,
  * two 3s and a 2, which is this game's fleet:
  *
  * | Game ship   | Squares | Source file        |

@@ -48,6 +48,8 @@ class BattleshipBoardTest {
         val notice = File("src/main/assets/licenses/battleship-pieces-cc-by.txt").readText()
         assertTrue(notice.contains("MZimb"))
         assertTrue(notice.contains("5190846"))
+        assertTrue(notice.contains("Mattwall"))
+        assertTrue(notice.contains("4244260"))
         assertTrue(notice.contains("Creative Commons"))
         assertTrue(notice.contains("Aircraft Carrier"))
         val credits = File("src/main/java/com/simplegamegen/sudoku/ui/screens/CreditsScreen.kt").readText()

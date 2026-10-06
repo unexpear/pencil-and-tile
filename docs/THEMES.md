@@ -55,8 +55,9 @@ in-range values; anything else is rejected without changes.
 ## Game art
 
 Pieces are drawn in code (`ui/assets/`). The Battleship hulls and pins are the one
-third-party set: MZimb's Original Battleship Pieces, Creative Commons Attribution,
-Thingiverse thing 5190846, scaled onto the classic fleet. Everything else is original:
+third-party set: MZimb's Original Battleship Pieces (Thingiverse 5190846), resized
+from Mattwall's Battleship Game Spare Ships (Thingiverse 4244260). Both are
+Creative Commons Attribution. The hulls are scaled onto the classic fleet. Everything else is original:
 
 - **Cards:** traditional red/black suits, standard pip layouts for 2–10, rank
   and suit indices in both corners, and double-headed J/Q/K court portraits. The
