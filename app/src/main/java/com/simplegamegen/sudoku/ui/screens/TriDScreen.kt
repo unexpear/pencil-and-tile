@@ -71,8 +71,8 @@ private val TriDViews = listOf(
 private val TriDStrength = listOf(
     "Moves almost at random",
     "Takes material when it sees it",
-    "Looks a move ahead",
     "Looks two moves ahead",
+    "Looks three moves ahead",
     "Pass the phone. White moves first.",
 )
 
@@ -156,7 +156,7 @@ fun TriDScreen(nav: NavController, vm: PlayViewModel<TriD>, factory: PuzzleFacto
                                 onClick = { pick = if (pick == TriPick.Board(board)) null else TriPick.Board(board) },
                                 label = { Text(g.label(board)) },
                                 colors = FilterChipDefaults.filterChipColors(containerColor = colors.surface),
-                                modifier = Modifier.heightIn(min = 40.dp),
+                                modifier = Modifier.heightIn(min = 48.dp),
                             )
                         }
                         val board = (pick as? TriPick.Board)?.index
@@ -172,7 +172,7 @@ fun TriDScreen(nav: NavController, vm: PlayViewModel<TriD>, factory: PuzzleFacto
                                         }
                                     },
                                     label = { Text(shiftName(g, group.first())) },
-                                    modifier = Modifier.heightIn(min = 40.dp),
+                                    modifier = Modifier.heightIn(min = 48.dp),
                                 )
                             }
                         }
@@ -254,6 +254,7 @@ private fun TriDTable(
     val c = LocalGameLook.current.colors
     val measurer = rememberTextMeasurer()
     val cells = remember(g.squares) { g.squares.map { TriCell(it, it.wx(), it.wy(), it.wz()) } }
+    val boardSquares = (pick as? TriPick.Board)?.let { g.squaresOf(it.index).toSet() }.orEmpty()
     BoardWithViews(camera, n = 6, peakZ = 10.1f, margin = 0.7f, rows = 10f) { frame ->
         val order = cells.sortedByDescending { frame.depth(it.x, it.y, it.z) }
         order.forEach { cell ->
@@ -292,12 +293,15 @@ private fun TriDTable(
             val ink = Color(0xFFF1DFC0)
             order.forEach { cell ->
                 val light = (cell.sq.f + cell.sq.r) % 2 == 1
-                val base = if (light) c.boardLight else c.boardDark
+                val attack = cell.sq.z != 2 && cell.sq.z != 4 && cell.sq.z != 6
+                var base = if (light) c.boardLight else c.boardDark
+                if (attack) base = lerp(base, c.highlight, 0.18f)
                 val marked = destOn(g, legal, shifts, pick, cell.sq) != null
                 val selected = pick is TriPick.Man && pick.sq == cell.sq
+                val chosen = cell.sq in boardSquares
                 val last = cell.sq.key == g.lastFrom || cell.sq.key == g.lastTo
                 val tint = when {
-                    selected -> 0.62f
+                    selected || chosen -> 0.62f
                     marked -> 0.34f
                     last -> 0.28f
                     else -> 0f

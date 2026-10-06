@@ -17,9 +17,15 @@ import com.simplegamegen.sudoku.tabletop.Go
 import com.simplegamegen.sudoku.tabletop.GoAi
 import com.simplegamegen.sudoku.tabletop.Move
 import com.simplegamegen.sudoku.tabletop.Op
+import com.simplegamegen.sudoku.tabletop.Raumschach
+import com.simplegamegen.sudoku.tabletop.RaumschachAi
 import com.simplegamegen.sudoku.tabletop.ReversiState
 import com.simplegamegen.sudoku.tabletop.TableAi
+import com.simplegamegen.sudoku.tabletop.TriD
+import com.simplegamegen.sudoku.tabletop.TriDAi
+import com.simplegamegen.sudoku.tabletop.TriMove
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -152,6 +158,109 @@ class OpponentStrengthTest {
         }
     }
 
+    @Test fun `tri-d medium and above take a hanging queen and keep their own`() {
+        val queen = TriD.Sq(2, 4, 4)
+        val hanging = tri(mapOf(
+            queen to TriD.QUEEN,
+            TriD.Sq(2, 6, 4) to -TriD.QUEEN,
+            TriD.Sq(4, 1, 2) to TriD.KING,
+            TriD.Sq(4, 8, 6) to -TriD.KING,
+        ), turn = -1)
+        assertTrue(hanging.legalMoves().any { it is TriMove.Slide && it.to == queen })
+        assertTrue(TriDAi.choose(hanging.copy(setting = 0)) in hanging.legalMoves())
+        for (setting in 1..3) {
+            val started = System.nanoTime()
+            val move = TriDAi.choose(hanging.copy(setting = setting))
+            val millis = (System.nanoTime() - started) / 1_000_000
+            assertTrue(move is TriMove.Slide && move.to == queen, "setting $setting played $move")
+            assertTrue(millis < 2_000, "setting $setting took ${millis}ms")
+        }
+
+        val pawn = TriD.Sq(3, 5, 4)
+        val bait = tri(mapOf(
+            TriD.Sq(2, 4, 4) to TriD.QUEEN,
+            pawn to -TriD.PAWN,
+            TriD.Sq(3, 7, 6) to -TriD.ROOK,
+            TriD.Sq(4, 1, 2) to TriD.KING,
+            TriD.Sq(1, 8, 6) to -TriD.KING,
+        ))
+        val grab = bait.legalMoves().filterIsInstance<TriMove.Slide>().first { it.to == pawn }
+        val lost = bait.perform(grab)
+        assertEquals(TriD.QUEEN, lost.pieceAt(pawn))
+        assertTrue(lost.legalMoves().any { it is TriMove.Slide && it.to == pawn })
+        for (setting in 1..3) {
+            val move = TriDAi.choose(bait.copy(setting = setting, seed = 3))
+            assertFalse(move is TriMove.Slide && move.to == pawn, "setting $setting hung the queen with $move")
+        }
+    }
+
+    @Test fun `tri-d medium and above take a mate`() {
+        val king = TriD.Sq(4, 8, 6)
+        val game = tri(mapOf(
+            TriD.Sq(4, 6, 4) to TriD.QUEEN,
+            king to -TriD.KING,
+            TriD.Sq(1, 1, 2) to TriD.KING,
+        ))
+        assertTrue(game.legalMoves().any { game.perform(it).let { next -> next.ended && next.winner == 1 } })
+        for (setting in 1..3) {
+            val move = TriDAi.choose(game.copy(setting = setting))
+            val next = game.perform(move)
+            assertTrue(next.ended && next.winner == 1, "setting $setting played $move")
+        }
+    }
+
+    @Test fun `raumschach medium and above take a hanging queen and keep their own`() {
+        val queen = Raumschach.idx(2, 2, 2)
+        val hanging = raum(mapOf(
+            queen to Raumschach.QUEEN,
+            Raumschach.idx(2, 4, 2) to -Raumschach.ROOK,
+            Raumschach.idx(0, 0, 0) to Raumschach.KING,
+            Raumschach.idx(4, 4, 4) to -Raumschach.KING,
+        ), turn = -1)
+        assertTrue(hanging.legalMoves().any { it.to == queen })
+        assertTrue(RaumschachAi.choose(hanging.copy(setting = 0)) in hanging.legalMoves())
+        for (setting in 1..3) {
+            val started = System.nanoTime()
+            val move = RaumschachAi.choose(hanging.copy(setting = setting))
+            val millis = (System.nanoTime() - started) / 1_000_000
+            assertEquals(queen, move.to, "setting $setting")
+            assertTrue(millis < 2_000, "setting $setting took ${millis}ms")
+        }
+
+        val pawn = Raumschach.idx(2, 2, 2)
+        val from = Raumschach.idx(2, 1, 2)
+        val bait = raum(mapOf(
+            from to Raumschach.QUEEN,
+            pawn to -Raumschach.PAWN,
+            Raumschach.idx(2, 4, 2) to -Raumschach.ROOK,
+            Raumschach.idx(0, 0, 0) to Raumschach.KING,
+            Raumschach.idx(4, 4, 0) to -Raumschach.KING,
+        ))
+        val grab = bait.legalMoves().first { it.from == from && it.to == pawn }
+        val lost = bait.perform(grab)
+        assertEquals(Raumschach.QUEEN, lost.board[pawn])
+        assertTrue(lost.legalMoves().any { it.to == pawn })
+        for (setting in 1..3) {
+            val move = RaumschachAi.choose(bait.copy(setting = setting))
+            assertFalse(move.from == from && move.to == pawn, "setting $setting hung the queen")
+        }
+    }
+
+    @Test fun `raumschach medium and above take a mate`() {
+        val board = MutableList(125) { 0 }
+        board[Raumschach.idx(0, 0, 0)] = -Raumschach.KING
+        board[Raumschach.idx(1, 1, 2)] = Raumschach.QUEEN
+        board[Raumschach.idx(2, 2, 2)] = Raumschach.KING
+        board[Raumschach.idx(4, 4, 4)] = Raumschach.PAWN
+        val game = Raumschach(0, 1, board)
+        assertTrue(game.legalMoves().any { game.perform(it).let { next -> next.ended && next.winner == 1 } })
+        for (setting in 1..3) {
+            val move = RaumschachAi.choose(game.copy(setting = setting))
+            val next = game.perform(move)
+            assertTrue(next.ended && next.winner == 1, "setting $setting")
+        }
+    }
+
     @Test fun `ship expert keeps a low cargo die on the last roll and hard rolls it again`() {
         val dice = listOf(6, 5, 4, 3, 1)
         val expert = ShipAi.step(crew(dice, setting = 3, rolls = 2))
@@ -160,6 +269,18 @@ class OpponentStrengthTest {
         assertEquals(listOf(true, true, true, false, false), hard.held)
         val medium = ShipAi.step(crew(dice, setting = 1, rolls = 2))
         assertEquals(listOf(true, true, true, false, false), medium.held)
+    }
+
+    private fun tri(men: Map<TriD.Sq, Int>, turn: Int = 1): TriD {
+        val board = MutableList(480) { 0 }
+        for ((sq, piece) in men) board[sq.key] = piece
+        return TriD(0, 1, board, turn = turn, fresh = emptyList(), castling = 0)
+    }
+
+    private fun raum(men: Map<Int, Int>, turn: Int = 1): Raumschach {
+        val board = MutableList(125) { 0 }
+        for ((index, piece) in men) board[index] = piece
+        return Raumschach(0, 1, board, turn = turn)
     }
 
     private fun crew(dice: List<Int>, setting: Int, rolls: Int) = ShipCrew(
