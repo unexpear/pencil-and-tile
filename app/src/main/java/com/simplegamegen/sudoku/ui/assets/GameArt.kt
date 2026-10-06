@@ -140,6 +140,37 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 drawCircle(Color(0xFF1565C0), radius * 0.55f, center(0, 1))
                 drawCircle(Color(0xFFE53935), radius * 0.55f, center(1, 2))
             }
+            GameId.RPS -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFFF6EBD2), cornerRadius = CornerRadius(8f))
+                val radius = size.minDimension * 0.18f
+                fun center(col: Int, row: Int) = Offset(
+                    size.width * 0.3f + col * radius * 1.7f,
+                    size.height * 0.28f + row * radius * 1.85f,
+                )
+                fun blob(at: Offset, fill: Color) {
+                    val path = Path()
+                    for (i in 0 until 6) {
+                        val angle = Math.toRadians((60.0 * i).toDouble())
+                        val x = at.x + radius * kotlin.math.cos(angle).toFloat()
+                        val y = at.y + radius * kotlin.math.sin(angle).toFloat()
+                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+                    path.close()
+                    drawPath(path, Color(0xFFFFF8EC))
+                    drawPath(path, Color(0xFF8D6E63), style = Stroke(1.4f))
+                    drawCircle(fill, radius * 0.62f, at)
+                }
+                blob(center(0, 0), Color(0xFFE53935))
+                blob(center(1, 0), Color(0xFF1565C0))
+                blob(center(0, 1), Color(0xFFE53935))
+                val rock = center(0, 0)
+                drawCircle(Color(0xFFFFF8EC), radius * 0.28f, rock)
+                val paper = center(1, 0)
+                drawRoundRect(Color(0xFFFFF8EC), paper - Offset(radius * 0.22f, radius * 0.28f), Size(radius * 0.44f, radius * 0.56f), CornerRadius(radius * 0.08f))
+                val cut = center(0, 1)
+                drawLine(Color(0xFFFFF8EC), cut + Offset(-radius * 0.22f, -radius * 0.22f), cut + Offset(radius * 0.22f, radius * 0.22f), strokeWidth = radius * 0.12f, cap = StrokeCap.Round)
+                drawLine(Color(0xFFFFF8EC), cut + Offset(radius * 0.22f, -radius * 0.22f), cut + Offset(-radius * 0.22f, radius * 0.22f), strokeWidth = radius * 0.12f, cap = StrokeCap.Round)
+            }
             GameId.CONNECT_FOUR -> Canvas(Modifier.size(56.dp)) {
                 drawRoundRect(Color(0xFF1565C0), cornerRadius = CornerRadius(8f))
                 val cols = 4

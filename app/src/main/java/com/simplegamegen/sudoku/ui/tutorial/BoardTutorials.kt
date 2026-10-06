@@ -699,6 +699,99 @@ internal object BoardTutorials {
             ),
         )
     }
+
+    val rps: Tutorial get() {
+        fun scene(
+            n: Int,
+            pieces: Map<Pair<Int, Int>, Pair<String, Boolean>>,
+            mark: Pair<Int, Int>? = null,
+            good: Set<Pair<Int, Int>> = emptySet(),
+        ): Scene {
+            val radius = 0.62f
+            val cell = 0.8f
+            val items = (0 until n).flatMap { row ->
+                (0 until n).map { col ->
+                    val cx = radius + radius * 1.5f * col
+                    val cy = radius * 0.9f + radius * 0.9f * (row + col / 2f)
+                    val piece = pieces[row to col]
+                    val letter = piece?.first ?: ""
+                    Item(
+                        cellId(row, col),
+                        cx - cell / 2f,
+                        cy - cell / 2f,
+                        cell,
+                        cell,
+                        Cell(
+                            fill = Fill.OPEN,
+                            text = letter,
+                            mark = if (mark == row to col) Mark.CIRCLE else Mark.NONE,
+                        ),
+                        tone = when {
+                            row to col in good -> Tone.GOOD
+                            piece?.second == true -> Tone.ENTERED
+                            else -> Tone.PLAIN
+                        },
+                        describe = when (letter) {
+                            "R" -> if (piece?.second == true) "your rock" else "blue rock"
+                            "P" -> if (piece?.second == true) "your paper" else "blue paper"
+                            "S" -> if (piece?.second == true) "your scissors" else "blue scissors"
+                            else -> if (mark == row to col) "the circled hex" else "empty hex"
+                        },
+                    )
+                }
+            }
+            return Scene(items.maxOf { it.x + it.w } + 0.06f, items.maxOf { it.y + it.h } + 0.06f, items, Backdrop.BOARD, maxUnit = 44)
+        }
+        val yours: (String) -> Pair<String, Boolean> = { it to true }
+        val blue: (String) -> Pair<String, Boolean> = { it to false }
+        val n = 3
+        val camps = scene(n, mapOf(
+            0 to 0 to blue("R"), 0 to 1 to blue("P"), 0 to 2 to blue("S"),
+            2 to 0 to yours("R"), 2 to 1 to yours("P"), 2 to 2 to yours("S"),
+        ))
+        val rock = scene(n, mapOf(1 to 1 to blue("S"), 2 to 1 to yours("R")), mark = 1 to 1)
+        val captured = scene(n, mapOf(1 to 1 to yours("R")), good = setOf(1 to 1))
+        val blocked = scene(n, mapOf(1 to 0 to blue("S"), 2 to 0 to yours("P")), mark = 1 to 1)
+        val stepped = scene(n, mapOf(1 to 0 to blue("S"), 1 to 1 to yours("P")))
+        val last = scene(n, mapOf(1 to 2 to blue("P"), 1 to 1 to yours("S")), mark = 1 to 2)
+        val finish = scene(n, mapOf(1 to 2 to yours("S")), good = setOf(1 to 2))
+        return Tutorial(
+            GameId.RPS,
+            "Capture with rock, paper, and scissors on a hex board.",
+            rules = listOf(
+                "Each side starts with the same mix of rock, paper, and scissors on opposite sides of the hex board.",
+                "On your turn, move one of your pieces one hex in any of the six directions.",
+                "Land on an empty hex, or on an enemy your type beats. Paper beats rock, rock beats scissors, and scissors beats paper.",
+                "You cannot jump, and you cannot land on your own piece, the same type, or a type that beats you. Landing on an enemy captures it.",
+                "Capture every enemy piece, or leave the opponent with no legal move, to win. You play red from the bottom against the computer, or pass the phone.",
+            ),
+            tips = listOf(
+                "Take a capture when the landing hex is not next to a type that beats you.",
+                "A piece that cannot move is stuck. Leave the whole side with no move and you win.",
+            ),
+            steps = listOf(
+                Step(
+                    "Red starts at the bottom, blue at the top. R is rock, P is paper, and S is scissors.",
+                    camps.copy(caption = "Paper beats rock, rock beats scissors, and scissors beats paper."),
+                ),
+                Step(
+                    "Rock beats scissors. Tap the circled hex to capture.",
+                    rock, tap = setOf(cellId(1, 1)), after = captured,
+                    then = "Rock landed on the scissors and captured it.", help = "The circled hex.",
+                ),
+                Step(
+                    "Scissors beats paper, so paper cannot land there. Tap the empty hex instead.",
+                    blocked, tap = setOf(cellId(1, 1)), after = stepped,
+                    then = "Paper moved one hex onto an empty cell.", help = "The empty hex beside your paper.",
+                ),
+                Step(
+                    "Scissors beats paper. Tap the last paper to win.",
+                    last, tap = setOf(cellId(1, 2)), after = finish,
+                    then = "That was the last blue piece. Red wins!", help = "The circled paper.",
+                ),
+            ),
+        )
+    }
 }
 
 internal object ArcadeTutorials {
