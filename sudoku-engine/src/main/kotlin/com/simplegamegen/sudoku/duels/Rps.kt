@@ -188,8 +188,10 @@ data class RpsMove(val from: Int, val to: Int)
 object RpsAi {
     /**
      * A legal move for the player about to move.
-     * Easy wanders and often grabs a capture. Medium takes a safe capture or a step that is not next to a beater.
-     * Hard and Expert look ahead, with a short time cap so a phone stays responsive.
+     * Easy prefers a safe capture and usually steps clear of a type that beats it, with some noise, and sometimes misses a one-move win.
+     * Medium and above always take an immediate win. Medium looks one reply ahead.
+     * Hard searches wider and deeper. Expert searches further, orders moves more carefully, and follows captures past the horizon.
+     * Expert stops by about 180ms so a phone stays responsive.
      */
     fun choose(g: Rps): RpsMove {
         checkpoint()
@@ -198,40 +200,57 @@ object RpsAi {
         require(legal.isNotEmpty())
         if (legal.size == 1) return legal.first()
         val wins = legal.filter { wins(g, it) }
-        val random = Random(g.seed xor (g.cells.count { it != 0 }.toLong() shl 1) xor ((g.lastTo ?: -1).toLong() shl 8) xor g.turn.toLong())
-        if (g.level == 0) {
-            if (wins.isNotEmpty() && random.nextInt(100) < 55) return wins.first()
-            val captures = legal.filter { g.cells[it.to] != 0 }
-            if (captures.isNotEmpty() && random.nextInt(100) < 60) return captures.random(random)
-            return legal.random(random)
-        }
+        if (g.level == 0) return easy(g, legal, wins)
         if (wins.isNotEmpty()) return wins.first()
-        if (g.level == 1) return quiet(g, legal)
-        return Search(g).best(legal)
+        val move = Search(g).best(legal)
+        return if (move in legal) move else legal.first()
     }
+
+    private fun easy(g: Rps, legal: List<RpsMove>, wins: List<RpsMove>): RpsMove {
+        val random = Random(mix(g))
+        if (wins.isNotEmpty() && random.nextInt(100) < 85) return wins.first()
+        val ranked = legal.sortedWith(
+            compareByDescending<RpsMove> { easyScore(g, it) }.thenBy { it.from }.thenBy { it.to },
+        )
+        val safeCaps = ranked.filter { g.cells[it.to] != 0 && !hangs(g, it) }
+        if (safeCaps.isNotEmpty() && random.nextInt(100) < 78) return noisy(safeCaps, random)
+        val calm = ranked.filter { !hangs(g, it) }
+        val pool = if (calm.isNotEmpty() && random.nextInt(100) < 82) calm else ranked
+        return noisy(pool, random)
+    }
+
+    private fun easyScore(g: Rps, move: RpsMove): Int {
+        val fromRow = move.from / g.size
+        val toRow = move.to / g.size
+        val forward = if (g.turn == 1) fromRow - toRow else toRow - fromRow
+        var score = forward * 2
+        if (g.cells[move.to] != 0) score += 12
+        if (hangs(g, move)) score -= 14
+        return score
+    }
+
+    /** Prefers the front of an already ranked list, but not always the first move. */
+    private fun noisy(moves: List<RpsMove>, random: Random): RpsMove {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, moves.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total)
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return moves[i]
+        }
+        return moves.first()
+    }
+
+    private fun mix(g: Rps): Long =
+        g.seed xor (g.cells.count { it != 0 }.toLong() shl 1) xor ((g.lastTo ?: -1).toLong() shl 8) xor g.turn.toLong()
 
     private fun wins(g: Rps, move: RpsMove): Boolean {
         val next = g.cells.toMutableList()
         next[move.to] = next[move.from]
         next[move.from] = 0
         return g.options(-g.turn, next).isEmpty()
-    }
-
-    private fun quiet(g: Rps, legal: List<RpsMove>): RpsMove {
-        val safeCaps = legal.filter { g.cells[it.to] != 0 && !hangs(g, it) }
-        if (safeCaps.isNotEmpty()) return bestOf(g, safeCaps)
-        val safe = legal.filter { !hangs(g, it) }
-        return bestOf(g, if (safe.isNotEmpty()) safe else legal)
-    }
-
-    private fun bestOf(g: Rps, moves: List<RpsMove>): RpsMove =
-        moves.maxWith(compareBy<RpsMove> { score(g, it) }.thenByDescending { it.to }.thenByDescending { it.from })
-
-    private fun score(g: Rps, move: RpsMove): Int {
-        val fromRow = move.from / g.size
-        val toRow = move.to / g.size
-        val forward = if (g.turn == 1) fromRow - toRow else toRow - fromRow
-        return forward + if (g.cells[move.to] != 0) 5 else 0
     }
 
     /** True when the landing hex is next to an enemy that beats the piece that just arrived. */
@@ -247,111 +266,236 @@ object RpsAi {
     private class Search(val g: Rps) {
         val n = g.size
         val board = g.cells.toIntArray()
+        val neigh = Array(board.size) { Rps.neighbors(n, it) }
+        val level = g.level
+        val maxDepth = when (level) { 1 -> 2; 2 -> 4; else -> 6 }
+        val width = when (level) { 1 -> 14; 2 -> 16; else -> 22 }
+        val nodeCap = when (level) { 1 -> 6_000; 2 -> 30_000; else -> 80_000 }
+        val qLimit = when (level) { 3 -> 2; 2 -> 1; else -> 0 }
         var deadline = Long.MAX_VALUE
         var nodes = 0
-        var width = 8
+        var aborted = false
+        val killers = IntArray(16) { -1 }
+        val moves = IntArray(STRIDE * 12)
+        val scores = IntArray(STRIDE * 12)
 
         fun best(legal: List<RpsMove>): RpsMove {
-            deadline = System.nanoTime() + if (g.level >= 3) 90_000_000L else 45_000_000L
-            width = if (g.level >= 3) 8 else 7
-            val depth = if (g.level >= 3) 3 else 2
-            val moves = ordered(g.turn).let { ranked ->
-                val chosen = ranked.filter { it in legal }
-                if (chosen.isEmpty()) legal else chosen
-            }
-            var bestMove = moves.first()
-            var best = Int.MIN_VALUE / 4
-            var alpha = Int.MIN_VALUE / 4
-            val beta = Int.MAX_VALUE / 4
-            for (move in moves.take(width)) {
-                val captured = apply(move)
-                val scored = if (gen(-g.turn).isEmpty()) 90_000 + depth else -value(-g.turn, depth - 1, -beta, -alpha)
-                undo(move, captured)
-                if (scored > best) {
-                    best = scored
-                    bestMove = move
+            deadline = System.nanoTime() + when (level) { 1 -> 50_000_000L; 2 -> 110_000_000L; else -> 180_000_000L }
+            val packed = IntArray(legal.size) { pack(legal[it].from, legal[it].to) }
+            val rootScore = IntArray(packed.size)
+            for (i in packed.indices) rootScore[i] = rank(g.turn, packed[i], -1)
+            sort(packed, rootScore, 0, packed.size)
+            var bestMove = packed[0]
+            var depth = 1
+            while (depth <= maxDepth) {
+                aborted = false
+                var alpha = Int.MIN_VALUE / 4
+                val beta = Int.MAX_VALUE / 4
+                var bestScore = Int.MIN_VALUE / 4
+                var local = bestMove
+                // Score every move once, then spend the deeper budgets on the best of them.
+                val limit = if (depth == 1) packed.size else minOf(width, packed.size)
+                for (i in 0 until limit) {
+                    if (stop()) break
+                    val move = packed[i]
+                    val captured = apply(move)
+                    val scored = if (countMoves(-g.turn) == 0) 90_000 + depth
+                    else -value(-g.turn, depth - 1, -beta, -alpha, 0)
+                    undo(move, captured)
+                    rootScore[i] = scored
+                    if (scored > bestScore) {
+                        bestScore = scored
+                        local = move
+                    }
+                    if (bestScore > alpha) alpha = bestScore
                 }
-                if (best > alpha) alpha = best
+                if (aborted) break
+                bestMove = local
+                sort(packed, rootScore, 0, limit)
+                depth++
             }
-            return bestMove
+            val chosen = RpsMove(bestMove ushr 6, bestMove and 63)
+            return if (chosen in legal) chosen else legal.first()
         }
 
-        private fun value(player: Int, depth: Int, alpha: Int, beta: Int): Int {
+        private fun value(player: Int, depth: Int, alpha0: Int, beta: Int, ply: Int): Int {
             checkpoint()
             nodes++
-            if (nodes > 4_000 || System.nanoTime() > deadline || depth == 0) return eval(player)
-            val moves = ordered(player)
-            if (moves.isEmpty()) return -90_000 - depth
+            if (stop()) return eval(player)
+            if (depth <= 0) return if (qLimit > 0) qsearch(player, qLimit, alpha0, beta, ply) else eval(player)
+            val base = ply * STRIDE
+            val end = gen(player, base, capturesOnly = false)
+            if (end == base) return -90_000 - depth
+            order(base, end, player, ply)
+            var alpha = alpha0
             var best = Int.MIN_VALUE / 4
-            var a = alpha
-            for (move in moves.take(width)) {
+            val limit = minOf(end, base + width)
+            for (i in base until limit) {
+                if (stop()) return best
+                val move = moves[i]
                 val captured = apply(move)
-                val scored = if (gen(-player).isEmpty()) 90_000 + depth else -value(-player, depth - 1, -beta, -a)
+                val scored = if (countMoves(-player) == 0) 90_000 + depth
+                else -value(-player, depth - 1, -beta, -alpha, ply + 1)
                 undo(move, captured)
                 if (scored > best) best = scored
-                if (best > a) a = best
-                if (a >= beta) break
+                if (best > alpha) alpha = best
+                if (alpha >= beta) {
+                    killers[ply] = move
+                    break
+                }
+            }
+            return best
+        }
+
+        /** Capture-only extension. A quiet evaluation is always allowed, so a bad capture can be declined. */
+        private fun qsearch(player: Int, q: Int, alpha0: Int, beta: Int, ply: Int): Int {
+            nodes++
+            val stand = eval(player)
+            if (stand >= beta || q == 0 || stop()) return stand
+            var alpha = if (stand > alpha0) stand else alpha0
+            var best = stand
+            val base = ply * STRIDE
+            val end = gen(player, base, capturesOnly = true)
+            if (end == base) return stand
+            order(base, end, player, ply)
+            val limit = minOf(end, base + 8)
+            for (i in base until limit) {
+                if (stop()) return best
+                val move = moves[i]
+                val captured = apply(move)
+                val scored = if (countMoves(-player) == 0) 90_000 + q
+                else -qsearch(-player, q - 1, -beta, -alpha, ply + 1)
+                undo(move, captured)
+                if (scored > best) best = scored
+                if (best > alpha) alpha = best
+                if (alpha >= beta) break
             }
             return best
         }
 
         private fun eval(player: Int): Int {
-            var score = gen(player).size * 3 - gen(-player).size * 3
+            var material = 0
+            var forward = 0
+            var hanging = 0
             for (i in board.indices) {
                 val cell = board[i]
                 if (cell == 0) continue
                 val sign = if (cell.sign == player) 1 else -1
-                score += sign * 100
+                material += sign * 120
                 val row = i / n
-                val forward = if (cell > 0) n - 1 - row else row
-                score += sign * forward * 2
-                if (threatened(i, cell)) score -= sign * 25
+                val adv = if (cell > 0) n - 1 - row else row
+                forward += sign * adv * 3
+                if (attacked(i, cell)) hanging -= sign * 70
             }
-            return score
+            val mobility = countMoves(player) * 5 - countMoves(-player) * 5
+            return material + forward + hanging + mobility + 8
         }
 
-        private fun threatened(index: Int, piece: Int): Boolean =
-            Rps.neighbors(n, index).any { n -> board[n] != 0 && board[n].sign != piece.sign && Rps.beats(board[n], piece) }
-
-        private fun gen(player: Int): List<RpsMove> {
-            val out = ArrayList<RpsMove>()
-            for (from in board.indices) {
-                val piece = board[from]
-                if (piece == 0 || piece.sign != player) continue
-                for (to in Rps.neighbors(n, from)) {
-                    val occ = board[to]
-                    if (occ == 0 || (occ.sign != piece.sign && Rps.beats(piece, occ))) out += RpsMove(from, to)
-                }
-            }
-            return out
-        }
-
-        private fun ordered(player: Int): List<RpsMove> = gen(player).sortedWith(
-            compareByDescending<RpsMove> { board[it.to] != 0 }
-                .thenBy { hangs(it) }
-                .thenBy { it.from }
-                .thenBy { it.to },
-        )
-
-        private fun hangs(move: RpsMove): Boolean {
-            val piece = board[move.from]
-            return Rps.neighbors(n, move.to).any { at ->
-                if (at == move.from) return@any false
+        private fun attacked(index: Int, piece: Int): Boolean =
+            neigh[index].any { at ->
                 val occ = board[at]
                 occ != 0 && occ.sign != piece.sign && Rps.beats(occ, piece)
             }
+
+        private fun gen(player: Int, base: Int, capturesOnly: Boolean): Int {
+            var m = base
+            for (from in board.indices) {
+                val piece = board[from]
+                if (piece == 0 || piece.sign != player) continue
+                val around = neigh[from]
+                for (k in around.indices) {
+                    val to = around[k]
+                    val occ = board[to]
+                    val capture = occ != 0 && occ.sign != piece.sign && Rps.beats(piece, occ)
+                    if (capture || (!capturesOnly && occ == 0)) moves[m++] = pack(from, to)
+                }
+            }
+            return m
         }
 
-        private fun apply(move: RpsMove): Int {
-            val captured = board[move.to]
-            board[move.to] = board[move.from]
-            board[move.from] = 0
+        private fun countMoves(player: Int): Int {
+            var count = 0
+            for (from in board.indices) {
+                val piece = board[from]
+                if (piece == 0 || piece.sign != player) continue
+                val around = neigh[from]
+                for (k in around.indices) {
+                    val occ = board[around[k]]
+                    if (occ == 0 || (occ.sign != piece.sign && Rps.beats(piece, occ))) count++
+                }
+            }
+            return count
+        }
+
+        private fun order(base: Int, end: Int, player: Int, ply: Int) {
+            val killer = killers[ply]
+            for (i in base until end) scores[i] = rank(player, moves[i], killer)
+            sort(moves, scores, base, end)
+        }
+
+        private fun rank(player: Int, move: Int, killer: Int): Int {
+            val from = move ushr 6
+            val to = move and 63
+            val piece = board[from]
+            val occ = board[to]
+            var score = 0
+            if (move == killer) score += 280
+            if (occ != 0) score += 520
+            if (hangingLanding(from, to, piece)) score -= 360
+            val forward = if (player == 1) from / n - to / n else to / n - from / n
+            return score + forward * 8
+        }
+
+        private fun hangingLanding(from: Int, to: Int, piece: Int): Boolean =
+            neigh[to].any { at ->
+                if (at == from) return@any false
+                val occ = board[at]
+                occ != 0 && occ.sign != piece.sign && Rps.beats(occ, piece)
+            }
+
+        private fun sort(keys: IntArray, weight: IntArray, start: Int, end: Int) {
+            for (i in start + 1 until end) {
+                val key = keys[i]
+                val w = weight[i]
+                var j = i
+                while (j > start && (weight[j - 1] < w || (weight[j - 1] == w && keys[j - 1] > key))) {
+                    keys[j] = keys[j - 1]
+                    weight[j] = weight[j - 1]
+                    j--
+                }
+                keys[j] = key
+                weight[j] = w
+            }
+        }
+
+        private fun apply(move: Int): Int {
+            val from = move ushr 6
+            val to = move and 63
+            val captured = board[to]
+            board[to] = board[from]
+            board[from] = 0
             return captured
         }
 
-        private fun undo(move: RpsMove, captured: Int) {
-            board[move.from] = board[move.to]
-            board[move.to] = captured
+        private fun undo(move: Int, captured: Int) {
+            val from = move ushr 6
+            val to = move and 63
+            board[from] = board[to]
+            board[to] = captured
+        }
+
+        private fun stop(): Boolean {
+            if (nodes > nodeCap || System.nanoTime() > deadline) {
+                aborted = true
+                return true
+            }
+            return false
+        }
+
+        private fun pack(from: Int, to: Int) = (from shl 6) or to
+
+        companion object {
+            const val STRIDE = 96
         }
     }
 }

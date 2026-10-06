@@ -224,5 +224,70 @@ class RpsTest {
         val again = Rps.start(4, 2)
         assertEquals(RpsAi.choose(again), RpsAi.choose(Rps.start(4, 2)))
         assertNotEquals(0, again.legalMoves().size)
+        val expert = Rps.start(1, 7)
+        val started = System.nanoTime()
+        assertTrue(RpsAi.choose(expert) in expert.legalMoves())
+        assertTrue(System.nanoTime() - started < 350_000_000L, "expert move stayed under the phone cap")
+    }
+
+    @Test fun `easy prefers a safe capture and medium refuses a capture that hangs`() {
+        val captureTo = at(3, 4, 7)
+        val safe = placed(7, pieces = listOf(
+            at(3, 3, 7) to Rps.ROCK,
+            captureTo to -Rps.SCISSORS,
+            at(0, 0, 7) to -Rps.ROCK,
+            at(0, 1, 7) to -Rps.PAPER,
+            at(6, 6, 7) to Rps.PAPER,
+        ))
+        assertTrue(captureTo in safe.destinations(at(3, 3, 7)))
+        assertFalse(RpsAi.hangs(safe, RpsMove(at(3, 3, 7), captureTo)))
+        var took = 0
+        for (seed in 1..24) {
+            val move = RpsAi.choose(safe.copy(seed = seed.toLong()))
+            assertTrue(move in safe.legalMoves())
+            if (move.to == captureTo) took++
+        }
+        assertTrue(took >= 16, "easy took the safe capture $took of 24 times")
+
+        val safeTo = at(2, 3, 7)
+        val hangTo = at(3, 4, 7)
+        val bait = placed(7, level = 1, pieces = listOf(
+            at(3, 3, 7) to Rps.ROCK,
+            safeTo to -Rps.SCISSORS,
+            hangTo to -Rps.SCISSORS,
+            at(3, 5, 7) to -Rps.PAPER,
+            at(6, 6, 7) to Rps.PAPER,
+        ))
+        assertFalse(RpsAi.hangs(bait, RpsMove(at(3, 3, 7), safeTo)))
+        assertTrue(RpsAi.hangs(bait, RpsMove(at(3, 3, 7), hangTo)))
+        for (level in 1..3) {
+            val game = bait.copy(setting = 4 + level)
+            val move = RpsAi.choose(game)
+            assertTrue(move in game.legalMoves(), "level $level $move")
+            assertEquals(safeTo, move.to, "level $level took $move instead of the safe capture")
+            assertFalse(RpsAi.hangs(game, move), "level $level hung with $move")
+        }
+    }
+
+    @Test fun `hard and expert outplay easy from the opening`() {
+        for (strong in intArrayOf(2, 3)) {
+            var score = 0
+            for (seed in 1L..2L) {
+                var g = Rps.start(seed, 0)
+                var steps = 0
+                while (!g.over && steps++ < 40) {
+                    val level = if (g.turn == 1) strong else 0
+                    val move = RpsAi.choose(g.copy(setting = level))
+                    assertTrue(move in g.legalMoves(), "level $strong $move")
+                    g = g.play(move)!!
+                }
+                score += when (g.winner) {
+                    1 -> 4
+                    -1 -> -4
+                    else -> g.cells.count { it > 0 } - g.cells.count { it < 0 }
+                }
+            }
+            assertTrue(score > 0, "level $strong score $score")
+        }
     }
 }

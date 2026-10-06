@@ -59,10 +59,10 @@ private val RpsCapture = Color(0xFF2E7D32)
 private const val SQRT3 = 1.7320508f
 
 private val RpsStrength = listOf(
-    "Moves almost at random, and often takes a capture",
-    "Takes a capture and steps away from a type that beats it",
-    "Looks a couple of moves ahead",
-    "Searches further for a safe capture",
+    "Prefers a safe capture, and sometimes steps next to a type that beats it",
+    "Takes safe captures and looks a move ahead",
+    "Looks several moves ahead and keeps its pieces safe",
+    "Searches deeper for a capture that stays safe",
 )
 
 val RpsSetup: (PuzzleFactory) -> PlaySetup<Rps> = { factory ->
