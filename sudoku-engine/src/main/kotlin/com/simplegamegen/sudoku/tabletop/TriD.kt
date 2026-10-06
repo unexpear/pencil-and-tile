@@ -68,6 +68,14 @@ data class TriD(
     val passAndPlay: Boolean get() = setting == PASS
     val squares: List<Sq> = MAIN + (0 until 4).flatMap { cells(it % 2, pins[it], flipped(it)) }
 
+    /** Squares on one file and rank, low level to high, so a path does not scan the whole board. */
+    private val byFileRank: Array<Array<List<Sq>>> = Array(6) { f ->
+        Array(10) { r -> squares.filter { it.f == f && it.r == r }.sortedBy { it.z } }
+    }
+    private val levelPresent: BooleanArray = BooleanArray(8).also { seen ->
+        for (sq in squares) if (sq.z in seen.indices) seen[sq.z] = true
+    }
+
     init {
         require(setting in NAMES.indices && board.size == 480 && board.all { abs(it) in 0..6 })
         require(turn == 1 || turn == -1)
@@ -118,6 +126,10 @@ data class TriD(
 
     /** Squares an attack board would cover after [move]. */
     fun landing(move: TriMove.Shift): List<Sq> = cells(move.board % 2, move.pin, move.inverted)
+
+    /** The four squares an attack board covers now. */
+    fun squaresOf(board: Int): List<Sq> =
+        if (board !in 0..3) emptyList() else cells(board % 2, pins[board], flipped(board))
 
     fun label(board: Int): String {
         val line = if (board % 2 == 0) "Queen's board" else "King's board"
@@ -264,7 +276,9 @@ data class TriD(
         if (kind == KNIGHT) return true
         val ceiling = max(from.z, to.z)
         if (clear(from, to, ceiling)) return true
-        if (ceiling in MAIN_LEVELS && squares.any { it.z == ceiling + 1 }) return clear(from, to, ceiling + 1)
+        if (ceiling in MAIN_LEVELS && ceiling + 1 in levelPresent.indices && levelPresent[ceiling + 1]) {
+            return clear(from, to, ceiling + 1)
+        }
         return false
     }
 
@@ -297,9 +311,10 @@ data class TriD(
 
     private fun highest(f: Int, r: Int, ceiling: Int): Sq? {
         if (f !in 0..5 || r !in 0..9) return null
+        val col = byFileRank[f][r]
         var best: Sq? = null
-        for (sq in squares) {
-            if (sq.f == f && sq.r == r && sq.z <= ceiling && (best == null || sq.z > best.z)) best = sq
+        for (sq in col) {
+            if (sq.z <= ceiling) best = sq else break
         }
         return best
     }
@@ -594,39 +609,142 @@ private fun sideOf(piece: Int) = when {
 
 object TriDAi {
     private val VALUE = intArrayOf(0, 100, 320, 330, 500, 900, 20_000)
-    private val BUDGET = intArrayOf(0, 250, 700, 1_600)
 
+    /**
+     * A legal move for the side about to move.
+     * Easy develops and usually takes a mate or a free piece.
+     * Medium always takes a mate and will not hand a piece to a cheaper attacker.
+     * Hard and Expert search with a piece-square evaluation and stop after a short time cap.
+     */
     fun choose(g: TriD): TriMove {
         checkpoint()
         val legal = g.legalMoves()
         require(legal.isNotEmpty())
+        if (legal.size == 1) return legal.first()
         val random = Random(g.seed xor g.board.fold(0L) { n, p -> n * 31 + p } xor g.pins.fold(0L) { n, p -> n * 17 + p } xor g.turn.toLong())
-        if (g.setting == 0 || g.passAndPlay) return legal.random(random)
-        val ordered = legal.sortedByDescending { one(g, it) }
-        if (g.setting == 1) {
-            val best = one(g, ordered.first())
-            return ordered.filter { one(g, it) == best }.random(random)
+        if (g.passAndPlay) return legal.random(random)
+        val ordered = legal.sortedByDescending { quiet(g, it) }
+        val mates = ordered.take(18).filter { move -> g.perform(move).let { it.ended && it.winner == g.turn } }
+        if (mates.isNotEmpty() && (g.setting > 0 || random.nextInt(100) < 85)) return mates.first()
+        if (g.setting == 0) return noisy(ordered, random)
+        val varied = collapse(ordered)
+        // Every legal step is scored by the material it leaves. A short search then chooses
+        // among the steps that do not drop a piece, so a save or a free capture is not crowded
+        // out by a developing move.
+        val guard = HashMap<TriMove, Int>(varied.size)
+        var bestGuard = Int.MIN_VALUE / 4
+        for (move in varied) {
+            val score = guarded(g, move)
+            guard[move] = score
+            if (score > bestGuard) bestGuard = score
         }
-        val nodes = intArrayOf(0)
-        val budget = BUDGET[g.setting.coerceAtMost(3)]
-        var alpha = Int.MIN_VALUE / 4
-        var pick = ordered.first()
-        var pickScore = Int.MIN_VALUE / 4
-        for (move in ordered) {
-            val next = g.perform(move)
-            val score = score(next, g.turn, 1, alpha, Int.MAX_VALUE / 4, nodes, budget)
-            if (score > pickScore) {
-                pickScore = score
-                pick = move
+        if (g.setting == 1) {
+            val ties = varied.filter { guard[it] == bestGuard }
+            return if (ties.size == 1) ties.first() else ties.random(random)
+        }
+        val depth = if (g.setting == 2) 2 else 3
+        val width = if (g.setting == 2) 8 else 10
+        val deadline = System.nanoTime() + (if (g.setting == 2) 100L else 180L) * 1_000_000L
+        val sound = varied.filter { guard[it]!! >= bestGuard - 200 }
+        val use = (varied.filter { guard[it] == bestGuard } + sound).distinct().take(width)
+        var pick = use.first()
+        for (ply in 1..depth) {
+            if (System.nanoTime() > deadline) break
+            var local = pick
+            var best = Int.MIN_VALUE / 4
+            var a = Int.MIN_VALUE / 4
+            var stopped = false
+            for (move in listOf(pick) + use.filter { it != pick }) {
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                val next = g.perform(move)
+                val score = if (next.ended) standing(next, g.turn) else -scoreFor(next, ply - 1, -20_000, -a, deadline)
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                if (score > best) { best = score; local = move }
+                if (best > a) a = best
             }
-            if (score > alpha) alpha = score
-            if (nodes[0] >= budget) break
+            if (stopped) break
+            pick = local
         }
         return pick
     }
 
-    private fun one(g: TriD, move: TriMove) = standing(g.perform(move), g.turn)
+    private fun noisy(moves: List<TriMove>, random: Random): TriMove {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, moves.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return moves[i]
+        }
+        return moves.first()
+    }
 
+    /** One move per square-to-square step. Queen promotion sorts first, so it is the one that remains. */
+    private fun collapse(moves: List<TriMove>): List<TriMove> {
+        val seen = HashSet<Long>()
+        val out = ArrayList<TriMove>(moves.size)
+        for (move in moves) if (seen.add(shape(move))) out += move
+        return out
+    }
+
+    private fun shape(move: TriMove): Long = when (move) {
+        is TriMove.Slide -> move.from.key.toLong() * 1000 + move.to.key
+        is TriMove.Passant -> 1_000_000L + move.from.key.toLong() * 1000 + move.land.key
+        is TriMove.Castle -> if (move.kingSide) 2L else 3L
+        is TriMove.Shift -> 4_000_000L + move.board * 1000L + move.pin * 10 + if (move.inverted) 1 else 0
+    }
+
+    /** Capture value, a step toward the enemy king, and a queen promotion, without looking at the reply. */
+    private fun quiet(g: TriD, move: TriMove): Int {
+        val king = enemyKing(g)
+        fun toward(sq: TriD.Sq): Int {
+            if (king == null) return 0
+            val dist = abs(sq.f - king.f) + abs(sq.r - king.r)
+            return (10 - dist).coerceAtLeast(0)
+        }
+        return when (move) {
+            is TriMove.Slide -> {
+                val attacker = abs(g.pieceAt(move.from))
+                val victim = abs(g.pieceAt(move.to))
+                var score = if (victim != 0) VALUE[victim] * 8 - VALUE[attacker] else 0
+                val piece = g.pieceAt(move.from)
+                score += place(piece, move.to) - place(piece, move.from) / 2
+                if (attacker == TriD.PAWN && promotes(piece, move.to)) score += VALUE[TriD.QUEEN]
+                score + toward(move.to) * 2
+            }
+            is TriMove.Passant -> VALUE[TriD.PAWN] * 8 - VALUE[TriD.PAWN] + toward(move.land) * 2
+            is TriMove.Castle -> 8
+            is TriMove.Shift -> {
+                val pin = TriD.PINS[move.pin]
+                val ahead = if (g.turn == 1) pin.rank else 9 - pin.rank
+                ahead * 2 + if (move.promo == TriD.QUEEN) 3 else 0
+            }
+        }
+    }
+
+    /** Material after the move, minus the most valuable piece the opponent can take at once. */
+    private fun guarded(g: TriD, move: TriMove): Int {
+        val next = g.perform(move)
+        val base = standing(next, g.turn)
+        if (next.ended) return base
+        var worst = 0
+        val ours = g.turn
+        for (reply in next.legalMoves()) {
+            val victim = taken(next, reply)
+            if (sideOf(victim) == ours) worst = maxOf(worst, VALUE[abs(victim)])
+        }
+        return base - worst
+    }
+
+    private fun taken(g: TriD, move: TriMove): Int = when (move) {
+        is TriMove.Slide -> g.pieceAt(move.to)
+        is TriMove.Passant -> g.pieceAt(move.victim)
+        else -> 0
+    }
+
+    /** Higher is better for [player]. */
     private fun standing(g: TriD, player: Int): Int {
         if (g.ended) return when (g.winner) {
             player -> 100_000
@@ -637,34 +755,53 @@ object TriDAi {
         for (i in g.board.indices) {
             val p = g.board[i]
             if (p == 0) continue
-            val v = VALUE[abs(p)]
+            val v = VALUE[abs(p)] + place(p, TriD.Sq.of(i))
             score += if (sideOf(p) == player) v else -v
         }
-        for (i in 0 until 4) if (g.owners[i] == player) score += 15 else score -= 15
+        for (i in 0 until 4) score += if (g.owners[i] == player) 18 else -18
         return score
     }
 
-    private fun score(g: TriD, player: Int, depth: Int, alpha0: Int, beta0: Int, nodes: IntArray, budget: Int): Int {
+    private fun place(piece: Int, sq: TriD.Sq): Int {
+        val type = abs(piece)
+        val forward = if (piece > 0) sq.r else 9 - sq.r
+        val file = 3 - abs(sq.f * 2 - 5) / 2
+        val center = if (sq.z == 4 && sq.r in 3..6 && sq.f in 1..4) 5 else 0
+        return when (type) {
+            TriD.PAWN -> forward * 3 + file
+            TriD.KNIGHT -> file * 2 + center
+            TriD.BISHOP -> file + center
+            TriD.ROOK -> if (forward >= 5) 4 else 0
+            TriD.QUEEN -> file + center / 2
+            TriD.KING -> if (forward <= 2) 8 else -forward
+            else -> 0
+        }
+    }
+
+    private fun enemyKing(g: TriD): TriD.Sq? {
+        val key = g.board.indexOfFirst { it == TriD.KING * -g.turn }
+        return if (key < 0) null else TriD.Sq.of(key)
+    }
+
+    private fun promotes(piece: Int, to: TriD.Sq): Boolean {
+        if (abs(piece) != TriD.PAWN) return false
+        return (piece > 0 && to.r >= 8) || (piece < 0 && to.r <= 1)
+    }
+
+    private fun scoreFor(g: TriD, depth: Int, alpha0: Int, beta0: Int, deadline: Long): Int {
         checkpoint()
-        if (++nodes[0] >= budget || g.ended || depth == 0) return standing(g, player)
-        val moves = g.legalMoves()
-        if (moves.isEmpty()) return standing(g, player)
-        val mine = g.turn == player
+        if (System.nanoTime() > deadline || g.ended || depth <= 0) return standing(g, g.turn)
+        val moves = collapse(g.legalMoves().sortedByDescending { quiet(g, it) }).take(8)
+        if (moves.isEmpty()) return standing(g, g.turn)
         var alpha = alpha0
-        var beta = beta0
-        var best = if (mine) Int.MIN_VALUE / 4 else Int.MAX_VALUE / 4
-        for (move in moves.sortedByDescending { one(g, it) }) {
+        var best = Int.MIN_VALUE / 4
+        for (move in moves) {
+            if (System.nanoTime() > deadline) return best
             val next = g.perform(move)
-            val s = score(next, player, depth - 1, alpha, beta, nodes, budget)
-            if (mine) {
-                if (s > best) best = s
-                if (best > alpha) alpha = best
-                if (alpha >= beta || nodes[0] >= budget) break
-            } else {
-                if (s < best) best = s
-                if (best < beta) beta = best
-                if (alpha >= beta || nodes[0] >= budget) break
-            }
+            val score = if (next.ended) standing(next, g.turn) else -scoreFor(next, depth - 1, -beta0, -alpha, deadline)
+            if (score > best) best = score
+            if (best > alpha) alpha = best
+            if (alpha >= beta0) break
         }
         return best
     }

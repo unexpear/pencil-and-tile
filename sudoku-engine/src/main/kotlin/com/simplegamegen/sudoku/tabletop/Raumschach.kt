@@ -69,8 +69,11 @@ data class Raumschach(
 
     fun play(move: RaumMove): Raumschach? {
         if (move !in legalMoves()) return null
-        return apply(move).finish()
+        return perform(move)
     }
+
+    /** Applies a move already known to be legal. */
+    internal fun perform(move: RaumMove): Raumschach = apply(move).finish()
 
     fun play(from: Int, to: Int): Raumschach? = play(RaumMove(from, to))
 
@@ -318,40 +321,117 @@ private fun rank(i: Int) = Raumschach.rank(i)
 private fun level(i: Int) = Raumschach.level(i)
 
 object RaumschachAi {
-    private val VALUE = intArrayOf(0, 100, 320, 330, 500, 900, 20_000, 300)
-    private val BUDGET = intArrayOf(0, 400, 1_500, 4_000)
+    private val VALUE = intArrayOf(0, 100, 320, 330, 500, 900, 20_000, 330)
 
+    /**
+     * A legal move for the side about to move.
+     * Easy develops and usually takes a mate or a free piece.
+     * Medium always takes a mate and will not hand a piece to a cheaper attacker.
+     * Hard and Expert search with a piece-square evaluation and stop after a short time cap.
+     */
     fun choose(g: Raumschach): RaumMove {
         checkpoint()
         val legal = g.legalMoves()
         require(legal.isNotEmpty())
+        if (legal.size == 1) return legal.first()
         val random = Random(g.seed xor g.board.fold(0L) { n, p -> n * 31 + p } xor (g.turn.toLong() shl 8) xor g.halfmove.toLong())
-        if (g.setting == 0 || g.passAndPlay) return legal.random(random)
-        val ordered = legal.sortedByDescending { one(g, it) }
-        if (g.setting == 1) {
-            val best = one(g, ordered.first())
-            return ordered.filter { one(g, it) == best }.random(random)
+        if (g.passAndPlay) return legal.random(random)
+        val ordered = legal.sortedByDescending { quiet(g, it) }
+        val mates = ordered.take(18).filter { move -> g.perform(move).let { it.ended && it.winner == g.turn } }
+        if (mates.isNotEmpty() && (g.setting > 0 || random.nextInt(100) < 85)) return mates.first()
+        if (g.setting == 0) return noisy(ordered, random)
+        val varied = collapse(ordered)
+        // Every legal step is scored by the material it leaves. A short search then chooses
+        // among the steps that do not drop a piece, so a save or a free capture is not crowded
+        // out by a developing move.
+        val guard = HashMap<RaumMove, Int>(varied.size)
+        var bestGuard = Int.MIN_VALUE / 4
+        for (move in varied) {
+            val score = guarded(g, move)
+            guard[move] = score
+            if (score > bestGuard) bestGuard = score
         }
-        val nodes = intArrayOf(0)
-        val budget = BUDGET[g.setting.coerceAtMost(3)]
-        var alpha = Int.MIN_VALUE / 4
-        var pick = ordered.first()
-        var pickScore = Int.MIN_VALUE / 4
-        for (move in ordered) {
-            val next = g.play(move)!!
-            val score = score(next, g.turn, 1, alpha, Int.MAX_VALUE / 4, nodes, budget)
-            if (score > pickScore) {
-                pickScore = score
-                pick = move
+        if (g.setting == 1) {
+            val ties = varied.filter { guard[it] == bestGuard }
+            return if (ties.size == 1) ties.first() else ties.random(random)
+        }
+        val depth = if (g.setting == 2) 2 else 3
+        val width = if (g.setting == 2) 8 else 10
+        val deadline = System.nanoTime() + (if (g.setting == 2) 100L else 180L) * 1_000_000L
+        val sound = varied.filter { guard[it]!! >= bestGuard - 200 }
+        val use = (varied.filter { guard[it] == bestGuard } + sound).distinct().take(width)
+        var pick = use.first()
+        for (ply in 1..depth) {
+            if (System.nanoTime() > deadline) break
+            var local = pick
+            var best = Int.MIN_VALUE / 4
+            var a = Int.MIN_VALUE / 4
+            var stopped = false
+            for (move in listOf(pick) + use.filter { it != pick }) {
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                val next = g.perform(move)
+                val score = if (next.ended) standing(next, g.turn) else -scoreFor(next, ply - 1, -20_000, -a, deadline)
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                if (score > best) { best = score; local = move }
+                if (best > a) a = best
             }
-            if (score > alpha) alpha = score
-            if (nodes[0] >= budget) break
+            if (stopped) break
+            pick = local
         }
         return pick
     }
 
-    private fun one(g: Raumschach, move: RaumMove) = standing(g.play(move)!!, g.turn)
+    private fun noisy(moves: List<RaumMove>, random: Random): RaumMove {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, moves.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return moves[i]
+        }
+        return moves.first()
+    }
 
+    /** One move per from-to. Queen promotion sorts first, so it is the one that remains. */
+    private fun collapse(moves: List<RaumMove>): List<RaumMove> {
+        val seen = HashSet<Int>()
+        val out = ArrayList<RaumMove>(moves.size)
+        for (move in moves) if (seen.add(move.from * 125 + move.to)) out += move
+        return out
+    }
+
+    /** Capture value, a step toward the enemy king, and a queen promotion, without looking at the reply. */
+    private fun quiet(g: Raumschach, move: RaumMove): Int {
+        val attacker = abs(g.board[move.from])
+        val victim = abs(g.board[move.to])
+        var score = if (victim != 0) VALUE[victim] * 8 - VALUE[attacker] else 0
+        val piece = g.board[move.from]
+        score += place(piece, move.to) - place(piece, move.from) / 2
+        if (attacker == Raumschach.PAWN && promotes(piece, move.to)) score += VALUE[Raumschach.QUEEN]
+        val king = g.board.indexOfFirst { it == Raumschach.KING * -g.turn }
+        if (king >= 0) {
+            val dist = abs(file(move.to) - file(king)) + abs(rank(move.to) - rank(king)) + abs(level(move.to) - level(king))
+            score += (8 - dist).coerceAtLeast(0) * 2
+        }
+        return score
+    }
+
+    /** Material after the move, minus the most valuable piece the opponent can take at once. */
+    private fun guarded(g: Raumschach, move: RaumMove): Int {
+        val next = g.perform(move)
+        val base = standing(next, g.turn)
+        if (next.ended) return base
+        var worst = 0
+        for (reply in next.legalMoves()) {
+            val victim = next.board[reply.to]
+            if (sideOf(victim) == g.turn) worst = maxOf(worst, VALUE[abs(victim)])
+        }
+        return base - worst
+    }
+
+    /** Higher is better for [player]. */
     private fun standing(g: Raumschach, player: Int): Int {
         if (g.ended) return when (g.winner) {
             player -> 100_000
@@ -362,37 +442,46 @@ object RaumschachAi {
         for (i in g.board.indices) {
             val p = g.board[i]
             if (p == 0) continue
-            var v = VALUE[abs(p)]
-            val df = abs(Raumschach.file(i) - 2)
-            val dr = abs(Raumschach.rank(i) - 2)
-            val dl = abs(Raumschach.level(i) - 2)
-            if (max(df, max(dr, dl)) <= 1) v += 6
+            val v = VALUE[abs(p)] + place(p, i)
             score += if (sideOf(p) == player) v else -v
         }
         return score
     }
 
-    private fun score(g: Raumschach, player: Int, depth: Int, alpha0: Int, beta0: Int, nodes: IntArray, budget: Int): Int {
+    private fun place(piece: Int, index: Int): Int {
+        val type = abs(piece)
+        val forward = if (piece > 0) rank(index) + level(index) else (4 - rank(index)) + (4 - level(index))
+        val center = 6 - (abs(file(index) - 2) + abs(rank(index) - 2) + abs(level(index) - 2))
+        return when (type) {
+            Raumschach.PAWN -> forward * 4
+            Raumschach.KNIGHT, Raumschach.UNICORN -> center * 2
+            Raumschach.BISHOP -> center
+            Raumschach.ROOK -> if (forward >= 4) 4 else 0
+            Raumschach.QUEEN -> center
+            Raumschach.KING -> if (forward <= 2) 8 else -forward
+            else -> 0
+        }
+    }
+
+    private fun promotes(piece: Int, to: Int): Boolean {
+        if (abs(piece) != Raumschach.PAWN) return false
+        return if (piece > 0) level(to) == 4 && rank(to) == 4 else level(to) == 0 && rank(to) == 0
+    }
+
+    private fun scoreFor(g: Raumschach, depth: Int, alpha0: Int, beta0: Int, deadline: Long): Int {
         checkpoint()
-        if (++nodes[0] >= budget || g.ended || depth == 0) return standing(g, player)
-        val moves = g.legalMoves()
-        if (moves.isEmpty()) return standing(g, player)
-        val mine = g.turn == player
+        if (System.nanoTime() > deadline || g.ended || depth <= 0) return standing(g, g.turn)
+        val moves = collapse(g.legalMoves().sortedByDescending { quiet(g, it) }).take(8)
+        if (moves.isEmpty()) return standing(g, g.turn)
         var alpha = alpha0
-        var beta = beta0
-        var best = if (mine) Int.MIN_VALUE / 4 else Int.MAX_VALUE / 4
-        for (move in moves.sortedByDescending { one(g, it) }) {
-            val next = g.play(move)!!
-            val s = score(next, player, depth - 1, alpha, beta, nodes, budget)
-            if (mine) {
-                if (s > best) best = s
-                if (best > alpha) alpha = best
-                if (alpha >= beta || nodes[0] >= budget) break
-            } else {
-                if (s < best) best = s
-                if (best < beta) beta = best
-                if (alpha >= beta || nodes[0] >= budget) break
-            }
+        var best = Int.MIN_VALUE / 4
+        for (move in moves) {
+            if (System.nanoTime() > deadline) return best
+            val next = g.perform(move)
+            val score = if (next.ended) standing(next, g.turn) else -scoreFor(next, depth - 1, -beta0, -alpha, deadline)
+            if (score > best) best = score
+            if (best > alpha) alpha = best
+            if (alpha >= beta0) break
         }
         return best
     }

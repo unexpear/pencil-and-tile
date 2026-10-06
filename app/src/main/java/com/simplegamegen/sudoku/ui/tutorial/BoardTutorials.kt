@@ -906,7 +906,7 @@ internal object BoardTutorials {
             ),
             tips = listOf(
                 "U is the unicorn. It is blocked by a man standing in a corner of its path.",
-                "Use the Side camera when a piece is hidden under the board above.",
+                "Tap A to E to bring one floor forward.",
             ),
             steps = listOf(
                 Step("The unicorn on the corner can reach the black pawn. Tap the unicorn.", scene(start), tap = setOf("r3c0"),

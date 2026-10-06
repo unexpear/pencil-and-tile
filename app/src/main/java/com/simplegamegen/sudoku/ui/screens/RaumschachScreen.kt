@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -61,16 +64,16 @@ import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 import kotlin.math.roundToInt
 
 private val RaumViews = listOf(
-    BoardView("Stack", yaw = 14f, pitch = 50f, distance = 1.75f),
-    BoardView("Side", yaw = 72f, pitch = 32f, distance = 1.95f),
-    BoardView("Top", yaw = 0f, pitch = 84f, distance = 1.85f),
+    BoardView("Stack", yaw = 12f, pitch = 62f, distance = 1.48f),
+    BoardView("Side", yaw = 78f, pitch = 46f, distance = 1.65f),
+    BoardView("Top", yaw = 0f, pitch = 84f, distance = 1.7f),
 )
 
 private val RaumStrength = listOf(
     "Moves almost at random",
     "Takes material when it sees it",
-    "Looks a move ahead",
     "Looks two moves ahead",
+    "Looks three moves ahead",
     "Pass the phone. White moves first.",
 )
 
@@ -122,6 +125,7 @@ fun RaumschachScreen(nav: NavController, vm: PlayViewModel<Raumschach>, factory:
         val playable = !g.ended && human && !s.thinking && !s.busy
         var selected by remember(g) { mutableStateOf<Int?>(null) }
         var ask by remember(g) { mutableStateOf<List<RaumMove>?>(null) }
+        var floor by rememberSaveable { mutableStateOf(-1) }
         val legal = remember(g) { g.legalMoves() }
         PlayBoard(
             full, { full = false }, s.canUndo && !s.busy, vm::undo,
@@ -137,8 +141,35 @@ fun RaumschachScreen(nav: NavController, vm: PlayViewModel<Raumschach>, factory:
                     if (!g.ended && g.inCheck()) InfoChip("Check!", emphasized = true)
                 }
             },
+            below = {
+                val colors = LocalGameLook.current.colors
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FilterChip(
+                        selected = floor < 0,
+                        onClick = { floor = -1 },
+                        label = { Text("All levels") },
+                        colors = FilterChipDefaults.filterChipColors(containerColor = colors.surface),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    )
+                    for (level in 0 until 5) {
+                        FilterChip(
+                            selected = floor == level,
+                            onClick = { floor = if (floor == level) -1 else level },
+                            label = { Text(('A' + level).toString()) },
+                            colors = FilterChipDefaults.filterChipColors(containerColor = colors.surface),
+                            modifier = Modifier.heightIn(min = 48.dp).semantics {
+                                contentDescription = say("Level ${'A' + level}")
+                            },
+                        )
+                    }
+                }
+            },
         ) {
-            RaumTable(camera, g, legal, selected, playable, onSelect = { selected = it }, onPlay = { move ->
+            RaumTable(camera, g, legal, selected, floor, playable, onSelect = { selected = it }, onFloor = { floor = it }, onPlay = { move ->
                 val choices = legal.filter { it.from == move.from && it.to == move.to }
                 if (choices.size > 1) ask = choices
                 else {
@@ -191,16 +222,45 @@ private fun RaumTable(
     g: Raumschach,
     legal: List<RaumMove>,
     selected: Int?,
+    floor: Int,
     playable: Boolean,
     onSelect: (Int?) -> Unit,
+    onFloor: (Int) -> Unit,
     onPlay: (RaumMove) -> Unit,
 ) {
     val c = LocalGameLook.current.colors
     val measurer = rememberTextMeasurer()
-    BoardWithViews(camera, n = 5, peakZ = 7.6f, margin = 0.75f, rows = 7.6f) { frame ->
+    val forward = remember(legal, selected, floor) {
+        val dests = legal.filter { it.from == selected }.map { it.to }.toSet()
+        (0 until 125).filter { i ->
+            floor < 0 || Raumschach.level(i) == floor || i in dests || i == selected
+        }.toSet()
+    }
+    BoardWithViews(camera, n = 5, peakZ = 9.4f, margin = 0.85f, rows = 10.4f) { frame ->
         val order = (0 until 125).sortedByDescending { i ->
             val (x, y, z) = raumAt(i)
             frame.depth(x, y, z)
+        }
+        fun hitAt(pos: androidx.compose.ui.geometry.Offset, cells: List<Int>): Int? =
+            cells.asReversed().firstOrNull { i ->
+                val (x, y, z) = raumAt(i)
+                val piece = g.board[i]
+                val lift = if (selected == i) RaumLift else 0f
+                val tall = if (piece == 0) z else z + lift + chessRise(piece)
+                floatSquareHit(frame, pos, x, y, z, tall, frame.unitAt(x, y, z) * 0.38f)
+            }
+        fun tap(i: Int) {
+            val dest = legal.firstOrNull { it.from == selected && it.to == i }
+            val movable = legal.any { it.from == i }
+            when {
+                dest != null -> onPlay(dest)
+                i !in forward -> {
+                    onFloor(Raumschach.level(i))
+                    onSelect(if (movable) i else null)
+                }
+                movable -> onSelect(if (selected == i) null else i)
+                else -> onSelect(null)
+            }
         }
         order.forEach { i ->
             val (x, y, z) = raumAt(i)
@@ -218,78 +278,80 @@ private fun RaumTable(
                     },
                 )
                 if (selected == i) stateDescription = say("Selected")
-                if (playable && (dest != null || movable)) onClick {
-                    when {
-                        dest != null -> onPlay(dest)
-                        movable -> onSelect(if (selected == i) null else i)
-                        else -> onSelect(null)
-                    }
+                if (playable && (dest != null || movable || i !in forward)) onClick {
+                    tap(i)
                     true
                 }
             })
         }
-        Canvas(Modifier.matchParentSize().pointerInput(g, selected, playable) {
+        Canvas(Modifier.matchParentSize().pointerInput(g, selected, floor, playable) {
             detectTapGestures { pos ->
                 if (!playable) return@detectTapGestures
-                val hit = order.asReversed().firstOrNull { i ->
-                    val (x, y, z) = raumAt(i)
-                    val piece = g.board[i]
-                    val lift = if (selected == i) RaumLift else 0f
-                    val tall = if (piece == 0) z else z + lift + chessRise(piece)
-                    floatSquareHit(frame, pos, x, y, z, tall, frame.unitAt(x, y, z) * 0.34f)
-                } ?: return@detectTapGestures
-                val dest = legal.firstOrNull { it.from == selected && it.to == hit }
-                val movable = legal.any { it.from == hit }
-                when {
-                    dest != null -> onPlay(dest)
-                    movable -> onSelect(if (selected == hit) null else hit)
-                    else -> onSelect(null)
-                }
+                val front = order.filter { it in forward }
+                val back = order.filter { it !in forward }
+                val hit = hitAt(pos, front) ?: hitAt(pos, back) ?: return@detectTapGestures
+                tap(hit)
             }
         }) {
             val ink = Color(0xFFF1DFC0)
-            order.forEach { i ->
-                val (x, y, z) = raumAt(i)
-                val light = (Raumschach.file(i) + Raumschach.rank(i) + Raumschach.level(i)) % 2 == 0
-                val base = if (light) c.boardLight else c.boardDark
-                val dest = legal.any { it.from == selected && it.to == i }
-                val tint = when {
-                    selected == i -> 0.62f
-                    dest -> 0.34f
-                    g.lastFrom == i || g.lastTo == i -> 0.28f
-                    else -> 0f
+            fun squares(cells: List<Int>) {
+                cells.forEach { i ->
+                    val (x, y, z) = raumAt(i)
+                    val light = (Raumschach.file(i) + Raumschach.rank(i) + Raumschach.level(i)) % 2 == 0
+                    val base = if (light) c.boardLight else c.boardDark
+                    val dest = legal.any { it.from == selected && it.to == i }
+                    val tint = when {
+                        selected == i -> 0.62f
+                        dest -> 0.34f
+                        g.lastFrom == i || g.lastTo == i -> 0.28f
+                        else -> 0f
+                    }
+                    drawFloatSquare(frame, x, y, z, if (tint > 0f) lerp(base, c.highlight, tint) else base)
                 }
-                drawFloatSquare(frame, x, y, z, if (tint > 0f) lerp(base, c.highlight, tint) else base)
             }
-            val near = raumAt(Raumschach.idx(0, 0, 0))
+            fun men(cells: List<Int>) {
+                cells.forEach { i ->
+                    val piece = g.board[i]
+                    val (x, y, z) = raumAt(i)
+                    val lift = if (selected == i) RaumLift else 0f
+                    if (piece != 0) {
+                        drawChessMan(frame, x, y, z, piece, if (piece > 0) ChessIvory else ChessEbony, lift)
+                    }
+                    val dest = legal.any { it.from == selected && it.to == i }
+                    when {
+                        selected == i && piece != 0 -> drawRing(
+                            frame, x, y, z + lift + chessRise(piece) * 0.55f, c.highlight, radiusScale = 0.48f,
+                        )
+                        dest && piece != 0 -> drawRing(frame, x, y, z + chessRise(piece) * 0.5f, c.highlight)
+                        dest -> drawDot(frame, x, y, z, c.highlight, radius = 0.2f)
+                    }
+                }
+            }
+            val ghost = order.filter { it !in forward }
+            val solid = order.filter { it in forward }
+            if (ghost.isNotEmpty()) {
+                val layer = drawContext.canvas.nativeCanvas
+                layer.saveLayerAlpha(null, (0.42f * 255).toInt())
+                squares(ghost)
+                men(ghost)
+                layer.restore()
+            }
+            squares(solid)
+            val labeled = if (floor >= 0) floor else 0
             for (file in 0 until 5) {
-                val (x, _, z) = raumAt(Raumschach.idx(0, 0, file))
-                drawBoardLabel(measurer, frame, ('a' + file).toString(), x, near.second + 0.85f, z, ink)
+                val (x, y, z) = raumAt(Raumschach.idx(labeled, 0, file))
+                drawBoardLabel(measurer, frame, ('a' + file).toString(), x, y + 0.72f, z, ink)
             }
             for (rank in 0 until 5) {
-                val (_, y, z) = raumAt(Raumschach.idx(0, rank, 0))
-                drawBoardLabel(measurer, frame, (rank + 1).toString(), -0.45f, y, z, ink)
+                val (x, y, z) = raumAt(Raumschach.idx(labeled, rank, 0))
+                drawBoardLabel(measurer, frame, (rank + 1).toString(), x - 0.78f, y, z, ink)
             }
             for (level in 0 until 5) {
-                val (_, y, z) = raumAt(Raumschach.idx(level, 0, 0))
-                drawBoardLabel(measurer, frame, ('A' + level).toString(), -0.45f, y + 0.72f, z, ink)
+                val (x, y, z) = raumAt(Raumschach.idx(level, 2, 4))
+                val mark = if (floor == level) c.highlight else ink
+                drawBoardLabel(measurer, frame, ('A' + level).toString(), x + 0.82f, y, z, mark)
             }
-            order.forEach { i ->
-                val piece = g.board[i]
-                val (x, y, z) = raumAt(i)
-                val lift = if (selected == i) RaumLift else 0f
-                if (piece != 0) {
-                    drawChessMan(frame, x, y, z, piece, if (piece > 0) ChessIvory else ChessEbony, lift)
-                }
-                val dest = legal.any { it.from == selected && it.to == i }
-                when {
-                    selected == i && piece != 0 -> drawRing(
-                        frame, x, y, z + lift + chessRise(piece) * 0.55f, c.highlight, radiusScale = 0.48f,
-                    )
-                    dest && piece != 0 -> drawRing(frame, x, y, z + chessRise(piece) * 0.5f, c.highlight)
-                    dest -> drawDot(frame, x, y, z, c.highlight, radius = 0.18f)
-                }
-            }
+            men(solid)
             if (g.lastFrom >= 0 && g.lastTo >= 0) {
                 val (x0, y0, z0) = raumAt(g.lastFrom)
                 val (x1, y1, z1) = raumAt(g.lastTo)
@@ -323,15 +385,18 @@ private fun raumStatus(g: Raumschach, thinking: Boolean): String = when {
     else -> "Computer's turn"
 }
 
-/** Level A sits toward the player. Higher levels step back so each floor's near edge stays visible. */
+/**
+ * Level A sits toward the player. Each higher floor steps back by more than a square and sits
+ * high enough that a piece can lift without meeting the board above.
+ */
 private fun raumAt(i: Int): Triple<Float, Float, Float> {
     val file = Raumschach.file(i)
     val rank = Raumschach.rank(i)
     val level = Raumschach.level(i)
     val x = file + 0.5f
-    val y = (4 - rank) + (4 - level) * 0.62f + 0.5f
-    val z = level * 1.48f + 0.22f
+    val y = (4 - rank) + (4 - level) * 1.15f + 0.5f
+    val z = level * 1.85f + 0.22f
     return Triple(x, y, z)
 }
 
-private const val RaumLift = 0.18f
+private const val RaumLift = 0.42f
