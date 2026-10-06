@@ -300,27 +300,55 @@ object BattleshipAi {
         val hits = seaKnowledge(g.incoming).hits
         return when (g.setting) {
             0 -> easy(legal, hits, random)
-            1 -> hunt(hits, legal.toSet()).randomOrNull(random) ?: legal.random(random)
-            2 -> hard(hits, legal, random)
+            1 -> medium(hits, legal, random)
+            2 -> hard(g.incoming, hits, legal, random)
             else -> expert(g.incoming, legal, random)
         }
     }
 
-    /** Mostly a fresh square. About three times in ten, a square next to a hit that is still afloat. */
+    /**
+     * Follows a hit a bit more than a third of the time, preferring the open end of a line.
+     * With no hit to chase, prefers the checkerboard a destroyer still has to cross.
+     */
     private fun easy(legal: List<Int>, hits: Set<Int>, random: Random): Int {
-        val near = hunt(hits, legal.toSet())
-        if (near.isNotEmpty() && random.nextInt(100) < 30) return near.random(random)
+        val open = legal.toSet()
+        val ends = lineEnds(hits, open)
+        val near = if (ends.isNotEmpty()) ends else hunt(hits, open)
+        if (near.isNotEmpty() && random.nextInt(100) < 36) return near.random(random)
+        if (hits.isEmpty()) {
+            val parity = legal.filter { cell -> ((cell / Battleship.SIZE) + (cell % Battleship.SIZE)) % 2 == 0 }
+            if (parity.isNotEmpty() && random.nextInt(100) < 70) return parity.random(random)
+        }
         return legal.random(random)
     }
 
-    /** Open ends of a hit line when one is known; otherwise any orthogonal neighbor. */
-    private fun hard(hits: Set<Int>, legal: List<Int>, random: Random): Int {
-        val ends = lineEnds(hits, legal.toSet())
+    /** Hunts the end of a known line, otherwise the neighbor most ships can still cover. */
+    private fun medium(hits: Set<Int>, legal: List<Int>, random: Random): Int {
+        val open = legal.toSet()
+        val ends = lineEnds(hits, open)
         if (ends.isNotEmpty()) return ends.random(random)
-        val beside = hunt(hits, legal.toSet())
+        val beside = hunt(hits, open)
         if (beside.isNotEmpty()) return beside.random(random)
         val parity = legal.filter { cell -> ((cell / Battleship.SIZE) + (cell % Battleship.SIZE)) % 2 == 0 }
         return (if (parity.isNotEmpty()) parity else legal).random(random)
+    }
+
+    /**
+     * Finishes a line when the hits already show its direction.
+     * Otherwise ranks the checkerboard by how many remaining ships can still sit there.
+     */
+    private fun hard(shots: List<Shot>, hits: Set<Int>, legal: List<Int>, random: Random): Int {
+        val open = legal.toSet()
+        val ends = lineEnds(hits, open)
+        if (ends.isNotEmpty()) return ends.random(random)
+        val beside = hunt(hits, open)
+        if (beside.isNotEmpty()) return beside.random(random)
+        val parity = legal.filter { cell -> ((cell / Battleship.SIZE) + (cell % Battleship.SIZE)) % 2 == 0 }
+        val pool = if (parity.isNotEmpty()) parity else legal
+        if (hits.isNotEmpty()) return pool.random(random)
+        val scores = density(shots, pool)
+        val best = pool.maxOf { scores[it] }
+        return pool.filter { scores[it] == best }.random(random)
     }
 
     /**
@@ -350,6 +378,23 @@ object BattleshipAi {
         val best = legal.maxOf { scores[it] }
         if (best <= 0) return legal.random(random)
         return legal.filter { scores[it] == best }.random(random)
+    }
+
+    /** How many remaining ships can still cover each square. Used while there is nothing afloat to chase. */
+    private fun density(shots: List<Shot>, pool: List<Int>): IntArray {
+        val blocked = seaKnowledge(shots).let { it.misses + it.sunk }
+        val scores = IntArray(Battleship.CELLS)
+        for (length in remainingLengths(shots)) {
+            checkpoint()
+            for (cells in SPANS.getValue(length)) {
+                if (cells.any { it in blocked }) continue
+                val room = cells.count { it !in blocked }
+                if (room < length) continue
+                for (cell in cells) if (cell !in blocked) scores[cell]++
+            }
+        }
+        if (pool.all { scores[it] == 0 }) pool.forEach { scores[it] = 1 }
+        return scores
     }
 
     private fun hunt(hits: Set<Int>, legal: Set<Int>): List<Int> =

@@ -168,20 +168,30 @@ object TenAi {
     }
 
     private fun choose(g: TenThousand, masks: List<List<Int>>): List<Int> {
-        if (g.setting < 3) return masks.maxBy { (TenThousand.pointsOf(g.live.pick(it)) ?: 0) * 20 - it.size }
-        return masks.maxBy { mask ->
+        fun value(mask: List<Int>): Int {
             val pts = TenThousand.pointsOf(g.live.pick(mask)) ?: 0
             val left = if (mask.size == g.live.size) TenThousand.DICE else g.live.size - mask.size
-            pts + outlook(left)
+            return when (g.setting) {
+                0 -> pts * 20 - mask.size
+                1 -> pts * 10 + if (left >= 3) 40 else left * 8
+                else -> pts + outlook(left).toInt()
+            }
         }
+        val ranked = masks.sortedByDescending { value(it) }
+        if (g.setting > 0) return ranked.first()
+        val random = Random(g.seed xor g.drawn.toLong() xor g.pending.toLong())
+        if (ranked.size > 1 && random.nextInt(100) < 20) return ranked[1]
+        return ranked.first()
     }
 
     private fun bankNow(g: TenThousand): Boolean {
         if (!g.canBank()) return false
         val left = if (g.mustRoll) TenThousand.DICE else g.live.size
+        val ahead = g.cpu >= g.you
         return when (g.setting) {
-            0 -> g.cpu > 0 || g.pending >= TenThousand.OPENING
-            1 -> g.pending >= 1000 || left <= 2 && g.pending >= TenThousand.OPENING
+            0 -> g.pending >= 800 || (g.pending >= TenThousand.OPENING && (left <= 2 || ahead))
+            1 -> g.pending >= 1_000 || (left <= 2 && g.pending >= 700) || outlook(left) + 200 < g.pending
+            2 -> outlook(left) + 80 < g.pending
             else -> outlook(left) < g.pending
         }
     }

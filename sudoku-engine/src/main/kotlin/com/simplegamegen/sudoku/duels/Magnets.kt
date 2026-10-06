@@ -83,20 +83,56 @@ object MagnetAi {
     fun choose(g: MagnetGame): Stone {
         checkpoint()
         val random = Random(g.seed * 104_729 + g.stones.size * 31 + g.hands.sum())
-        val samples = listOf(6, 80, 300, 900)[g.setting]
-        val points = List(samples) {
+        val samples = listOf(12, 80, 160, 220)[g.setting]
+        val randomPoints = List(samples) {
             val r = sqrt(random.nextFloat()) * (1f - MagnetGame.RADIUS)
             val a = random.nextFloat() * 6.2831855f
             Stone(r * cos(a), r * sin(a))
-        }.filter { g.legal(it) }.ifEmpty { listOf(Stone(0f, 0f)) }
-        if (g.setting == 0) return points.minBy { g.cluster(it).size }
-        // Prefer a spot that snaps nothing and keeps the most distance from other stones;
-        // stronger players also prefer spots that leave the opponent less room.
-        return points.maxBy { p ->
+        }
+        val grid = if (g.setting == 0) emptyList() else ring(if (g.setting == 1) 5 else 8)
+        val pool = (grid + randomPoints).filter { g.legal(it) }
+        if (pool.isEmpty()) {
+            val origin = Stone(0f, 0f)
+            return if (g.legal(origin)) origin else randomPoints.first()
+        }
+        if (g.setting == 0) {
+            val calm = pool.filter { g.cluster(it).size == 1 }
+            val use = if (calm.isNotEmpty() && random.nextInt(100) < 80) calm else pool
+            return use.maxBy { gap(g, it) + random.nextFloat() * 0.05f }
+        }
+        // Prefer a spot that snaps nothing, keeps its distance, and does not sit in a gap the opponent can close.
+        return pool.maxBy { p ->
             val snap = g.cluster(p).size
-            val gap = g.stones.minOfOrNull { MagnetGame.dist(it, p) } ?: 2f
-            val crowd = if (g.setting >= 2) g.stones.count { MagnetGame.dist(it, p) < MagnetGame.PULL * 2 } * 0.01f else 0f
-            -1000f * (snap - 1) + gap - crowd + (if (g.setting == 3) edgeBonus(p) else 0f)
+            val crowd = if (g.setting >= 2) g.stones.count { MagnetGame.dist(it, p) < MagnetGame.PULL * 2 } * 0.02f else 0f
+            val trap = if (g.setting >= 2) bridges(g, p) else 0f
+            -1000f * (snap - 1) + gap(g, p) - crowd - trap + if (g.setting == 3) edgeBonus(p) else 0f
+        }
+    }
+
+    private fun gap(g: MagnetGame, p: Stone) = g.stones.minOfOrNull { MagnetGame.dist(it, p) } ?: 2f
+
+    /** A point near the middle of two close stones is where the opponent can snap both. */
+    private fun bridges(g: MagnetGame, p: Stone): Float {
+        var danger = 0f
+        val stones = g.stones
+        for (i in stones.indices) for (j in i + 1 until stones.size) {
+            val span = MagnetGame.dist(stones[i], stones[j])
+            if (span > MagnetGame.PULL * 2 + MagnetGame.RADIUS) continue
+            val mid = Stone((stones[i].x + stones[j].x) / 2f, (stones[i].y + stones[j].y) / 2f)
+            if (MagnetGame.dist(p, mid) < MagnetGame.PULL) danger += 0.35f
+        }
+        return danger
+    }
+
+    private fun ring(steps: Int): List<Stone> = buildList {
+        add(Stone(0f, 0f))
+        for (band in 1..steps) {
+            val radius = band / steps.toFloat() * (1f - MagnetGame.RADIUS)
+            val count = 6 + band * 2
+            for (k in 0 until count) {
+                val angle = k * 6.2831855f / count
+                add(Stone(radius * cos(angle), radius * sin(angle)))
+            }
         }
     }
 

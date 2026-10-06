@@ -65,15 +65,33 @@ object DotsAi {
         val random = Random(g.seed * 7919 + g.drawn.size)
         val free = g.free.shuffled(random)
         val closing = free.filter { e -> g.boxesOf(e).any { g.sides(it) == 3 } }
-        if (g.setting == 0) return if (closing.isNotEmpty() && random.nextInt(10) < 7) closing.first() else free.first()
+        if (g.setting == 0) {
+            if (closing.isNotEmpty() && random.nextInt(100) < 86) return closing.first()
+            val safe = free.filter { e -> g.boxesOf(e).none { g.sides(it) == 2 } }
+            val pool = if (safe.isNotEmpty() && random.nextInt(100) < 70) safe else free
+            return pool.first()
+        }
         val exactLimit = listOf(0, 0, 12, 16)[g.setting]
         if (free.size <= exactLimit) return Endgame(g).best()
-        if (closing.isNotEmpty()) return closing.first()
+        if (closing.isNotEmpty()) return longestChain(g, closing)
         val safe = free.filter { e -> g.boxesOf(e).none { g.sides(it) == 2 } }
-        if (safe.isNotEmpty()) return safe.first()
-        if (g.setting == 1) return free.first()
-        // Every move gives something away: give away the least.
+        if (safe.isNotEmpty()) return safe.minBy { control(g, it) }
+        // Every move gives something away: give away the shortest chain.
         return free.minBy { e -> handout(g.draw(e)!!) }
+    }
+
+    /** Prefer the capture that continues into the longer chain of boxes. */
+    private fun longestChain(g: DotsGame, closing: List<Int>): Int =
+        closing.maxBy { edge -> handout(g.draw(edge)!!) * 10 + g.boxesOf(edge).count { g.sides(it) == 3 } }
+
+    /**
+     * Lower is better. A safe edge that touches a box of one side is a future gift,
+     * so it waits until the looser edges are gone.
+     */
+    private fun control(g: DotsGame, edge: Int): Int {
+        var score = 0
+        for (box in g.boxesOf(edge)) score += if (g.sides(box) == 1) 2 else if (g.sides(box) == 0) 0 else 5
+        return score
     }
 
     /** Boxes the opponent can grab in a row after this position. */

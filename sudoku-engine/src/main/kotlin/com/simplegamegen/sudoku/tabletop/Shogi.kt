@@ -405,38 +405,92 @@ data class ShogiMove(val from: Int, val to: Int, val promote: Boolean = false, v
 object ShogiAi {
     private val VALUE = intArrayOf(0, 100, 320, 350, 450, 520, 850, 1100, 20_000)
 
+    /**
+     * A legal move for the side about to move.
+     * Easy prefers a capture or a step forward, and usually takes a mate.
+     * Medium always takes a mate and keeps a piece out of a cheaper reply.
+     * Hard and Expert search a short list of forcing moves and stop on a time cap.
+     */
     fun choose(g: Shogi): ShogiMove {
         checkpoint()
         val legal = g.legalMoves()
         require(legal.isNotEmpty())
+        if (legal.size == 1) return legal.first()
         val random = Random(g.seed xor g.board.fold(0L) { n, p -> n * 31 + p } xor g.turn.toLong() xor g.senteHand.size.toLong())
-        if (g.setting == 0) return legal.random(random)
-        val ordered = legal.sortedByDescending { worth(g, it) }
+        val ordered = legal.sortedByDescending { rank(g, it) }
+        val mates = ordered.take(24).filter { move -> g.play(move)?.let { it.ended && it.winner == g.turn } == true }
+        if (mates.isNotEmpty() && (g.setting > 0 || random.nextInt(100) < 80)) return mates.first()
+        if (g.setting == 0) return noisy(ordered, random)
         if (g.setting == 1) {
-            val best = worth(g, ordered.first())
-            return ordered.filter { worth(g, it) >= best - 20 }.take(8).random(random)
+            val considered = ordered.take(16)
+            val scored = considered.sortedByDescending { guarded(g, it) }
+            val best = guarded(g, scored.first())
+            return scored.filter { guarded(g, it) >= best - 15 }.take(4).random(random)
         }
-        val width = if (g.setting == 2) 5 else 7
-        val depth = if (g.setting == 2) 1 else 2
+        val width = if (g.setting == 2) 8 else 10
+        val depth = if (g.setting == 2) 2 else 3
+        val deadline = System.nanoTime() + (if (g.setting == 2) 80L else 150L) * 1_000_000L
         val consider = ordered.take(width)
         var pick = consider.first()
-        var best = Int.MIN_VALUE / 4
-        val nodes = intArrayOf(0)
-        for (move in consider) {
-            val next = g.play(move) ?: continue
-            val score = search(next, g.turn, depth - 1, nodes, 400)
-            if (score > best) {
-                best = score
-                pick = move
+        for (ply in 1..depth) {
+            if (System.nanoTime() > deadline) break
+            var local = pick
+            var best = Int.MIN_VALUE / 4
+            var stopped = false
+            for (move in listOf(pick) + consider.filter { it != pick }) {
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                val next = g.play(move) ?: continue
+                val score = if (next.ended) standing(next, g.turn) else -search(next, ply - 1, deadline)
+                if (System.nanoTime() > deadline && ply > 1) { stopped = true; break }
+                if (score > best) { best = score; local = move }
             }
-            if (nodes[0] > 400) break
+            if (stopped) break
+            pick = local
         }
         return pick
     }
 
-    private fun worth(g: Shogi, move: ShogiMove): Int {
+    private fun noisy(moves: List<ShogiMove>, random: Random): ShogiMove {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, moves.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return moves[i]
+        }
+        return moves.first()
+    }
+
+    /** Capture, promotion, and a step toward the enemy king. Drops land nearer that king. */
+    private fun rank(g: Shogi, move: ShogiMove): Int {
+        val king = g.board.indexOfFirst { it == Shogi.KING * -g.turn }
+        val kingRow = if (king < 0) 4 else king / 9
+        val kingCol = if (king < 0) 4 else king % 9
+        val row = move.to / 9
+        val col = move.to % 9
+        var score = 12 - (kotlin.math.abs(row - kingRow) + kotlin.math.abs(col - kingCol))
+        if (move.drop != 0) return score + VALUE[move.drop] / 8
+        val victim = g.board[move.to]
+        if (victim != 0) score += value(victim) * 8
+        if (move.promote) score += 350
+        val fromRow = move.from / 9
+        val forward = if (g.turn == 1) fromRow - row else row - fromRow
+        return score + forward * 6
+    }
+
+    private fun guarded(g: Shogi, move: ShogiMove): Int {
         val next = g.play(move) ?: return -100_000
-        return standing(next, g.turn)
+        val base = standing(next, g.turn)
+        if (next.ended) return base
+        var worst = 0
+        for (reply in next.legalMoves().sortedByDescending { rank(next, it) }.take(12)) {
+            if (reply.to !in next.board.indices) continue
+            val victim = next.board[reply.to]
+            if (victim.sign == g.turn) worst = maxOf(worst, value(victim))
+        }
+        return base - worst
     }
 
     private fun standing(g: Shogi, player: Int): Int {
@@ -446,25 +500,34 @@ object ShogiAi {
             else -> 0
         }
         var score = 0
-        for (piece in g.board) if (piece != 0) score += if (piece.sign == player) value(piece) else -value(piece)
+        val king = g.board.indexOfFirst { it == Shogi.KING * player }
+        for (i in g.board.indices) {
+            val piece = g.board[i]
+            if (piece == 0) continue
+            var v = value(piece)
+            if (king >= 0 && piece.sign == -player && Shogi.baseOf(piece) != Shogi.KING) {
+                val dist = kotlin.math.abs(i / 9 - king / 9) + kotlin.math.abs(i % 9 - king % 9)
+                v += (8 - dist).coerceAtLeast(0)
+            }
+            score += if (piece.sign == player) v else -v
+        }
         for (piece in g.hand(player)) score += VALUE[piece]
         for (piece in g.hand(-player)) score -= VALUE[piece]
         return score
     }
 
-    private fun search(g: Shogi, player: Int, depth: Int, nodes: IntArray, budget: Int): Int {
+    /** Score from the side about to move. */
+    private fun search(g: Shogi, depth: Int, deadline: Long): Int {
         checkpoint()
-        if (++nodes[0] > budget || g.ended || depth <= 0) return standing(g, player)
-        val moves = g.legalMoves().sortedByDescending { worth(g, it) }.take(4)
-        if (moves.isEmpty()) return standing(g, player)
-        val mine = g.turn == player
-        var best = if (mine) Int.MIN_VALUE / 4 else Int.MAX_VALUE / 4
+        if (System.nanoTime() > deadline || g.ended || depth <= 0) return standing(g, g.turn)
+        val moves = g.legalMoves().sortedByDescending { rank(g, it) }.take(6)
+        if (moves.isEmpty()) return standing(g, g.turn)
+        var best = Int.MIN_VALUE / 4
         for (move in moves) {
+            if (System.nanoTime() > deadline) return best
             val next = g.play(move) ?: continue
-            val score = search(next, player, depth - 1, nodes, budget)
-            if (mine && score > best) best = score
-            if (!mine && score < best) best = score
-            if (nodes[0] > budget) break
+            val score = if (next.ended) standing(next, g.turn) else -search(next, depth - 1, deadline)
+            if (score > best) best = score
         }
         return best
     }

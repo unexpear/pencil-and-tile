@@ -104,9 +104,13 @@ private fun lined(index: Int, player: Int, cell: (Int) -> Int): Boolean {
 }
 
 object FiveRowAi {
-    private val WEIGHT = intArrayOf(0, 1, 12, 80, 500)
+    private val WEIGHT = intArrayOf(0, 2, 22, 140, 900)
 
-    /** An empty square for the player about to move. */
+    /**
+     * An empty square for the player about to move.
+     * Easy usually takes a win and often a block, then plays near the stones.
+     * Medium and above always take a win or a block, and look for a move that builds two threats at once.
+     */
     fun choose(g: FiveRow): Int {
         checkpoint()
         val win = (0 until FiveRow.CELLS).firstOrNull { g.wouldWin(it, g.turn) }
@@ -114,15 +118,46 @@ object FiveRowAi {
         val random = Random(g.seed xor (g.cells.count { it != 0 }.toLong() shl 8) xor g.turn.toLong())
         val near = candidates(g)
         require(near.isNotEmpty())
-        return when (g.setting) {
-            0 -> when {
-                win != null && random.nextInt(100) < 45 -> win
-                block != null && random.nextInt(100) < 25 -> block
-                else -> near.random(random)
+        if (g.setting == 0) return easy(g, near, win, block, random)
+        if (win != null) return win
+        if (block != null) return block
+        val depth = when (g.setting) { 1 -> 2; 2 -> 3; else -> 4 }
+        val width = when (g.setting) { 1 -> 8; 2 -> 10; else -> 12 }
+        val millis = when (g.setting) { 1 -> 40L; 2 -> 90L; else -> 150L }
+        return search(g, near, depth, width, millis)
+    }
+
+    private fun easy(g: FiveRow, near: List<Int>, win: Int?, block: Int?, random: Random): Int {
+        if (win != null && random.nextInt(100) < 82) return win
+        if (block != null && random.nextInt(100) < 55) return block
+        val board = g.cells.toIntArray()
+        val ranked = near.sortedByDescending { moveValue(board, it, g.turn) }
+        val safe = ranked.filter { index ->
+            board[index] = g.turn
+            val lost = !lined(index, g.turn) { board[it] } && candidatesOn(board).any { reply ->
+                board[reply] = -g.turn
+                val wins = lined(reply, -g.turn) { board[it] }
+                board[reply] = 0
+                wins
             }
-            1 -> win ?: block ?: bestByEval(g, near, random)
-            else -> win ?: block ?: search(g, near, if (g.setting == 2) 2 else 3)
+            board[index] = 0
+            !lost
         }
+        val pool = if (safe.isNotEmpty() && random.nextInt(100) < 75) safe else ranked
+        return noisy(pool, random)
+    }
+
+    private fun noisy(cells: List<Int>, random: Random): Int {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, cells.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return cells[i]
+        }
+        return cells.first()
     }
 
     private fun candidates(g: FiveRow): List<Int> {
@@ -143,36 +178,40 @@ object FiveRowAi {
         return near.toList()
     }
 
-    private fun bestByEval(g: FiveRow, near: List<Int>, random: Random): Int {
+    private fun search(g: FiveRow, near: List<Int>, depthLimit: Int, width: Int, millis: Long): Int {
         val board = g.cells.toIntArray()
-        val scored = near.map { it to moveValue(board, it, g.turn) }
-        val best = scored.maxOf { it.second }
-        return scored.filter { it.second == best }.map { it.first }.random(random)
-    }
-
-    private fun search(g: FiveRow, near: List<Int>, depth: Int): Int {
-        val board = g.cells.toIntArray()
-        val ordered = near.sortedByDescending { moveValue(board, it, g.turn) }.take(10)
+        val ordered = near.sortedByDescending { moveValue(board, it, g.turn) }.take(width)
         var best = ordered.first()
-        var bestScore = Int.MIN_VALUE / 4
-        for (index in ordered) {
-            board[index] = g.turn
-            val score = if (lined(index, g.turn) { board[it] }) 10000
-            else -reply(board, -g.turn, depth - 1, bestScore, 10000)
-            board[index] = 0
-            if (score > bestScore) {
-                bestScore = score
-                best = index
+        val deadline = System.nanoTime() + millis * 1_000_000L
+        for (depth in 1..depthLimit) {
+            var local = best
+            var bestScore = Int.MIN_VALUE / 4
+            var stopped = false
+            val seq = listOf(best) + ordered.filter { it != best }
+            for (index in seq) {
+                if (depth > 1 && System.nanoTime() > deadline) { stopped = true; break }
+                board[index] = g.turn
+                val score = if (lined(index, g.turn) { board[it] }) 10_000
+                else -reply(board, -g.turn, depth - 1, bestScore, 10_000, deadline, width)
+                board[index] = 0
+                if (System.nanoTime() > deadline && depth > 1) { stopped = true; break }
+                if (score > bestScore) {
+                    bestScore = score
+                    local = index
+                }
             }
+            if (stopped) break
+            best = local
         }
         return best
     }
 
-    private fun reply(board: IntArray, player: Int, depth: Int, alpha0: Int, beta0: Int): Int {
+    private fun reply(board: IntArray, player: Int, depth: Int, alpha0: Int, beta0: Int, deadline: Long, width: Int): Int {
         checkpoint()
+        if (System.nanoTime() > deadline) return evaluate(board, player)
         val open = candidatesOn(board)
         if (open.isEmpty()) return 0
-        val ordered = open.sortedByDescending { moveValue(board, it, player) }.take(8)
+        val ordered = open.sortedByDescending { moveValue(board, it, player) }.take(width)
         var alpha = alpha0
         var beta = beta0
         var best = Int.MIN_VALUE / 4
@@ -181,7 +220,7 @@ object FiveRowAi {
             val score = when {
                 lined(index, player) { board[it] } -> 10000 - (3 - depth)
                 depth <= 1 -> evaluate(board, player)
-                else -> -reply(board, -player, depth - 1, -beta, -alpha)
+                else -> -reply(board, -player, depth - 1, -beta, -alpha, deadline, width)
             }
             board[index] = 0
             if (score > best) best = score

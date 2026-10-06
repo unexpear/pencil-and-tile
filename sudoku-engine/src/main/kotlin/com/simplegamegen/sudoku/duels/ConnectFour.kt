@@ -135,40 +135,66 @@ object ConnectFourAi {
         for (r in 0..ConnectFour.ROWS - 4) for (c in 3 until ConnectFour.COLS) add(IntArray(4) { (r + it) * ConnectFour.COLS + (c - it) })
     }
 
-    /** Chooses a legal column for the player about to move. Stronger settings look further ahead. */
+    /**
+     * A legal column for the player about to move.
+     * Easy usually takes a win, often blocks, and otherwise prefers a safe central drop.
+     * Medium and above always take a win or a block, then look ahead so they do not open a forced loss.
+     * Hard and Expert search deeper, with a time cap so a phone stays responsive.
+     */
     fun choose(g: ConnectFour): Int {
         checkpoint()
         val legal = g.legalColumns()
         require(legal.isNotEmpty())
+        if (legal.size == 1) return legal.first()
         val win = legal.firstOrNull { g.wouldWin(it, g.turn) }
         val block = legal.firstOrNull { g.wouldWin(it, -g.turn) }
         val random = Random(g.seed * 7919 + g.cells.count { it != 0 } * 31 + g.turn)
-        return when (g.setting) {
-            0 -> when {
-                win != null && random.nextInt(100) < 55 -> win
-                block != null && random.nextInt(100) < 30 -> block
-                else -> legal.random(random)
-            }
-            1 -> win ?: block ?: weighted(legal, random)
-            else -> win ?: Search(g).best(if (g.setting == 2) 4 else 6)
-        }
+        if (g.setting == 0) return easy(g, legal, win, block, random)
+        if (win != null) return win
+        if (block != null) return block
+        val safe = legal.filter { col -> !hangs(g, col) }
+        val pool = if (safe.isNotEmpty()) safe else legal
+        val depth = when (g.setting) { 1 -> 4; 2 -> 7; else -> 9 }
+        val budget = when (g.setting) { 1 -> 40L; 2 -> 100L; else -> 170L }
+        return Search(g).best(pool, depth, budget)
     }
 
-    /** Prefers the middle columns when several drops are equally quiet. */
-    private fun weighted(cols: List<Int>, random: Random): Int {
-        val weights = cols.map { 1 + (3 - kotlin.math.abs(it - 3)).coerceAtLeast(0) }
-        var pick = random.nextInt(weights.sum())
-        for (i in cols.indices) {
-            pick -= weights[i]
-            if (pick < 0) return cols[i]
+    private fun easy(g: ConnectFour, legal: List<Int>, win: Int?, block: Int?, random: Random): Int {
+        if (win != null && random.nextInt(100) < 84) return win
+        if (block != null && random.nextInt(100) < 62) return block
+        val safe = legal.filter { col -> !hangs(g, col) }
+        val pool = if (safe.isNotEmpty() && random.nextInt(100) < 78) safe else legal
+        val ranked = pool.sortedBy { kotlin.math.abs(it - 3) }
+        return noisy(ranked, random)
+    }
+
+    /** True when this drop lets the opponent win on the next turn. */
+    private fun hangs(g: ConnectFour, col: Int): Boolean {
+        val next = g.drop(col) ?: return true
+        if (next.winner != 0) return false
+        return next.legalColumns().any { next.wouldWin(it, next.turn) }
+    }
+
+    /** Prefers the front of an already ranked list, but not always the first column. */
+    private fun noisy(cols: List<Int>, random: Random): Int {
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, cols.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return cols[i]
         }
-        return cols.last()
+        return cols.first()
     }
 
     private class Search(g: ConnectFour) {
         val board = g.cells.toIntArray()
         val height = IntArray(ConnectFour.COLS) { col -> (0 until ConnectFour.ROWS).count { board[it * ConnectFour.COLS + col] != 0 } }
         val me = g.turn
+        var deadline = Long.MAX_VALUE
+        var aborted = false
 
         fun play(col: Int, player: Int): Int {
             val row = ConnectFour.ROWS - 1 - height[col]
@@ -183,24 +209,38 @@ object ConnectFourAi {
             board[(ConnectFour.ROWS - 1 - height[col]) * ConnectFour.COLS + col] = 0
         }
 
-        fun best(depth: Int): Int {
-            var bestCol = ORDER.first { height[it] < ConnectFour.ROWS }
-            var bestVal = Int.MIN_VALUE / 4
-            var alpha = Int.MIN_VALUE / 4
-            val beta = Int.MAX_VALUE / 4
-            for (col in ORDER) {
-                if (height[col] >= ConnectFour.ROWS) continue
-                val index = play(col, me)
-                val value = if (lineAt(index, me) { board[it] }) 100_000 + depth else -value(-me, depth - 1, -beta, -alpha, index)
-                undo(col)
-                if (value > bestVal) { bestVal = value; bestCol = col }
-                if (bestVal > alpha) alpha = bestVal
+        fun best(root: List<Int>, maxDepth: Int, millis: Long): Int {
+            deadline = System.nanoTime() + millis * 1_000_000L
+            val order = root.sortedWith(compareBy({ ORDER.indexOf(it).let { i -> if (i < 0) 9 else i } }))
+            var bestCol = order.first()
+            for (depth in 1..maxDepth) {
+                aborted = false
+                var alpha = Int.MIN_VALUE / 4
+                val beta = Int.MAX_VALUE / 4
+                var bestVal = Int.MIN_VALUE / 4
+                var local = bestCol
+                val seq = ArrayList<Int>(order.size)
+                seq += bestCol
+                for (col in order) if (col != bestCol) seq += col
+                for (col in seq) {
+                    if (height[col] >= ConnectFour.ROWS) continue
+                    if (depth > 1 && System.nanoTime() > deadline) { aborted = true; break }
+                    val index = play(col, me)
+                    val value = if (lineAt(index, me) { board[it] }) 100_000 + depth else -value(-me, depth - 1, -beta, -alpha, index)
+                    undo(col)
+                    if (aborted) break
+                    if (value > bestVal) { bestVal = value; local = col }
+                    if (bestVal > alpha) alpha = bestVal
+                }
+                if (aborted) break
+                bestCol = local
             }
             return bestCol
         }
 
         fun value(turn: Int, depth: Int, alpha: Int, beta: Int, lastIndex: Int): Int {
             checkpoint()
+            if (System.nanoTime() > deadline) { aborted = true; return 0 }
             if (lastIndex >= 0 && board[lastIndex] == -turn && lineAt(lastIndex, -turn) { board[it] }) return -(100_000 + depth + 1)
             if ((0 until ConnectFour.COLS).all { height[it] >= ConnectFour.ROWS }) return 0
             if (depth == 0) return heuristic(turn)
@@ -230,7 +270,7 @@ object ConnectFourAi {
                 for (i in window) when (board[i]) { player -> mine++; -player -> opp++ }
                 if (mine > 0 && opp > 0) continue
                 val n = if (mine > 0) mine else -opp
-                val weight = when (kotlin.math.abs(n)) { 1 -> 1; 2 -> 6; 3 -> 30; else -> 0 }
+                val weight = when (kotlin.math.abs(n)) { 1 -> 1; 2 -> 10; 3 -> 48; else -> 0 }
                 score += if (n > 0) weight else -weight
             }
             return score

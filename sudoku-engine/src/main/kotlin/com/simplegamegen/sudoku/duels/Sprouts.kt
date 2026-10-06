@@ -202,18 +202,33 @@ object SproutsAi {
         checkpoint()
         val random = Random(g.seed * 7_127 + g.curves.size)
         val moves = variants(g, random).shuffled(random)
-        if (g.setting == 0) return moves.first()
-        val sample = moves.take(listOf(0, 20, 12, 18)[g.setting])
+        if (moves.isEmpty()) return g.legalMoves().first()
+        if (g.setting == 0) {
+            val win = moves.take(6).firstOrNull { m -> g.play(m)?.winner == g.turn }
+            if (win != null && random.nextInt(100) < 75) return win
+            val ranked = moves.take(8).sortedByDescending { spare(g, it) }
+            return ranked.first()
+        }
+        val sample = moves.take(listOf(0, 16, 12, 14)[g.setting])
         // Win now if possible.
         sample.firstOrNull { m -> g.play(m)?.winner == g.turn }?.let { return it }
-        if (g.setting == 1) return sample.first()
-        // Avoid moves that let the opponent win straight away.
-        val replies = listOf(0, 0, 8, 14)[g.setting]
-        return sample.firstOrNull { m ->
+        if (g.setting == 1) return sample.maxBy { spare(g, it) }
+        // Avoid moves that let the opponent win straight away, then keep the most lives for later.
+        val replies = listOf(0, 0, 6, 8)[g.setting]
+        val safe = sample.filter { m ->
             checkpoint()
-            val after = g.play(m) ?: return@firstOrNull false
+            val after = g.play(m) ?: return@filter false
             variants(after, random).shuffled(random).take(replies).none { r -> after.play(r)?.winner == after.turn }
-        } ?: sample.first()
+        }
+        val pool = if (safe.isNotEmpty()) safe else sample
+        return pool.maxBy { spare(g, it) }
+    }
+
+    /** Lives left after the move. A last move scores as a win. */
+    private fun spare(g: SproutsGame, move: SproutMove): Int {
+        val after = g.play(move) ?: return Int.MIN_VALUE
+        if (after.winner == g.turn) return 1_000
+        return after.degree.sumOf { (3 - it).coerceAtLeast(0) }
     }
 
     /** Legal moves plus a few steered versions, since the side a curve passes on matters. */

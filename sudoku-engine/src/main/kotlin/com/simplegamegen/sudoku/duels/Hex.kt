@@ -212,8 +212,9 @@ private fun path(cells: List<Int>, size: Int, player: Int): List<Int> {
 object HexAi {
     /**
      * A legal move for the player about to move. [Hex.SWAP] takes the opening stone.
-     * Easy wanders. Medium and above take a connection, answer a threat, and swap a strong opening.
-     * Hard and Expert look ahead on the cells next to the stones, with a short time cap so a phone stays responsive.
+     * Easy prefers a stone next to the fight, usually takes a win, and often answers a threat.
+     * Medium and above always connect, answer a threat, and swap a strong opening.
+     * Hard and Expert look further ahead, with a short time cap so a phone stays responsive.
      */
     fun choose(g: Hex): Int {
         checkpoint()
@@ -225,38 +226,59 @@ object HexAi {
         val wins = search.urgent(me)
         val blocks = search.urgent(-me)
         val random = Random(g.seed xor (g.cells.count { it != 0 }.toLong() shl 8) xor g.turn.toLong())
-        if (g.level == 0) {
-            if (wins.isNotEmpty() && random.nextInt(100) < 55) return wins.first()
-            if (blocks.isNotEmpty() && random.nextInt(100) < 30) return blocks.first()
-            if (g.canSwap && search.central(g.last!!) && random.nextInt(100) < 25) return Hex.SWAP
-            val near = search.nearby(me, 8)
-            return near.random(random)
-        }
+        if (g.level == 0) return easy(g, search, wins, blocks, random)
         if (wins.isNotEmpty()) return wins.first()
         if (blocks.isNotEmpty()) return blocks.first()
         if (g.canSwap && search.central(g.last!!)) return Hex.SWAP
-        val deadline = System.nanoTime() + if (g.level >= 3) 140_000_000L else 80_000_000L
-        val depth = if (g.level == 1) 1 else if (g.level == 2) 2 else 3
-        val width = if (g.level == 1) 12 else if (g.level == 2) 8 else 7
-        search.deadline = deadline
-        var bestMove = blocks.firstOrNull() ?: search.nearby(me, 1).first()
-        var best = Int.MIN_VALUE / 4
-        if (g.canSwap) {
-            val swapped = g.swap()!!
-            val score = Search(swapped).let { next ->
-                if (depth == 1) next.eval(1).let { -it } else -next.value(1, depth - 1, Int.MIN_VALUE / 4, Int.MAX_VALUE / 4, width)
+        val maxDepth = when (g.level) { 1 -> 2; 2 -> 3; else -> 4 }
+        val width = when (g.level) { 1 -> 10; 2 -> 12; else -> 14 }
+        val millis = when (g.level) { 1 -> 50L; 2 -> 110L; else -> 170L }
+        search.deadline = System.nanoTime() + millis * 1_000_000L
+        var chosen = search.nearby(me, 1).first()
+        var depth = 1
+        while (depth <= maxDepth) {
+            search.aborted = false
+            var local = chosen
+            var best = Int.MIN_VALUE / 4
+            if (g.canSwap) {
+                val swapped = g.swap()!!
+                val next = Search(swapped)
+                next.deadline = search.deadline
+                val score = if (depth == 1) -next.eval(1) else -next.value(1, depth - 1, Int.MIN_VALUE / 4, Int.MAX_VALUE / 4, width)
+                if (!next.aborted && score > best) { best = score; local = Hex.SWAP }
             }
-            if (score > best) { best = score; bestMove = Hex.SWAP }
+            val pool = search.nearby(me, width)
+            for (move in pool) {
+                if (search.aborted) break
+                checkpoint()
+                search.board[move] = me
+                val score = if (search.cost(me) == 0) 90_000 + depth else -search.value(-me, depth - 1, Int.MIN_VALUE / 4, Int.MAX_VALUE / 4, width)
+                search.board[move] = 0
+                if (search.aborted) break
+                if (score > best) { best = score; local = move }
+            }
+            if (search.aborted && depth > 1) break
+            chosen = local
+            depth++
         }
-        val pool = if (blocks.isNotEmpty()) blocks else search.nearby(me, width)
-        for (move in pool) {
-            checkpoint()
-            search.board[move] = me
-            val score = if (search.cost(me) == 0) 90_000 + depth else -search.value(-me, depth - 1, Int.MIN_VALUE / 4, Int.MAX_VALUE / 4, width)
-            search.board[move] = 0
-            if (score > best) { best = score; bestMove = move }
+        return if (chosen == Hex.SWAP || chosen in legal) chosen else legal.first()
+    }
+
+    private fun easy(g: Hex, search: Search, wins: List<Int>, blocks: List<Int>, random: Random): Int {
+        if (wins.isNotEmpty() && random.nextInt(100) < 80) return wins.first()
+        if (blocks.isNotEmpty() && random.nextInt(100) < 48) return blocks.first()
+        if (g.canSwap && search.central(g.last!!) && random.nextInt(100) < 35) return Hex.SWAP
+        val near = search.nearby(g.turn, 10)
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, near.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return near[i]
         }
-        return bestMove
+        return near.first()
     }
 
     private class Search(g: Hex) {
@@ -264,6 +286,7 @@ object HexAi {
         val size = g.size
         val neigh = Array(board.size) { Hex.neighbors(size, it) }
         var deadline = Long.MAX_VALUE
+        var aborted = false
 
         fun cost(player: Int) = connectionCost(board, size, neigh, player)
 
@@ -354,7 +377,8 @@ object HexAi {
 
         fun value(turn: Int, depth: Int, alpha: Int, beta: Int, width: Int): Int {
             checkpoint()
-            if (System.nanoTime() > deadline || depth == 0) return eval(turn)
+            if (System.nanoTime() > deadline) { aborted = true; return eval(turn) }
+            if (depth == 0) return eval(turn)
             val wins = urgent(turn)
             if (wins.isNotEmpty()) return 90_000 + depth
             val blocks = urgent(-turn)
@@ -366,6 +390,7 @@ object HexAi {
                 board[move] = turn
                 val scored = if (cost(turn) == 0) 90_000 + depth else -value(-turn, depth - 1, -beta, -a, width)
                 board[move] = 0
+                if (aborted) return best
                 if (scored > best) best = scored
                 if (best > a) a = best
                 if (a >= beta) break

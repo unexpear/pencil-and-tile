@@ -224,9 +224,12 @@ data class Go(
 }
 
 object GoAi {
-    private val BUDGET = intArrayOf(0, 0, 8, 14)
-
-    /** A legal placement, or [Go.PASS]. */
+    /**
+     * A legal placement, or [Go.PASS].
+     * Easy takes a capture or saves a stone in atari more often than not, and otherwise plays near the stones.
+     * Medium and above answer atari, avoid self-atari, and build toward the centre.
+     * Hard and Expert compare a few replies and stop if the clock runs long.
+     */
     fun choose(g: Go): Int {
         checkpoint()
         val random = Random(g.seed xor g.board.fold(0) { n, p -> n * 31 + p }.toLong() xor g.turn.toLong())
@@ -234,21 +237,36 @@ object GoAi {
         if (moves.isEmpty()) return Go.PASS
         val calm = moves.filter { !g.eye(it, g.turn) }
         if (calm.isEmpty()) return Go.PASS
-        val pool = calm
+        val saves = atariLiberties(g).filter { it in calm }
+        val captures = calm.filter { captures(g, it) > 0 }
+        val local = localCandidates(g, calm)
         if (g.setting == 0) {
-            val captures = pool.filter { captures(g, it) > 0 }
-            return if (captures.isNotEmpty() && random.nextInt(10) < 7) captures.random(random) else pool.random(random)
+            if (saves.isNotEmpty() && random.nextInt(100) < 68) return saves.random(random)
+            if (captures.isNotEmpty() && random.nextInt(100) < 74) return captures.maxBy { captures(g, it) }
+            val safe = local.filter { point -> captures(g, point) > 0 || !selfAtari(g, point) }
+            val pool = (if (safe.isNotEmpty()) safe else local).sortedByDescending { heuristic(g, it, saves.toSet()) }
+            return noisy(pool, random)
         }
-        val ranked = pool.sortedByDescending { heuristic(g, it) }
+        if (saves.isNotEmpty() && captures.none { captures(g, it) >= 2 }) {
+            val save = saves.maxBy { heuristic(g, it, saves.toSet()) }
+            if (g.setting == 1) return save
+        }
+        val pool = (local + saves + captures).distinct()
+        val saveSet = saves.toSet()
+        val ranked = pool.sortedByDescending { heuristic(g, it, saveSet) }
         if (g.setting == 1) {
-            val best = heuristic(g, ranked.first())
-            return ranked.filter { heuristic(g, it) == best }.take(4).random(random)
+            val safe = ranked.filter { captures(g, it) > 0 || !selfAtari(g, it) }
+            val use = if (safe.isNotEmpty()) safe else ranked
+            val best = heuristic(g, use.first(), saveSet)
+            return use.filter { heuristic(g, it, saveSet) >= best - 2 }.take(3).random(random)
         }
-        val width = BUDGET[g.setting]
-        val replies = if (g.setting >= 3) 5 else 1
+        val width = if (g.setting >= 3) 10 else 8
+        val replies = if (g.setting >= 3) 4 else 2
+        val deadline = System.nanoTime() + (if (g.setting >= 3) 140L else 80L) * 1_000_000L
         var bestMove = ranked.first()
         var bestScore = Int.MIN_VALUE
         for (move in ranked.take(width)) {
+            if (System.nanoTime() > deadline) break
             checkpoint()
             val next = g.place(move) ?: continue
             val score = if (replies == 1) outlook(next) else -answer(next, replies)
@@ -260,10 +278,76 @@ object GoAi {
         return bestMove
     }
 
+    private fun noisy(points: List<Int>, random: Random): Int {
+        if (points.isEmpty()) return Go.PASS
+        val weights = intArrayOf(5, 2, 1)
+        val n = minOf(weights.size, points.size)
+        var total = 0
+        for (i in 0 until n) total += weights[i]
+        var roll = random.nextInt(total.coerceAtLeast(1))
+        for (i in 0 until n) {
+            roll -= weights[i]
+            if (roll < 0) return points[i]
+        }
+        return points.first()
+    }
+
+    /** Empty liberties of our groups that have only one liberty left. */
+    private fun atariLiberties(g: Go): List<Int> {
+        val seen = HashSet<Int>()
+        val out = ArrayList<Int>()
+        for (point in g.board.indices) {
+            if (g.board[point] != g.turn || !seen.add(point)) continue
+            val (group, libs) = g.groupAndLibs(g.board, point)
+            seen.addAll(group)
+            if (libs != 1) continue
+            val liberty = group.asSequence().flatMap { g.neighbors(it) }.firstOrNull { g.board[it] == 0 }
+            if (liberty != null) out += liberty
+        }
+        return out.distinct()
+    }
+
+    private fun selfAtari(g: Go, point: Int): Boolean {
+        val next = g.place(point) ?: return true
+        val (_, libs) = next.groupAndLibs(next.board, point)
+        return libs <= 1 && captures(g, point) == 0
+    }
+
+    /** Points next to stones, or the opening star points when the board is empty. */
+    private fun localCandidates(g: Go, calm: List<Int>): List<Int> {
+        val calmSet = calm.toHashSet()
+        val stones = g.board.indices.filter { g.board[it] != 0 }
+        if (stones.isEmpty()) {
+            val stars = starPoints(g.size).filter { it in calmSet }
+            if (stars.isNotEmpty()) return stars
+        }
+        val near = LinkedHashSet<Int>()
+        for (stone in stones) {
+            val row = stone / g.size
+            val col = stone % g.size
+            for (dr in -2..2) for (dc in -2..2) {
+                val r = row + dr
+                val c = col + dc
+                if (r !in 0 until g.size || c !in 0 until g.size) continue
+                val point = r * g.size + c
+                if (point in calmSet) near += point
+            }
+        }
+        return if (near.isNotEmpty()) near.toList() else calm
+    }
+
+    private fun starPoints(size: Int): List<Int> {
+        val mid = size / 2
+        val edge = if (size >= 13) 3 else 2
+        val coords = listOf(edge, mid, size - 1 - edge).distinct()
+        return coords.flatMap { row -> coords.map { col -> row * size + col } }
+    }
+
     private fun answer(g: Go, width: Int): Int {
         val moves = g.legalPlacements().filter { !g.eye(it, g.turn) }
         if (moves.isEmpty()) return outlook(g)
-        return moves.sortedByDescending { heuristic(g, it) }.take(width).maxOf { move ->
+        val saves = atariLiberties(g).toSet()
+        return moves.sortedByDescending { heuristic(g, it, saves) }.take(width).maxOf { move ->
             outlook(g.place(move) ?: g)
         }
     }
@@ -275,12 +359,13 @@ object GoAi {
         return -g.turn * blackLead
     }
 
-    private fun heuristic(g: Go, point: Int): Int {
+    private fun heuristic(g: Go, point: Int, saves: Set<Int> = emptySet()): Int {
         val taken = captures(g, point)
         val next = g.place(point) ?: return Int.MIN_VALUE
         val (own, libs) = next.groupAndLibs(next.board, point)
-        var score = taken * 50 + libs * 4 - own.size + nearby(g, point)
-        if (libs <= 1 && taken == 0) score -= 35
+        var score = taken * 80 + libs * 6 - own.size + nearby(g, point)
+        if (libs <= 1 && taken == 0) score -= 70
+        if (point in saves) score += 90
         val center = g.size / 2
         val row = point / g.size
         val col = point % g.size
