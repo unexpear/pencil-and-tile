@@ -46,6 +46,9 @@ private val Credits = listOf(
     Credit("ONNX Runtime", "Runs the on-device model", "MIT License", "licenses/mit-onnxruntime.txt", "© Microsoft Corporation."),
     Credit("AndroidX, Jetpack Compose and Kotlin", "The app's building blocks", "Apache License 2.0", "licenses/apache-2.0.txt",
         "© The Android Open Source Project and JetBrains s.r.o."),
+    Credit("Original Battleship Pieces", "The Battleship hulls and the hit and miss pins", "Creative Commons Attribution",
+        "licenses/battleship-pieces-cc-by.txt",
+        "By MZimb, Thingiverse thing 5190846, resized from Mattwall, thing 4244260. Adapted to the classic fleet."),
 )
 
 @Composable

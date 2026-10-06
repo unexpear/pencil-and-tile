@@ -197,6 +197,8 @@ internal fun BoardWithViews(
     rows: Float = n.toFloat(),
     /** A fixed height for the board, for screens that scroll; otherwise it takes the space that's left. */
     height: androidx.compose.ui.unit.Dp? = null,
+    /** Camera chips. A second board that shares [camera] can hide them. */
+    controls: Boolean = true,
     content: @Composable BoxScope.(TableFrame) -> Unit,
 ) {
     val colors = LocalGameLook.current.colors
@@ -205,6 +207,7 @@ internal fun BoardWithViews(
     // The board first, then the camera controls under it, where a thumb reaches them on a phone.
     Column(if (height == null) Modifier.fillMaxSize() else Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Box((if (height == null) Modifier.weight(1f) else Modifier.height(height)).fillMaxWidth()) { BoardFrame(camera, n, peakZ, margin, rows, content) }
+        if (!controls) return@Column
         Row(
             Modifier.fillMaxWidth().horizontalScroll(chipScroll),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
