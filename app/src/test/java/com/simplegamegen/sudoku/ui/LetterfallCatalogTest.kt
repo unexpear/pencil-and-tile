@@ -18,9 +18,9 @@ class LetterfallCatalogTest {
     }
 
     @Test fun `the collection guide counts Letterfall with the other games`() {
-        assertEquals(62, CollectionGuide.entries.size)
-        assertEquals(72, CollectionGuide.entries.sumOf { it.variants })
-        assertEquals(449, CollectionGuide.entries.sumOf { it.setups })
+        assertEquals(63, CollectionGuide.entries.size)
+        assertEquals(73, CollectionGuide.entries.sumOf { it.variants })
+        assertEquals(464, CollectionGuide.entries.sumOf { it.setups })
         val entry = CollectionGuide.entries.single { it.title == GameId.LETTERFALL.title }
         assertEquals(1, entry.variants)
         assertEquals(4, entry.setups)

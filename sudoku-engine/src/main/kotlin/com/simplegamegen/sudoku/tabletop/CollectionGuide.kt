@@ -70,5 +70,6 @@ object CollectionGuide {
         GameCapacity("Shogi", 1, 4, "9×9 shogi × 4 computer strengths. You play Sente. Pieces promote in the far three rows. Captures can be dropped. No legal move loses. Four repeats draw, unless one side checked on every move of the repeat. Both kings in camp can be counted: rook and bishop 5, other pieces 1, 24 to draw.", "1 opening board; matches differ by play."),
         GameCapacity("Hex", 1, 15, "11×11, 9×9 or 7×7 × 4 computer strengths, plus pass-and-play on each size. Red joins top and bottom. Blue joins left and right. The second player may swap the opening stone.", "1 empty starting board; matches differ by play."),
         GameCapacity("Rock Paper Scissors", 1, 10, "5×5 or 7×7 × 4 computer strengths, plus pass-and-play on each size. Each side starts with the same mix of rock, paper and scissors. Move one hex onto an empty cell or an enemy you beat. Landing captures. Take every enemy piece, or leave no legal move, to win.", "1 opening board per size; matches differ by play."),
+        GameCapacity("Tic-Tac-Toe", 1, 15, "3×3, 4×4 or 5×5 × 4 computer strengths, plus pass-and-play on each size. Get the whole row, column or diagonal — 3, 4 or 5 marks — to win. A full board with no line is a draw. You play X and move first.", "1 empty starting board; matches differ by play."),
     )
 }
