@@ -62,9 +62,9 @@ internal object KnifeStage {
         BoardView("Top", yaw = 0f, pitch = 70f, distance = 2.6f),
     )
     val bottleViews = listOf(
-        BoardView("Side", yaw = 30f, pitch = 26f, distance = 2.6f),
-        BoardView("Corner", yaw = 56f, pitch = 26f, distance = 2.7f),
-        BoardView("Top", yaw = 0f, pitch = 66f, distance = 2.8f),
+        BoardView("Side", yaw = 18f, pitch = 20f, distance = 2.05f),
+        BoardView("Corner", yaw = 40f, pitch = 22f, distance = 2.15f),
+        BoardView("Top", yaw = 0f, pitch = 62f, distance = 2.2f),
     )
 
     fun peak(bottle: Boolean) = if (bottle) BOTTLE_PEAK else KNIFE_PEAK

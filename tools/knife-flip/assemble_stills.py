@@ -28,6 +28,15 @@ MB = 0.025
 SHOULDER = 0.148
 NECK_LIMIT = 0.040
 WATER_RADIUS = 0.0292
+MENISCUS = 0.0028
+# Same lux as KnifeFlipWorld (IBL_LUX, KEY_LUX, FILL_LUX). Picker key is a little hotter.
+IBL_LUX = 22000
+KEY_LUX = 42000
+FILL_LUX = 15000
+PICKER_KEY_LUX = 48000
+PICKER_FILL_LUX = 18000
+KEY_DIR = [-0.28, -1.0, -0.62]
+FILL_DIR = [0.45, -0.4, 0.55]
 KNIVES = {
     "chef": 0.330,
     "throwing": 0.280,
@@ -35,8 +44,12 @@ KNIVES = {
     "butterfly": 0.250,
     "cleaver": 0.300,
 }
+# Distance from the tip to the centre of mass. The mesh origin sits there.
 COM = {
     "chef": (0.090 * 0.108 + 0.040 * 0.206 + 0.090 * 0.272) / 0.220,
+    "throwing": 0.140,
+    "pocket": (0.032 * 0.042 + 0.096 * 0.152) / 0.128,
+    "butterfly": (0.055 * 0.055 + 0.100 * 0.190) / 0.155,
     "cleaver": (0.330 * 0.086 + 0.075 * 0.242) / 0.405,
 }
 
@@ -101,16 +114,19 @@ def requested_tilt(fill, sigma):
 
 
 def water_material():
+    """Opaque light blue. Alpha water is invisible inside Filament glass."""
     mat = bpy.data.materials.new("Water")
     mat.use_nodes = True
-    mat.blend_method = "BLEND"
+    mat.blend_method = "OPAQUE"
     mat.use_backface_culling = False
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = (0.29, 0.64, 0.78, 1)
-    bsdf.inputs["Roughness"].default_value = 0.08
-    bsdf.inputs["Metallic"].default_value = 0.02
+    bsdf.inputs["Base Color"].default_value = (0.243, 0.686, 0.875, 1)
+    bsdf.inputs["Roughness"].default_value = 0.16
+    bsdf.inputs["Metallic"].default_value = 0.0
+    if "Transmission Weight" in bsdf.inputs:
+        bsdf.inputs["Transmission Weight"].default_value = 0.0
     if "Alpha" in bsdf.inputs:
-        bsdf.inputs["Alpha"].default_value = 0.72
+        bsdf.inputs["Alpha"].default_value = 1.0
     return mat
 
 
@@ -124,25 +140,30 @@ def add_mesh(name, verts, faces, mat):
     return obj
 
 
-def ring_verts(radius, y, tilt, sides, gltf_to_blender=True):
+def ring_verts(radius, y, tilt, sides, meniscus=0.0):
     slope = math.tan(tilt)
     pts = []
     for i in range(sides):
         a = 2 * math.pi * i / sides
         x = math.cos(a) * radius
         z = math.sin(a) * radius
-        yy = y + x * slope
+        climb = meniscus * (x * x + z * z) / (radius * radius) if radius > 1e-6 and meniscus else 0.0
+        yy = y + x * slope + climb
         # glTF local (x, y, z) -> Blender (x, -z, y), child of the bottle.
-        pts.append((x, -z, yy) if gltf_to_blender else (x, yy, z))
+        pts.append((x, -z, yy))
     return pts
 
 
-def liquid_mesh(name, profile, tilt, mat, sides=24):
-    """profile is (y, radius) up the bottle. The last ring is the plane-cut surface."""
+def liquid_mesh(name, profile, tilt, mat, sides=24, meniscus=0.0):
+    """profile is (y, radius) up the bottle. The last ring climbs the wall as a meniscus."""
     rings = []
     for index, (y, radius) in enumerate(profile):
-        rings.append(ring_verts(radius, y, tilt if index == len(profile) - 1 else 0.0, sides))
+        last = index == len(profile) - 1
+        rings.append(ring_verts(radius, y, tilt if last else 0.0, sides, meniscus if last else 0.0))
     verts = [p for ring in rings for p in ring]
+    # Centre of the free surface, below the rim, so the cap is concave.
+    top_y, top_r = profile[-1]
+    verts.append((0.0, 0.0, top_y))
     faces = []
     n = sides
     for r in range(len(rings) - 1):
@@ -154,7 +175,9 @@ def liquid_mesh(name, profile, tilt, mat, sides=24):
             faces.append((a, b, c, d))
     faces.append(tuple(range(n)))
     last = (len(rings) - 1) * n
-    faces.append(tuple(last + i for i in range(n - 1, -1, -1)))
+    center = len(verts) - 1
+    for i in range(n):
+        faces.append((center, last + (i + 1) % n, last + i))
     return add_mesh(name, verts, faces, mat)
 
 
@@ -172,7 +195,11 @@ def add_water(parent, fill, sigma, mat):
     body_tilt = 0.0 if in_neck else clipped_tilt(
         requested_tilt(fill, sigma), body_top, WATER_RADIUS, 0.004, SHOULDER
     )
-    body = liquid_mesh("water_body", [(0.001, WATER_RADIUS), (body_top, WATER_RADIUS)], body_tilt, mat)
+    body_meniscus = 0.0 if in_neck else max(0.0, min(MENISCUS, SHOULDER - body_top))
+    body = liquid_mesh(
+        "water_body", [(0.001, WATER_RADIUS), (body_top, WATER_RADIUS)], body_tilt, mat,
+        meniscus=body_meniscus,
+    )
     attach(body, parent)
     if in_neck:
         neck_h = max(0.004, min(NECK_LIMIT, height - SHOULDER))
@@ -182,19 +209,25 @@ def add_water(parent, fill, sigma, mat):
         for i in range(steps + 1):
             y = neck_h * i / steps
             profile.append((y, neck_radius(y)))
-        neck = liquid_mesh("water_neck", profile, tilt, mat, sides=20)
+        neck_meniscus = max(0.0, min(0.0016, NECK_LIMIT - neck_h))
+        neck = liquid_mesh("water_neck", profile, tilt, mat, sides=20, meniscus=neck_meniscus)
         # Shoulder is +Y in the bottle's glTF space, which is +Z in Blender.
         attach(neck, parent, Matrix.Translation((0, 0, SHOULDER)))
 
 
-def backdrop():
-    mat = bpy.data.materials.new("Backdrop")
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = (0.79, 0.73, 0.66, 1)
-    bsdf.inputs["Roughness"].default_value = 0.85
+def backdrop(length, bottle):
+    wall = bpy.data.materials.new("Backdrop")
+    wall.use_nodes = True
+    wall_bsdf = wall.node_tree.nodes.get("Principled BSDF")
+    wall_bsdf.inputs["Base Color"].default_value = (0.835, 0.816, 0.784, 1)
+    wall_bsdf.inputs["Roughness"].default_value = 0.92
+    board = bpy.data.materials.new("Board")
+    board.use_nodes = True
+    board_bsdf = board.node_tree.nodes.get("Principled BSDF")
+    board_bsdf.inputs["Base Color"].default_value = (0.843, 0.690, 0.478, 1)
+    board_bsdf.inputs["Roughness"].default_value = 0.58
 
-    def cube(name, gltf_center, gltf_size):
+    def cube(name, gltf_center, gltf_size, mat):
         bpy.ops.mesh.primitive_cube_add(size=1)
         obj = bpy.context.active_object
         obj.name = name
@@ -202,17 +235,19 @@ def backdrop():
         obj.scale = (sx, sz, sy)  # blender (x, y, z) = gltf (x, z, y) for a box aligned to axes
         cx, cy, cz = gltf_center
         obj.location = (cx, -cz, cy)
-        assign = obj.data.materials
-        assign.append(mat)
+        obj.data.materials.append(mat)
 
-    cube("back", (0, 0.35, -0.55), (1.6, 1.4, 0.04))
-    cube("side", (-0.7, 0.35, 0), (0.04, 1.4, 1.4))
-    cube("plinth", (0, -0.02, 0), (0.42, 0.02, 0.22))
+    cube("back", (0, 0.35, -0.55), (1.6, 1.4, 0.04), wall)
+    cube("side", (-0.7, 0.35, 0), (0.04, 1.4, 1.4), wall)
+    # A small maple board under the model, not a slab that fills the frame.
+    span_x = length * (0.72 if bottle else 1.18)
+    span_z = length * (0.55 if bottle else 0.42)
+    cube("board", (0, -0.007, 0), (span_x, 0.014, span_z), board)
 
 
 def camera_play(bottle, yaw, pitch, distance):
-    look = (0.30, 0.36, 0.0) if bottle else (0.34, 0.18, 0.0)
-    dist = (0.72 if bottle else 0.48) * distance
+    look = (0.26, 0.46, 0.0) if bottle else (0.34, 0.18, 0.0)
+    dist = (0.62 if bottle else 0.48) * distance
     cp = math.cos(math.radians(pitch))
     sp = math.sin(math.radians(pitch))
     eye = (
@@ -223,17 +258,27 @@ def camera_play(bottle, yaw, pitch, distance):
     return eye, look, 36.0, 0.04
 
 
-def camera_preview(length, bottle):
-    dist = length * (2.1 if bottle else 2.55)
-    pitch = math.radians(16 if bottle else 20)
-    yaw = math.radians(54)
+def camera_preview(length, bottle, com_from_tip=None):
+    """Matches KnifeFlipPreview. Knives look at the geometric middle, not the COM."""
+    theta = 0.30 if bottle else 1.20
+    if bottle:
+        look = (0.0, length * 0.46, 0.0)
+        dist = length * 2.15
+        pitch = math.radians(16)
+        yaw = math.radians(36)
+    else:
+        mid = (com_from_tip if com_from_tip is not None else length * 0.5) - length * 0.5
+        look = (mid * math.sin(theta), mid * math.cos(theta), 0.0)
+        # 4× length at 32° vertical / ~31° horizontal fills about 80% of a square frame.
+        dist = length * 4.0
+        pitch = math.radians(22)
+        yaw = math.radians(28)
     cp = math.cos(pitch)
     eye = (
-        dist * cp * math.sin(yaw),
-        length * 0.15 + dist * math.sin(pitch),
-        dist * cp * math.cos(yaw),
+        look[0] + dist * cp * math.sin(yaw),
+        look[1] + dist * math.sin(pitch),
+        look[2] + dist * cp * math.cos(yaw),
     )
-    look = (0.0, length * (0.45 if bottle else 0.02), 0.0)
     return eye, look, 32.0, 0.02
 
 
@@ -295,13 +340,19 @@ def shot(name, build, camera):
     eye, look, fov, near = camera
     path = os.path.join(OUT, f"{name}.glb")
     export(path)
+    picker = name.startswith("picker")
     spec = {
         "name": name,
         "eye": list(eye),
         "look": list(look),
         "fov": fov,
         "near": near,
-        "background": [0.79, 0.73, 0.66] if name.startswith("picker") else [0.55, 0.51, 0.45],
+        "background": [0.84, 0.82, 0.78] if picker else [0.55, 0.51, 0.45],
+        "ibl": IBL_LUX,
+        "key": PICKER_KEY_LUX if picker else KEY_LUX,
+        "fill": PICKER_FILL_LUX if picker else FILL_LUX,
+        "key_dir": KEY_DIR,
+        "fill_dir": FILL_DIR,
     }
     with open(os.path.join(OUT, f"{name}.json"), "w", encoding="utf-8") as fh:
         json.dump(spec, fh)
@@ -321,17 +372,17 @@ def main():
 
     def knife_picker(name):
         def build():
-            backdrop()
-            place_knife(name, 0, 0, 1.15)
-        shot(f"picker-{name}", build, camera_preview(KNIVES[name], False))
+            backdrop(KNIVES[name], False)
+            place_knife(name, 0, 0, 1.20)
+        shot(f"picker-{name}", build, camera_preview(KNIVES[name], False, COM[name]))
 
     for name in KNIVES:
         knife_picker(name)
 
     def bottle_picker(label, fill):
         def build():
-            backdrop()
-            place_bottle(0, 0, 0.22, fill, 0.0)
+            backdrop(H, True)
+            place_bottle(0, 0, 0.30, fill, 0.0)
         shot(f"picker-bottle-{label}", build, camera_preview(H, True))
 
     for label, fill in fills:
@@ -357,8 +408,8 @@ def main():
             place_bottle(pose[0], pose[1], pose[2], fill, pose[3])
         return build
 
-    shot("bottle-mid", room_bottle(mid_bottle), camera_play(True, 30, 26, 2.6))
-    shot("bottle-landed", room_bottle(landed), camera_play(True, 30, 26, 2.6))
+    shot("bottle-mid", room_bottle(mid_bottle), camera_play(True, 18, 20, 2.05))
+    shot("bottle-landed", room_bottle(landed), camera_play(True, 18, 20, 2.05))
 
 
 if __name__ == "__main__":

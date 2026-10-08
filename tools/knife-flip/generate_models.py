@@ -287,12 +287,13 @@ def new_bsdf(name):
 
 
 def steel(brush):
+    """Light brushed steel. Metallic is not 1, so the grey base shows when the room is dark."""
     mat, bsdf = new_bsdf("Steel")
-    socket(bsdf, "Base Color").default_value = (0.78, 0.80, 0.83, 1)
-    socket(bsdf, "Metallic").default_value = 1.0
-    socket(bsdf, "Roughness").default_value = 0.22
+    socket(bsdf, "Base Color").default_value = (0.84, 0.86, 0.88, 1)
+    socket(bsdf, "Metallic").default_value = 0.86
+    socket(bsdf, "Roughness").default_value = 0.32
     if "Anisotropic" in bsdf.inputs:
-        socket(bsdf, "Anisotropic").default_value = 0.65
+        socket(bsdf, "Anisotropic").default_value = 0.45
     if "Anisotropic Rotation" in bsdf.inputs:
         socket(bsdf, "Anisotropic Rotation").default_value = 0.25
     nt = mat.node_tree
@@ -349,6 +350,48 @@ def glass(name, color, transmission=0.92, roughness=0.06, ior=1.5):
     return mat
 
 
+def alpha_glass(name, color, alpha=0.16, roughness=0.06):
+    """See-through glass without refraction.
+
+    Filament's transmission pass samples the opaque background and skips a transparent
+    liquid sitting inside the bottle, so the bottle used to look empty. Alpha blending
+    composites over the opaque water instead.
+    """
+    mat, bsdf = new_bsdf(name)
+    socket(bsdf, "Base Color").default_value = (*color, 1)
+    socket(bsdf, "Metallic").default_value = 0.0
+    socket(bsdf, "Roughness").default_value = roughness
+    socket(bsdf, "Transmission Weight").default_value = 0.0
+    socket(bsdf, "Alpha").default_value = alpha
+    mat.blend_method = "BLEND"
+    mat.use_backface_culling = False
+    mat.show_transparent_back = True
+    return mat
+
+
+def liquid(name, color):
+    """Opaque light-blue water. Transparent water disappears inside the glass."""
+    mat, bsdf = new_bsdf(name)
+    socket(bsdf, "Base Color").default_value = (*color, 1)
+    socket(bsdf, "Metallic").default_value = 0.0
+    socket(bsdf, "Roughness").default_value = 0.16
+    socket(bsdf, "Transmission Weight").default_value = 0.0
+    socket(bsdf, "Alpha").default_value = 1.0
+    mat.blend_method = "OPAQUE"
+    mat.use_backface_culling = False
+    return mat
+
+
+def image_mat(name, img, roughness=0.62):
+    mat, bsdf = new_bsdf(name)
+    socket(bsdf, "Metallic").default_value = 0.0
+    socket(bsdf, "Roughness").default_value = roughness
+    tex = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    mat.node_tree.links.new(tex.outputs["Color"], socket(bsdf, "Base Color"))
+    return mat
+
+
 def load_image(path, name, noncolor=False):
     img = bpy.data.images.load(path)
     img.name = name
@@ -366,20 +409,98 @@ def scaled_copy(img, size, name):
 def brush_image():
     w = h = 128
     img = bpy.data.images.new("steel_brush", width=w, height=h, alpha=False)
+    # Set the color space before the pixels. Doing it afterwards clears the buffer.
+    img.colorspace_settings.name = "Non-Color"
     rnd = random.Random(7)
     px = [0.0] * (w * h * 4)
     for y in range(h):
         for x in range(w):
             band = 0.62 + 0.38 * math.sin(x * 1.35 + 0.2 * math.sin(y * 0.15))
             grain = rnd.uniform(-0.05, 0.05)
-            v = min(1.0, max(0.0, 0.16 + 0.18 * band + grain))
+            # Brushed range about 0.27–0.36, so the key light reads as pale steel.
+            v = min(1.0, max(0.0, 0.26 + 0.08 * band + grain * 0.35))
             i = (y * w + x) * 4
             px[i] = px[i + 1] = px[i + 2] = v
             px[i + 3] = 1.0
     img.pixels.foreach_set(px)
-    img.colorspace_settings.name = "Non-Color"
-    img.pack()
-    return img
+    return bake_image(img)
+
+
+def _image(name, size, color_at):
+    img = bpy.data.images.new(name, width=size, height=size, alpha=False)
+    # Set the color space before the pixels. Doing it afterwards clears the buffer.
+    img.colorspace_settings.name = "sRGB"
+    px = [0.0] * (size * size * 4)
+    for y in range(size):
+        for x in range(size):
+            r, g, b = color_at(x, y, size)
+            i = (y * size + x) * 4
+            px[i] = r
+            px[i + 1] = g
+            px[i + 2] = b
+            px[i + 3] = 1.0
+    img.pixels.foreach_set(px)
+    return bake_image(img)
+
+
+def bake_image(img):
+    """Save generated pixels and reload the file.
+
+    The glTF exporter writes a black JPEG for an image that only exists as a
+    packed pixel buffer. The block, the counter and the steel roughness all
+    went out black until the pixels were saved to a real PNG first.
+    """
+    img.update()
+    folder = os.environ.get("KNIFE_IMAGE_BAKE", "/tmp/knife-flip-images")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, img.name + ".png")
+    img.filepath_raw = path
+    img.file_format = "PNG"
+    img.save()
+    loaded = bpy.data.images.load(path)
+    loaded.name = img.name + "_baked"
+    loaded.colorspace_settings.name = img.colorspace_settings.name
+    return loaded
+
+
+def endgrain_image(size=512):
+    """Maple butcher-block top: a grid of end-grain rounds with growth rings."""
+    def color_at(x, y, n):
+        cell = n / 4.0
+        cx = (x % cell) - cell * 0.5
+        cy = (y % cell) - cell * 0.5
+        jx = ((int(x // cell) * 17) % 7) - 3
+        jy = ((int(y // cell) * 13) % 5) - 2
+        r = math.hypot(cx - jx, (cy - jy) * 0.9) / (cell * 0.46)
+        ring = 0.5 + 0.5 * math.sin(r * 26.0)
+        shade = 1.0 - 0.16 * ring
+        if r > 0.98:
+            shade = 0.62
+        return (0.86 * shade, 0.68 * shade, 0.44 * shade)
+    return _image("endgrain", size, color_at)
+
+
+def edgegrain_image(size=256):
+    """Long grain for the block sides and the chips, lighter than the counter."""
+    rnd = random.Random(4)
+
+    def color_at(x, y, n):
+        wave = 0.5 + 0.5 * math.sin(y * 0.55 + 2.2 * math.sin(x * 0.04))
+        speck = rnd.uniform(-0.03, 0.03)
+        shade = 0.90 - 0.12 * wave + speck
+        return (0.78 * shade, 0.60 * shade, 0.38 * shade)
+    return _image("edgegrain", size, color_at)
+
+
+def counter_image(size=512):
+    """Mid oak planks, darker than the maple block so the two separate."""
+    def color_at(x, y, n):
+        plank = int(y / (n / 5.0))
+        seam = (y % (n / 5.0)) < 2.0
+        grain = 0.5 + 0.5 * math.sin(x * 0.09 + plank + 1.4 * math.sin(y * 0.03))
+        shade = 0.62 if seam else (0.94 - 0.14 * grain)
+        return (0.64 * shade, 0.48 * shade, 0.32 * shade)
+    return _image("counter", size, color_at)
 
 
 def export(objs, filename):
@@ -805,12 +926,15 @@ def build_water_neck(water_mat):
     return [obj]
 
 
-def build_block(wood_mat):
+def build_block(top_mat, side_mat):
     # Top face on z = 0, centred on x = 0.29 so it covers physics x = 0..0.58.
     # Depth is along Y. After export, Blender -Y becomes glTF +Z (the camera side).
     obj = bevel_box("block", 0.0, 0.58, -0.11, 0.11, -0.10, 0.0, 0.006)
-    assign(obj, wood_mat)
-    cube_uv(obj, scale=3.2)
+    obj.data.materials.append(top_mat)
+    obj.data.materials.append(side_mat)
+    for poly in obj.data.polygons:
+        poly.material_index = 0 if poly.normal.z > 0.55 else 1
+    cube_uv(obj, scale=2.4)
     report("block", [obj])
     return [obj]
 
@@ -838,12 +962,45 @@ def build_chip(wood_mat, seed):
     return [obj]
 
 
-def build_room(wood_mat, wall_mat, glass_mat, plaster_mat):
+def mug(ceramic):
+    """A cup with a handle, on the left of the counter. The old prop was a plain cylinder."""
+    body = tube("mug", [
+        (0.0, 0.030),
+        (0.006, 0.036),
+        (0.072, 0.038),
+        (0.088, 0.034),
+    ], segments=24, wall=0.0022)
+    assign(body, ceramic)
+    # C-shaped handle in the XY plane, opening toward the cup, on the camera side (-Y).
+    rings = []
+    steps = 14
+    for i in range(steps):
+        a = math.radians(210) + math.radians(300) * i / (steps - 1)
+        cy = -0.034 + math.cos(a) * 0.018
+        cz = 0.046 + math.sin(a) * 0.022
+        ring = []
+        for k in range(8):
+            b = 2 * math.pi * k / 8
+            ring.append((
+                math.cos(b) * 0.0032,
+                cy + math.sin(b) * 0.0032,
+                cz,
+            ))
+        rings.append(ring)
+    handle = loft("mug_handle", rings)
+    assign(handle, ceramic)
+    for obj in (body, handle):
+        obj.location = (-0.32, 0.05, -0.10)
+    bpy.context.view_layer.update()
+    return [body, handle]
+
+
+def build_room(counter_mat, wall_mat, glass_mat, plaster_mat, frame_mat):
     objs = []
     # Counter top. Physics block sits on z = -0.10. Front (camera) is -Y.
     top = bevel_box("counter", -0.55, 1.25, -0.34, 0.42, -0.142, -0.100, 0.008)
-    assign(top, wood_mat)
-    cube_uv(top, scale=1.6)
+    assign(top, counter_mat)
+    cube_uv(top, scale=1.4)
     objs.append(top)
     # Cabinet under the counter. The room is a closed box: the HDRI is only the light.
     cabinet = box("cabinet", -0.52, 1.22, -0.30, 0.38, -0.90, -0.142)
@@ -898,29 +1055,14 @@ def build_room(wood_mat, wall_mat, glass_mat, plaster_mat):
         box("mullion", 0.83, 0.86, 0.44, 0.495, 0.40, 0.90),
     ]
     for part in frame_parts:
-        assign(part, wood_mat)
+        assign(part, frame_mat)
         objs.append(part)
     pane = box("pane", 0.58, 1.12, 0.455, 0.462, 0.40, 0.90)
     assign(pane, glass_mat)
     objs.append(pane)
-    # A plain canister on the far-left of the counter, out of the toss.
-    jar = lathe_solid("canister", [
-        ( -0.10, 0.0004), (-0.10, 0.045), (-0.02, 0.048), (0.06, 0.046), (0.08, 0.028),
-    ], segments=20)
-    # That profile used absolute z by mistake (negative). Rebuild at the counter.
-    bpy.data.objects.remove(jar, do_unlink=True)
-    jar = lathe_solid("canister", [
-        (0.0, 0.0004), (0.0, 0.045), (0.08, 0.048), (0.11, 0.046), (0.125, 0.030),
-    ], segments=20)
-    jar.location = (-0.28, 0.16, -0.10)
-    assign(jar, plaster_mat)
-    bpy.context.view_layer.update()
-    objs.append(jar)
-    lid = cylinder("canister_lid", 0.0, 0.012, 0.032, segments=16)
-    lid.location = (-0.28, 0.16, 0.025)
-    assign(lid, wood_mat)
-    bpy.context.view_layer.update()
-    objs.append(lid)
+    # Far left of the counter, out of the toss.
+    ceramic = paint("Ceramic", (0.90, 0.86, 0.78), roughness=0.42)
+    objs.extend(mug(ceramic))
     report("room", objs)
     return objs
 
@@ -939,18 +1081,22 @@ def main():
     steel_mat = steel(brush)
     brass_mat = brass()
     wood_handle = wood(color_s, normal_s, rough_s, "WoodHandle")
-    wood_big = wood(color, normal, rough, "WoodScene")
+    endgrain = image_mat("EndGrain", endgrain_image(), roughness=0.58)
+    edgegrain = image_mat("EdgeGrain", edgegrain_image(), roughness=0.62)
+    counter = image_mat("Counter", counter_image(), roughness=0.55)
     cord = paint("Cord", (0.45, 0.16, 0.10), roughness=0.72)
     g10 = paint("G10", (0.72, 0.58, 0.36), roughness=0.48)
     liner = paint("Liner", (0.55, 0.57, 0.60), roughness=0.35, metallic=0.9)
     pin = paint("Pin", (0.62, 0.48, 0.22), roughness=0.3, metallic=1.0)
     fly_scale = paint("Channels", (0.28, 0.30, 0.33), roughness=0.34, metallic=0.85)
-    plastic = glass("PET", (0.90, 0.95, 0.96), transmission=0.94, roughness=0.05, ior=1.52)
+    # Alpha glass, not transmission: the water has to show through.
+    plastic = alpha_glass("PET", (0.93, 0.96, 0.97), alpha=0.28, roughness=0.05)
     cap_mat = paint("Cap", (0.16, 0.38, 0.40), roughness=0.38)
-    water_mat = glass("Water", (0.55, 0.78, 0.92), transmission=0.98, roughness=0.02, ior=1.33)
+    water_mat = liquid("Water", (0.32, 0.70, 0.90))
     wall = paint("Wall", (0.86, 0.82, 0.74), roughness=0.85)
     plaster = paint("Plaster", (0.78, 0.74, 0.68), roughness=0.9)
-    window_glass = glass("Window", (0.85, 0.92, 0.95), transmission=0.88, roughness=0.04, ior=1.5)
+    window_glass = alpha_glass("Window", (0.85, 0.92, 0.95), alpha=0.22, roughness=0.04)
+    frame = paint("Frame", (0.62, 0.46, 0.30), roughness=0.5)
 
     groups = {
         "chef.glb": build_chef(steel_mat, wood_handle, brass_mat),
@@ -961,12 +1107,11 @@ def main():
         "bottle.glb": build_bottle(plastic, cap_mat),
         "water_body.glb": build_water_body(water_mat),
         "water_neck.glb": build_water_neck(water_mat),
-        "chip0.glb": build_chip(wood_handle, 1),
-        "chip1.glb": build_chip(wood_handle, 2),
-        "chip2.glb": build_chip(wood_handle, 3),
-        "chip3.glb": build_chip(wood_handle, 4),
-        # The block shares the room file so the 1K wood maps are stored once.
-        "room.glb": build_room(wood_big, wall, window_glass, plaster) + build_block(wood_big),
+        "chip0.glb": build_chip(edgegrain, 1),
+        "chip1.glb": build_chip(edgegrain, 2),
+        "chip2.glb": build_chip(edgegrain, 3),
+        "chip3.glb": build_chip(edgegrain, 4),
+        "room.glb": build_room(counter, wall, window_glass, plaster, frame) + build_block(endgrain, edgegrain),
     }
     # chip loft uses wedge_ring which has a fixed point count; report length separately.
     for filename, objs in groups.items():

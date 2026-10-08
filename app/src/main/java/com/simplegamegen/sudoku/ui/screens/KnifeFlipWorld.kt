@@ -35,6 +35,7 @@ import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironment
 import io.github.sceneview.rememberEnvironmentLoader
+import io.github.sceneview.rememberFillLightNode
 import io.github.sceneview.rememberMainLightNode
 import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelInstance
@@ -77,9 +78,14 @@ internal fun KnifeFlipWorld(
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
     val light = rememberMainLightNode(engine) {
-        intensity = 18_000f
-        lightDirection = Direction(x = -0.35f, y = -1f, z = -0.25f)
-        color = colorOf(r = 1f, g = 0.94f, b = 0.84f)
+        intensity = KEY_LUX
+        lightDirection = KEY_DIR
+        color = KEY_COLOR
+    }
+    val fill = rememberFillLightNode(engine) {
+        intensity = FILL_LUX
+        lightDirection = FILL_DIR
+        color = FILL_COLOR
     }
     val toss = remember { TossDrag() }
     val room = rememberModelInstance(modelLoader, "knife-flip/room.glb")
@@ -107,10 +113,11 @@ internal fun KnifeFlipWorld(
         autoCenterContent = false,
         autoFitContent = false,
         mainLightNode = light,
-        fillLightNode = null,
+        fillLightNode = fill,
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            environment.indirectLight?.intensity = IBL_LUX
             renderer.clearColor(0.55, 0.51, 0.45)
             placeKnifeCamera(camera, body.bottle, view, shake)
         },
@@ -175,17 +182,22 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val renderer = rememberRenderer(engine)
     val camera = rememberCameraNode(engine)
     val light = rememberMainLightNode(engine) {
-        intensity = 22_000f
-        lightDirection = Direction(x = -0.4f, y = -1f, z = -0.45f)
-        color = colorOf(r = 1f, g = 0.95f, b = 0.88f)
+        intensity = PICKER_KEY_LUX
+        lightDirection = KEY_DIR
+        color = KEY_COLOR
+    }
+    val fill = rememberFillLightNode(engine) {
+        intensity = PICKER_FILL_LUX
+        lightDirection = FILL_DIR
+        color = FILL_COLOR
     }
     val hero = rememberModelInstance(modelLoader, if (body.bottle) "knife-flip/bottle.glb" else knifeAsset(body.id))
     val materialLoader = rememberMaterialLoader(engine)
-    val plinth = remember(materialLoader) {
-        materialLoader.createColorInstance(Color(0xFF7A5230), metallic = 0f, roughness = 0.55f)
+    val board = remember(materialLoader) {
+        materialLoader.createColorInstance(Color(0xFFD7B07A), metallic = 0f, roughness = 0.58f)
     }
     val backdrop = remember(materialLoader) {
-        materialLoader.createColorInstance(Color(0xFFC9BBA8), metallic = 0f, roughness = 0.85f)
+        materialLoader.createColorInstance(Color(0xFFD5D0C8), metallic = 0f, roughness = 0.92f)
     }
     val waterMaterial = remember(materialLoader) { makeWaterMaterial(materialLoader) }
     val bodyLiquid = remember(engine) {
@@ -194,7 +206,9 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val neckLiquid = remember(engine) {
         liquidGeometry(engine, neckVertices(NECK_LIMIT, 0f), neckIndices())
     }
-    val theta = if (body.bottle) 0.22f else 1.15f
+    // Nearly horizontal, so a camera on +Z sees the blade face at a 3/4 angle and the length
+    // runs across the frame. 1.15 rad with the old yaw looked along the edge.
+    val theta = if (body.bottle) 0.30f else 1.20f
     val deg = tipDegrees(theta)
     val sample = Sample(0f, 0f, 0f, theta, 0f)
     SceneView(
@@ -209,15 +223,21 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
         autoCenterContent = false,
         autoFitContent = false,
         mainLightNode = light,
-        fillLightNode = null,
+        fillLightNode = fill,
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
-            renderer.clearColor(0.79, 0.73, 0.66)
-            val eye = previewEye(body)
-            camera.position = eye
-            camera.lookAt(Position(y = body.length * if (body.bottle) 0.45f else 0.02f))
-            camera.setProjection(fovInDegrees = 32.0, near = 0.02f, far = 20f)
+            environment.indirectLight?.intensity = IBL_LUX
+            renderer.clearColor(0.84, 0.82, 0.78)
+            val look = previewLook(body)
+            camera.position = previewEye(body, look)
+            camera.lookAt(look)
+            // Vertical field is derived from a fixed horizontal field, so a wide
+            // preview banner and the square headless frame both keep the same width.
+            val aspect = camera.getViewPortAspect().takeIf { it > 0.2 } ?: 1.0
+            val hfov = if (body.bottle) 28.0 else 30.7
+            val vfov = Math.toDegrees(2.0 * atan(tan(Math.toRadians(hfov / 2.0)) / aspect))
+            camera.setProjection(fovInDegrees = vfov, near = 0.02f, far = 20f)
         },
     ) {
         CubeNode(
@@ -231,9 +251,13 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
             materialInstance = backdrop,
         )
         CubeNode(
-            size = Size(x = 0.42f, y = 0.012f, z = 0.22f),
-            position = Position(y = if (body.bottle) -0.006f else -body.length * 0.16f),
-            materialInstance = plinth,
+            size = Size(
+                x = body.length * if (body.bottle) 0.72f else 1.18f,
+                y = 0.014f,
+                z = body.length * if (body.bottle) 0.55f else 0.42f,
+            ),
+            position = Position(y = -0.007f),
+            materialInstance = board,
         )
         if (!body.bottle) {
             hero?.let {
@@ -253,10 +277,11 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
 }
 
 internal fun placeKnifeCamera(camera: CameraNode, bottle: Boolean, view: BoardView, shake: Float) {
-    val look = if (bottle) Position(x = 0.30f, y = 0.36f, z = 0f) else Position(x = 0.34f, y = 0.18f, z = 0f)
+    val look = if (bottle) Position(x = 0.26f, y = 0.46f, z = 0f) else Position(x = 0.34f, y = 0.18f, z = 0f)
     val yaw = Math.toRadians(view.yaw.toDouble())
     val pitch = Math.toRadians(view.pitch.toDouble())
-    val dist = (if (bottle) 0.72f else 0.48f) * view.distance / view.zoom.coerceIn(0.35f, 5f)
+    // Bottles use a closer orbit than knives so the toss fills the frame.
+    val dist = (if (bottle) 0.62f else 0.48f) * view.distance / view.zoom.coerceIn(0.35f, 5f)
     val cp = cos(pitch).toFloat()
     val sp = sin(pitch).toFloat()
     val pan = dist / 900f
@@ -269,15 +294,30 @@ internal fun placeKnifeCamera(camera: CameraNode, bottle: Boolean, view: BoardVi
     camera.setProjection(fovInDegrees = 36.0, near = 0.04f, far = 40f)
 }
 
-private fun previewEye(body: FlipBody): Position {
-    val dist = body.length * if (body.bottle) 2.1f else 2.55f
-    val yaw = Math.toRadians(54.0)
-    val pitch = Math.toRadians(if (body.bottle) 16.0 else 20.0)
+private fun previewLook(body: FlipBody): Position {
+    val theta = if (body.bottle) 0.30f else 1.20f
+    // The mesh origin is the centre of mass. Look at the geometric middle so a
+    // tip-heavy knife is not shoved off the right of the frame.
+    val mid = if (body.bottle) 0f else body.length * (body.balance - 0.5f)
+    val lookY = if (body.bottle) body.length * 0.46f else 0f
+    return Position(
+        x = mid * sin(theta),
+        y = lookY + mid * cos(theta),
+        z = 0f,
+    )
+}
+
+private fun previewEye(body: FlipBody, look: Position): Position {
+    // Face of the blade is +Z. A small yaw is a 3/4 view; 54° was looking at the edge.
+    // 4× the length at 30.7° horizontal field puts the knife at about 80% of the width.
+    val dist = body.length * if (body.bottle) 2.15f else 4.0f
+    val yaw = Math.toRadians(if (body.bottle) 36.0 else 28.0)
+    val pitch = Math.toRadians(if (body.bottle) 16.0 else 22.0)
     val cp = cos(pitch).toFloat()
     return Position(
-        x = dist * cp * sin(yaw).toFloat(),
-        y = body.length * 0.15f + dist * sin(pitch).toFloat(),
-        z = dist * cp * cos(yaw).toFloat(),
+        x = look.x + dist * cp * sin(yaw).toFloat(),
+        y = look.y + dist * sin(pitch).toFloat(),
+        z = look.z + dist * cp * cos(yaw).toFloat(),
     )
 }
 
@@ -391,6 +431,22 @@ private fun chipPose(i: Int, age: Float, tip: Position): Position {
 }
 
 private const val HDRI = "knife-flip/kiara_interior_1k.hdr"
+
+/**
+ * Lux for the Kiara IBL, the key, and the fill. tools/knife-flip/assemble_stills.py writes the
+ * same numbers into the headless batch, so the stills match the app.
+ */
+private const val IBL_LUX = 22_000f
+private const val KEY_LUX = 42_000f
+private const val FILL_LUX = 15_000f
+private const val PICKER_KEY_LUX = 48_000f
+private const val PICKER_FILL_LUX = 18_000f
+private val KEY_DIR = Direction(x = -0.28f, y = -1f, z = -0.62f)
+private val FILL_DIR = Direction(x = 0.45f, y = -0.4f, z = 0.55f)
+private val KEY_COLOR = colorOf(r = 1f, g = 0.96f, b = 0.90f)
+private val FILL_COLOR = colorOf(r = 0.82f, g = 0.88f, b = 1f)
+/** How far the water climbs the glass. The centre of the surface stays at the fill height. */
+private const val MENISCUS = 0.0028f
 private const val SHOULDER = 0.148f
 /** Water stops here, under the cap, so the plane cut cannot leave the neck. */
 private const val NECK_LIMIT = 0.040f
@@ -415,10 +471,11 @@ private fun Renderer.clearColor(r: Double, g: Double, b: Double) {
 
 private fun makeWaterMaterial(materialLoader: MaterialLoader): MaterialInstance =
     materialLoader.createColorInstance(
-        Color(0xB34AA3C8),
-        metallic = 0.02f,
-        roughness = 0.08f,
-        reflectance = 0.5f,
+        // Opaque. A transparent volume is skipped by Filament's glass refraction and the bottle looks empty.
+        Color(0xFF3EAFDF),
+        metallic = 0f,
+        roughness = 0.16f,
+        reflectance = 0.35f,
     )
 
 /** Vertical water with a plane-cut top. The walls stay put, so the tilt cannot leave the bottle. */
@@ -440,9 +497,11 @@ private fun SceneScope.BottleWater(
     val neckTilt = if (!inNeck) 0f else clippedLiquidTilt(
         requestedTilt(body, sample), neckHeight, neckRadius(neckHeight), 0.003f, NECK_LIMIT,
     )
+    val bodyMeniscus = if (inNeck) 0f else (SHOULDER - bodyTop).coerceIn(0f, MENISCUS)
+    val neckMeniscus = if (!inNeck) 0f else (NECK_LIMIT - neckHeight).coerceIn(0f, 0.0016f)
     SideEffect {
-        bodyLiquid.setVertices(engine, cylinderLiquid(bodyTop, bodyTilt))
-        neckLiquid.setVertices(engine, neckVertices(neckHeight, neckTilt))
+        bodyLiquid.setVertices(engine, cylinderLiquid(bodyTop, bodyTilt, bodyMeniscus))
+        neckLiquid.setVertices(engine, neckVertices(neckHeight, neckTilt, neckMeniscus))
     }
     MeshNode(
         primitiveType = RenderableManager.PrimitiveType.TRIANGLES,
@@ -465,7 +524,7 @@ private fun SceneScope.BottleWater(
 private fun liquidGeometry(engine: Engine, vertices: List<Geometry.Vertex>, indices: List<Int>): Geometry =
     Geometry.Builder().vertices(vertices).indices(indices).build(engine)
 
-private fun cylinderLiquid(top: Float, tiltRad: Float): List<Geometry.Vertex> {
+private fun cylinderLiquid(top: Float, tiltRad: Float, meniscus: Float = MENISCUS): List<Geometry.Vertex> {
     val slope = tan(tiltRad)
     val capNormal = normalizeDir(Direction(x = -slope, y = 1f, z = 0f))
     val lower = ArrayList<Geometry.Vertex>()
@@ -478,7 +537,7 @@ private fun cylinderLiquid(top: Float, tiltRad: Float): List<Geometry.Vertex> {
         val z = WATER_RADIUS * sin(theta)
         val radial = normalizeDir(Direction(x = x, y = 0f, z = z))
         val bottom = Position(x, 0.001f, z)
-        val yTop = top + x * slope
+        val yTop = top + x * slope + meniscusLift(x, z, WATER_RADIUS, meniscus)
         val crest = Position(x, yTop, z)
         lower += Geometry.Vertex(bottom, radial)
         lowerCap += Geometry.Vertex(bottom, Direction(y = -1f))
@@ -508,7 +567,7 @@ private fun cylinderIndices(sideCount: Int): List<Int> = buildList {
     }
 }
 
-private fun neckVertices(height: Float, tiltRad: Float): List<Geometry.Vertex> {
+private fun neckVertices(height: Float, tiltRad: Float, meniscus: Float = 0.0016f): List<Geometry.Vertex> {
     val slope = tan(tiltRad)
     val capNormal = normalizeDir(Direction(x = -slope, y = 1f, z = 0f))
     val stride = LATHE_SIDES + 1
@@ -523,7 +582,7 @@ private fun neckVertices(height: Float, tiltRad: Float): List<Geometry.Vertex> {
             val theta = side * (Math.PI * 2.0 / LATHE_SIDES).toFloat()
             val x = radius * cos(theta)
             val z = radius * sin(theta)
-            val y = if (tilted) y0 + x * slope else y0
+            val y = if (tilted) y0 + x * slope + meniscusLift(x, z, radius, meniscus) else y0
             wall += Geometry.Vertex(Position(x, y, z), normalizeDir(Direction(x = x, y = 0f, z = z)))
         }
     }
@@ -542,7 +601,7 @@ private fun neckVertices(height: Float, tiltRad: Float): List<Geometry.Vertex> {
             val theta = side * (Math.PI * 2.0 / LATHE_SIDES).toFloat()
             val x = topR * cos(theta)
             val z = topR * sin(theta)
-            add(Geometry.Vertex(Position(x, topY + x * slope, z), capNormal))
+            add(Geometry.Vertex(Position(x, topY + x * slope + meniscusLift(x, z, topR, meniscus), z), capNormal))
         }
     }.also {
         check(wall.size == LATHE_RINGS * stride)
@@ -578,6 +637,13 @@ private fun neckRadius(y: Float): Float {
     val r1 = samples[i + 3]
     val t = if (y1 == y0) 0f else (yy - y0) / (y1 - y0)
     return r0 + (r1 - r0) * t
+}
+
+/** Concave meniscus: zero on the axis, [meniscus] at [radius]. */
+private fun meniscusLift(x: Float, z: Float, radius: Float, meniscus: Float): Float {
+    if (meniscus <= 0f || radius <= 1e-4f) return 0f
+    val t = ((x * x + z * z) / (radius * radius)).coerceIn(0f, 1f)
+    return meniscus * t
 }
 
 private fun normalizeDir(v: Direction): Direction {

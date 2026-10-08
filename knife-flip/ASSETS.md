@@ -15,15 +15,15 @@ Blender's glTF exporter on this machine has no Draco shared library, so the GLBs
 | Asset | Use | Source | Author | License | Modifications |
 | --- | --- | --- | --- | --- | --- |
 | Kiara Interior 1K HDR | Image-based light and reflections only. It is not drawn as the background. | https://polyhaven.com/a/kiara_interior | Greg Zaal | CC0 1.0 | Downloaded the 1K `.hdr` only (1.7 MB). No other edit. |
-| Wood051 1K | Counter, butcher block, knife handles | https://ambientcg.com/view?id=Wood051 | ambientCG / Lennart Demes | CC0 1.0 | Kept Colour, NormalGL and Roughness. Did not ship the displacement map, preview, or the included `.blend`. Handles use a copy scaled to 512 px inside the generator. |
+| Wood051 1K | Knife handles | https://ambientcg.com/view?id=Wood051 | ambientCG / Lennart Demes | CC0 1.0 | Kept Colour, NormalGL and Roughness. Did not ship the displacement map, preview, or the included `.blend`. Handles use a copy scaled to 512 px inside the generator. |
 
 The source JPEGs live in `tools/knife-flip/textures/` so the script can be re-run. The HDRI is the runtime file `app/src/main/assets/knife-flip/kiara_interior_1k.hdr`.
 
 ## Made for this app
 
-chef, throwing, pocket, butterfly, cleaver, bottle shell and cap, water body, water neck, cutting block, counter, cabinet, walls, window, floor, ceiling, canister, and four wood splinters. Steel roughness is a brush map drawn by the script.
+chef, throwing, pocket, butterfly, cleaver, bottle shell and cap, water body, water neck, cutting block, counter, cabinet, walls, window, floor, ceiling, mug, and four wood splinters. Steel roughness is a brush map drawn by the script. The block top is a generated maple end-grain, the block sides and chips are a lighter long grain, and the counter is a generated mid oak. Those three are not the Wood051 maps.
 
-The throwing knife's steel and cord stay inside `FlipModels.THROWING_THICKNESS` (5 mm). The pocket knife is an open drop-point folder: 18 mm blade, 28 mm handle, about 14 mm thick. Chips are small irregular splinters with the wood material. The room is a closed box, so the HDRI lights the scene and does not show up as a photograph behind it. Water in the app is a vertical column with a tilted top, clipped so the surface stays inside the glass. The exported water GLBs are the untilted volumes at the same radii.
+The throwing knife's steel and cord stay inside `FlipModels.THROWING_THICKNESS` (5 mm). The pocket knife is an open drop-point folder: 18 mm blade, 28 mm handle, about 14 mm thick. Chips are small irregular splinters. The room is a closed box, so the HDRI lights the scene and does not show up as a photograph behind it. Water is an opaque light-blue column with a meniscus, clipped so the surface stays inside the glass. The bottle is alpha-blended glass (alpha 0.28) rather than a refraction material, because Filament's transmission pass does not show a liquid inside the bottle. Generated images are written to PNG before export: a packed pixel buffer goes out as a black JPEG, which made the block, counter and steel roughness render black. The exported water GLBs are the untilted volumes at the same radii.
 
 ## Renderer
 
