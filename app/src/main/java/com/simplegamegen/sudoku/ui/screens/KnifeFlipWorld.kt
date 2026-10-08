@@ -46,7 +46,6 @@ import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
-import kotlin.math.min
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -554,26 +553,6 @@ private fun bottleBase(body: FlipBody, sample: Sample): Position {
         y = sample.z - h * cos(sample.theta),
         z = 0f,
     )
-}
-
-/**
- * Radians of free-surface tilt that still fit in the glass.
- *
- * The column is not rotated. The top is a plane, so the walls stay at [radius]. The angle is
- * clipped so the low side stays above [floor] and the high side stays under [ceiling].
- */
-internal fun clippedLiquidTilt(
-    requestedDegrees: Float,
-    center: Float,
-    radius: Float,
-    floor: Float,
-    ceiling: Float,
-): Float {
-    val room = min(center - floor, ceiling - center)
-    if (requestedDegrees == 0f || room <= 0.001f || radius <= 0.001f) return 0f
-    val maxRad = atan((room / radius).toDouble())
-    val requested = Math.toRadians(requestedDegrees.toDouble())
-    return requested.coerceIn(-maxRad, maxRad).toFloat()
 }
 
 private fun waterHeight(body: FlipBody, sample: Sample) =
