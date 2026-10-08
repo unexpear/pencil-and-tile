@@ -94,10 +94,12 @@ internal object KnifeStage {
 private val BlockMesh = boxMesh(FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE, 2.15f, KnifeStage.BLOCK_TOP)
 
 private val BladeSteel = Color(0xFFE4EAF1)
+private val EdgeSteel = Color(0xFF4A515C)
 private val TangSteel = Color(0xFF4E545E)
 private val WoodHandle = Color(0xFF8B5A34)
 private val BolsterBrass = Color(0xFFC6A15A)
-private val Scales = Color(0xFF1A1C1F)
+private val Scales = Color(0xFF7E8791)
+private val G10 = Color(0xFFC2A36B)
 private val BlockWood = Color(0xFF8B5A34)
 private val Felt = Color(0xFF2E6B4F)
 private val Plastic = Color(0xFFB7D0DC)
@@ -276,15 +278,20 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawToss(
     drawContactShadow(frame, body, sample)
     if (!body.bottle) {
         val pose = Pose(comX, KnifeStage.BLOCK_Y, comZ, rot = rot, scale = scale)
-        val rim = (frame.cell * if (sample.z < 0.35f) 0.12f else 0.055f).coerceIn(4.5f, 11f)
-        for (part in KnifeMeshes.parts(body)) drawSilhouette(frame, part.mesh, pose, Color(0xFF12141A), rim)
+        val rim = (frame.cell * if (sample.z < 0.35f) 0.09f else 0.04f).coerceIn(2.5f, 7f)
+        for (part in KnifeMeshes.parts(body)) {
+            if (part.surface == KnifeSurface.EDGE || part.mesh.count < 140) continue
+            drawSilhouette(frame, part.mesh, pose, Color(0xFF12141A), rim)
+        }
         for (part in KnifeMeshes.parts(body)) {
             val (color, finish) = when (part.surface) {
                 KnifeSurface.BLADE -> BladeSteel to Polished
+                KnifeSurface.EDGE -> EdgeSteel to Polished
                 KnifeSurface.TANG -> TangSteel to Polished
                 KnifeSurface.BOLSTER -> BolsterBrass to Polished
                 KnifeSurface.HANDLE -> WoodHandle to Satin
                 KnifeSurface.SCALES -> Scales to Satin
+                KnifeSurface.G10 -> G10 to Satin
             }
             drawMesh(frame, part.mesh, pose, color, finish)
         }
@@ -481,15 +488,15 @@ internal fun androidx.compose.ui.graphics.drawscope.DrawScope.paintChoice(body: 
     val scale = KnifeMeshes.SQUARES_PER_METRE
     if (!body.bottle) {
         val pose = Pose(shot.x, shot.y, shot.z, rot = rot, scale = scale)
-        val rim = (frame.cell * 0.055f).coerceIn(3f, 8f)
-        for (part in KnifeMeshes.parts(body)) drawSilhouette(frame, part.mesh, pose, Color(0xFF12141A), rim)
         for (part in KnifeMeshes.parts(body)) {
             val (color, finish) = when (part.surface) {
                 KnifeSurface.BLADE -> BladeSteel to Polished
+                KnifeSurface.EDGE -> EdgeSteel to Polished
                 KnifeSurface.TANG -> TangSteel to Polished
                 KnifeSurface.BOLSTER -> BolsterBrass to Polished
                 KnifeSurface.HANDLE -> WoodHandle to Satin
                 KnifeSurface.SCALES -> Scales to Satin
+                KnifeSurface.G10 -> G10 to Satin
             }
             drawMesh(frame, part.mesh, pose, color, finish)
         }

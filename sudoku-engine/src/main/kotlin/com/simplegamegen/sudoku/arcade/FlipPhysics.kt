@@ -642,46 +642,46 @@ fun waterBottle(fill: Float): FlipBody {
 object FlipModels {
     val chef: FlipBody = knife(
         "chef", "Chef's knife", 0.330f,
-        // 8 inch blade, 2.0 mm average, heavier at the heel; bolster; full tang handle.
+        // 203 × 48 × 2.3 mm blade, brass bolster, wood scales on a steel tang.
         listOf(
-            Part(0.110f, 0.112f, 0.203f),
-            Part(0.040f, 0.206f, 0.022f),
-            Part(0.078f, 0.272f, 0.120f),
+            Part(0.090f, 0.108f, 0.203f, across = 0.050f),
+            Part(0.040f, 0.206f, 0.022f, across = 0.044f),
+            Part(0.090f, 0.272f, 0.118f, across = 0.032f),
         ),
         gripFromTip = 0.272f, handleZone = 0.115f,
     )
     val throwing: FlipBody = knife(
         "throwing", "Throwing knife", 0.280f,
-        // One piece of steel, 22 × 5 mm, balanced at the middle.
-        listOf(Part(0.240f, 0.140f, 0.280f, across = 0.022f)),
+        // One piece of steel, about 28 × 5 mm, balanced at the middle.
+        listOf(Part(0.240f, 0.140f, 0.280f, across = 0.028f)),
         gripFromTip = 0.246f, handleZone = 0.07f,
     )
     val pocket: FlipBody = knife(
         "pocket", "Pocket knife", 0.200f,
-        // 90 mm blade, heavy scales and liners in the handle.
+        // 90 mm blade, heavy liners and scales in the handle.
         listOf(
-            Part(0.032f, 0.042f, 0.090f),
-            Part(0.096f, 0.152f, 0.105f),
+            Part(0.032f, 0.042f, 0.090f, across = 0.018f),
+            Part(0.096f, 0.152f, 0.105f, across = 0.028f),
         ),
         gripFromTip = 0.158f, handleZone = 0.10f,
     )
     val butterfly: FlipBody = knife(
         "butterfly", "Butterfly knife", 0.250f,
-        // Open balisong: blade plus two steel handles.
+        // Open balisong: 120 mm blade plus two steel channel handles.
         listOf(
-            Part(0.058f, 0.052f, 0.115f),
-            Part(0.098f, 0.188f, 0.125f),
+            Part(0.055f, 0.055f, 0.120f, across = 0.020f),
+            Part(0.100f, 0.190f, 0.125f, across = 0.024f),
         ),
-        gripFromTip = 0.198f, handleZone = 0.11f,
+        gripFromTip = 0.195f, handleZone = 0.11f,
     )
     val cleaver: FlipBody = knife(
-        "cleaver", "Cleaver", 0.295f,
-        // 175 × 95 × 2.4 mm blade. The tall blade adds to the in-plane inertia.
+        "cleaver", "Cleaver", 0.300f,
+        // 180 × 90 × 4 mm blade. The tall blade adds to the in-plane inertia.
         listOf(
-            Part(0.311f, 0.088f, 0.175f, across = 0.095f),
-            Part(0.070f, 0.232f, 0.115f),
+            Part(0.330f, 0.086f, 0.180f, across = 0.094f),
+            Part(0.075f, 0.242f, 0.115f, across = 0.032f),
         ),
-        gripFromTip = 0.238f, tipZone = 0.035f, handleZone = 0.10f,
+        gripFromTip = 0.245f, tipZone = 0.040f, handleZone = 0.11f,
     )
 
     val fills: List<Float> = listOf(0.25f, 1f / 3f, 0.50f, 0.75f, 1f)

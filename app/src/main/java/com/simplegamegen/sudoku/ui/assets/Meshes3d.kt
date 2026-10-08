@@ -213,6 +213,275 @@ internal fun holedPlate(
     return b.build()
 }
 
+/**
+ * One station of a blade, already in mesh space (z toward the tip).
+ * [spine] and [edge] are the profile in x. [spineHalf] is half the thickness at the spine
+ * (or at the centre ridge when [diamond] is set). [edgeHalf] is half the thickness at the cutting edge.
+ * [grind] is how far from the spine, as a fraction of the blade's height, the flat stops and the bevel starts.
+ */
+internal class BladeSample(
+    val z: Float,
+    val spine: Float,
+    val edge: Float,
+    val spineHalf: Float,
+    val edgeHalf: Float,
+    val grind: Float = 0.22f,
+    val diamond: Boolean = false,
+)
+
+/** The ground body and a separate darker lip along the cutting edge. */
+internal class GroundBlade(val body: Mesh, val edge: Mesh)
+
+/**
+ * A blade with a thick spine, a flat, and a wedge down to a thin edge. The grind shoulder is a hard edge
+ * so the highlight breaks there. Thickness can taper from station to station (distal taper).
+ * An optional round hole is cut through, with walls.
+ */
+internal fun groundBlade(
+    samples: List<BladeSample>,
+    holeX: Float = 0f,
+    holeZ: Float = 0f,
+    holeR: Float = 0f,
+): GroundBlade {
+    val body = Builder()
+    val lip = Builder()
+    val grind = samples.first().grind.coerceIn(0.08f, 0.45f)
+    val diamond = samples.first().diamond
+    // t runs from the spine (0) to the cutting edge (1). The lip overlaps the body slightly so the seam does not gap.
+    val bodyT = if (diamond) floatArrayOf(0f, 0.16f, 0.34f, 0.5f, 0.66f, 0.84f, 1f)
+        else floatArrayOf(
+            0f, grind * 0.5f, grind, grind,
+            grind + (1f - grind) * 0.28f,
+            grind + (1f - grind) * 0.55f,
+            grind + (1f - grind) * 0.78f,
+        )
+    val bodyBevel = BooleanArray(bodyT.size) { c -> diamond || c >= 3 }
+    fun buildSide(
+        target: Builder,
+        ts: FloatArray,
+        bevel: BooleanArray,
+        wallStart: Boolean,
+        wallEnd: Boolean,
+        caps: Boolean,
+    ) {
+        val cols = ts.size
+        val n = samples.size
+        val id = Array(n) { Array(cols) { IntArray(2) } }
+        for (i in 0 until n) for (c in 0 until cols) for (side in 0..1) {
+            val s = samples[i]
+            val t = ts[c]
+            val x = s.spine + (s.edge - s.spine) * t
+            val yMag = sectionHalf(s, t)
+            val y = if (side == 0) yMag else -yMag
+            val (nx, ny, nz) = sectionNormal(samples, i, t, bevel[c], side == 0)
+            id[i][c][side] = target.vertex(x, y, s.z, nx, ny, nz)
+        }
+        for (i in 0 until n - 1) for (c in 0 until cols - 1) for (side in 0..1) {
+            if (insideHole(samples, i, c, ts, holeX, holeZ, holeR)) continue
+            val a = id[i][c][side]
+            val b = id[i + 1][c][side]
+            val d = id[i][c + 1][side]
+            val e = id[i + 1][c + 1][side]
+            if (side == 0) {
+                target.tri(a, d, e); target.tri(a, e, b)
+            } else {
+                target.tri(a, e, d); target.tri(a, b, e)
+            }
+        }
+        // Spine or second edge, and the cutting-edge wall, so the blade is a closed solid.
+        fun wall(col: Int, outwardX: Float) {
+            for (i in 0 until n - 1) {
+                val s0 = samples[i]; val s1 = samples[i + 1]
+                val t = ts[col]
+                val x0 = s0.spine + (s0.edge - s0.spine) * t
+                val x1 = s1.spine + (s1.edge - s1.spine) * t
+                val h0 = sectionHalf(s0, t); val h1 = sectionHalf(s1, t)
+                val zm = (s0.z + s1.z) * 0.5f
+                val xm = (x0 + x1) * 0.5f
+                if (holeR > 0f && (xm - holeX) * (xm - holeX) + (zm - holeZ) * (zm - holeZ) < holeR * holeR) continue
+                val nz = s1.z - s0.z
+                val nx = outwardX
+                val a = target.vertex(x0, h0, s0.z, nx, 0f, nz)
+                val b = target.vertex(x1, h1, s1.z, nx, 0f, nz)
+                val d = target.vertex(x0, -h0, s0.z, nx, 0f, nz)
+                val e = target.vertex(x1, -h1, s1.z, nx, 0f, nz)
+                target.tri(a, b, e); target.tri(a, e, d)
+            }
+        }
+        val spineOut = if (samples[0].spine < samples[0].edge) -1f else 1f
+        if (wallStart) wall(0, spineOut)
+        if (wallEnd) wall(cols - 1, -spineOut)
+        if (caps) {
+            // Heel is the first sample and the tip is the last, with +z toward the tip.
+            for (end in intArrayOf(0, n - 1)) {
+                val sign = if (end == 0) -1f else 1f
+                val fan = IntArray(cols * 2)
+                var k = 0
+                for (c in 0 until cols) fan[k++] = id[end][c][0]
+                for (c in cols - 1 downTo 0) fan[k++] = id[end][c][1]
+                val cx = (samples[end].spine + samples[end].edge) * 0.5f
+                val center = target.vertex(cx, 0f, samples[end].z, 0f, 0f, sign)
+                for (i in 0 until fan.size - 1) {
+                    if (sign > 0f) target.tri(center, fan[i], fan[i + 1]) else target.tri(center, fan[i + 1], fan[i])
+                }
+            }
+        }
+        if (holeR > 0f && caps) holeWalls(target, samples, ts, holeX, holeZ, holeR)
+    }
+    buildSide(body, bodyT, bodyBevel, wallStart = !diamond, wallEnd = false, caps = true)
+    if (diamond) {
+        buildSide(lip, floatArrayOf(0f, 0.14f), booleanArrayOf(true, true), wallStart = true, wallEnd = false, caps = false)
+        buildSide(lip, floatArrayOf(0.86f, 1f), booleanArrayOf(true, true), wallStart = false, wallEnd = true, caps = false)
+    } else {
+        buildSide(lip, floatArrayOf(0.78f, 0.9f, 1f), booleanArrayOf(true, true, true), wallStart = false, wallEnd = true, caps = false)
+    }
+    return GroundBlade(body.build(), lip.build())
+}
+
+private fun sectionHalf(s: BladeSample, t: Float): Float {
+    val tt = t.coerceIn(0f, 1f)
+    return if (s.diamond) {
+        val u = abs(tt - 0.5f) * 2f
+        s.spineHalf + (s.edgeHalf - s.spineHalf) * u
+    } else if (tt <= s.grind) s.spineHalf
+    else {
+        val u = (tt - s.grind) / (1f - s.grind).coerceAtLeast(0.05f)
+        s.spineHalf + (s.edgeHalf - s.spineHalf) * u
+    }
+}
+
+/** Outward normal of one face. [bevel] uses the wedge slope; the flat beside the spine does not. */
+private fun sectionNormal(samples: List<BladeSample>, i: Int, t: Float, bevel: Boolean, positiveY: Boolean): Triple<Float, Float, Float> {
+    val s = samples[i]
+    val eps = 0.04f
+    val t2 = (t + eps).coerceAtMost(1f)
+    val y0 = if (bevel) sectionHalf(s, t) else s.spineHalf
+    val y1 = if (bevel) sectionHalf(s, t2) else s.spineHalf
+    val x0 = s.spine + (s.edge - s.spine) * t
+    val x1 = s.spine + (s.edge - s.spine) * t2
+    val dydx = if (abs(x1 - x0) < 1e-6f) 0f else (y1 - y0) / (x1 - x0)
+    val i0 = (i - 1).coerceAtLeast(0)
+    val i1 = (i + 1).coerceAtMost(samples.lastIndex)
+    val dydz = if (abs(samples[i1].z - samples[i0].z) < 1e-6f) 0f
+        else (sectionHalf(samples[i1], t) - sectionHalf(samples[i0], t)) / (samples[i1].z - samples[i0].z)
+    val ny = if (positiveY) 1f else -1f
+    val nx = if (positiveY) -dydx else dydx
+    val nz = if (positiveY) -dydz else dydz
+    return Triple(nx, ny, nz)
+}
+
+private fun insideHole(samples: List<BladeSample>, i: Int, c: Int, ts: FloatArray, holeX: Float, holeZ: Float, holeR: Float): Boolean {
+    if (holeR <= 0f || i >= samples.lastIndex || c >= ts.lastIndex) return false
+    val s0 = samples[i]; val s1 = samples[i + 1]
+    val t = (ts[c] + ts[c + 1]) * 0.5f
+    val x0 = s0.spine + (s0.edge - s0.spine) * t
+    val x1 = s1.spine + (s1.edge - s1.spine) * t
+    val x = (x0 + x1) * 0.5f
+    val z = (s0.z + s1.z) * 0.5f
+    val dx = x - holeX; val dz = z - holeZ
+    return dx * dx + dz * dz < holeR * holeR
+}
+
+private fun holeWalls(target: Builder, samples: List<BladeSample>, ts: FloatArray, holeX: Float, holeZ: Float, holeR: Float) {
+    val n = samples.size
+    val cols = ts.size
+    fun inn(i: Int, c: Int) = i in 0 until n - 1 && c in 0 until cols - 1 && insideHole(samples, i, c, ts, holeX, holeZ, holeR)
+    fun point(i: Int, c: Int): Pair<Float, Float> {
+        val s = samples[i]
+        val t = ts[c]
+        return s.spine + (s.edge - s.spine) * t to s.z
+    }
+    fun quad(i0: Int, c0: Int, i1: Int, c1: Int) {
+        val (x0, z0) = point(i0, c0)
+        val (x1, z1) = point(i1, c1)
+        val mx = (x0 + x1) * 0.5f - holeX
+        val mz = (z0 + z1) * 0.5f - holeZ
+        val h0 = sectionHalf(samples[i0], ts[c0])
+        val h1 = sectionHalf(samples[i1], ts[c1])
+        val a = target.vertex(x0, h0, z0, -mx, 0f, -mz)
+        val b = target.vertex(x1, h1, z1, -mx, 0f, -mz)
+        val d = target.vertex(x0, -h0, z0, -mx, 0f, -mz)
+        val e = target.vertex(x1, -h1, z1, -mx, 0f, -mz)
+        target.tri(a, b, e); target.tri(a, e, d)
+    }
+    for (i in 0 until n - 1) for (c in 0 until cols - 1) {
+        if (!inn(i, c)) continue
+        if (!inn(i - 1, c)) quad(i, c, i, c + 1)
+        if (!inn(i + 1, c)) quad(i + 1, c, i + 1, c + 1)
+        if (!inn(i, c - 1)) quad(i, c, i + 1, c)
+        if (!inn(i, c + 1)) quad(i, c + 1, i + 1, c + 1)
+    }
+}
+
+/** One station of a rounded handle. [x] is the centre, [rx] the half-height in the blade plane, [ry] the half-thickness. */
+internal class OvalStation(val z: Float, val x: Float, val rx: Float, val ry: Float)
+
+/** A handle swept through rounded sections, with smooth normals and closed ends. */
+internal fun ovalLoft(stations: List<OvalStation>, segments: Int = 16): Mesh {
+    val b = Builder()
+    val n = stations.size
+    val id = Array(n) { IntArray(segments) }
+    for (i in 0 until n) {
+        val s = stations[i]
+        for (k in 0 until segments) {
+            val a = (2.0 * PI * k / segments).toFloat()
+            val c = cos(a); val sn = sin(a)
+            val px = s.x + s.rx * c
+            val py = s.ry * sn
+            val i0 = (i - 1).coerceAtLeast(0)
+            val i1 = (i + 1).coerceAtMost(n - 1)
+            val dz = (stations[i1].z - stations[i0].z).let { if (abs(it) < 1e-5f) 1f else it }
+            val drx = (stations[i1].rx - stations[i0].rx) / dz
+            val dry = (stations[i1].ry - stations[i0].ry) / dz
+            val dx = (stations[i1].x - stations[i0].x) / dz
+            // Normal tilts as the section grows or the centreline bends.
+            b.vertex(px, py, s.z, c * s.ry - dx * 0f, sn * s.rx, -(c * s.ry * drx + sn * s.rx * dry))
+            id[i][k] = b.pos.size / 3 - 1
+        }
+    }
+    for (i in 0 until n - 1) for (k in 0 until segments) {
+        val k1 = (k + 1) % segments
+        b.tri(id[i][k], id[i][k1], id[i + 1][k1])
+        b.tri(id[i][k], id[i + 1][k1], id[i + 1][k])
+    }
+    for (end in intArrayOf(0, n - 1)) {
+        val s = stations[end]
+        val sign = if (end == 0) -1f else 1f
+        val center = b.vertex(s.x, 0f, s.z, 0f, 0f, sign)
+        for (k in 0 until segments) {
+            val k1 = (k + 1) % segments
+            if (sign > 0f) b.tri(center, id[end][k], id[end][k1]) else b.tri(center, id[end][k1], id[end][k])
+        }
+    }
+    return b.build()
+}
+
+/** A pin along local y, for rivets, pivots and a thumb stud. */
+internal fun yRod(x: Float, z: Float, y0: Float, y1: Float, radius: Float, segments: Int = 12): Mesh {
+    val b = Builder()
+    val turn = (2.0 * PI / segments).toFloat()
+    val lo = IntArray(segments) { s ->
+        val a = s * turn
+        b.vertex(x + cos(a) * radius, y0, z + sin(a) * radius, cos(a), 0f, sin(a))
+    }
+    val hi = IntArray(segments) { s ->
+        val a = s * turn
+        b.vertex(x + cos(a) * radius, y1, z + sin(a) * radius, cos(a), 0f, sin(a))
+    }
+    for (s in 0 until segments) {
+        val t = (s + 1) % segments
+        b.tri(lo[s], hi[s], hi[t]); b.tri(lo[s], hi[t], lo[t])
+    }
+    val c0 = b.vertex(x, y0, z, 0f, -1f, 0f)
+    val c1 = b.vertex(x, y1, z, 0f, 1f, 0f)
+    for (s in 0 until segments) {
+        val t = (s + 1) % segments
+        b.tri(c0, lo[t], lo[s])
+        b.tri(c1, hi[s], hi[t])
+    }
+    return b.build()
+}
+
 private fun abs(f: Float) = if (f < 0) -f else f
 
 /** Triangles of a simple anticlockwise polygon. */
