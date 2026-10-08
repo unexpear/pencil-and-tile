@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -239,7 +240,7 @@ private fun DrawScope.draw(op: DrawOp, measurer: androidx.compose.ui.text.TextMe
         }
         is DrawOp.Line -> drawLine(Color(op.color.toInt()), Offset(op.x1, op.y1), Offset(op.x2, op.y2), op.stroke, StrokeCap.Round)
         is DrawOp.Clip -> pathOf(op.pts)?.let { path ->
-            clipPath(path) { op.inner.forEach { draw(it, measurer) } }
+            withTransform({ clipPath(path) }) { op.inner.forEach { draw(it, measurer) } }
         }
         is DrawOp.Poly -> pathOf(op.pts)?.let { path ->
             val c = Color(op.color.toInt())
