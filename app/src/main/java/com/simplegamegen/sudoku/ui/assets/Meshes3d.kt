@@ -686,7 +686,10 @@ internal fun DrawScope.drawMesh(
 ) = drawMesh(frame, mesh, Pose(x, y, z, fx, fy, null, scale), color, finish, shade)
 
 /** Draws [mesh] at [pose]; see [Pose]. */
-internal fun DrawScope.drawMesh(frame: TableFrame, mesh: Mesh, pose: Pose, color: Color, finish: Finish, shade: Float = 1f, alpha: Float = 1f) {
+internal fun DrawScope.drawMesh(
+    frame: TableFrame, mesh: Mesh, pose: Pose, color: Color, finish: Finish,
+    shade: Float = 1f, alpha: Float = 1f, warmth: Float = 0f,
+) {
     if (alpha <= 0.003f) return
     val n = mesh.count
     val basis = frame.basis()
@@ -723,10 +726,13 @@ internal fun DrawScope.drawMesh(frame: TableFrame, mesh: Mesh, pose: Pose, color
         val spec = max(0f, nx * h[0] + ny * h[1] + nz * h[2]).pow(finish.shine) * finish.spec
         // A little darker close to the board, where light is blocked.
         val occlusion = (0.78f + 0.22f * (lz / 0.12f).coerceIn(0f, 1f)) * shade
-        val light = (0.34f + 0.66f * diffuse + fillLight) * occlusion
-        val cr = (r * light + spec + rim).coerceIn(0f, 1f)
+        // Warmth tints the key toward daylight. Zero leaves the original lighting untouched.
+        val light = (0.34f + warmth * 0.08f + (0.66f - warmth * 0.04f) * diffuse + fillLight) * occlusion
+        val specR = spec * (1f + warmth * 0.22f)
+        val specB = spec * (1f - warmth * 0.35f)
+        val cr = (r * light + specR + rim).coerceIn(0f, 1f)
         val cg = (g * light + spec + rim).coerceIn(0f, 1f)
-        val cb = (bl * light + spec + rim * 1.05f).coerceIn(0f, 1f)
+        val cb = (bl * light + specB + rim * 1.05f).coerceIn(0f, 1f)
         colors[i] = Color(cr, cg, cb).toArgb()
     }
     // Faces that look toward the camera, far to near.

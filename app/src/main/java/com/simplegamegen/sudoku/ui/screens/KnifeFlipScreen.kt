@@ -3,10 +3,12 @@ package com.simplegamegen.sudoku.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,9 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -47,6 +51,8 @@ import com.simplegamegen.sudoku.ui.assets.TableFrame
 import com.simplegamegen.sudoku.ui.assets.boxMesh
 import com.simplegamegen.sudoku.ui.assets.drawBoardSlab
 import com.simplegamegen.sudoku.ui.assets.drawMesh
+import com.simplegamegen.sudoku.ui.assets.latheMesh
+import com.simplegamegen.sudoku.ui.assets.quad
 import com.simplegamegen.sudoku.ui.assets.rotation
 import com.simplegamegen.sudoku.ui.assets.tableFrame
 import com.simplegamegen.sudoku.ui.components.ToolButton
@@ -91,7 +97,9 @@ internal object KnifeStage {
     fun views(bottle: Boolean) = if (bottle) bottleViews else knifeViews
 }
 
-private val BlockMesh = boxMesh(FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE, 2.15f, KnifeStage.BLOCK_TOP)
+private val BlockMesh = boxMesh(FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE, 1.5f, KnifeStage.BLOCK_TOP)
+private val MugMesh = latheMesh(listOf(0f to 0.11f, 0.03f to 0.15f, 0.26f to 0.155f, 0.30f to 0.17f), segments = 14)
+private val ChipMesh = boxMesh(0.11f, 0.05f, 0.035f)
 
 private val BladeSteel = Color(0xFFE4EAF1)
 private val EdgeSteel = Color(0xFF4A515C)
@@ -100,8 +108,11 @@ private val WoodHandle = Color(0xFF8B5A34)
 private val BolsterBrass = Color(0xFFC6A15A)
 private val Scales = Color(0xFF7E8791)
 private val G10 = Color(0xFFC2A36B)
-private val BlockWood = Color(0xFF8B5A34)
-private val Felt = Color(0xFF2E6B4F)
+private val BlockWood = Color(0xFF8E5A32)
+private val TableWood = Color(0xFFC4A574)
+private val Wall = Color(0xFFE6D9C8)
+private val WindowDay = Color(0xFFC5D8E6)
+private val MugClay = Color(0xFFD7CFC4)
 private val Plastic = Color(0xFFB7D0DC)
 private val Water = Color(0xFF2E86C7)
 private val Cap = Color(0xFF1F6F78)
@@ -168,12 +179,15 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
         )
         var flying by remember(g.seed) { mutableStateOf<Sample?>(null) }
         var rested by remember(g.seed) { mutableStateOf<Sample?>(null) }
+        var burst by remember(g.seed) { mutableStateOf<FlipBurst?>(null) }
+        var clock by remember(g.seed) { mutableStateOf(0L) }
         LaunchedEffect(g.phase, g.throwNum, g.seed) {
             val release = g.release
             if (g.phase != KnifeFlip.Phase.FLYING || release == null) {
                 flying = null
                 return@LaunchedEffect
             }
+            burst = null
             val flight = FlipPhysics.simulate(g.body, release)
             val start = withFrameNanos { it }
             while (true) {
@@ -184,7 +198,20 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
             }
             rested = flight.final
             flying = null
+            val kind = when (flight.end) {
+                FlipEnd.STUCK -> FlipJuice.CHIPS
+                FlipEnd.LANDED -> FlipJuice.BOUNCE
+                else -> FlipJuice.CLATTER
+            }
+            burst = FlipBurst(kind, System.nanoTime())
             vm.play(record = false) { it.settle() }
+        }
+        LaunchedEffect(burst) {
+            val started = burst ?: return@LaunchedEffect
+            while ((System.nanoTime() - started.at) / 1_000_000_000f < 0.7f) {
+                clock = withFrameNanos { it }
+            }
+            if (burst === started) burst = null
         }
         val shown = flying ?: rested ?: holdSample(g.body)
         val camera = if (g.body.bottle) bottleCamera else knifeCamera
@@ -220,8 +247,28 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
                             )
                         },
                 ) {
-                    paintKnifeFlip(frame, g.body, shown)
+                    val age = burst?.let { ((clock - it.at) / 1_000_000_000f).coerceAtLeast(0f) } ?: 0f
+                    val effect = burst?.let { FlipEffect(it.kind, age) } ?: FlipEffect.None
+                    val visual = juiceSample(shown, effect)
+                    val kick = if (effect.kind == FlipJuice.CHIPS || effect.kind == FlipJuice.CLATTER) {
+                        val fade = (1f - effect.age / 0.22f).coerceAtLeast(0f)
+                        sin(effect.age * 70f) * fade * 7f
+                    } else 0f
+                    translate(kick, kick * 0.35f) {
+                        paintKnifeFlip(frame, g.body, visual, effect)
+                    }
                 }
+            }
+            Column(Modifier.align(Alignment.TopStart).padding(10.dp)) {
+                Text(
+                    g.streak.toString(),
+                    color = when (g.verdict) {
+                        FlipEnd.STUCK.name, FlipEnd.LANDED.name -> look.colors.success
+                        else -> look.colors.text
+                    },
+                    style = MaterialTheme.typography.headlineLarge,
+                )
+                Text("Streak", color = look.colors.muted, style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -238,19 +285,126 @@ internal fun knifePlayFrame(bottle: Boolean, view: BoardView, width: Float, heig
         view = view, maxHeightPx = height, margin = 0.12f, rows = KnifeStage.ROWS, fitToView = true,
     )
 
+internal enum class FlipJuice { CHIPS, BOUNCE, CLATTER }
+
+internal class FlipBurst(val kind: FlipJuice, val at: Long)
+
+internal class FlipEffect(val kind: FlipJuice, val age: Float) {
+    companion object {
+        val None = FlipEffect(FlipJuice.CLATTER, -1f)
+    }
+}
+
+private fun juiceSample(sample: Sample, effect: FlipEffect): Sample {
+    if (effect.age < 0f) return sample
+    return when (effect.kind) {
+        FlipJuice.BOUNCE -> {
+            val hop = (1f - effect.age / 0.55f).coerceAtLeast(0f)
+            sample.copy(z = sample.z + hop * abs(sin(effect.age * 16f)) * 0.045f)
+        }
+        FlipJuice.CLATTER -> {
+            val kick = sin(effect.age * 46f) * (1f - effect.age / 0.45f).coerceAtLeast(0f)
+            sample.copy(x = sample.x + kick * 0.012f, theta = sample.theta + kick * 0.18f)
+        }
+        FlipJuice.CHIPS -> sample
+    }
+}
+
 internal fun androidx.compose.ui.graphics.drawscope.DrawScope.paintKnifeFlip(
     frame: TableFrame,
     body: FlipBody,
     sample: Sample,
+    effect: FlipEffect = FlipEffect.None,
 ) {
-    drawBoardSlab(frame, 0.06f, Felt, KnifeStage.ROWS)
-    val span = FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE
-    drawMesh(
-        frame, BlockMesh,
-        Pose(KnifeStage.BLOCK_LEFT + span / 2f, KnifeStage.BLOCK_Y, 0f),
-        BlockWood, Satin,
+    drawRect(
+        Brush.verticalGradient(
+            listOf(Color(0xFFD7E6F0), Color(0xFFE7DCCE), Color(0xFFCDB892)),
+        ),
     )
+    val back = KnifeStage.ROWS - 0.02f
+    fun panel(x0: Float, z0: Float, x1: Float, z1: Float, y: Float, color: Color) {
+        drawPath(
+            quad(frame.at(x0, y, z0), frame.at(x1, y, z0), frame.at(x1, y, z1), frame.at(x0, y, z1)),
+            color,
+        )
+    }
+    panel(0f, 0.06f, KnifeStage.N.toFloat(), 4.4f, back, Wall)
+    panel(3.55f, 1.7f, 5.15f, 3.55f, back - 0.02f, WindowDay)
+    panel(4.28f, 1.7f, 4.36f, 3.55f, back - 0.03f, Wall.copy(alpha = 0.85f))
+    panel(3.55f, 2.55f, 5.15f, 2.63f, back - 0.03f, Wall.copy(alpha = 0.85f))
+    drawBoardSlab(frame, 0.06f, TableWood, KnifeStage.ROWS)
+    val span = FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE
+    val blockX = KnifeStage.BLOCK_LEFT + span / 2f
+    oval(frame, 0.4f, 0.48f, 0.28f, 0.12f, 0.07f).let { drawPath(it, Color.Black.copy(alpha = 0.22f)) }
+    drawMesh(frame, MugMesh, Pose(0.4f, 0.48f, 0.06f), MugClay, Satin, warmth = 0.35f)
+    oval(frame, blockX, KnifeStage.BLOCK_Y, span * 0.46f, 0.62f, 0.07f).let { drawPath(it, Color.Black.copy(alpha = 0.3f)) }
+    drawMesh(frame, BlockMesh, Pose(blockX, KnifeStage.BLOCK_Y, 0f), BlockWood, Satin, warmth = 0.4f)
+    val grain = Color(0xFF5C3A22).copy(alpha = 0.28f)
+    val top = KnifeStage.BLOCK_TOP + 0.012f
+    val x0 = KnifeStage.BLOCK_LEFT + 0.08f
+    val x1 = KnifeStage.BLOCK_LEFT + span - 0.08f
+    var gy = KnifeStage.BLOCK_Y - 0.62f
+    while (gy < KnifeStage.BLOCK_Y + 0.62f) {
+        drawLine(grain, frame.at(x0, gy, top), frame.at(x1, gy + 0.05f, top), strokeWidth = 1.4f)
+        gy += 0.2f
+    }
     drawToss(frame, body, sample)
+    if (effect.age < 0f) return
+    when (effect.kind) {
+        FlipJuice.CHIPS -> drawChips(frame, body, sample, effect.age)
+        FlipJuice.CLATTER -> drawClatter(frame, sample, effect.age)
+        FlipJuice.BOUNCE -> Unit
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawClatter(
+    frame: TableFrame,
+    sample: Sample,
+    age: Float,
+) {
+    val fade = (1f - age / 0.35f).coerceAtLeast(0f)
+    if (fade <= 0f) return
+    val scale = KnifeMeshes.SQUARES_PER_METRE
+    val cx = KnifeStage.BLOCK_LEFT + sample.x * scale
+    val cz = KnifeStage.BLOCK_TOP + sample.z * scale
+    val ink = Color(0xFF3A342C).copy(alpha = 0.55f * fade)
+    for (i in 0 until 6) {
+        val ang = i * 1.05f + age * 2f
+        val inner = 0.18f + age * 0.7f
+        val outer = inner + 0.28f
+        drawLine(
+            ink,
+            frame.at(cx + cos(ang) * inner, KnifeStage.BLOCK_Y, cz + sin(ang) * inner * 0.35f),
+            frame.at(cx + cos(ang) * outer, KnifeStage.BLOCK_Y, cz + sin(ang) * outer * 0.35f),
+            strokeWidth = 2.2f,
+        )
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawChips(
+    frame: TableFrame,
+    body: FlipBody,
+    sample: Sample,
+    age: Float,
+) {
+    val scale = KnifeMeshes.SQUARES_PER_METRE
+    val tip = body.comFromTip(0f) * scale
+    val tx = KnifeStage.BLOCK_LEFT + sample.x * scale + sin(sample.theta) * tip
+    val fade = (1f - age / 0.55f).coerceAtLeast(0f)
+    if (fade <= 0f) return
+    for (i in 0 until 12) {
+        val ang = i * 0.85f
+        val speed = 0.9f + (i % 4) * 0.28f
+        val x = tx + cos(ang) * speed * age
+        val y = KnifeStage.BLOCK_Y + sin(ang) * 0.45f * age
+        val z = KnifeStage.BLOCK_TOP + (1.15f + (i % 3) * 0.35f) * age - 3.2f * age * age
+        if (z < 0.08f) continue
+        drawMesh(
+            frame, ChipMesh,
+            Pose(x, y, z, rot = rotation(0.4f, 1f, 0.2f, age * 9f + i)),
+            BlockWood, Satin, warmth = 0.3f, alpha = fade,
+        )
+    }
 }
 
 private fun statusLine(g: KnifeFlip): String = when (g.verdict) {
