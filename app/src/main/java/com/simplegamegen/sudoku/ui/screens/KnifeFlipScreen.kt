@@ -32,6 +32,7 @@ import com.simplegamegen.sudoku.data.Result
 import com.simplegamegen.sudoku.ui.GameId
 import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.BoardView
+import io.github.sceneview.math.Position
 import com.simplegamegen.sudoku.ui.components.ToolButton
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
@@ -56,16 +57,30 @@ internal object KnifeStage {
     /** Just above a practised bottle arc (about 7.5 squares). */
     const val BOTTLE_PEAK = 7.8f
 
+    /**
+     * Portrait phone, 40° vertical field. [BoardView.distance] is metres.
+     * Side and Corner sit the toss high in the frame so the wall is only a strip.
+     * The same numbers are camera_play() in tools/knife-flip/assemble_stills.py.
+     */
+    const val PLAY_FOV = 40.0
     val knifeViews = listOf(
-        BoardView("Side", yaw = 32f, pitch = 34f, distance = 2.4f),
-        BoardView("Corner", yaw = 58f, pitch = 32f, distance = 2.5f),
-        BoardView("Top", yaw = 0f, pitch = 70f, distance = 2.6f),
+        BoardView("Side", yaw = 52f, pitch = 46f, distance = 2.0769f),
+        BoardView("Corner", yaw = 68f, pitch = 50f, distance = 1.7615f),
+        BoardView("Top", yaw = 24f, pitch = 68f, distance = 2.1822f),
     )
     val bottleViews = listOf(
-        BoardView("Side", yaw = 18f, pitch = 20f, distance = 2.05f),
-        BoardView("Corner", yaw = 40f, pitch = 22f, distance = 2.15f),
-        BoardView("Top", yaw = 0f, pitch = 62f, distance = 2.2f),
+        BoardView("Side", yaw = 36f, pitch = 24f, distance = 2.1500f),
+        BoardView("Corner", yaw = 54f, pitch = 28f, distance = 1.9520f),
+        BoardView("Top", yaw = 18f, pitch = 62f, distance = 1.9171f),
     )
+    fun look(bottle: Boolean, name: String): Position = when {
+        bottle && name == "Corner" -> Position(0.3422f, 0.2697f, 0.0937f)
+        bottle && name == "Top" -> Position(0.2811f, 0.3438f, 0.0758f)
+        bottle -> Position(0.3313f, 0.2039f, 0.1341f)
+        name == "Corner" -> Position(0.4222f, -0.0179f, 0.1043f)
+        name == "Top" -> Position(0.3000f, 0.0724f, 0.1092f)
+        else -> Position(0.4645f, -0.1107f, 0.1959f)
+    }
 
     fun peak(bottle: Boolean) = if (bottle) BOTTLE_PEAK else KNIFE_PEAK
     fun views(bottle: Boolean) = if (bottle) bottleViews else knifeViews
@@ -109,8 +124,8 @@ private fun describeOption(index: Int): String {
 @Composable
 fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: PuzzleFactory) {
     val look = LocalGameLook.current
-    val knifeCamera = rememberBoardCamera("knife_flip_knife_views", KnifeStage.knifeViews)
-    val bottleCamera = rememberBoardCamera("knife_flip_bottle_views", KnifeStage.bottleViews)
+    val knifeCamera = rememberBoardCamera("knife_flip_knife_views_v3", KnifeStage.knifeViews)
+    val bottleCamera = rememberBoardCamera("knife_flip_bottle_views_v3", KnifeStage.bottleViews)
     PlayShell(
         nav, vm, GameId.KNIFE_FLIP, remember(factory) { KnifeFlipSetup(factory) },
         undoable = false, scroll = false, tight = true,

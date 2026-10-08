@@ -47,6 +47,7 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
+import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
@@ -196,9 +197,6 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val board = remember(materialLoader) {
         materialLoader.createColorInstance(Color(0xFFD7B07A), metallic = 0f, roughness = 0.58f)
     }
-    val backdrop = remember(materialLoader) {
-        materialLoader.createColorInstance(Color(0xFFD5D0C8), metallic = 0f, roughness = 0.92f)
-    }
     val waterMaterial = remember(materialLoader) { makeWaterMaterial(materialLoader) }
     val bodyLiquid = remember(engine) {
         liquidGeometry(engine, cylinderLiquid(SHOULDER, 0f), cylinderIndices(WATER_SIDES))
@@ -206,11 +204,11 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val neckLiquid = remember(engine) {
         liquidGeometry(engine, neckVertices(NECK_LIMIT, 0f), neckIndices())
     }
-    // Nearly horizontal, so a camera on +Z sees the blade face at a 3/4 angle and the length
-    // runs across the frame. 1.15 rad with the old yaw looked along the edge.
-    val theta = if (body.bottle) 0.30f else 1.20f
-    val deg = tipDegrees(theta)
-    val sample = Sample(0f, 0f, 0f, theta, 0f)
+    // Edge up, length across the frame. The old 1.20 rad pose pointed a cleaver's
+    // blade down through the board.
+    val pose = remember(body.id, body.bottle) { previewPose(body) }
+    val deg = tipDegrees(pose.theta)
+    val sample = Sample(0f, pose.lift, 0f, pose.theta, 0f)
     SceneView(
         modifier = modifier,
         surfaceType = SurfaceType.TextureSurface,
@@ -228,35 +226,17 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
         cameraManipulator = null,
         onFrame = {
             environment.indirectLight?.intensity = IBL_LUX
-            renderer.clearColor(0.84, 0.82, 0.78)
-            val look = previewLook(body)
-            camera.position = previewEye(body, look)
-            camera.lookAt(look)
-            // Vertical field is derived from a fixed horizontal field, so a wide
-            // preview banner and the square headless frame both keep the same width.
-            val aspect = camera.getViewPortAspect().takeIf { it > 0.2 } ?: 1.0
-            val hfov = if (body.bottle) 28.0 else 30.7
-            val vfov = Math.toDegrees(2.0 * atan(tan(Math.toRadians(hfov / 2.0)) / aspect))
-            camera.setProjection(fovInDegrees = vfov, near = 0.02f, far = 20f)
+            renderer.clearColor(0.27, 0.26, 0.25)
+            val aspect = camera.getViewPortAspect().takeIf { it > 0.2 } ?: (614.0 / 640.0)
+            val fit = previewCamera(pose, body.bottle, aspect)
+            camera.position = fit.eye
+            camera.lookAt(fit.look)
+            camera.setProjection(fovInDegrees = fit.vfov, near = 0.02f, far = 20f)
         },
     ) {
         CubeNode(
-            size = Size(x = 1.6f, y = 1.4f, z = 0.04f),
-            position = Position(z = -0.55f, y = 0.35f),
-            materialInstance = backdrop,
-        )
-        CubeNode(
-            size = Size(x = 0.04f, y = 1.4f, z = 1.4f),
-            position = Position(x = -0.7f, y = 0.35f),
-            materialInstance = backdrop,
-        )
-        CubeNode(
-            size = Size(
-                x = body.length * if (body.bottle) 0.72f else 1.18f,
-                y = 0.014f,
-                z = body.length * if (body.bottle) 0.55f else 0.42f,
-            ),
-            position = Position(y = -0.007f),
+            size = Size(x = pose.boardWidth, y = 0.016f, z = pose.boardDepth),
+            position = Position(x = pose.centerX, y = -0.008f, z = pose.centerZ),
             materialInstance = board,
         )
         if (!body.bottle) {
@@ -264,11 +244,12 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
                 ModelNode(
                     modelInstance = it,
                     autoAnimate = false,
+                    position = Position(y = pose.lift),
                     rotation = Rotation(z = deg),
                 )
             }
         } else {
-            Node(rotation = Rotation(z = deg)) {
+            Node(position = Position(y = pose.lift), rotation = Rotation(z = deg)) {
                 hero?.let { ModelNode(modelInstance = it, autoAnimate = false) }
                 BottleWater(body, sample, waterMaterial, bodyLiquid, neckLiquid)
             }
@@ -277,11 +258,10 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
 }
 
 internal fun placeKnifeCamera(camera: CameraNode, bottle: Boolean, view: BoardView, shake: Float) {
-    val look = if (bottle) Position(x = 0.26f, y = 0.46f, z = 0f) else Position(x = 0.34f, y = 0.18f, z = 0f)
+    val look = KnifeStage.look(bottle, view.name)
     val yaw = Math.toRadians(view.yaw.toDouble())
     val pitch = Math.toRadians(view.pitch.toDouble())
-    // Bottles use a closer orbit than knives so the toss fills the frame.
-    val dist = (if (bottle) 0.62f else 0.48f) * view.distance / view.zoom.coerceIn(0.35f, 5f)
+    val dist = view.distance / view.zoom.coerceIn(0.35f, 5f)
     val cp = cos(pitch).toFloat()
     val sp = sin(pitch).toFloat()
     val pan = dist / 900f
@@ -291,34 +271,269 @@ internal fun placeKnifeCamera(camera: CameraNode, bottle: Boolean, view: BoardVi
         z = look.z + dist * cp * cos(yaw).toFloat(),
     )
     camera.lookAt(look)
-    camera.setProjection(fovInDegrees = 36.0, near = 0.04f, far = 40f)
+    camera.setProjection(fovInDegrees = KnifeStage.PLAY_FOV, near = 0.04f, far = 40f)
 }
 
-private fun previewLook(body: FlipBody): Position {
-    val theta = if (body.bottle) 0.30f else 1.20f
-    // The mesh origin is the centre of mass. Look at the geometric middle so a
-    // tip-heavy knife is not shoved off the right of the frame.
-    val mid = if (body.bottle) 0f else body.length * (body.balance - 0.5f)
-    val lookY = if (body.bottle) body.length * 0.46f else 0f
-    return Position(
-        x = mid * sin(theta),
-        y = lookY + mid * cos(theta),
-        z = 0f,
+/** Local glTF bounds. Y runs tip to handle, X is the edge, Z is the thickness. */
+private fun meshBounds(body: FlipBody): FloatArray = when {
+    body.bottle -> floatArrayOf(-0.0315f, 0f, -0.0315f, 0.0315f, 0.204f, 0.0315f)
+    body.id == "chef" -> floatArrayOf(-0.016f, -0.1371f, -0.012f, 0.0476f, 0.1929f, 0.012f)
+    body.id == "pocket" -> floatArrayOf(-0.014f, -0.0755f, -0.0084f, 0.0158f, 0.1245f, 0.0082f)
+    body.id == "butterfly" -> floatArrayOf(-0.0125f, -0.1079f, -0.008f, 0.018f, 0.1421f, 0.008f)
+    body.id == "cleaver" -> floatArrayOf(-0.016f, -0.1851f, -0.012f, 0.09f, 0.1149f, 0.012f)
+    else -> floatArrayOf(-0.014f, -0.14f, -0.0025f, 0.014f, 0.14f, 0.0025f)
+}
+
+internal class PreviewPose(
+    val theta: Float,
+    val lift: Float,
+    val centerX: Float,
+    val centerZ: Float,
+    val minZ: Float,
+    val boardWidth: Float,
+    val boardDepth: Float,
+    val panelWidth: Float,
+    val panelHeight: Float,
+    val points: List<Position>,
+)
+
+internal class PreviewFit(val eye: Position, val look: Position, val vfov: Double)
+
+/** Board corners. The picker camera has to keep this shelf inside the frame. */
+private fun shelfPoints(pose: PreviewPose): List<Position> {
+    val hx = pose.boardWidth / 2f
+    val hz = pose.boardDepth / 2f
+    val out = ArrayList<Position>(8)
+    for (x in floatArrayOf(pose.centerX - hx, pose.centerX + hx)) {
+        for (y in floatArrayOf(0f, -0.016f)) {
+            for (z in floatArrayOf(pose.centerZ - hz, pose.centerZ + hz)) {
+                out.add(Position(x, y, z))
+            }
+        }
+    }
+    return out
+}
+
+internal fun previewPose(body: FlipBody): PreviewPose {
+    val box = meshBounds(body)
+    val theta = if (body.bottle) 0.22f else (-PI / 2).toFloat()
+    val clearance = if (body.bottle) 0.004f else 0.012f
+    var lowest = Float.POSITIVE_INFINITY
+    val xs = floatArrayOf(box[0], box[3])
+    val ys = floatArrayOf(box[1], box[4])
+    for (x in xs) for (y in ys) {
+        val wy = (-sin(theta) * x + cos(theta) * y)
+        if (wy < lowest) lowest = wy
+    }
+    val lift = clearance - lowest
+    val points = ArrayList<Position>(8)
+    for (x in xs) for (y in ys) for (z in floatArrayOf(box[2], box[5])) {
+        points.add(
+            Position(
+                x = cos(theta) * x + sin(theta) * y,
+                y = -sin(theta) * x + cos(theta) * y + lift,
+                z = z,
+            ),
+        )
+    }
+    var minX = Float.POSITIVE_INFINITY
+    var maxX = Float.NEGATIVE_INFINITY
+    var maxY = Float.NEGATIVE_INFINITY
+    var minZ = Float.POSITIVE_INFINITY
+    var maxZ = Float.NEGATIVE_INFINITY
+    for (p in points) {
+        if (p.x < minX) minX = p.x
+        if (p.x > maxX) maxX = p.x
+        if (p.y > maxY) maxY = p.y
+        if (p.z < minZ) minZ = p.z
+        if (p.z > maxZ) maxZ = p.z
+    }
+    val spanX = maxX - minX
+    val spanZ = maxZ - minZ
+    return PreviewPose(
+        theta = theta,
+        lift = lift,
+        centerX = (minX + maxX) / 2f,
+        centerZ = (minZ + maxZ) / 2f,
+        minZ = minZ,
+        boardWidth = spanX + 0.018f,
+        boardDepth = 0.040f,
+        panelWidth = spanX + 0.13f,
+        panelHeight = maxY + 0.08f,
+        points = points,
     )
 }
 
-private fun previewEye(body: FlipBody, look: Position): Position {
-    // Face of the blade is +Z. A small yaw is a 3/4 view; 54° was looking at the edge.
-    // 4× the length at 30.7° horizontal field puts the knife at about 80% of the width.
-    val dist = body.length * if (body.bottle) 2.15f else 4.0f
-    val yaw = Math.toRadians(if (body.bottle) 36.0 else 28.0)
-    val pitch = Math.toRadians(if (body.bottle) 16.0 else 22.0)
-    val cp = cos(pitch).toFloat()
-    return Position(
-        x = look.x + dist * cp * sin(yaw).toFloat(),
-        y = look.y + dist * sin(pitch).toFloat(),
-        z = look.z + dist * cp * cos(yaw).toFloat(),
+/**
+ * Orbit distance from the posed bounds and the field of view.
+ * Knives target about 80% of the frame width, with the shelf inside the frame.
+ * Bottles target 70% of the height.
+ * [aspect] is width / height. The horizontal field stays 28°.
+ */
+internal fun previewCamera(pose: PreviewPose, bottle: Boolean, aspect: Double): PreviewFit {
+    val hfov = Math.toRadians(28.0)
+    val vfov = 2.0 * atan(tan(hfov / 2.0) / aspect)
+    val tanH = tan(hfov / 2.0)
+    val tanV = tan(vfov / 2.0)
+    val yaw = Math.toRadians(if (bottle) 28.0 else 14.0)
+    val pitch = Math.toRadians(if (bottle) 12.0 else 8.0)
+    val targetW = if (bottle) 0.55 else 0.84
+    val targetH = if (bottle) 0.70 else 0.92
+    val fitted = if (bottle) pose.points else pose.points + shelfPoints(pose)
+    var lookX = 0.0
+    var lookY = 0.0
+    var lookZ = 0.0
+    var minX = Double.POSITIVE_INFINITY
+    var maxX = Double.NEGATIVE_INFINITY
+    var minY = Double.POSITIVE_INFINITY
+    var maxY = Double.NEGATIVE_INFINITY
+    var minZ = Double.POSITIVE_INFINITY
+    var maxZ = Double.NEGATIVE_INFINITY
+    for (p in fitted) {
+        if (p.x < minX) minX = p.x.toDouble()
+        if (p.x > maxX) maxX = p.x.toDouble()
+        if (p.y < minY) minY = p.y.toDouble()
+        if (p.y > maxY) maxY = p.y.toDouble()
+        if (p.z < minZ) minZ = p.z.toDouble()
+        if (p.z > maxZ) maxZ = p.z.toDouble()
+    }
+    lookX = (minX + maxX) / 2.0
+    lookY = (minY + maxY) / 2.0
+    lookZ = (minZ + maxZ) / 2.0
+    var dist = 0.6
+    repeat(5) {
+        var lo = 0.08
+        var hi = 4.0
+        repeat(22) {
+            dist = (lo + hi) / 2.0
+            val span = projectSpan(fitted, lookX, lookY, lookZ, yaw, pitch, dist, tanH, tanV)
+            if (span == null || span[0] > targetW || span[1] > targetH) lo = dist else hi = dist
+        }
+        dist = hi
+        val span = projectSpan(fitted, lookX, lookY, lookZ, yaw, pitch, dist, tanH, tanV) ?: return@repeat
+        val depth = meanDepth(fitted, lookX, lookY, lookZ, yaw, pitch, dist)
+        val shift = recenter(lookX, lookY, lookZ, yaw, pitch, dist, span[2], span[3], tanH, tanV, depth)
+        lookX += shift[0]
+        lookY += shift[1]
+        lookZ += shift[2]
+    }
+    val cp = cos(pitch)
+    val sp = sin(pitch)
+    return PreviewFit(
+        eye = Position(
+            x = (lookX + dist * cp * sin(yaw)).toFloat(),
+            y = (lookY + dist * sp).toFloat(),
+            z = (lookZ + dist * cp * cos(yaw)).toFloat(),
+        ),
+        look = Position(lookX.toFloat(), lookY.toFloat(), lookZ.toFloat()),
+        vfov = Math.toDegrees(vfov),
     )
+}
+
+private fun projectSpan(
+    points: List<Position>,
+    lookX: Double,
+    lookY: Double,
+    lookZ: Double,
+    yaw: Double,
+    pitch: Double,
+    dist: Double,
+    tanH: Double,
+    tanV: Double,
+): DoubleArray? {
+    val eye = orbit(lookX, lookY, lookZ, yaw, pitch, dist)
+    val basis = cameraBasis(eye, doubleArrayOf(lookX, lookY, lookZ))
+    var minX = Double.POSITIVE_INFINITY
+    var maxX = Double.NEGATIVE_INFINITY
+    var minY = Double.POSITIVE_INFINITY
+    var maxY = Double.NEGATIVE_INFINITY
+    for (p in points) {
+        val rx = p.x - eye[0]
+        val ry = p.y - eye[1]
+        val rz = p.z - eye[2]
+        val depth = rx * basis[6] + ry * basis[7] + rz * basis[8]
+        if (depth <= 0.02) return null
+        val ndcX = ((rx * basis[0] + ry * basis[1] + rz * basis[2]) / depth) / tanH
+        val ndcY = ((rx * basis[3] + ry * basis[4] + rz * basis[5]) / depth) / tanV
+        if (ndcX < minX) minX = ndcX
+        if (ndcX > maxX) maxX = ndcX
+        if (ndcY < minY) minY = ndcY
+        if (ndcY > maxY) maxY = ndcY
+    }
+    val cx = (minX + maxX) / 2.0
+    val cy = (minY + maxY) / 2.0
+    return doubleArrayOf((maxX - minX) / 2.0, (maxY - minY) / 2.0, cx, cy)
+}
+
+private fun meanDepth(
+    points: List<Position>,
+    lookX: Double,
+    lookY: Double,
+    lookZ: Double,
+    yaw: Double,
+    pitch: Double,
+    dist: Double,
+): Double {
+    val eye = orbit(lookX, lookY, lookZ, yaw, pitch, dist)
+    val basis = cameraBasis(eye, doubleArrayOf(lookX, lookY, lookZ))
+    var sum = 0.0
+    for (p in points) {
+        sum += (p.x - eye[0]) * basis[6] + (p.y - eye[1]) * basis[7] + (p.z - eye[2]) * basis[8]
+    }
+    return sum / points.size
+}
+
+private fun recenter(
+    lookX: Double,
+    lookY: Double,
+    lookZ: Double,
+    yaw: Double,
+    pitch: Double,
+    dist: Double,
+    cx: Double,
+    cy: Double,
+    tanH: Double,
+    tanV: Double,
+    depth: Double,
+): DoubleArray {
+    val eye = orbit(lookX, lookY, lookZ, yaw, pitch, dist)
+    val basis = cameraBasis(eye, doubleArrayOf(lookX, lookY, lookZ))
+    val sx = cx * tanH * depth
+    val sy = cy * tanV * depth
+    return doubleArrayOf(
+        basis[0] * sx + basis[3] * sy,
+        basis[1] * sx + basis[4] * sy,
+        basis[2] * sx + basis[5] * sy,
+    )
+}
+
+private fun orbit(lookX: Double, lookY: Double, lookZ: Double, yaw: Double, pitch: Double, dist: Double): DoubleArray {
+    val cp = cos(pitch)
+    val sp = sin(pitch)
+    return doubleArrayOf(
+        lookX + dist * cp * sin(yaw),
+        lookY + dist * sp,
+        lookZ + dist * cp * cos(yaw),
+    )
+}
+
+/** right xyz, up xyz, view xyz. */
+private fun cameraBasis(eye: DoubleArray, look: DoubleArray): DoubleArray {
+    var vx = look[0] - eye[0]
+    var vy = look[1] - eye[1]
+    var vz = look[2] - eye[2]
+    val vl = sqrt(vx * vx + vy * vy + vz * vz)
+    vx /= vl; vy /= vl; vz /= vl
+    // right = view × worldUp
+    var rx = vy * 0 - vz * 1
+    var ry = vz * 0 - vx * 0
+    var rz = vx * 1 - vy * 0
+    val rl = sqrt(rx * rx + ry * ry + rz * rz)
+    rx /= rl; ry /= rl; rz /= rl
+    val ux = ry * vz - rz * vy
+    val uy = rz * vx - rx * vz
+    val uz = rx * vy - ry * vx
+    return doubleArrayOf(rx, ry, rz, ux, uy, uz, vx, vy, vz)
 }
 
 private fun knifeAsset(id: String): String = when (id) {

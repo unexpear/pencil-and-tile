@@ -215,12 +215,194 @@ def add_water(parent, fill, sigma, mat):
         attach(neck, parent, Matrix.Translation((0, 0, SHOULDER)))
 
 
-def backdrop(length, bottle):
-    wall = bpy.data.materials.new("Backdrop")
-    wall.use_nodes = True
-    wall_bsdf = wall.node_tree.nodes.get("Principled BSDF")
-    wall_bsdf.inputs["Base Color"].default_value = (0.835, 0.816, 0.784, 1)
-    wall_bsdf.inputs["Roughness"].default_value = 0.92
+# glTF AABBs (POSITION accessor). Y is length, X is edge-to-spine, Z is thickness.
+MESH = {
+    "chef": ((-0.016, -0.1371, -0.012), (0.0476, 0.1929, 0.012)),
+    "throwing": ((-0.014, -0.14, -0.0025), (0.014, 0.14, 0.0025)),
+    "pocket": ((-0.014, -0.0755, -0.0084), (0.0158, 0.1245, 0.0082)),
+    "butterfly": ((-0.0125, -0.1079, -0.008), (0.018, 0.1421, 0.008)),
+    "cleaver": ((-0.016, -0.1851, -0.012), (0.09, 0.1149, 0.012)),
+    "bottle": ((-0.0315, 0.0, -0.0315), (0.0315, 0.204, 0.0315)),
+}
+# Knife pickers are a wide banner (1280×560), the same shape as the in-app strip.
+# Bottle pickers stay on the viewer's 614×640 window. The app derives the vertical
+# field from the live aspect and keeps this horizontal field.
+PICKER_KNIFE_ASPECT = 1280.0 / 560.0
+PICKER_BOTTLE_ASPECT = 614.0 / 640.0
+PICKER_HFOV = math.radians(28.0)
+# Nearly face-on, so the length runs across the frame instead of a steep diagonal.
+PICKER_YAW = math.radians(14.0)
+PICKER_PITCH = math.radians(8.0)
+BOTTLE_YAW = math.radians(28.0)
+BOTTLE_PITCH = math.radians(12.0)
+KNIFE_THETA = -math.pi / 2
+BOTTLE_THETA = 0.22
+# Play cameras are a 9:19.5 phone (720×1560) at 40° vertical. Distance is metres.
+# Fitted so the block, the counter and the toss stay inside, with the subject high
+# in the frame so the wall is a strip. Top views stay centred on the block.
+PLAY_FOV = 40.0
+PLAY = {
+    "knife": {
+        "side": (52.0, 46.0, 2.0769, (0.4645, -0.1107, 0.1959)),
+        "corner": (68.0, 50.0, 1.7615, (0.4222, -0.0179, 0.1043)),
+        "top": (24.0, 68.0, 2.1822, (0.3000, 0.0724, 0.1092)),
+    },
+    "bottle": {
+        "side": (36.0, 24.0, 2.1500, (0.3313, 0.2039, 0.1341)),
+        "corner": (54.0, 28.0, 1.9520, (0.3422, 0.2697, 0.0937)),
+        "top": (18.0, 62.0, 1.9171, (0.2811, 0.3438, 0.0758)),
+    },
+}
+
+
+def _corners(box):
+    (x0, y0, z0), (x1, y1, z1) = box
+    return [(x, y, z) for x in (x0, x1) for y in (y0, y1) for z in (z0, z1)]
+
+
+def _xform(point, theta, origin):
+    x, y, z = point
+    ox, oy, oz = origin
+    return (
+        math.cos(theta) * x + math.sin(theta) * y + ox,
+        -math.sin(theta) * x + math.cos(theta) * y + oy,
+        z + oz,
+    )
+
+
+def _sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def _add(a, b):
+    return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
+
+
+def _mul(a, s):
+    return (a[0] * s, a[1] * s, a[2] * s)
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    )
+
+
+def _norm(v):
+    length = math.sqrt(_dot(v, v))
+    return (v[0] / length, v[1] / length, v[2] / length)
+
+
+def _eye(look, yaw, pitch, dist):
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    return _add(look, (dist * cp * math.sin(yaw), dist * sp, dist * cp * math.cos(yaw)))
+
+
+def _basis(eye, look):
+    view = _norm(_sub(look, eye))
+    right = _norm(_cross(view, (0.0, 1.0, 0.0)))
+    up = _cross(right, view)
+    return right, up, view
+
+
+def _span(points, eye, look, tan_h, tan_v):
+    right, up, view = _basis(eye, look)
+    xs, ys = [], []
+    for point in points:
+        rel = _sub(point, eye)
+        depth = _dot(rel, view)
+        if depth <= 0.02:
+            return None
+        xs.append((_dot(rel, right) / depth) / tan_h)
+        ys.append((_dot(rel, up) / depth) / tan_v)
+    return min(xs), max(xs), min(ys), max(ys)
+
+
+def pose_lift(box, theta, clearance):
+    """Raise the mesh so its lowest point sits [clearance] metres above the board."""
+    (x0, y0, _), (x1, y1, _) = box
+    lowest = min(
+        -math.sin(theta) * x + math.cos(theta) * y
+        for x in (x0, x1) for y in (y0, y1)
+    )
+    return clearance - lowest
+
+
+def preview_pose(name, bottle):
+    """Edge-up knife, or a slightly tipped bottle, clear of the board."""
+    theta = BOTTLE_THETA if bottle else KNIFE_THETA
+    clearance = 0.004 if bottle else 0.012
+    lift = pose_lift(MESH[name], theta, clearance)
+    points = [_xform(c, theta, (0.0, lift, 0.0)) for c in _corners(MESH[name])]
+    return theta, lift, points
+
+
+def preview_camera(points, bottle):
+    """Distance from the posed bounds and the field, aimed at the bounds centre.
+
+    Knives fill 80% of the banner width. Bottles fill 70% of the frame height
+    so the water line is readable. A few recentres keep the bounds centred.
+    """
+    aspect = PICKER_BOTTLE_ASPECT if bottle else PICKER_KNIFE_ASPECT
+    vfov = 2.0 * math.atan(math.tan(PICKER_HFOV / 2.0) / aspect)
+    tan_v = math.tan(vfov / 2.0)
+    tan_h = math.tan(PICKER_HFOV / 2.0)
+    yaw = BOTTLE_YAW if bottle else PICKER_YAW
+    pitch = BOTTLE_PITCH if bottle else PICKER_PITCH
+    # Knife target is the shelf, which is a little wider than the blade, so the
+    # blade itself lands near 80% of the width with the board still inside.
+    target_w = 0.55 if bottle else 0.84
+    target_h = 0.70 if bottle else 0.92
+    xs, ys, zs = zip(*points)
+    look = [(min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2, (min(zs) + max(zs)) / 2]
+    dist = 0.6
+    for _ in range(5):
+        lo, hi = 0.08, 4.0
+        for _step in range(22):
+            dist = (lo + hi) / 2
+            eye = _eye(look, yaw, pitch, dist)
+            span = _span(points, eye, look, tan_h, tan_v)
+            wide = (span[1] - span[0]) / 2
+            tall = (span[3] - span[2]) / 2
+            if span is None or wide > target_w or tall > target_h:
+                lo = dist
+            else:
+                hi = dist
+        dist = hi
+        eye = _eye(look, yaw, pitch, dist)
+        span = _span(points, eye, look, tan_h, tan_v)
+        cx = (span[0] + span[1]) / 2
+        cy = (span[2] + span[3]) / 2
+        right, up, view = _basis(eye, look)
+        depth = sum(_dot(_sub(p, eye), view) for p in points) / len(points)
+        look = list(_add(look, _add(_mul(right, cx * tan_h * depth), _mul(up, cy * tan_v * depth))))
+    eye = _eye(look, yaw, pitch, dist)
+    return eye, tuple(look), math.degrees(vfov), 0.02
+
+
+def shelf_points(points):
+    """Corners of the board under the model. The camera fit has to include them."""
+    xs, _, zs = zip(*points)
+    span_x = (max(xs) - min(xs)) + 0.018
+    span_z = 0.040
+    cx = (min(xs) + max(xs)) / 2
+    cz = (min(zs) + max(zs)) / 2
+    return [
+        (x, y, z)
+        for x in (cx - span_x / 2, cx + span_x / 2)
+        for y in (0.0, -0.016)
+        for z in (cz - span_z / 2, cz + span_z / 2)
+    ]
+
+
+def studio(points):
+    """A board just under the model and a neutral panel just behind it."""
     board = bpy.data.materials.new("Board")
     board.use_nodes = True
     board_bsdf = board.node_tree.nodes.get("Principled BSDF")
@@ -232,22 +414,22 @@ def backdrop(length, bottle):
         obj = bpy.context.active_object
         obj.name = name
         sx, sy, sz = gltf_size
-        obj.scale = (sx, sz, sy)  # blender (x, y, z) = gltf (x, z, y) for a box aligned to axes
+        obj.scale = (sx, sz, sy)
         cx, cy, cz = gltf_center
         obj.location = (cx, -cz, cy)
         obj.data.materials.append(mat)
 
-    cube("back", (0, 0.35, -0.55), (1.6, 1.4, 0.04), wall)
-    cube("side", (-0.7, 0.35, 0), (0.04, 1.4, 1.4), wall)
-    # A small maple board under the model, not a slab that fills the frame.
-    span_x = length * (0.72 if bottle else 1.18)
-    span_z = length * (0.55 if bottle else 0.42)
-    cube("board", (0, -0.007, 0), (span_x, 0.014, span_z), board)
+    xs, ys, zs = zip(*points)
+    # A shallow shelf under the model. A deep board becomes the floor at this range.
+    span_x = (max(xs) - min(xs)) + 0.018
+    span_z = 0.040
+    cx = (min(xs) + max(xs)) / 2
+    cz = (min(zs) + max(zs)) / 2
+    cube("board", (cx, -0.008, cz), (span_x, 0.016, span_z), board)
 
 
-def camera_play(bottle, yaw, pitch, distance):
-    look = (0.26, 0.46, 0.0) if bottle else (0.34, 0.18, 0.0)
-    dist = (0.62 if bottle else 0.48) * distance
+def camera_play(kind, name):
+    yaw, pitch, dist, look = PLAY[kind][name]
     cp = math.cos(math.radians(pitch))
     sp = math.sin(math.radians(pitch))
     eye = (
@@ -255,31 +437,7 @@ def camera_play(bottle, yaw, pitch, distance):
         look[1] + dist * sp,
         look[2] + dist * cp * math.cos(math.radians(yaw)),
     )
-    return eye, look, 36.0, 0.04
-
-
-def camera_preview(length, bottle, com_from_tip=None):
-    """Matches KnifeFlipPreview. Knives look at the geometric middle, not the COM."""
-    theta = 0.30 if bottle else 1.20
-    if bottle:
-        look = (0.0, length * 0.46, 0.0)
-        dist = length * 2.15
-        pitch = math.radians(16)
-        yaw = math.radians(36)
-    else:
-        mid = (com_from_tip if com_from_tip is not None else length * 0.5) - length * 0.5
-        look = (mid * math.sin(theta), mid * math.cos(theta), 0.0)
-        # 4× length at 32° vertical / ~31° horizontal fills about 80% of a square frame.
-        dist = length * 4.0
-        pitch = math.radians(22)
-        yaw = math.radians(28)
-    cp = math.cos(pitch)
-    eye = (
-        look[0] + dist * cp * math.sin(yaw),
-        look[1] + dist * math.sin(pitch),
-        look[2] + dist * cp * math.cos(yaw),
-    )
-    return eye, look, 32.0, 0.02
+    return eye, look, PLAY_FOV, 0.04
 
 
 def export(path):
@@ -347,7 +505,8 @@ def shot(name, build, camera):
         "look": list(look),
         "fov": fov,
         "near": near,
-        "background": [0.84, 0.82, 0.78] if picker else [0.55, 0.51, 0.45],
+        "portrait": not picker,
+        "background": [0.27, 0.26, 0.25] if picker else [0.55, 0.51, 0.45],
         "ibl": IBL_LUX,
         "key": PICKER_KEY_LUX if picker else KEY_LUX,
         "fill": PICKER_FILL_LUX if picker else FILL_LUX,
@@ -361,6 +520,10 @@ def shot(name, build, camera):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
+    only = [part for part in os.environ.get("KNIFE_SHOTS", "").split(",") if part]
+
+    def want(name):
+        return not only or any(name.startswith(part) for part in only)
     # Practised-toss samples. Printed from FlipPhysics and copied here.
     held = (0.10, 0.24, 1.20, 0.0)
     mid_throw = (0.1169909, 0.25707525, 1.8668044, 0.0)
@@ -371,19 +534,27 @@ def main():
     fills = [("quarter", 0.25), ("third", 1 / 3), ("half", 0.5), ("three-quarter", 0.75), ("full", 1.0)]
 
     def knife_picker(name):
+        theta, lift, points = preview_pose(name, False)
+
         def build():
-            backdrop(KNIVES[name], False)
-            place_knife(name, 0, 0, 1.20)
-        shot(f"picker-{name}", build, camera_preview(KNIVES[name], False, COM[name]))
+            studio(points)
+            place_knife(name, 0, lift, theta)
+        if want(f"picker-{name}"):
+            shot(f"picker-{name}", build, preview_camera(points + shelf_points(points), False))
 
     for name in KNIVES:
         knife_picker(name)
 
     def bottle_picker(label, fill):
+        theta, lift, points = preview_pose("bottle", True)
+
         def build():
-            backdrop(H, True)
-            place_bottle(0, 0, 0.30, fill, 0.0)
-        shot(f"picker-bottle-{label}", build, camera_preview(H, True))
+            studio(points)
+            # place_bottle takes the centre of mass. The fit puts the base at (0, lift).
+            h = com_from_base(fill, 0.0)
+            place_bottle(h * math.sin(theta), lift + h * math.cos(theta), theta, fill, 0.0)
+        if want(f"picker-bottle-{label}"):
+            shot(f"picker-bottle-{label}", build, preview_camera(points, True))
 
     for label, fill in fills:
         bottle_picker(label, fill)
@@ -396,11 +567,18 @@ def main():
                 chip_burst(tip_of(asset, pose[0], pose[1], pose[2]))
         return build
 
-    shot("side-held", room_knife("throwing", held), camera_play(False, 32, 34, 2.4))
-    shot("mid-flip", room_knife("throwing", mid_throw), camera_play(False, 32, 34, 2.4))
-    shot("stuck-chef", room_knife("chef", stuck_chef, chips=True), camera_play(False, 32, 34, 2.4))
-    shot("stuck-cleaver", room_knife("cleaver", stuck_cleaver, chips=True), camera_play(False, 32, 34, 2.4))
-    shot("corner", room_knife("throwing", held), camera_play(False, 58, 32, 2.5))
+    if want("side-held"):
+        shot("side-held", room_knife("throwing", held), camera_play("knife", "side"))
+    if want("mid-flip"):
+        shot("mid-flip", room_knife("throwing", mid_throw), camera_play("knife", "side"))
+    if want("stuck-chef"):
+        shot("stuck-chef", room_knife("chef", stuck_chef, chips=True), camera_play("knife", "side"))
+    if want("stuck-cleaver"):
+        shot("stuck-cleaver", room_knife("cleaver", stuck_cleaver, chips=True), camera_play("knife", "side"))
+    if want("corner"):
+        shot("corner", room_knife("throwing", held), camera_play("knife", "corner"))
+    if want("block-top"):
+        shot("block-top", room_knife("chef", stuck_chef), camera_play("knife", "top"))
 
     def room_bottle(pose, fill=1 / 3):
         def build():
@@ -408,8 +586,10 @@ def main():
             place_bottle(pose[0], pose[1], pose[2], fill, pose[3])
         return build
 
-    shot("bottle-mid", room_bottle(mid_bottle), camera_play(True, 18, 20, 2.05))
-    shot("bottle-landed", room_bottle(landed), camera_play(True, 18, 20, 2.05))
+    if want("bottle-mid"):
+        shot("bottle-mid", room_bottle(mid_bottle), camera_play("bottle", "side"))
+    if want("bottle-landed"):
+        shot("bottle-landed", room_bottle(landed), camera_play("bottle", "side"))
 
 
 if __name__ == "__main__":

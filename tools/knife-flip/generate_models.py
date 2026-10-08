@@ -464,20 +464,56 @@ def bake_image(img):
 
 
 def endgrain_image(size=512):
-    """Maple butcher-block top: a grid of end-grain rounds with growth rings."""
+    """Maple end-grain: a grid of rectangular staves, each with partial ring arcs.
+
+    A full circle in every cell reads as coins. Real butcher block is square
+    sticks glued in a grid, and the rings are arcs of a centre that is not in
+    the middle of the stave.
+    """
+    cols, rows = 6, 8
+
     def color_at(x, y, n):
-        cell = n / 4.0
-        cx = (x % cell) - cell * 0.5
-        cy = (y % cell) - cell * 0.5
-        jx = ((int(x // cell) * 17) % 7) - 3
-        jy = ((int(y // cell) * 13) % 5) - 2
-        r = math.hypot(cx - jx, (cy - jy) * 0.9) / (cell * 0.46)
-        ring = 0.5 + 0.5 * math.sin(r * 26.0)
-        shade = 1.0 - 0.16 * ring
-        if r > 0.98:
-            shade = 0.62
-        return (0.86 * shade, 0.68 * shade, 0.44 * shade)
+        cw, ch = n / cols, n / rows
+        ix, iy = int(min(cols - 1, x // cw)), int(min(rows - 1, y // ch))
+        fx = (x - ix * cw) / cw
+        fy = (y - iy * ch) / ch
+        if fx < 0.045 or fy < 0.04 or fx > 0.965 or fy > 0.97:
+            return (0.42, 0.30, 0.16)
+        tone = ((ix * 13 + iy * 7) % 9) / 8.0
+        base_r = 0.74 + 0.14 * tone
+        base_g = 0.54 + 0.10 * tone
+        base_b = 0.30 + 0.08 * tone
+        # Centre sits outside the stave, so the rings are arcs, not discs.
+        ox = -0.25 + ((ix * 5 + 2) % 7) / 9.0
+        oy = 1.25 - ((iy * 3 + 1) % 5) / 6.0
+        radius = math.hypot(fx - ox, (fy - oy) * (ch / cw))
+        ring = 0.5 + 0.5 * math.sin(radius * 34.0 + ix * 0.7)
+        shade = 0.88 + 0.14 * ring
+        return (base_r * shade, base_g * shade, base_b * shade)
     return _image("endgrain", size, color_at)
+
+
+def plaster_image(size=256):
+    """Warm wall paint with a slow tone shift, not a flat grey fill."""
+    def color_at(x, y, n):
+        wave = 0.035 * math.sin(x * 0.05 + 0.4 * math.sin(y * 0.03))
+        wave += 0.02 * math.sin(y * 0.11 + x * 0.02)
+        v = 0.90 + wave
+        return (0.80 * v, 0.76 * v, 0.70 * v)
+    return _image("plaster_wall", size, color_at)
+
+
+def tile_image(size=256):
+    """Off-white rectangular tiles with grout, for the backsplash."""
+    def color_at(x, y, n):
+        cell_x, cell_y = n / 5.0, n / 8.0
+        ix, iy = int(x // cell_x), int(y // cell_y)
+        fx, fy = x % cell_x, y % cell_y
+        if fx < 2.2 or fy < 2.2:
+            return (0.52, 0.49, 0.45)
+        tone = ((ix * 3 + iy * 5) % 4) / 3.0
+        return (0.84 + 0.05 * tone, 0.81 + 0.04 * tone, 0.75 + 0.03 * tone)
+    return _image("backsplash", size, color_at)
 
 
 def edgegrain_image(size=256):
@@ -934,7 +970,8 @@ def build_block(top_mat, side_mat):
     obj.data.materials.append(side_mat)
     for poly in obj.data.polygons:
         poly.material_index = 0 if poly.normal.z > 0.55 else 1
-    cube_uv(obj, scale=2.4)
+    # About a 4 cm stave on the 58×22 cm top, so the rings read as a grid of sticks.
+    cube_uv(obj, scale=3.6)
     report("block", [obj])
     return [obj]
 
@@ -1023,18 +1060,28 @@ def build_room(counter_mat, wall_mat, glass_mat, plaster_mat, frame_mat):
     except RuntimeError as err:
         print("window boolean failed:", err)
         bpy.data.objects.remove(cutter, do_unlink=True)
-    assign(wall, wall_mat)
+    painted = image_mat("WallPaint", plaster_image(), roughness=0.88)
+    assign(wall, painted)
+    cube_uv(wall, scale=0.28)
     objs.append(wall)
+    # Tile backsplash between the counter and the window, proud of the wall.
+    splash = box("backsplash", -0.20, 1.40, 0.418, 0.452, -0.100, 0.32)
+    assign(splash, image_mat("Tiles", tile_image(), roughness=0.45))
+    cube_uv(splash, scale=2.0)
+    objs.append(splash)
     side = box("side_wall", -1.20, -1.14, -2.20, 0.52, -0.90, 2.55)
-    assign(side, wall_mat)
+    assign(side, painted)
+    cube_uv(side, scale=0.28)
     objs.append(side)
     # Right wall and a front wall behind every gameplay camera, plus a ceiling.
     # Together with the floor they hide the photograph that used to be the skybox.
     right = box("right_wall", 2.34, 2.40, -2.20, 0.52, -0.90, 2.55)
-    assign(right, wall_mat)
+    assign(right, painted)
+    cube_uv(right, scale=0.28)
     objs.append(right)
     front = box("front_wall", -1.20, 2.40, -2.26, -2.20, -0.90, 2.55)
-    assign(front, wall_mat)
+    assign(front, painted)
+    cube_uv(front, scale=0.28)
     objs.append(front)
     ceiling = box("ceiling", -1.20, 2.40, -2.26, 0.52, 2.50, 2.58)
     assign(ceiling, plaster_mat)
