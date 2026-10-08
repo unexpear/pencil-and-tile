@@ -16,6 +16,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -35,6 +36,8 @@ import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.BoardView
 import com.simplegamegen.sudoku.ui.assets.Glassy
 import com.simplegamegen.sudoku.ui.assets.KnifeMeshes
+import com.simplegamegen.sudoku.ui.assets.KnifeSurface
+import com.simplegamegen.sudoku.ui.assets.Polished
 import com.simplegamegen.sudoku.ui.assets.Pose
 import com.simplegamegen.sudoku.ui.assets.Satin
 import com.simplegamegen.sudoku.ui.assets.boxMesh
@@ -53,23 +56,25 @@ import kotlin.math.hypot
 import kotlin.math.sin
 
 private val KnifeViews = listOf(
-    BoardView("Side", yaw = 0f, pitch = 22f, distance = 1.28f),
-    BoardView("Corner", yaw = 34f, pitch = 32f, distance = 1.45f),
-    BoardView("Top", yaw = 0f, pitch = 76f, distance = 1.55f),
+    BoardView("Side", yaw = 12f, pitch = 58f, distance = 1.18f),
+    BoardView("Corner", yaw = 42f, pitch = 52f, distance = 1.28f),
+    BoardView("Top", yaw = 0f, pitch = 76f, distance = 1.35f),
 )
 
-private const val BOARD = 10
-private const val BLOCK_LEFT = 2.35f
+private const val BOARD = 8
+private const val BLOCK_LEFT = 1.68f
 private const val BLOCK_TOP = 0.78f
-private const val BLOCK_Y = 3f
+private const val BLOCK_Y = 3.4f
 private val BlockMesh = boxMesh(FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE, 2.15f, BLOCK_TOP)
 
-private val Steel = Color(0xFFD5D8DE)
-private val CleaverSteel = Color(0xFFB7BCC4)
-private val HandleSteel = Color(0xFF8E939C)
-private val Wood = Color(0xFF8B5A34)
+private val BladeSteel = Color(0xFFE4EAF1)
+private val TangSteel = Color(0xFF4E545E)
+private val WoodHandle = Color(0xFF8B5A34)
+private val BolsterBrass = Color(0xFFC6A15A)
+private val Scales = Color(0xFF1A1C1F)
+private val BlockWood = Color(0xFF8B5A34)
 private val Felt = Color(0xFF2E6B4F)
-private val Plastic = Color(0xFFD7E7EE)
+private val Plastic = Color(0xFFB7D0DC)
 private val Water = Color(0xFF2E86C7)
 private val Cap = Color(0xFF1F6F78)
 
@@ -77,7 +82,7 @@ val KnifeFlipSetup: (PuzzleFactory) -> PlaySetup<KnifeFlip> = { factory ->
     PlaySetup(
         rules = "Swipe up to toss a knife or a water bottle, or tap Toss. A knife scores when the point sticks in the block. " +
             "A bottle scores when it lands upright on its base. Each clean landing raises the streak, and a miss ends the round. " +
-            "The model changes the weight, the balance and the spin. A bottle about one third full is the easiest to land.",
+            "The model changes the weight, the balance and the spin. A bottle between a quarter and a third full is the easiest to land.",
         settingTitle = "Knife",
         settings = FlipModels.options.map { it.label },
         describe = { describeOption(it) },
@@ -153,7 +158,7 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
         }
         val shown = flying ?: rested ?: holdSample(g.body)
         Box(Modifier.fillMaxWidth().weight(1f)) {
-            BoardWithViews(camera, n = BOARD, peakZ = 6.2f, margin = 0.35f, rows = 6f) { frame ->
+            BoardWithViews(camera, n = BOARD, peakZ = 6.8f, margin = 0.2f, rows = BOARD.toFloat()) { frame ->
                 Canvas(
                     Modifier.matchParentSize()
                         .semantics { contentDescription = say("Knife flip block. Swipe up to toss.") }
@@ -179,7 +184,7 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
                 ) {
                     drawBoardSlab(frame, 0.06f, Felt)
                     val span = FlipPhysics.BLOCK_X1 * KnifeMeshes.SQUARES_PER_METRE
-                    drawMesh(frame, BlockMesh, Pose(BLOCK_LEFT + span / 2f, BLOCK_Y, 0f), Wood, Satin)
+                    drawMesh(frame, BlockMesh, Pose(BLOCK_LEFT + span / 2f, BLOCK_Y, 0f), BlockWood, Satin)
                     drawToss(frame, g.body, shown)
                 }
             }
@@ -214,13 +219,19 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawToss(
     val comX = BLOCK_LEFT + sample.x * scale
     val comZ = BLOCK_TOP + sample.z * scale
     val rot = rotation(0f, 1f, 0f, sample.theta)
+    drawContactShadow(frame, sample)
     if (!body.bottle) {
-        val color = when (body.id) {
-            "cleaver" -> CleaverSteel
-            "pocket", "butterfly" -> HandleSteel
-            else -> Steel
+        val pose = Pose(comX, BLOCK_Y, comZ, rot = rot, scale = scale)
+        for (part in KnifeMeshes.parts(body)) {
+            val (color, finish) = when (part.surface) {
+                KnifeSurface.BLADE -> BladeSteel to Polished
+                KnifeSurface.TANG -> TangSteel to Polished
+                KnifeSurface.BOLSTER -> BolsterBrass to Polished
+                KnifeSurface.HANDLE -> WoodHandle to Satin
+                KnifeSurface.SCALES -> Scales to Satin
+            }
+            drawMesh(frame, part.mesh, pose, color, finish)
         }
-        drawMesh(frame, KnifeMeshes.knife(body), Pose(comX, BLOCK_Y, comZ, rot = rot, scale = scale), color, Satin)
         return
     }
     val h = body.comFromBase(sample.sigma)
@@ -233,6 +244,27 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawToss(
     )
     val fillIndex = FlipModels.bottles.indexOfFirst { abs(it.fill - body.fill) < 0.01f }.coerceAtLeast(0)
     drawMesh(frame, KnifeMeshes.water(fillIndex, sample.sigma), pose, Water, Glassy, alpha = 0.92f)
-    drawMesh(frame, KnifeMeshes.bottle, pose, Plastic, Glassy, alpha = 0.42f)
+    drawMesh(frame, KnifeMeshes.bottle, pose, Plastic, Glassy, alpha = 0.56f)
     drawMesh(frame, KnifeMeshes.cap, pose, Cap, Satin)
+}
+
+/** A soft disc on the block under the toss. It shrinks and darkens as the body comes down. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawContactShadow(
+    frame: com.simplegamegen.sudoku.ui.assets.TableFrame,
+    sample: Sample,
+) {
+    val fade = (1f - sample.z / 0.7f).coerceIn(0f, 1f)
+    if (fade < 0.04f) return
+    val scale = KnifeMeshes.SQUARES_PER_METRE
+    val cx = BLOCK_LEFT + sample.x * scale
+    val radius = 0.28f + sample.z * 0.55f
+    val path = Path()
+    val steps = 14
+    for (i in 0..steps) {
+        val a = (i.toFloat() / steps) * (2f * Math.PI.toFloat())
+        val at = frame.at(cx + cos(a) * radius, BLOCK_Y + sin(a) * radius * 0.62f, BLOCK_TOP + 0.012f)
+        if (i == 0) path.moveTo(at.x, at.y) else path.lineTo(at.x, at.y)
+    }
+    path.close()
+    drawPath(path, Color.Black.copy(alpha = 0.32f * fade))
 }

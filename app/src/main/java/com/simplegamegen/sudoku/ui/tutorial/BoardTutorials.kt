@@ -1002,13 +1002,13 @@ internal object ArcadeTutorials {
             "Flick a knife so the point sticks, or land a water bottle upright.",
             rules = listOf(
                 "Swipe up to toss, or tap Toss. A faster swipe throws harder and spins more.",
-                "A knife scores when the point hits the block first, aimed down, neither too soft nor too hard. The handle or the flat does not stick.",
+                "A knife scores when the point hits the block first, aimed down, hard enough to sink into the wood. The handle or the flat does not stick.",
                 "A bottle scores when it lands on its base after about one flip and stays upright. The fill changes the weight, the balance and how the water sloshes.",
                 "Each clean landing adds one to the streak. A miss ends the round. The best streak is kept for each knife and each water level.",
             ),
             tips = listOf(
                 "A throwing knife is balanced. A cleaver is heavy in the blade and a pocket knife is heavy in the handle, so the same flick spins them differently.",
-                "About one third full is the easiest bottle. A full bottle cannot slosh, so it keeps spinning and tips.",
+                "A bottle between a quarter and a third full is the easiest. A full bottle cannot slosh, so it keeps spinning and tips.",
             ),
             steps = listOf(
                 Step("The block is the target. This throwing knife starts in your hand.", scene(bottle = false, landed = false)),

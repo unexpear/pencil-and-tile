@@ -427,14 +427,28 @@ private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Flo
 }
 
 internal fun DrawScope.drawBoardSlab(frame: TableFrame, top: Float, wood: Color) {
-    if (frame.orbit) {
-        drawOrbitSides(frame, top, wood)
-        return
+    if (frame.orbit) drawOrbitSides(frame, top, wood)
+    else {
+        val n = frame.n.toFloat()
+        val dark = lerp(wood, Color.Black, 0.28f)
+        drawPath(quad(frame.at(0f, n, top), frame.at(n, n, top), frame.at(n, n, 0f), frame.at(0f, n, 0f)), dark)
+        drawPath(quad(frame.at(n, 0f, top), frame.at(n, n, top), frame.at(n, n, 0f), frame.at(n, 0f, 0f)), lerp(wood, Color.Black, 0.12f))
     }
+    drawSlabTop(frame, top, wood)
+}
+
+/** The playing surface, with a few grain lines so it reads as felt or wood rather than a thin edge. */
+private fun DrawScope.drawSlabTop(frame: TableFrame, top: Float, wood: Color) {
     val n = frame.n.toFloat()
-    val dark = lerp(wood, Color.Black, 0.28f)
-    drawPath(quad(frame.at(0f, n, top), frame.at(n, n, top), frame.at(n, n, 0f), frame.at(0f, n, 0f)), dark)
-    drawPath(quad(frame.at(n, 0f, top), frame.at(n, n, top), frame.at(n, n, 0f), frame.at(n, 0f, 0f)), lerp(wood, Color.Black, 0.12f))
+    if (frame.orbit && !frame.facing(0f, 0f, 1f, n / 2f, n / 2f, top)) return
+    drawPath(quad(frame.at(0f, 0f, top), frame.at(n, 0f, top), frame.at(n, n, top), frame.at(0f, n, top)), wood)
+    val grain = lerp(wood, Color.Black, 0.28f).copy(alpha = 0.4f)
+    val w = (frame.cell * 0.01f).coerceAtLeast(0.6f)
+    var y = 0.4f
+    while (y < n - 0.2f) {
+        drawLine(grain, frame.at(0.2f, y, top + 0.004f), frame.at(n - 0.2f, y + 0.06f, top + 0.004f), strokeWidth = w)
+        y += 0.7f
+    }
 }
 
 private fun DrawScope.drawOrbitSides(frame: TableFrame, top: Float, wood: Color) {

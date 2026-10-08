@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.sqrt
@@ -81,9 +82,12 @@ class KnifeFlipTest {
         assertTrue(w3 < wQ, "1/3 ($w3) slows more than 1/4 ($wQ)")
     }
 
-    @Test fun `a third full lands more often than the other fills`() {
-        val speeds = listOf(1.5f, 1.7f, 1.9f, 2.2f, 2.6f, 3.0f)
-        val aims = listOf(1.00f, 1.15f, 1.30f, 1.45f)
+    @Test fun `fills in the published band land more often than a full bottle`() {
+        // A short flick: a couple of metres per second, steep enough to come down on the block.
+        // Dekker et al. Sec. IV put a good flip around 20%–40%, not at one exact fraction.
+        // 1/4 sits nearer their lowest centre of mass (eq. 16) and 1/3 nearer the biggest slowdown (eq. 14).
+        val speeds = listOf(2.2f, 2.4f, 2.6f, 2.8f, 3.0f)
+        val aims = listOf(1.25f, 1.35f, 1.45f, 1.55f)
         val rates = FlipModels.bottles.map { bottle ->
             var lands = 0
             var tries = 0
@@ -97,12 +101,15 @@ class KnifeFlipTest {
         }
         val report = rates.joinToString("\n") { (fill, rate) -> "fill $fill rate $rate" }
         val byFill = rates.toMap()
+        val quarter = byFill.getValue(0.25f)
         val third = byFill.getValue(1f / 3f)
-        assertTrue(third > byFill.getValue(1f), "full should land less often\n$report")
-        assertTrue(third > byFill.getValue(0.25f), "1/4 should land less often\n$report")
-        assertTrue(third > byFill.getValue(0.75f), "3/4 should land less often\n$report")
-        assertTrue(third >= byFill.getValue(0.5f), "1/2 should not beat 1/3\n$report")
-        assertTrue(third >= 0.12f, "1/3 should have a real window\n$report")
+        val half = byFill.getValue(0.5f)
+        val three = byFill.getValue(0.75f)
+        val full = byFill.getValue(1f)
+        assertTrue(quarter > full && third > full, "full should land less often\n$report")
+        assertTrue(quarter > three && third > three, "3/4 should land less often\n$report")
+        assertTrue(third > half, "1/2 matches the slowdown but sits higher\n$report")
+        assertTrue(quarter >= 0.15f && third >= 0.10f, "the 20%–40% band should have a real window\n$report")
     }
 
     @Test fun `a practised toss sticks the throwing knife and lands a third-full bottle`() {
@@ -123,6 +130,41 @@ class KnifeFlipTest {
         val fullHand = FlipPhysics.hold(full)
         val same = FlipPhysics.flick(full, fullHand.theta, bs, ba, fullHand.x, fullHand.z)
         assertNotEquals(FlipEnd.LANDED, FlipPhysics.simulate(full, same).end)
+    }
+
+    @Test fun `one full turn covers the same distance at any throw speed`() {
+        // Thiel formulas 1–3: d = 2π V / ω, and V = r ω, so d does not depend on speed.
+        val knife = FlipModels.throwing
+        val slow = FlipPhysics.flick(knife, 1.2f, 1.4f, 1.2f, 0.1f, 0.24f)
+        val fast = FlipPhysics.flick(knife, 1.2f, 2.8f, 1.2f, 0.1f, 0.24f)
+        val dSlow = (2.0 * PI).toFloat() * hypot(slow.vx, slow.vz) / slow.omega
+        val dFast = (2.0 * PI).toFloat() * hypot(fast.vx, fast.vz) / fast.omega
+        assertEquals(dSlow, dFast, 0.02f, "d=$dSlow vs $dFast")
+        assertTrue(dSlow > 0.2f && dSlow < 4f, "a flick's turn distance is $dSlow m")
+    }
+
+    @Test fun `published bottle fill has its optimum near a quarter to a third`() {
+        val bestG = (1..99).maxBy { -BottleModel.slowdownG(it / 100f) } / 100f
+        assertTrue(bestG in 0.38f..0.44f, "G(f) is smallest at $bestG, Dekker et al. eq. 14 gives ~0.41")
+        assertEquals(0.18f, BottleModel.lowestComFill(), 0.01f)
+        assertTrue(BottleModel.pooledComFraction(BottleModel.lowestComFill()) < BottleModel.pooledComFraction(0.5f))
+        val third = 1f / 3f
+        assertTrue(third in 0.20f..0.41f, "1/3 sits in the paper's 20%–40% window")
+        assertTrue(BottleModel.slowdownG(third) < BottleModel.slowdownG(0.25f))
+        assertTrue(BottleModel.slowdownG(third) < BottleModel.slowdownG(1f))
+        assertEquals(1f, BottleModel.slowdownG(1f), 1e-4f)
+    }
+
+    @Test fun `spreading water keeps angular momentum`() {
+        val third = FlipModels.bottles[1]
+        val start = 12f
+        val sample = FlipPhysics.coastSample(third, start, 0.45f, drag = false)
+        val expected = start * third.inertia(0f) / third.inertia(sample.sigma)
+        assertEquals(expected, sample.omega, 0.05f, "σ ${sample.sigma} ω ${sample.omega} vs $expected")
+        assertTrue(sample.sigma > 0.5f, "water should have climbed, σ=${sample.sigma}")
+        val full = FlipPhysics.coastSample(FlipModels.bottles[4], start, 0.45f, drag = false)
+        assertEquals(start, full.omega, 0.02f, "a full bottle cannot slosh")
+        assertEquals(0f, full.sigma, 1e-3f)
     }
 
     @Test fun `a round keeps a streak until a miss and the save round-trips`() {

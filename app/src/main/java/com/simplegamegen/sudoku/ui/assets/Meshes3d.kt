@@ -149,6 +149,70 @@ internal fun carvedMesh(poly: List<Pair<Float, Float>>, half: Float, bevel: Floa
     return b.build()
 }
 
+/**
+ * A rectangular plate in the x–z plane, [half] thick along y, with a round hole.
+ * The outer boundary runs anticlockwise when seen from +y. The hole wall faces into the opening.
+ */
+internal fun holedPlate(
+    x0: Float, z0: Float, x1: Float, z1: Float,
+    half: Float,
+    holeX: Float, holeZ: Float, holeR: Float,
+    segments: Int = 16,
+): Mesh {
+    val b = Builder()
+    val outer = arrayOf(x0 to z0, x1 to z0, x1 to z1, x0 to z1)
+    val turn = (2.0 * PI / segments).toFloat()
+    fun ring(y: Float, ny: Float): IntArray = IntArray(segments) { s ->
+        val a = s * turn
+        b.vertex(holeX + cos(a) * holeR, y, holeZ + sin(a) * holeR, 0f, ny, 0f)
+    }
+    fun corners(y: Float, ny: Float): IntArray = IntArray(4) { i ->
+        b.vertex(outer[i].first, y, outer[i].second, 0f, ny, 0f)
+    }
+    val frontRing = ring(half, 1f)
+    val frontCorner = corners(half, 1f)
+    val backRing = ring(-half, -1f)
+    val backCorner = corners(-half, -1f)
+    // Each quarter of the hole stitches to one outer edge.
+    val per = segments / 4
+    fun cap(ringV: IntArray, cornerV: IntArray, flip: Boolean) {
+        for (q in 0 until 4) {
+            val c0 = cornerV[q]
+            val c1 = cornerV[(q + 1) % 4]
+            for (k in 0 until per) {
+                val i0 = q * per + k
+                val i1 = (i0 + 1) % segments
+                if (!flip) {
+                    b.tri(c0, ringV[i0], ringV[i1])
+                    b.tri(c0, ringV[i1], c1)
+                } else {
+                    b.tri(c0, ringV[i1], ringV[i0])
+                    b.tri(c0, c1, ringV[i1])
+                }
+            }
+        }
+    }
+    cap(frontRing, frontCorner, flip = false)
+    cap(backRing, backCorner, flip = true)
+    fun wall(a0: Int, a1: Int, b1: Int, b0: Int, outward: Boolean) {
+        if (outward) {
+            b.tri(a0, a1, b1); b.tri(a0, b1, b0)
+        } else {
+            b.tri(a0, b1, a1); b.tri(a0, b0, b1)
+        }
+    }
+    for (i in 0 until 4) {
+        val j = (i + 1) % 4
+        wall(frontCorner[i], frontCorner[j], backCorner[j], backCorner[i], outward = true)
+    }
+    for (s in 0 until segments) {
+        val t = (s + 1) % segments
+        // The hole's wall faces the centre, so the material's outside is the inward direction.
+        wall(frontRing[s], frontRing[t], backRing[t], backRing[s], outward = false)
+    }
+    return b.build()
+}
+
 private fun abs(f: Float) = if (f < 0) -f else f
 
 /** Triangles of a simple anticlockwise polygon. */

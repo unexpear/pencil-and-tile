@@ -17,9 +17,18 @@ import kotlin.math.sqrt
  * and increasing [theta] swings that end toward +x. The body rotates about its centre of mass.
  * A fixed step of 1/240 s keeps the motion deterministic.
  *
- * Knives are rigid. A bottle's water can slosh: while it is spinning the free surface lets the
- * water climb, which raises the moment of inertia and, by conservation of angular momentum, slows
- * the spin. A full bottle has no air gap, so the water cannot move.
+ * Knives are rigid. The release is an impulse at the grip that matches the hand speed there
+ * (impulse-momentum for a rigid body). While the knife was swinging with the hand,
+ * ω = V / r, so the distance travelled in one full turn is d = 2π r and does not depend on
+ * how hard the throw is. See J. Thiel, "The physics of knife throwing",
+ * https://www.knifethrowing.info/physics_of_knife_throwing.html formulas 1–3.
+ * For a finger flick the pivot is the grip, so r = k² / lever with k the radius of gyration.
+ * A long hammer grip instead uses the arm (about 0.32 m, their measured ~2 m per turn).
+ *
+ * A bottle follows Dekker et al., "Water bottle flipping physics", Am. J. Phys. 86, 733 (2018),
+ * https://doi.org/10.1119/1.5052441 . Water spread along the bottle raises the moment of inertia.
+ * Gravity has no torque about the centre of mass, so Iω stays constant and the spin falls.
+ * A full bottle has no air gap, so the water cannot move.
  */
 object FlipPhysics {
     const val GRAVITY = 9.81f
@@ -30,30 +39,48 @@ object FlipPhysics {
     const val BLOCK_X1 = 0.58f
 
     private const val G = -GRAVITY
-    private const val AIR = 0.08f
-    private const val AIR_SPIN = 0.045f
+    /** Air at about 1.2 kg/m³. A tumbling body has Cd near 1; the area is set per model. */
+    private const val RHO_AIR = 1.2f
+    private const val DRAG_CD = 1.0f
     private const val MAX_TIME = 2.8f
     private const val MAX_BOUNCES = 10
 
-    /** How far the point may lean from straight down and still bite. */
-    private const val STICK_COS = 0.8192f // cos 35°
-    private const val STICK_MIN = 0.85f
-    private const val STICK_MAX = 8.5f
+    /**
+     * A landing is one full turn back to cap-up, not a half turn (which would be cap-down)
+     * and not a second revolution. One radian of slack either side of 2π.
+     */
+    private const val FLIP_MIN = (2.0 * PI - 1.0).toFloat()
+    private const val FLIP_MAX = (2.0 * PI + 1.2).toFloat()
 
-    /** One flip, not a drop and not two turns. Radians of rotation before landing. */
-    private const val FLIP_MIN = 4.9f
-    private const val FLIP_MAX = 8.0f
+    /**
+     * How fast the water height moves toward the spread state.
+     * Dekker et al. measure h(t); they do not give dh/dt. Fig. 4 shows ω falling across
+     * the whole flight and essentially finished by landing, and a run lasts about a second.
+     * τ = 0.32 s is that empirical timescale: most of the spread has happened by ~1 s
+     * (1 − e^(−1/τ) ≈ 0.96) and it is still moving at mid-flight.
+     */
+    private const val SLOSH_TAU = 0.32f
 
-    private const val SLOSH_TAU = 0.06f
-    private const val SLOSH_RATE = 8f
-    /** Extra spin loss while water is free to move, scaled by how much water can move. */
-    private const val SLOSH_DAMP = 0.85f
-    /** A loose hold on the neck. A rigid grip would spin any bottle too fast to land. */
-    private const val LOOSE_GRIP = 0.26f
-    /** Scales hand speed into bottle centre-of-mass speed. Heavier fills leave more slowly. */
-    private const val BOTTLE_THROW = 0.12f
-    /** Extra height of the bottle centre of mass above its base, in the hand. */
+    /**
+     * Effective radius of the swing that sets the bottle's spin, ω = −V / R.
+     * Thiel's formula 2. His measured hammer grip is about 0.32 m (a full turn every ~2 m).
+     * A bottle flip is a wrist flick, not that throw: Dekker's flights are one turn in about
+     * a second, so ω is of order 10 rad/s while the toss that reaches this block is a couple
+     * of metres per second. R = 0.16 m is that estimate, between the neck-to-balance distance
+     * (~0.14 m) and a forearm. The same R is used at every fill, because Dekker compare fills
+     * at a given ω₀ (their Sec. IV: "for a given ω₀ one wishes to reduce ω").
+     */
+    private const val BOTTLE_SWING = 0.16f
+
+    /** Base of the bottle this far above the block when it leaves the hand. A table-height flip. */
     private const val BOTTLE_LIFT = 0.36f
+
+    /** Pine, compression perpendicular to the grain, mid of the Wood Handbook range 3–6 MPa. */
+    private const val WOOD_PRESSURE = 4.0e6f
+    /** A sharp tip, about 1.5 mm by 0.5 mm. An estimate, not a measured knife. */
+    private const val TIP_AREA = 1.5e-3f * 0.5e-3f
+    /** How deep the point must sink before it stays. An estimate. */
+    private const val EMBED = 0.006f
 
     /**
      * Centre-of-mass height under the same integrator as a toss, with collisions ignored.
@@ -65,7 +92,8 @@ object FlipPhysics {
         var t = 0f
         while (t + 1e-6f < seconds) {
             val h = minOf(DT, seconds - t)
-            val az = G - (if (drag) AIR else 0f) * vz
+            val dragK = if (drag) 0.5f * RHO_AIR * DRAG_CD * 0.01f / 0.2f else 0f
+            val az = G - dragK * abs(vz) * vz
             z += vz * h + 0.5f * az * h * h
             vz += az * h
             t += h
@@ -106,28 +134,35 @@ object FlipPhysics {
     }
 
     /**
-     * Same throw for every fill: impulse grows with mass so a light bottle is not fired across the room,
-     * then a loose neck grip passes [LOOSE_GRIP] of r × J into the spin.
+     * The gesture sets the centre-of-mass velocity. The spin is the swing's, ω = −V / R
+     * with [BOTTLE_SWING] the same at every fill (Dekker et al. Sec. IV). A negative ω
+     * carries the base forward toward the block. Fill does not change this release; it
+     * changes I(h), the balance, and whether the landing is stable.
      */
     private fun looseBottle(body: FlipBody, theta: Float, gripSpeed: Float, aim: Float, x: Float, z: Float): Release {
-        val throwV = gripSpeed * (BOTTLE_THROW / body.mass)
-        val ux = cos(aim)
-        val uz = sin(aim)
-        val lever = body.gripFromTip - body.comFromTip(0f)
-        val omega = (body.mass * throwV) * lever / body.inertia(0f) * LOOSE_GRIP
-        return Release(x, z, throwV * ux, throwV * uz, theta, omega)
+        val omega = -gripSpeed / BOTTLE_SWING
+        return Release(x, z, gripSpeed * cos(aim), gripSpeed * sin(aim), theta, omega)
     }
 
-    /** Spin left after [seconds] in the air, starting from [omega]. No collision. */
-    fun coastOmega(body: FlipBody, omega: Float, seconds: Float): Float {
+    /** Spin left after [seconds] in the air, starting from [omega]. No collision. Drag on. */
+    fun coastOmega(body: FlipBody, omega: Float, seconds: Float): Float = coast(body, omega, seconds, drag = true).omega
+
+    /**
+     * Same coast with drag chosen by the caller, so a test can check I₁ω₁ = I₂ω₂
+     * with nothing else taking angular momentum.
+     */
+    fun coastSample(body: FlipBody, omega: Float, seconds: Float, drag: Boolean): SpinState =
+        coast(body, omega, seconds, drag).let { SpinState(it.omega, it.sigma) }
+
+    private fun coast(body: FlipBody, omega: Float, seconds: Float, drag: Boolean): State {
         var s = State(0f, 8f, 0f, 0f, 0.3f, omega, 0f)
         var t = 0f
         while (t + 1e-6f < seconds) {
             val h = minOf(DT, seconds - t)
-            s = step(body, s, h, drag = true)
+            s = step(body, s, h, drag)
             t += h
         }
-        return s.omega
+        return s
     }
 
     fun hold(body: FlipBody): Release {
@@ -192,9 +227,12 @@ object FlipPhysics {
         }
         if (!body.bottle) {
             val kind = knifeContact(body, s0)
-            val speed = hypot(pointSpeed(body, s0, hitAt(body, s0, 0f)).x, pointSpeed(body, s0, hitAt(body, s0, 0f)).z)
-            val down = -cos(s0.theta)
-            val stick = kind == HitKind.TIP && down >= STICK_COS && speed in STICK_MIN..STICK_MAX
+            val tipV = pointSpeed(body, s0, hitAt(body, s0, 0f))
+            val speed = hypot(tipV.x, tipV.z)
+            // The tip has to arrive first (geometry in knifeContact) and carry enough energy
+            // to crush a few millimetres of softwood. There is no upper speed: a harder
+            // point-first throw sinks deeper. Adamovich's filmed throws are about 50 km/h.
+            val stick = kind == HitKind.TIP && speed >= embedSpeed(body.mass)
             if (stick) {
                 val planted = plantKnife(body, s0)
                 return Resolved(planted, FlipEnd.STUCK, FlipEnd.STUCK)
@@ -202,20 +240,21 @@ object FlipPhysics {
             val why = when {
                 kind == HitKind.HANDLE -> FlipEnd.HANDLE
                 kind == HitKind.BLADE -> FlipEnd.FLAT
-                speed < STICK_MIN -> FlipEnd.WEAK
-                speed > STICK_MAX -> FlipEnd.HARD
+                speed < embedSpeed(body.mass) -> FlipEnd.WEAK
                 else -> FlipEnd.FLAT
             }
             return Resolved(bounce(body, s0, hit, 0.42f, 0.32f), null, why)
         }
         val base = hit.kind == HitKind.BASE
-        val bounced = splash(body, bounce(body, s0, hit, 0.22f, 0.48f), base)
-        if (base && upright(body, bounced, theta0)) {
-            val settled = settleBottle(body, bounced)
+        // Plastic on wood, restitution about 0.2. Dekker et al. leave the landing unmodelled
+        // (Sec. V). A base that is already inside the tip-over angle, with too little spin
+        // left to climb the rim, stays. Anything else bounces.
+        if (base && upright(body, s0, theta0)) {
+            val settled = settleBottle(body, s0.copy(sigma = 0f))
             return Resolved(settled, FlipEnd.LANDED, FlipEnd.LANDED)
         }
-        val why = if (base) FlipEnd.TIPPED else FlipEnd.TIPPED
-        return Resolved(bounced, null, why)
+        val bounced = bounce(body, s0, hit, 0.22f, 0.45f)
+        return Resolved(bounced, null, FlipEnd.TIPPED)
     }
 
     /** Point-first means the tip is strictly the lowest part, not the flat or the handle. */
@@ -230,16 +269,42 @@ object FlipPhysics {
         return HitKind.BLADE
     }
 
+    /**
+     * Upright means the centre of mass is still over the base, and the spin left after the
+     * flight cannot carry it over the rim.
+     *
+     * The tip-over angle is α = atan(R / h_cm), with h_cm from Dekker eq. (15) for water
+     * back at the base. The potential barrier to that angle, rotating about the rim, is
+     * m g L (1 − cos(α − |tilt|)), L = hypot(R, h_cm).
+     *
+     * Rotational KE uses the slowed ω and the pooled inertia. Putting the water back at the
+     * base without speeding the spin up is an inelastic splash: Dekker do not model it, and
+     * conserving L through the collapse would undo the slowdown that the flight just produced.
+     * The rebound from plastic on wood (e ≈ 0.22) must not hop the bottle by more than h_cm.
+     */
     private fun upright(body: FlipBody, s: State, theta0: Float): Boolean {
         val tilt = wrap(s.theta)
-        val h = body.comFromBase(s.sigma).coerceAtLeast(0.02f)
+        val h = body.comFromBase(0f).coerceAtLeast(0.02f)
         val alpha = atan(body.baseRadius / h)
         if (abs(tilt) >= alpha) return false
         val reach = hypot(body.baseRadius, h)
         val barrier = body.mass * GRAVITY * reach * (1f - cos((alpha - abs(tilt)).coerceAtLeast(0f)))
-        val spin = 0.5f * body.inertia(s.sigma) * s.omega * s.omega
+        val spin = 0.5f * body.inertia(0f) * s.omega * s.omega
         val turned = abs(s.theta - theta0)
-        return spin <= barrier * 1.08f && turned in FLIP_MIN..FLIP_MAX && abs(s.vz) < 0.85f
+        val rebound = 0.22f * abs(s.vz)
+        val hop = rebound * rebound / (2f * GRAVITY)
+        return spin <= barrier && turned in FLIP_MIN..FLIP_MAX && hop <= h
+    }
+
+    /**
+     * Speed whose kinetic energy equals the work to push the tip [EMBED] into softwood.
+     * Pressure is the order of pine compressed across the grain, about 3–6 MPa
+     * (USDA Forest Products Laboratory, Wood Handbook, mechanical properties of wood).
+     * The tip area and the embed depth are estimates for a sharp point that stays in.
+     */
+    internal fun embedSpeed(mass: Float): Float {
+        val energy = WOOD_PRESSURE * TIP_AREA * EMBED
+        return sqrt(2f * energy / mass.coerceAtLeast(0.02f))
     }
 
     private fun plantKnife(body: FlipBody, s: State): State {
@@ -249,17 +314,6 @@ object FlipPhysics {
             z = s.z - tip.z - 0.004f,
             vx = 0f, vz = 0f, omega = 0f,
         )
-    }
-
-    /**
-     * A base hit dumps the water that had climbed the walls. That splash takes spin with it
-     * and drops the balance back toward the base. A full bottle has no free surface, so nothing
-     * is lost here and the same arrival keeps turning.
-     */
-    private fun splash(body: FlipBody, s: State, base: Boolean): State {
-        if (!base || body.mobility < 1e-3f) return s
-        val absorb = (0.72f * body.mobility * (body.waterMass / 0.12f).coerceAtMost(1.4f)).coerceIn(0f, 0.88f)
-        return s.copy(omega = s.omega * (1f - absorb), sigma = s.sigma * (1f - absorb))
     }
 
     private fun settleBottle(body: FlipBody, s: State): State {
@@ -296,19 +350,21 @@ object FlipPhysics {
     private fun step(body: FlipBody, s: State, dt: Float, drag: Boolean): State {
         var omega = s.omega
         var sigma = s.sigma
-        if (body.mobility > 1e-4f) {
-            val target = (abs(omega) / SLOSH_RATE).coerceIn(0f, 1f) * body.mobility
-            val sigma2 = sigma + (target - sigma) * (dt / SLOSH_TAU).coerceAtMost(1f)
+        if (body.bottle && body.fill < 0.999f) {
+            // In the air the water spreads toward the full height (Dekker Fig. 1).
+            // It falls back on impact, not before: their Fig. 4 keeps the slow spin through the descent.
+            // I(h) then sets ω so that Iω is unchanged (their eq. 12). No extra spin sink.
+            val sigma2 = (sigma + (1f - sigma) * (dt / SLOSH_TAU).coerceAtMost(1f)).coerceIn(0f, 1f)
             val i1 = body.inertia(sigma)
             val i2 = body.inertia(sigma2).coerceAtLeast(1e-8f)
-            val damp = SLOSH_DAMP * body.mobility * (body.waterMass / 0.17f)
-            omega = (i1 / i2) * omega * expNeg(damp * dt)
-            sigma = sigma2.coerceIn(0f, 1f)
+            omega *= i1 / i2
+            sigma = sigma2
         }
-        if (drag) omega *= expNeg(AIR_SPIN * dt)
-        val k = if (drag) AIR else 0f
-        val ax = -k * s.vx
-        val az = G - k * s.vz
+        val area = if (body.bottle) (PI.toFloat() * body.baseRadius * body.baseRadius) else body.length * 0.012f
+        val k = if (drag) 0.5f * RHO_AIR * DRAG_CD * area / body.mass else 0f
+        val speed = hypot(s.vx, s.vz)
+        val ax = -k * speed * s.vx
+        val az = G - k * speed * s.vz
         return State(
             s.x + s.vx * dt + 0.5f * ax * dt * dt,
             s.z + s.vz * dt + 0.5f * az * dt * dt,
@@ -391,11 +447,6 @@ object FlipPhysics {
         return a
     }
 
-    private fun expNeg(x: Float): Float {
-        val c = x.coerceIn(0f, 4f)
-        return 1f / (1f + c + 0.5f * c * c)
-    }
-
     const val KNIFE_THETA = 1.20f
     const val BOTTLE_THETA = 0.40f
 
@@ -415,6 +466,8 @@ data class Release(
     val x: Float, val z: Float, val vx: Float, val vz: Float,
     val theta: Float, val omega: Float, val sigma: Float = 0f,
 )
+
+data class SpinState(val omega: Float, val sigma: Float)
 
 data class Sample(val t: Float, val x: Float, val z: Float, val theta: Float, val sigma: Float)
 
@@ -459,15 +512,18 @@ data class FlipBody(
     val waterMass: Float,
     val fill: Float,
 ) {
-    fun comFromTip(sigma: Float) = comPooled + (comSpread - comPooled) * sigma.coerceIn(0f, 1f)
-    fun inertia(sigma: Float) = inertiaPooled + (inertiaSpread - inertiaPooled) * sigma.coerceIn(0f, 1f)
+    fun comFromTip(sigma: Float) = if (!bottle) comPooled
+        else length - BottleModel.comFromBase(fill, sigma)
+
+    /** Bottles use Dekker's I(h), which is not linear in the water height. Knives are rigid. */
+    fun inertia(sigma: Float) = if (!bottle) inertiaPooled else BottleModel.inertia(fill, sigma)
     fun comFromBase(sigma: Float) = length - comFromTip(sigma)
 
     /** Fraction of the length from the tip (or cap) to the balance point, water settled. */
     val balance: Float get() = comPooled / length
 }
 
-private data class Part(val mass: Float, val fromTip: Float, val span: Float)
+private data class Part(val mass: Float, val fromTip: Float, val span: Float, val across: Float = 0f)
 
 private fun knife(
     id: String,
@@ -482,7 +538,9 @@ private fun knife(
     val com = parts.sumOf { (it.mass * it.fromTip).toDouble() }.toFloat() / mass
     var inertia = 0.0
     for (p in parts) {
-        val own = p.mass.toDouble() * p.span * p.span / 12.0
+        // Thin plate in the plane of the blade: I = m (a² + b²) / 12 about the centre,
+        // then the parallel-axis shift to the knife's balance. b is the height across the blade.
+        val own = p.mass.toDouble() * (p.span * p.span + p.across * p.across) / 12.0
         val d = p.fromTip - com
         inertia += own + p.mass.toDouble() * d * d
     }
@@ -493,53 +551,90 @@ private fun knife(
 }
 
 /**
- * A 500 mL PET bottle. The container is 12.5 g; the water is [fill] of 500 g.
- * Empty is not offered. Around one third full the free surface can still travel the
- * whole cavity, so the inertia rises and the spin falls. A full bottle cannot slosh.
+ * Dekker et al. one-dimensional bottle, with the shell's radial term from their eq. (2).
+ * H and R match the drawn bottle. mb = 25 g and M = mw,full / mb = 20 are their typical 0.5 L bottle.
+ * [fill] is f = h₀/H. Empty is not offered.
+ *
+ * G(f) = I₀/I_max from their eq. (14) is smallest near f = 0.41. The centre of mass is lowest at
+ * f = (√(1+M) − 1) / M ≈ 0.18 (eq. 16). Together those put a good flip around 20%–40%, the range
+ * they compare with the usual 1/4 to 1/3.
+ */
+object BottleModel {
+    const val H = 0.204f
+    const val MB = 0.025f
+    const val M = 20f
+    const val R = 0.0315f
+
+    fun waterMass(fill: Float) = fill * M * MB
+
+    /** Water height. σ = 0 is pooled at h₀ = f H. σ = 1 is spread over the whole bottle. */
+    fun waterHeight(fill: Float, sigma: Float): Float {
+        val h0 = fill * H
+        return h0 + sigma.coerceIn(0f, 1f) * (H - h0)
+    }
+
+    /** Eq. (8), measured from the base. */
+    fun comFromBase(fill: Float, sigma: Float): Float {
+        val mw = waterMass(fill)
+        val h = waterHeight(fill, sigma)
+        return (MB * H / 2f + mw * h / 2f) / (MB + mw)
+    }
+
+    /**
+     * Eq. (11), plus the 6 R² term of eq. (2) so the shell is not a zero-radius rod.
+     * Their G(f) drops that term; [slowdownG] keeps the published 1D formula for the optimum.
+     */
+    fun inertia(fill: Float, sigma: Float): Float {
+        val mw = waterMass(fill)
+        val h = waterHeight(fill, sigma).coerceAtLeast(0.01f)
+        val hcm = comFromBase(fill, sigma)
+        val shell = MB * (6f * R * R + H * H) / 12f + MB * (H / 2f - hcm) * (H / 2f - hcm)
+        val water = mw * h * h / 12f + mw * (h / 2f - hcm) * (h / 2f - hcm)
+        return shell + water
+    }
+
+    /** Eq. (14). Ratio of pooled inertia to fully spread inertia in the 1D model. */
+    fun slowdownG(fill: Float): Float {
+        val f = fill
+        val num = M * M * f * f * f * f + 4f * M * f * f * f - 6f * M * f * f + 4f * M * f + 1f
+        val den = (1f + M * f) * (1f + M * f)
+        return num / den
+    }
+
+    /** Eq. (15), h_cm / H with the water still pooled. */
+    fun pooledComFraction(fill: Float): Float = 0.5f * (1f + M * fill * fill) / (1f + M * fill)
+
+    /** Eq. (16). */
+    fun lowestComFill(): Float = (sqrt(1f + M) - 1f) / M
+}
+
+/**
+ * A 500 mL PET bottle. The container is [BottleModel.MB]; the water is [fill] of 500 g.
+ * Empty is not offered.
  */
 fun waterBottle(fill: Float): FlipBody {
     require(fill in 0.2f..1f) { "fill must be at least about a quarter" }
-    val height = 0.204f
-    val radius = 0.0315f
-    val cavity = 0.180f
-    val plastic = 0.0125f
-    val plasticCom = 0.098f
-    val water = fill * 0.500f
-    val waterHeight = fill * cavity
-    val waterCom = waterHeight / 2f
-    val mass = plastic + water
-    val comBase = (plastic * plasticCom + water * waterCom) / mass
-    val comFromCap = height - comBase
-    fun cylinder(m: Float, h: Float, r: Float) = m * (3f * r * r + h * h) / 12f
-    val iWater = cylinder(water, waterHeight.coerceAtLeast(0.01f), radius * 0.92f)
-    val iShell = plastic * (radius * radius / 2f + height * height / 12f)
-    val dWater = waterCom - comBase
-    val dShell = plasticCom - comBase
-    val pooled = iWater + water * dWater * dWater + iShell + plastic * dShell * dShell
-    val spreadCom = cavity / 2f
-    val spreadBase = (plastic * plasticCom + water * spreadCom) / mass
-    val iSpreadWater = cylinder(water, cavity, radius * 0.92f)
-    val dWS = spreadCom - spreadBase
-    val dSS = plasticCom - spreadBase
-    val spread = iSpreadWater + water * dWS * dWS + iShell + plastic * dSS * dSS
-    val mobility = (1f - fill).coerceIn(0f, 1f)
-    val same = mobility < 1e-3f
+    val same = fill >= 0.999f
+    val comCap = BottleModel.H - BottleModel.comFromBase(fill, 0f)
+    val comSpread = if (same) comCap else BottleModel.H - BottleModel.comFromBase(fill, 1f)
+    val pooled = BottleModel.inertia(fill, 0f)
+    val spread = if (same) pooled else BottleModel.inertia(fill, 1f)
     return FlipBody(
         id = "bottle",
         label = "Water bottle",
         bottle = true,
-        length = height,
-        mass = mass,
-        comPooled = comFromCap,
-        comSpread = if (same) comFromCap else height - spreadBase,
+        length = BottleModel.H,
+        mass = BottleModel.MB + BottleModel.waterMass(fill),
+        comPooled = comCap,
+        comSpread = comSpread,
         inertiaPooled = pooled,
-        inertiaSpread = if (same) pooled else spread,
-        gripFromTip = 0.026f,
+        inertiaSpread = spread,
+        gripFromTip = 0.022f,
         tipZone = 0.02f,
         handleZone = 0.04f,
-        baseRadius = radius,
-        mobility = mobility,
-        waterMass = water,
+        baseRadius = BottleModel.R,
+        mobility = if (same) 0f else 1f - fill,
+        waterMass = BottleModel.waterMass(fill),
         fill = fill,
     )
 }
@@ -558,7 +653,7 @@ object FlipModels {
     val throwing: FlipBody = knife(
         "throwing", "Throwing knife", 0.280f,
         // One piece of steel, 22 × 5 mm, balanced at the middle.
-        listOf(Part(0.240f, 0.140f, 0.280f)),
+        listOf(Part(0.240f, 0.140f, 0.280f, across = 0.022f)),
         gripFromTip = 0.246f, handleZone = 0.07f,
     )
     val pocket: FlipBody = knife(
@@ -583,7 +678,7 @@ object FlipModels {
         "cleaver", "Cleaver", 0.295f,
         // 175 × 95 × 2.4 mm blade. The tall blade adds to the in-plane inertia.
         listOf(
-            Part(0.311f, 0.088f, 0.199f),
+            Part(0.311f, 0.088f, 0.175f, across = 0.095f),
             Part(0.070f, 0.232f, 0.115f),
         ),
         gripFromTip = 0.238f, tipZone = 0.035f, handleZone = 0.10f,
@@ -653,7 +748,7 @@ data class KnifeFlip(
             if (FlipModels.option(option).body.bottle) BOTTLE_TOSS else KNIFE_TOSS
 
         val KNIFE_TOSS = 1.30f to 1.25f
-        val BOTTLE_TOSS = 1.70f to 1.15f
+        val BOTTLE_TOSS = 2.60f to 1.45f
     }
 }
 
