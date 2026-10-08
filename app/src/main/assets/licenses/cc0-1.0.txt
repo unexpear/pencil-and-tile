@@ -1,0 +1,8 @@
+CC0 1.0 Universal (Public Domain Dedication)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The person who associated a work with this deed has dedicated the work to the public domain by waiving all of their rights to the work worldwide under copyright law, including all related and neighboring rights, to the extent allowed by law.
+
+You can copy, modify, distribute and perform the work, even for commercial purposes, all without asking permission.
+
+The knives, bottle, water, cutting block, counter and room in Knife Flip were modelled for this app. They are not part of this dedication. The dedication covers the Kiara Interior HDRI (Greg Zaal, Poly Haven) and the Wood051 maps (ambientCG / Lennart Demes) only.
