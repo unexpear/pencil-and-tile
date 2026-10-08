@@ -28,7 +28,7 @@ class LogThrowShots {
     @Test fun `render log throw boards`() {
         val root = File("/opt/cursor/artifacts")
         if (!root.isDirectory) return
-        val dir = File(root, "log-throw")
+        val dir = File(root, "log-throw-v2")
         dir.mkdirs()
         val w = 1080
         val h = 1920
@@ -36,7 +36,7 @@ class LogThrowShots {
         val menu = LogThrow.newGame(1).copy(best = 1840, stars = stars)
         val endless = stick(LogThrow.newGame(2).beginEndless(), 3)
         val reversal = stick(LogThrow.newGame(2).beginEndless().atStage(7), 2)
-        val boss = stick(opened(15), 3)
+        val boss = stick(opened(10), 3)
         val challenge = stick(opened(4), 1)
         val select = menu.beginLevels()
         val failed = clash(LogThrow.newGame(8).beginEndless())
@@ -92,14 +92,18 @@ class LogThrowShots {
                 g.draw(Line2D.Float(op.x1, op.y1, op.x2, op.y2))
             }
             is DrawOp.Poly -> {
-                if (op.pts.size < 4) return
-                val path = Path2D.Float()
-                path.moveTo(op.pts[0], op.pts[1])
-                var i = 2
-                while (i < op.pts.size) { path.lineTo(op.pts[i], op.pts[i + 1]); i += 2 }
-                path.closePath()
+                val path = polygon(op.pts) ?: return
                 g.paint = color(op.color)
-                if (op.stroke > 0f) { g.stroke = BasicStroke(op.stroke); g.draw(path) } else g.fill(path)
+                if (op.stroke > 0f) { g.stroke = BasicStroke(op.stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND); g.draw(path) } else g.fill(path)
+            }
+            is DrawOp.Shade -> {
+                val path = polygon(op.pts) ?: return
+                val dx = op.x1 - op.x0
+                val dy = op.y1 - op.y0
+                val x1 = if (dx * dx + dy * dy < 0.25f) op.x0 + 1f else op.x1
+                val y1 = if (dx * dx + dy * dy < 0.25f) op.y0 else op.y1
+                g.paint = GradientPaint(op.x0, op.y0, color(op.c0), x1, y1, color(op.c1))
+                g.fill(path)
             }
             is DrawOp.Wedge -> {
                 g.paint = color(op.color)
@@ -120,7 +124,17 @@ class LogThrowShots {
         val r = ((argb ushr 16) and 0xFF).toInt()
         val gg = ((argb ushr 8) and 0xFF).toInt()
         val b = (argb and 0xFF).toInt()
-        return Color(r, gg, b, if (a == 0) 255 else a)
+        return Color(r, gg, b, a)
+    }
+
+    private fun polygon(pts: List<Float>): Path2D.Float? {
+        if (pts.size < 4) return null
+        val path = Path2D.Float()
+        path.moveTo(pts[0], pts[1])
+        var i = 2
+        while (i + 1 < pts.size) { path.lineTo(pts[i], pts[i + 1]); i += 2 }
+        path.closePath()
+        return path
     }
 
     private fun contact(dir: File, shots: List<Pair<String, BufferedImage>>) {

@@ -1,6 +1,7 @@
 package com.simplegamegen.sudoku.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,6 +39,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import kotlin.math.abs
 import com.simplegamegen.sudoku.arcade.DrawOp
 import com.simplegamegen.sudoku.arcade.LogThrow
 import com.simplegamegen.sudoku.arcade.LogThrowArt
@@ -124,6 +127,13 @@ fun LogThrowScreen(nav: NavController, vm: PlayViewModel<ThrowState>, factory: P
             vm.flush()
         }
     }) { g, s ->
+        var page by remember { mutableIntStateOf(0) }
+        LaunchedEffect(g.phase, g.starTotal) {
+            if (g.phase == Phase.SELECT) {
+                val latest = (1..LogThrow.LEVEL_COUNT).lastOrNull { g.unlocked(it) } ?: 1
+                page = (latest - 1) / LogThrowArt.LEVELS_PER_PAGE
+            }
+        }
         val moving = g.phase == Phase.AIM || g.phase == Phase.FLIGHT || g.phase == Phase.CLEAR || g.phase == Phase.FAIL
         val running = resumed && !paused && !s.busy && moving
         LaunchedEffect(running) {
@@ -140,30 +150,59 @@ fun LogThrowScreen(nav: NavController, vm: PlayViewModel<ThrowState>, factory: P
             }
         }
         Box(Modifier.fillMaxWidth().weight(1f)) {
+            val swipe = if (g.phase == Phase.SELECT) {
+                Modifier.pointerInput(page) {
+                    var acc = 0f
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            if (abs(acc) > 80f) page = (page + if (acc < 0f) 1 else -1).coerceIn(0, LogThrowArt.pageCount() - 1)
+                            acc = 0f
+                        },
+                        onHorizontalDrag = { _, drag -> acc += drag },
+                    )
+                }
+            } else {
+                Modifier
+            }
             Canvas(Modifier.fillMaxSize()
                 .semantics { contentDescription = say(describe(g)) }
-                .pointerInput(paused) {
+                .then(swipe)
+                .pointerInput(paused, page) {
                     detectTapGestures { offset ->
                         val state = vm.state.value.game ?: return@detectTapGestures
-                        val frame = LogThrowArt.frame(state, size.width.toFloat(), size.height.toFloat(), paused = paused)
+                        val frame = LogThrowArt.frame(state, size.width.toFloat(), size.height.toFloat(), paused = paused, page = page)
                         val hot = LogThrowArt.hit(frame, offset.x, offset.y) ?: return@detectTapGestures
-                        act { cur ->
-                            when (hot.id) {
-                                "endless" -> cur.beginEndless()
-                                "levels" -> cur.beginLevels()
-                                "modes" -> cur.toMenu()
-                                "map" -> cur.toLevels()
-                                "again" -> if (cur.mode == Mode.ENDLESS) cur.again() else cur.beginLevel(cur.level)
-                                "throw" -> cur.throwKnife()
-                                else -> hot.id.removePrefix("L").toIntOrNull()?.let(cur::beginLevel)
+                        when (hot.id) {
+                            "prev" -> page = (page - 1).coerceAtLeast(0)
+                            "next" -> page = (page + 1).coerceAtMost(LogThrowArt.pageCount() - 1)
+                            else -> act { cur ->
+                                when (hot.id) {
+                                    "endless" -> cur.beginEndless()
+                                    "levels" -> cur.beginLevels()
+                                    "modes" -> cur.toMenu()
+                                    "map" -> cur.toLevels()
+                                    "again" -> if (cur.mode == Mode.ENDLESS) cur.again() else cur.beginLevel(cur.level)
+                                    "throw" -> cur.throwKnife()
+                                    else -> hot.id.removePrefix("L").toIntOrNull()?.let(cur::beginLevel)
+                                }
                             }
                         }
                     }
                 }) {
-                val frame = LogThrowArt.frame(g, size.width, size.height, paused = paused)
+                val frame = LogThrowArt.frame(g, size.width, size.height, paused = paused, page = page)
                 frame.ops.forEach { draw(it, measurer) }
             }
         }
+    }
+}
+
+private fun pathOf(pts: List<Float>): Path? {
+    if (pts.size < 4) return null
+    return Path().apply {
+        moveTo(pts[0], pts[1])
+        var i = 2
+        while (i + 1 < pts.size) { lineTo(pts[i], pts[i + 1]); i += 2 }
+        close()
     }
 }
 
@@ -195,18 +234,18 @@ private fun DrawScope.draw(op: DrawOp, measurer: androidx.compose.ui.text.TextMe
             else drawRoundRect(c, Offset(op.x, op.y), Size(op.w, op.h), CornerRadius(op.radius), style = style)
         }
         is DrawOp.Line -> drawLine(Color(op.color.toInt()), Offset(op.x1, op.y1), Offset(op.x2, op.y2), op.stroke, StrokeCap.Round)
-        is DrawOp.Poly -> {
-            if (op.pts.size >= 4) {
-                val path = Path().apply {
-                    moveTo(op.pts[0], op.pts[1])
-                    var i = 2
-                    while (i + 1 < op.pts.size) { lineTo(op.pts[i], op.pts[i + 1]); i += 2 }
-                    if (op.stroke <= 0f) close()
-                }
-                val c = Color(op.color.toInt())
-                if (op.stroke > 0f) drawPath(path, c, style = Stroke(op.stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                else drawPath(path, c)
+        is DrawOp.Poly -> pathOf(op.pts)?.let { path ->
+            val c = Color(op.color.toInt())
+            if (op.stroke > 0f) drawPath(path, c, style = Stroke(op.stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            else drawPath(path, c)
+        }
+        is DrawOp.Shade -> pathOf(op.pts)?.let { path ->
+            val end = if ((op.x1 - op.x0) * (op.x1 - op.x0) + (op.y1 - op.y0) * (op.y1 - op.y0) < 0.25f) {
+                Offset(op.x0 + 1f, op.y0)
+            } else {
+                Offset(op.x1, op.y1)
             }
+            drawPath(path, Brush.linearGradient(listOf(Color(op.c0.toInt()), Color(op.c1.toInt())), start = Offset(op.x0, op.y0), end = end))
         }
         is DrawOp.Wedge -> drawArc(
             Color(op.color.toInt()), op.startDeg, op.sweep, useCenter = true,
