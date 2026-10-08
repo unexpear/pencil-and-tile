@@ -4,11 +4,13 @@ agp = "8.10.1"
 # SceneView 4.18.0 is built with Kotlin 2.3.21. 4.19+ needs Kotlin 2.4, and no KSP
 # release supports 2.4 yet (Room is processed with KSP). 2.3.20 matches KSP 2.3.11,
 # the last 2.3 KSP that still accepts AGP 8.10 (2.3.12 requires AGP 8.12).
-# SceneView also imports Compose BOM 2026.05.01. The app stays on 2024.09.00 via
-# enforcedPlatform so Material3 call sites in the other games do not change.
+# SceneView 4.18 is compiled against Compose BOM 2026.05.01. Its composables call
+# Composer.shouldExecute and ComposablesKt.getCurrentCompositeKeyHashCode, which
+# Compose 1.7 (BOM 2024.09.00) does not have. Opening Knife Flip was the first
+# call into those composables, so the screen crashed before a frame. Keep this BOM.
 kotlin = "2.3.20"
 ksp = "2.3.11"
-composeBom = "2024.09.00"
+composeBom = "2026.05.01"
 coreKtx = "1.13.1"
 lifecycle = "2.8.6"
 activityCompose = "1.9.2"
