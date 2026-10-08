@@ -716,8 +716,9 @@ def add_rivets(name, com, stations_m, radius, mat, x=0.0, y=0.0066):
     """Flush with the scale face. The cylinder ends on the wood, it does not stand proud."""
     objs = []
     for i, frm in enumerate(stations_m):
+        xx = x[i] if isinstance(x, (list, tuple)) else x
         yy = y[i] if isinstance(y, (list, tuple)) else y
-        obj = disc_y(f"{name}_rivet_{i}", x, -yy, yy, z_of(com, frm), radius, segments=12)
+        obj = disc_y(f"{name}_rivet_{i}", xx, -yy, yy, z_of(com, frm), radius, segments=12)
         assign(obj, mat)
         objs.append(obj)
     return objs
@@ -733,100 +734,171 @@ def slab(z, cx, half_h, y_in, y_out):
     ]
 
 
+def d_scale(z, top_x, bot_x, y_in, y_out, n=12):
+    """Oval scale with a flat face on the tang. top_x is the spine side."""
+    sign = 1.0 if y_out >= 0.0 else -1.0
+    inner = abs(y_in) * sign
+    outer = abs(y_out) * sign
+    cx = (top_x + bot_x) * 0.5
+    rx = max(abs(bot_x - top_x) * 0.5, 1.5e-4)
+    pts = [(top_x, inner, z)]
+    for i in range(1, n - 1):
+        a = math.pi * i / (n - 1)
+        x = cx - math.cos(a) * rx
+        y = inner + (outer - inner) * math.sin(a)
+        pts.append((x, y, z))
+    pts.append((bot_x, inner, z))
+    return pts
+
+
+def piece_lerp(frm, keys, index):
+    if frm <= keys[0][0]:
+        return keys[0][index]
+    if frm >= keys[-1][0]:
+        return keys[-1][index]
+    for a, b in zip(keys, keys[1:]):
+        if frm <= b[0]:
+            u = 0.0 if b[0] == a[0] else (frm - a[0]) / (b[0] - a[0])
+            return lerp(a[index], b[index], u)
+    return keys[-1][index]
+
+
+def assert_layout(
+    name, handles, axis_x, blade_len, angle_rng, offset_rng, ratio_rng,
+    mode="top", z_lo=None, z_hi=None, front_z=None,
+):
+    """Handle axis, spine offset, and handle/blade length. Ranges are in KNIFE_CONSTRUCTION.md."""
+    verts = []
+    for obj in handles:
+        for vert in obj.data.vertices:
+            co = obj.matrix_world @ vert.co
+            if z_lo is not None and co.z < z_lo:
+                continue
+            if z_hi is not None and co.z > z_hi:
+                continue
+            verts.append(co)
+    if len(verts) < 8:
+        raise SystemExit(f"{name} layout has no handle vertices")
+    z0 = min(v.z for v in verts)
+    z1 = max(v.z for v in verts)
+    handle_len = z1 - z0
+    band = max(0.008, handle_len * 0.12)
+    front = [v for v in verts if v.z >= z1 - band]
+    rear = [v for v in verts if v.z <= z0 + band]
+
+    def bounds_x(group):
+        xs = [v.x for v in group]
+        return min(xs), max(xs)
+
+    f0, f1 = bounds_x(front)
+    r0, r1 = bounds_x(rear)
+    front_mid = (f0 + f1) * 0.5
+    rear_mid = (r0 + r1) * 0.5
+    # Positive angle: the butt sits toward the edge (+X), a drop off the spine.
+    angle = math.degrees(math.atan2(rear_mid - front_mid, max(handle_len, 1e-6)))
+    sample = front_mid if mode == "center" else f0
+    offset_mm = (sample - axis_x) * 1000.0
+    # front_z counts the bolster, which is on the blade mesh, as part of the handle.
+    ratio_len = (front_z - z0) if front_z is not None else handle_len
+    ratio = ratio_len / blade_len
+    print(
+        f"  layout {name}: angle {angle:+.2f} deg (range {angle_rng[0]:+.1f}..{angle_rng[1]:+.1f})"
+        f"  offset {offset_mm:+.2f} mm (range {offset_rng[0]:+.1f}..{offset_rng[1]:+.1f})"
+        f"  handle/blade {ratio:.3f} (range {ratio_rng[0]:.2f}..{ratio_rng[1]:.2f})"
+    )
+    if not (angle_rng[0] <= angle <= angle_rng[1]):
+        raise SystemExit(f"{name} handle axis is {angle:.2f} deg off the spine")
+    if not (offset_rng[0] <= offset_mm <= offset_rng[1]):
+        raise SystemExit(f"{name} handle is {offset_mm:.2f} mm off its spine line")
+    if not (ratio_rng[0] <= ratio <= ratio_rng[1]):
+        raise SystemExit(f"{name} handle/blade {ratio:.3f} is outside {ratio_rng}")
+    print(f"{name} layout ok")
+
+
 def build_chef(steel_mat, wood_mat, brass_mat):
-    """One steel solid: blade, bolster and full tang. Wood scales sandwich the tang."""
+    """Spine runs into the handle. One steel piece: blade, bolster, full tang."""
     com = CHEF_COM
-    # Scales sit on this centre. The tang is the same centre, a little taller,
-    # so the steel shows as a stripe on the top and bottom edges.
-    cx = -0.024
-    margin = 0.00135
-    # (from the tip, half-height of the wood, outer face). The first station is
-    # thin so it tucks into the bolster instead of butting against it.
+    # Heights are metres up from the edge line. X on the mesh is the negative of that.
+    # (from the tip, top of the wood, bottom of the wood, outer face).
+    # The top starts on the spine and drops 3 mm. Girth swells, then the butt flares a little.
     handle = (
-        (0.214, 0.0124, 0.00155),
-        (0.250, 0.0146, 0.0066),
-        (0.300, 0.0138, 0.0062),
-        (0.326, 0.0112, 0.0046),
+        (0.218, 0.0480, 0.0220, 0.0026),
+        (0.248, 0.0474, 0.0174, 0.0088),
+        (0.278, 0.0466, 0.0146, 0.0102),
+        (0.308, 0.0456, 0.0156, 0.0096),
+        (0.324, 0.0452, 0.0162, 0.0086),
+        (0.330, 0.0460, 0.0175, 0.0072),
     )
 
-    def scale_half(frm):
-        if frm <= handle[0][0]:
-            return handle[0][1]
-        if frm >= handle[-1][0]:
-            return handle[-1][1]
-        for (f0, h0, _), (f1, h1, _) in zip(handle, handle[1:]):
-            if frm <= f1:
-                u = 0.0 if f1 == f0 else (frm - f0) / (f1 - f0)
-                return lerp(h0, h1, u)
-        return handle[-1][1]
+    def top_of(frm):
+        return piece_lerp(frm, handle, 1)
+
+    def bot_of(frm):
+        return piece_lerp(frm, handle, 2)
+
+    def outer_of(frm):
+        return piece_lerp(frm, handle, 3)
+
+    def choil(frm):
+        """Quarter-ellipse from the heel up to the handle bottom. Concave, no notch."""
+        u = max(0.0, min(1.0, (frm - 0.200) / 0.018))
+        return bot_of(0.218) * math.sqrt(max(0.0, 2.0 * u - u * u))
 
     def ring(frm):
         z = z_of(com, frm)
-        spine, edge, thick = blades.chef_station(min(frm, 0.200))
         if frm <= 0.200:
+            spine, edge, thick = blades.chef_station(frm)
             return flat_grind_ring(z, spine, edge, thick, bevel=0.0015, grind_at=0.10)
-        # The heel swells into the bolster without moving the outline, so the
-        # edge meets that swell instead of dropping past a separate collar.
-        if frm <= 0.208:
-            u = smoothstep((frm - 0.200) / 0.008)
-            th = lerp(thick, 0.0064, u)
+        heel_t = blades.chef_station(0.200)[2]
+        if frm <= 0.218:
+            top = -0.048
+            bot = -choil(frm)
+            u = smoothstep((frm - 0.200) / 0.012)
+            thick = lerp(heel_t, 0.0086, min(1.0, u * 1.15))
             return flat_grind_ring(
-                z, spine, edge, th, bevel=0.0015, grind_at=0.08,
-                edge_thick=lerp(0.00012, th * 0.42, u),
+                z, top, bot, thick, bevel=0.0024, grind_at=0.08,
+                edge_thick=lerp(0.00016, thick * 0.55, u),
             )
-        # Then the outline eases up into the tang: a finger guard, not a hook.
-        tang_half = scale_half(0.222) + margin
-        tang_spine = cx - tang_half
-        tang_edge = cx + tang_half
-        if frm <= 0.222:
-            u = smoothstep((frm - 0.208) / 0.014)
-            return flat_grind_ring(
-                z,
-                lerp(spine, tang_spine, u),
-                lerp(edge, tang_edge, u),
-                lerp(0.0064, 0.0018, u),
-                bevel=0.0025,
-                grind_at=0.15,
-                edge_thick=lerp(0.0026, 0.0010, u),
-            )
-        half = scale_half(frm) + margin
+        # Tang is the handle outline. The wood is inset, so the spine line is steel.
+        top = -top_of(frm)
+        bot = -bot_of(frm)
+        u = smoothstep((frm - 0.218) / 0.014)
+        thick = lerp(0.0080, 0.0020, u)
+        if frm >= 0.232:
+            return flat_grind_ring(z, top, bot, 0.0020, bevel=0.003, grind_at=0.2, blunt=True)
         return flat_grind_ring(
-            z, cx - half, cx + half, 0.0018, bevel=0.003, grind_at=0.2, blunt=True,
+            z, top, bot, thick, bevel=0.0026, grind_at=0.14,
+            edge_thick=lerp(0.0044, 0.0011, u),
         )
 
-    frs = [0.200 * i / 46 for i in range(47)]
-    frs += [0.203, 0.206, 0.208, 0.211, 0.214, 0.217, 0.220, 0.222, 0.250, 0.300, 0.330]
+    frs = [0.200 * i / 48 for i in range(49)]
+    frs += [0.203, 0.206, 0.209, 0.212, 0.215, 0.218, 0.222, 0.228, 0.248, 0.278, 0.308, 0.330]
     blade_obj = loft("chef_blade", [ring(frm) for frm in frs])
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
     scales = []
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = [
-            slab(z_of(com, frm), cx, half, sign * 0.00042, sign * outer)
-            for frm, half, outer in handle
+            d_scale(z_of(com, frm), -top, -bot, sign * 0.0005, sign * outer)
+            for frm, top, bot, outer in handle
         ]
         scale = loft(f"chef_scale_{tag}", rings)
         assign(scale, wood_mat)
         uv_smart(scale)
         objs.append(scale)
         scales.append(scale)
-    # Rivets through the wood and the tang, flush with the outer face at each station.
-    def scale_outer(frm):
-        if frm <= handle[0][0]:
-            return handle[0][2]
-        if frm >= handle[-1][0]:
-            return handle[-1][2]
-        for (f0, _, o0), (f1, _, o1) in zip(handle, handle[1:]):
-            if frm <= f1:
-                u = 0.0 if f1 == f0 else (frm - f0) / (f1 - f0)
-                return lerp(o0, o1, u)
-        return handle[-1][2]
-
-    rivet_at = (0.242, 0.278, 0.312)
+    rivet_at = (0.252, 0.286, 0.316)
     objs.extend(add_rivets(
-        "chef", com, rivet_at, 0.0032, brass_mat, x=cx, y=[scale_outer(f) for f in rivet_at],
+        "chef", com, rivet_at, 0.0032, brass_mat,
+        x=[-(top_of(f) + bot_of(f)) * 0.5 for f in rivet_at],
+        y=[outer_of(f) for f in rivet_at],
     ))
     assert_joins("chef", [blade_obj], scales)
+    assert_layout(
+        "chef", scales, axis_x=-0.048, blade_len=0.200,
+        angle_rng=(-1.0, 3.5), offset_rng=(-0.6, 4.0), ratio_rng=(0.55, 0.75),
+        front_z=com - 0.200,
+    )
     report("chef", objs, 0.330)
     return objs
 
@@ -890,6 +962,12 @@ def build_throwing(steel_mat, cord_mat):
         objs.append(band)
         cords.append(band)
     assert_joins("throwing", [obj], cords)
+    # The handle is the rear half of the same bar. Its axis is the centreline.
+    assert_layout(
+        "throwing", [obj], axis_x=0.0, blade_len=0.140,
+        angle_rng=(-1.0, 1.0), offset_rng=(-0.6, 0.6), ratio_rng=(0.90, 1.10),
+        mode="center", z_lo=-0.141, z_hi=0.004,
+    )
     report("throwing", objs, 0.280)
     half = THROWING_THICKNESS * 0.5
     peak = max(abs(co) for o in objs for co in (v.co.y for v in o.data.vertices))
@@ -906,13 +984,13 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
         if frm <= 0.085:
             spine, edge, thick, blunt = blades.pocket_station(frm)
             return flat_grind_ring(z, spine, edge, thick, bevel=0.0012, grind_at=0.14, blunt=blunt)
-        # Tang continues through the pivot and into the channel. Same axis as the blade.
-        u = smoothstep((frm - 0.085) / 0.022)
+        # Tang stays inside the handle, on the same centre as the spine-aligned scales.
+        u = smoothstep((frm - 0.085) / 0.018)
         spine0, edge0, thick0, _blunt = blades.pocket_station(0.085)
         return flat_grind_ring(
             z,
-            lerp(spine0, -0.0205, u),
-            lerp(edge0, -0.0050, u),
+            lerp(spine0, -0.0222, u),
+            lerp(edge0, -0.0006, u),
             lerp(thick0, 0.0018, u),
             bevel=0.002,
             grind_at=0.2,
@@ -926,19 +1004,19 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
     stud = disc_y("pocket_stud", -0.016, 0.0014, 0.0046, z_of(com, 0.058), 0.0022, segments=10)
     assign(stud, pin_mat)
     objs.append(stud)
-    # Handle, 110 mm, with a gentle curve. Liners pinch the tang; scales sit outside.
-    def center(frm):
-        u = (frm - 0.084) / 0.116
-        return -0.012 - 0.0035 * math.sin(max(0.0, min(1.0, u)) * math.pi)
-
-    handle = (
-        (0.084, 0.0105),
-        (0.100, 0.0114),
-        (0.122, 0.0120),
-        (0.148, 0.0130),
-        (0.176, 0.0122),
-        (0.200, 0.0100),
+    # Spine side stays on the blade spine. The edge sits inside the handle.
+    outline = (
+        (0.084, -0.0242, 0.0016),
+        (0.112, -0.0244, 0.0020),
+        (0.148, -0.0240, 0.0020),
+        (0.178, -0.0234, 0.0012),
+        (0.200, -0.0228, 0.0006),
     )
+
+    def center_half(frm):
+        top = piece_lerp(frm, outline, 1)
+        bot = piece_lerp(frm, outline, 2)
+        return (top + bot) * 0.5, abs(bot - top) * 0.5
     liners = []
     for sign, tag, mat, y_mid, half_t in (
         # Inner face at ±0.40 mm, so it cuts into the 1.8 mm tang.
@@ -947,7 +1025,10 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
         (1, "sc_a", g10, 0.0044, 0.0023),
         (-1, "sc_b", g10, -0.0044, 0.0023),
     ):
-        rings = [rounded_ring(z_of(com, frm), center(frm), half, y_mid, half_t) for frm, half in handle]
+        rings = [
+            rounded_ring(z_of(com, frm), *center_half(frm), y_mid, half_t)
+            for frm, _top, _bot in outline
+        ]
         part = loft(f"pocket_{tag}", rings)
         assign(part, mat)
         if mat == g10:
@@ -956,10 +1037,15 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
         if tag.startswith("lin"):
             liners.append(part)
     # Pivot pin through the tang and both liners.
-    pivot = disc_y("pocket_pivot", -0.012, -0.0080, 0.0080, z_of(com, 0.090), 0.0044, segments=14)
+    pivot_x, _pivot_half = center_half(0.090)
+    pivot = disc_y("pocket_pivot", pivot_x, -0.0080, 0.0080, z_of(com, 0.090), 0.0044, segments=14)
     assign(pivot, pin_mat)
     objs.append(pivot)
     assert_joins("pocket", [blade_obj], liners + [pivot])
+    assert_layout(
+        "pocket", liners, axis_x=-0.024, blade_len=0.085,
+        angle_rng=(-2.0, 2.5), offset_rng=(-1.5, 1.5), ratio_rng=(1.05, 1.50),
+    )
     clip = box(
         "pocket_clip",
         -0.020, -0.014,
@@ -1005,7 +1091,7 @@ def build_butterfly(steel_mat, scale_mat, pin_mat):
     handles = []
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = []
-        for frm, half in ((0.100, 0.012), (0.160, 0.013), (0.210, 0.0125), (0.242, 0.011)):
+        for frm, half in ((0.100, 0.0125), (0.155, 0.0130), (0.205, 0.0126), (0.242, 0.0116)):
             z = z_of(com, frm)
             rings.append([
                 (cx - half, sign * 0.0028, z),
@@ -1029,39 +1115,37 @@ def build_butterfly(steel_mat, scale_mat, pin_mat):
     assert_joins("butterfly", [blade_obj], handles)
     assert_joins("butterfly kicker", [kicker], handles)
     assert_joins("butterfly pin", [blade_obj], [pins[0]])
+    assert_layout(
+        "butterfly", handles, axis_x=-0.011, blade_len=0.100,
+        angle_rng=(-2.0, 2.0), offset_rng=(-1.2, 1.2), ratio_rng=(1.15, 1.60),
+        mode="center",
+    )
     report("butterfly", objs, 0.250)
     return objs
 
 
 def build_cleaver(steel_mat, wood_mat, brass_mat):
     com = CLEAVER_COM
-    cx = -0.048
+    # (from the tip, spine-side X, edge-side X, outer face). Top sits on the spine.
+    handle = (
+        (0.188, -0.0900, -0.0570, 0.0026),
+        (0.228, -0.0892, -0.0556, 0.0096),
+        (0.268, -0.0884, -0.0554, 0.0092),
+        (0.300, -0.0874, -0.0564, 0.0074),
+    )
 
     def ring(frm):
         z = z_of(com, frm)
-        if frm <= 0.180:
-            spine, edge, thick = blades.cleaver_station(frm)
-            # Grind starts at 60% of the height: the top 40% stays the full 5 mm spine.
-            return flat_grind_ring(z, spine, edge, thick, bevel=0.0020, grind_at=0.40)
-        # Past the heel the steel narrows into the tang on the handle's axis.
-        u = smoothstep((frm - 0.180) / 0.016)
-        spine0, edge0, thick0 = blades.cleaver_station(0.180)
-        return flat_grind_ring(
-            z,
-            lerp(spine0, cx - 0.018, u),
-            lerp(edge0, cx + 0.018, u),
-            lerp(thick0, 0.0022, u),
-            bevel=0.003,
-            grind_at=0.25,
-            blunt=True,
-        )
+        spine, edge, thick = blades.cleaver_station(frm)
+        # The rectangle stops at the heel. The tang is a separate tongue at the top.
+        return flat_grind_ring(z, spine, edge, thick, bevel=0.0020, grind_at=0.40)
 
-    frs = [0.180 * i / 36 for i in range(37)] + [0.186, 0.194, 0.210, 0.250, 0.300]
+    frs = [0.180 * i / 40 for i in range(41)]
     blade_obj = loft("cleaver_blade", [ring(frm) for frm in frs])
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
-    # Hole near the top front corner. Spine is -X, the tip is the low from-tip end.
-    cutter = disc_y("cleaver_hole_cut", -0.074, -0.02, 0.02, z_of(com, 0.022), 0.008, segments=16)
+    # Hole near the top front corner, about 14 mm down from the spine.
+    cutter = disc_y("cleaver_hole_cut", -0.076, -0.02, 0.02, z_of(com, 0.028), 0.009, segments=16)
     mod = blade_obj.modifiers.new("hole", "BOOLEAN")
     mod.operation = "DIFFERENCE"
     mod.object = cutter
@@ -1073,32 +1157,54 @@ def build_cleaver(steel_mat, wood_mat, brass_mat):
     except RuntimeError as err:
         print("cleaver hole boolean failed:", err)
         bpy.data.objects.remove(cutter, do_unlink=True)
-    # Ferrule overlaps the blade heel and the front of the scales. Same axis as the tang.
+    # Tang is a tongue in the top of the heel. It starts inside the blade so the
+    # rectangular heel stays flat, then runs the length of the handle.
+    def tang_ring(frm):
+        z = z_of(com, frm)
+        if frm <= 0.182:
+            top, bot, thick = -0.0900, -0.0560, 0.0042
+        else:
+            top = piece_lerp(frm, handle, 1)
+            bot = piece_lerp(frm, handle, 2)
+            thick = 0.0022
+        return flat_grind_ring(z, top, bot, thick, bevel=0.003, grind_at=0.2, blunt=True)
+
+    tang = loft("cleaver_tang", [tang_ring(frm) for frm in (0.168, 0.180, 0.190, 0.230, 0.270, 0.300)])
+    assign(tang, steel_mat)
+    objs.append(tang)
+    # Ferrule caps the top of the heel and the front of the scales. Top is the spine.
     ferrule = loft("cleaver_ferrule", [
-        flat_grind_ring(z_of(com, 0.174), cx - 0.021, cx + 0.021, 0.009, bevel=0.004, grind_at=0.2, blunt=True),
-        flat_grind_ring(z_of(com, 0.198), cx - 0.020, cx + 0.020, 0.008, bevel=0.004, grind_at=0.2, blunt=True),
+        flat_grind_ring(z_of(com, 0.170), -0.0900, -0.0545, 0.0094, bevel=0.003, grind_at=0.15, blunt=True),
+        flat_grind_ring(z_of(com, 0.198), -0.0894, -0.0582, 0.0084, bevel=0.003, grind_at=0.15, blunt=True),
     ])
     assign(ferrule, brass_mat)
     objs.append(ferrule)
     scales = []
     for sign, tag in ((1, "a"), (-1, "b")):
-        rings = []
-        for frm, half_w, outer in (
-            (0.190, 0.0155, 0.0022),
-            (0.230, 0.0165, 0.0064),
-            (0.270, 0.0150, 0.0060),
-            (0.300, 0.0120, 0.0048),
-        ):
-            rings.append(slab(z_of(com, frm), cx, half_w, sign * 0.00055, sign * outer))
+        rings = [
+            d_scale(z_of(com, frm), top, bot, sign * 0.00055, sign * outer)
+            for frm, top, bot, outer in handle
+        ]
         scale = loft(f"cleaver_scale_{tag}", rings)
         assign(scale, wood_mat)
         uv_smart(scale)
         objs.append(scale)
         scales.append(scale)
-    objs.extend(add_rivets("cleaver", com, (0.230, 0.270), 0.0034, brass_mat, x=cx, y=(0.0064, 0.0060)))
-    assert_joins("cleaver", [blade_obj], scales)
+    rivet_at = (0.232, 0.272)
+    objs.extend(add_rivets(
+        "cleaver", com, rivet_at, 0.0034, brass_mat,
+        x=[(piece_lerp(f, handle, 1) + piece_lerp(f, handle, 2)) * 0.5 for f in rivet_at],
+        y=[piece_lerp(f, handle, 3) for f in rivet_at],
+    ))
+    assert_joins("cleaver tang", [blade_obj], [tang])
+    assert_joins("cleaver", [tang], scales)
     assert_joins("cleaver ferrule", [blade_obj], [ferrule])
     assert_joins("cleaver ferrule-handle", [ferrule], scales)
+    assert_layout(
+        "cleaver", scales, axis_x=-0.090, blade_len=0.180,
+        angle_rng=(-1.0, 3.5), offset_rng=(-0.8, 4.0), ratio_rng=(0.55, 0.80),
+        front_z=com - 0.180,
+    )
     report("cleaver", objs, 0.300)
     return objs
 

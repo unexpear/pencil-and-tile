@@ -650,7 +650,7 @@ object FlipModels {
 
     val chef: FlipBody = knife(
         "chef", "Chef's knife", 0.330f,
-        // 200 × 48 mm blade, 2.5 mm spine, brass bolster, 125 mm wood scales on a full tang.
+        // 200 × 48 mm blade, 2.7 mm spine at the heel, forged steel bolster, 125 mm full tang.
         listOf(
             Part(0.085f, 0.108f, 0.200f, across = 0.048f),
             Part(0.040f, 0.206f, 0.024f, across = 0.042f),

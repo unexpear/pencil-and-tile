@@ -62,16 +62,12 @@ def chef_heights(s):
         # Horizontal leave from the straight spine, then a steep arrival at the
         # tip, so the drop stays above its chord (a convex spine).
         spine = hermite(s, CHEF_SPINE_FLAT, CHEF_LENGTH, CHEF_HEEL, CHEF_TIP, 0.0, -0.85)
-    # Sharp heel corner, then a small finger choil, then a straight edge, then the belly.
-    if s <= 1.2:
+    # Straight edge to the heel. The finger guard is the bolster curve behind the
+    # heel, not a notch cut into the edge.
+    if s <= CHEF_EDGE_STRAIGHT:
         edge = 0.0
-    elif s <= 9.0:
-        u = (s - 1.2) / 7.8
-        edge = 4.6 * math.sin(math.pi * u)
-    elif s <= CHEF_EDGE_STRAIGHT:
-        edge = 0.15 * (s - 9.0) / (CHEF_EDGE_STRAIGHT - 9.0)
     else:
-        edge = hermite(s, CHEF_EDGE_STRAIGHT, CHEF_LENGTH, 0.15, CHEF_TIP, 0.0, 0.42)
+        edge = hermite(s, CHEF_EDGE_STRAIGHT, CHEF_LENGTH, 0.0, CHEF_TIP, 0.0, 0.42)
     return spine, edge
 
 
@@ -149,7 +145,9 @@ def _xs(spine_h, edge_h):
 def chef_station(from_tip_m):
     s = CHEF_LENGTH - from_tip_m * 1000.0
     spine, edge = chef_heights(s)
-    thick = (2.5 - 1.5 * (from_tip_m * 1000.0 / CHEF_LENGTH)) / 1000.0
+    # from_tip 0 is the tip. Heel is about 2.7 mm, tip about 1.0 mm.
+    u = min(1.0, max(0.0, from_tip_m * 1000.0 / CHEF_LENGTH))
+    thick = (1.0 + 1.7 * u) / 1000.0
     return (*_xs(spine, edge), thick)
 
 
@@ -158,7 +156,7 @@ def pocket_station(from_tip_m):
     spine, edge = pocket_heights(s)
     # Ricasso, the first 8 mm at the heel, stays blunt.
     from_heel = s
-    thick = (1.1 + 1.3 * (from_heel / POCKET_LENGTH)) / 1000.0
+    thick = (2.4 - 1.3 * (from_heel / POCKET_LENGTH)) / 1000.0
     blunt = from_heel <= 8.0
     return (*_xs(spine, edge), thick, blunt)
 
@@ -166,15 +164,16 @@ def pocket_station(from_tip_m):
 def fly_station(from_tip_m):
     s = FLY_LENGTH - from_tip_m * 1000.0
     spine, edge = fly_heights(s)
-    thick = (1.6 + 1.2 * (s / FLY_LENGTH)) / 1000.0
+    thick = (2.6 - 1.2 * (s / FLY_LENGTH)) / 1000.0
     return (*_xs(spine, edge), thick)
 
 
 def cleaver_station(from_tip_m):
     s = CLEAVER_LENGTH - from_tip_m * 1000.0
     spine, edge = cleaver_heights(s)
-    # Spine 5 mm, easing a little toward the tip. The flat grind starts lower.
-    thick = (5.0 - 0.8 * (from_tip_m * 1000.0 / CLEAVER_LENGTH)) / 1000.0
+    # 5 mm at the heel, easing to about 3.6 mm at the tip.
+    u = min(1.0, max(0.0, from_tip_m * 1000.0 / CLEAVER_LENGTH))
+    thick = (3.6 + 1.4 * u) / 1000.0
     return (*_xs(spine, edge), thick)
 
 
@@ -233,7 +232,7 @@ def check():
     for s, _, edge in chef:
         if CHEF_EDGE_STRAIGHT < s < CHEF_LENGTH:
             u = (s - CHEF_EDGE_STRAIGHT) / (CHEF_LENGTH - CHEF_EDGE_STRAIGHT)
-            chord = 0.15 + (CHEF_TIP - 0.15) * u
+            chord = CHEF_TIP * u
             expect(edge <= chord + 0.4, f"chef belly rose above its chord at {s:.0f}")
 
     throw_w = [throw_half_width(THROW_BLADE * i / 40) for i in range(41)]

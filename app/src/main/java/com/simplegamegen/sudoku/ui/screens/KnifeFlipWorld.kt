@@ -285,10 +285,10 @@ internal fun placeKnifeCamera(camera: CameraNode, bottle: Boolean, view: BoardVi
 /** Local glTF bounds. Y runs tip to handle, X is the edge, Z is the thickness. */
 private fun meshBounds(body: FlipBody): FloatArray = when {
     body.bottle -> floatArrayOf(-0.0315f, 0f, -0.0315f, 0.0315f, 0.204f, 0.0315f)
-    body.id == "chef" -> floatArrayOf(-0.048f, -0.13423f, -0.0066f, 0.000f, 0.19577f, 0.0066f)
-    body.id == "pocket" -> floatArrayOf(-0.02845f, -0.07961f, -0.0082f, -0.0004f, 0.12039f, 0.008f)
-    body.id == "butterfly" -> floatArrayOf(-0.027f, -0.11058f, -0.0074f, 0.002f, 0.13742f, 0.0074f)
-    body.id == "cleaver" -> floatArrayOf(-0.090f, -0.18222f, -0.0064f, 0.000f, 0.11778f, 0.0064f)
+    body.id == "chef" -> floatArrayOf(-0.04800f, -0.13423f, -0.01010f, 0.00001f, 0.19577f, 0.01010f)
+    body.id == "pocket" -> floatArrayOf(-0.02440f, -0.07961f, -0.00820f, 0.00200f, 0.12039f, 0.00800f)
+    body.id == "butterfly" -> floatArrayOf(-0.02700f, -0.11058f, -0.00740f, 0.00200f, 0.13742f, 0.00740f)
+    body.id == "cleaver" -> floatArrayOf(-0.09000f, -0.18222f, -0.00956f, 0.00000f, 0.11778f, 0.00956f)
     else -> floatArrayOf(-0.01378f, -0.14f, -0.0025f, 0.01378f, 0.14f, 0.0025f)
 }
 
