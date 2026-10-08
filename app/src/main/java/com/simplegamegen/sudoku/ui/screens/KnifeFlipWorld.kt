@@ -196,6 +196,9 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val board = remember(materialLoader) {
         materialLoader.createColorInstance(Color(0xFFD7B07A), metallic = 0f, roughness = 0.58f)
     }
+    val contact = remember(materialLoader) {
+        materialLoader.createColorInstance(Color(0x8C1E140C), metallic = 0f, roughness = 1f)
+    }
     val waterMaterial = remember(materialLoader) { makeWaterMaterial(materialLoader) }
     val bodyLiquid = remember(engine) {
         liquidGeometry(engine, cylinderLiquid(SHOULDER, 0f), cylinderIndices(WATER_SIDES))
@@ -203,8 +206,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val neckLiquid = remember(engine) {
         liquidGeometry(engine, neckVertices(NECK_LIMIT, 0f), neckIndices())
     }
-    // Edge up, length across the frame. The old 1.20 rad pose pointed a cleaver's
-    // blade down through the board.
+    // Spine on top, edge resting on the shelf. The old -pi/2 pose put the belly on top.
     val pose = remember(body.id, body.bottle) { previewPose(body) }
     val deg = tipDegrees(pose.theta)
     val sample = Sample(0f, pose.lift, 0f, pose.theta, 0f)
@@ -238,6 +240,13 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
             position = Position(x = pose.centerX, y = -0.008f, z = pose.centerZ),
             materialInstance = board,
         )
+        if (!body.bottle) {
+            CubeNode(
+                size = Size(x = pose.boardWidth * 0.72f, y = 0.0012f, z = pose.boardDepth * 0.62f),
+                position = Position(x = pose.centerX, y = 0.0011f, z = pose.centerZ),
+                materialInstance = contact,
+            )
+        }
         if (!body.bottle) {
             hero?.let {
                 ModelNode(
@@ -276,10 +285,10 @@ internal fun placeKnifeCamera(camera: CameraNode, bottle: Boolean, view: BoardVi
 /** Local glTF bounds. Y runs tip to handle, X is the edge, Z is the thickness. */
 private fun meshBounds(body: FlipBody): FloatArray = when {
     body.bottle -> floatArrayOf(-0.0315f, 0f, -0.0315f, 0.0315f, 0.204f, 0.0315f)
-    body.id == "chef" -> floatArrayOf(-0.016f, -0.1371f, -0.012f, 0.0476f, 0.1929f, 0.012f)
-    body.id == "pocket" -> floatArrayOf(-0.014f, -0.0755f, -0.0084f, 0.0158f, 0.1245f, 0.0082f)
-    body.id == "butterfly" -> floatArrayOf(-0.0125f, -0.1079f, -0.008f, 0.018f, 0.1421f, 0.008f)
-    body.id == "cleaver" -> floatArrayOf(-0.016f, -0.1851f, -0.012f, 0.09f, 0.1149f, 0.012f)
+    body.id == "chef" -> floatArrayOf(-0.054f, -0.134f, -0.012f, 0.000f, 0.196f, 0.012f)
+    body.id == "pocket" -> floatArrayOf(-0.029f, -0.080f, -0.008f, 0.000f, 0.120f, 0.008f)
+    body.id == "butterfly" -> floatArrayOf(-0.028f, -0.111f, -0.007f, 0.002f, 0.137f, 0.007f)
+    body.id == "cleaver" -> floatArrayOf(-0.090f, -0.182f, -0.012f, 0.000f, 0.118f, 0.012f)
     else -> floatArrayOf(-0.014f, -0.14f, -0.0025f, 0.014f, 0.14f, 0.0025f)
 }
 
@@ -315,8 +324,9 @@ private fun shelfPoints(pose: PreviewPose): List<Position> {
 
 internal fun previewPose(body: FlipBody): PreviewPose {
     val box = meshBounds(body)
-    val theta = if (body.bottle) 0.22f else (-PI / 2).toFloat()
-    val clearance = if (body.bottle) 0.004f else 0.012f
+    // +X is the edge. +pi/2 puts that edge on the shelf and the spine on top.
+    val theta = if (body.bottle) 0.22f else (PI / 2).toFloat()
+    val clearance = if (body.bottle) 0.004f else 0.0008f
     var lowest = Float.POSITIVE_INFINITY
     val xs = floatArrayOf(box[0], box[3])
     val ys = floatArrayOf(box[1], box[4])

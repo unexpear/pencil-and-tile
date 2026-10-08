@@ -29,13 +29,16 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 OUT = os.path.join(REPO, "app", "src", "main", "assets", "knife-flip")
 TEX = os.path.join(SCRIPT_DIR, "textures")
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+import blade_profiles as blades
 
 # Centres of mass, metres from the tip. Same parts as FlipPhysics.knife().
-CHEF_COM = (0.090 * 0.108 + 0.040 * 0.206 + 0.090 * 0.272) / 0.220
+CHEF_COM = (0.085 * 0.108 + 0.040 * 0.206 + 0.095 * 0.270) / 0.220
 THROW_COM = 0.140
-POCKET_COM = (0.032 * 0.042 + 0.096 * 0.152) / 0.128
-FLY_COM = (0.055 * 0.055 + 0.100 * 0.190) / 0.155
-CLEAVER_COM = (0.330 * 0.086 + 0.075 * 0.242) / 0.405
+POCKET_COM = (0.030 * 0.040 + 0.098 * 0.145) / 0.128
+FLY_COM = (0.050 * 0.048 + 0.105 * 0.180) / 0.155
+CLEAVER_COM = (0.330 * 0.090 + 0.075 * 0.240) / 0.405
 
 
 def throwing_thickness():
@@ -127,6 +130,49 @@ def wedge_ring(z, spine_x, edge_x, spine_full, edge_full=0.00018, grind=0.34, st
     for x, y in reversed(pts_y[1:-1]):
         ring.append((x, -y, z))
     return ring
+
+
+def flat_grind_ring(z, spine_x, edge_x, spine_full, bevel=0.0015, grind_at=0.12, blunt=False):
+    """Flat primary grind and a short secondary bevel. Faceted, not a lens.
+
+    +X is the edge. grind_at is how far down from the spine the flat face runs
+    before the grind line (0 is a full flat off the spine, 0.40 leaves the top
+    40% at full thickness). The last `bevel` metres are the secondary bevel.
+    """
+    height = max(edge_x - spine_x, 1.2e-4)
+    flat = min(height * grind_at, height * 0.55)
+    x_grind = spine_x + flat
+    x_bevel = edge_x - min(bevel, height * 0.42)
+    if x_bevel <= x_grind + 1.5e-4:
+        x_bevel = (x_grind + edge_x) * 0.5
+    if blunt:
+        t_bevel = spine_full * 0.72
+        t_edge = spine_full * 0.55
+    else:
+        t_bevel = max(0.00032, spine_full * 0.20)
+        t_edge = 0.00012
+    top = [
+        (spine_x, spine_full * 0.5),
+        (x_grind, spine_full * 0.5),
+        (x_bevel, t_bevel * 0.5),
+        (edge_x, t_edge * 0.5),
+    ]
+    ring = [(x, y, z) for x, y in top]
+    for x, y in reversed(top[:-1]):
+        ring.append((x, -y, z))
+    return ring
+
+
+def diamond_ring(z, half, thick):
+    """Both edges bevelled. Four flat facets, not a rounded lens."""
+    h = max(half, 1.5e-4)
+    t = thick * 0.5
+    return [
+        (0.0, t, z),
+        (h, 0.0, z),
+        (0.0, -t, z),
+        (-h, 0.0, z),
+    ]
 
 
 def blade(name, com, heel, profile, thick, stations=42):
@@ -597,88 +643,27 @@ def report(name, objs, expect_len=None):
 
 # --- knives -----------------------------------------------------------------
 
-def chef_profile(t):
-    # t = 0 at the tip, 1 at the heel. Spine is -X, edge (belly) is +X.
-    spine = -0.0012 - 0.0065 * (t ** 0.85)
-    belly = math.sin(t * math.pi * 0.92) ** 1.15
-    edge = 0.003 * t + 0.046 * belly
-    if t > 0.92:
-        # Choil: the edge turns back up into the heel.
-        k = (t - 0.92) / 0.08
-        edge = edge * (1 - k) + (spine + 0.012) * k
-    return spine, edge
+def stations(n, length):
+    return [length * i / (n - 1) for i in range(n)]
 
 
-def chef_thick(t):
-    return 0.00055 + 0.0018 * (t ** 0.65)
+def loft_along(name, com, from_tips, ring_at):
+    # ring_at takes metres from the tip and places its own Blender Z.
+    return loft(name, [ring_at(s) for s in from_tips])
 
 
-def throw_profile(t):
-    # Spear point at both ends. t = 0 tip, 1 butt. Height 28 mm.
-    span = max(0.035, math.sin(t * math.pi) ** 0.72)
-    half = 0.014 * span
-    return -half, half
+def rounded_ring(z, cx, half_h, y_mid, half_t, n=12):
+    ring = []
+    for k in range(n):
+        a = 2 * math.pi * k / n
+        ring.append((cx + math.cos(a) * half_h, y_mid + math.sin(a) * half_t, z))
+    return ring
 
 
-def throw_thick(t):
-    # Full thickness. The peak is the physics stock; the tip and the butt taper down.
-    return THROWING_THICKNESS * (0.24 + 0.76 * math.sin(t * math.pi))
-
-
-def pocket_profile(t):
-    # Open drop-point folder. The blade is 18 mm tall (the physics `across`).
-    spine = -0.0022
-    if t > 0.55:
-        # The point drops off the spine, instead of running out in a spear.
-        k = (t - 0.55) / 0.45
-        spine = -0.0022 + 0.0090 * (k ** 1.35)
-    belly = math.sin(min(t, 1.0) * math.pi) ** 0.72
-    edge = 0.0012 + 0.0148 * belly
-    if t < 0.14:
-        edge = spine + (edge - spine) * ((t / 0.14) ** 0.8)
-    if t > 0.88:
-        # Short ricasso into the handle.
-        k = (t - 0.88) / 0.12
-        edge = edge * (1 - k) + (spine + 0.0055) * k
-    if edge - spine > 0.018:
-        edge = spine + 0.018
-    return spine, edge
-
-
-def pocket_thick(t):
-    return 0.0004 + 0.0011 * t
-
-
-def fly_profile(t):
-    spine = -0.0015 - 0.001 * t
-    edge = 0.002 + 0.016 * math.sin(min(t, 1) * math.pi * 0.85)
-    if t < 0.12:
-        edge = spine + (0.004) * (t / 0.12)
-    return spine, edge
-
-
-def fly_thick(t):
-    return 0.00045 + 0.0013 * t
-
-
-def cleaver_profile(t):
-    # Tall rectangle, slight belly. across = 94 mm, so spine-to-edge is about that.
-    spine = -0.006
-    edge = 0.086 + 0.004 * math.sin(t * math.pi)
-    if t < 0.08:
-        # The tip corner is only slightly rounded, still a cleaver.
-        edge = spine + (edge - spine) * (0.55 + 0.45 * t / 0.08)
-    return spine, edge
-
-
-def cleaver_thick(t):
-    return 0.0022 + 0.0022 * t
-
-
-def add_rivets(name, com, stations, radius, mat):
+def add_rivets(name, com, stations_m, radius, mat, x=0.0):
     objs = []
-    for i, frm in enumerate(stations):
-        obj = disc_y(f"{name}_rivet_{i}", 0.0, -0.012, 0.012, z_of(com, frm), radius, segments=12)
+    for i, frm in enumerate(stations_m):
+        obj = disc_y(f"{name}_rivet_{i}", x, -0.012, 0.012, z_of(com, frm), radius, segments=12)
         assign(obj, mat)
         objs.append(obj)
     return objs
@@ -687,64 +672,76 @@ def add_rivets(name, com, stations, radius, mat):
 def build_chef(steel_mat, wood_mat, brass_mat):
     com = CHEF_COM
     objs = []
-    blade_obj = blade("chef_blade", com, 0.203, chef_profile, chef_thick)
+
+    def ring(s):
+        spine, edge, thick = blades.chef_station(s)
+        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0015, grind_at=0.10)
+
+    blade_obj = loft_along("chef_blade", com, stations(72, 0.200), ring)
     assign(blade_obj, steel_mat)
     objs.append(blade_obj)
-    # Full tang, peeking between the scales.
+    # Full tang between the scales. Narrower than the blade, stopping at the butt.
     tang = loft("chef_tang", [
-        wedge_ring(z_of(com, 0.198), -0.004, 0.010, 0.0022, edge_full=0.0016, grind=0.5, steps=5),
-        wedge_ring(z_of(com, 0.330), -0.006, 0.008, 0.0016, edge_full=0.0014, grind=0.5, steps=5),
+        flat_grind_ring(z_of(com, 0.198), -0.042, -0.010, 0.0020, bevel=0.004, grind_at=0.2, blunt=True),
+        flat_grind_ring(z_of(com, 0.330), -0.034, -0.012, 0.0016, bevel=0.004, grind_at=0.2, blunt=True),
     ])
     assign(tang, steel_mat)
     objs.append(tang)
-    # Two wood scales.
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = []
         for frm, half_w, half_t in (
-            (0.214, 0.013, 0.0055),
-            (0.250, 0.016, 0.0072),
-            (0.300, 0.015, 0.0064),
-            (0.330, 0.012, 0.0048),
+            (0.208, 0.014, 0.0052),
+            (0.250, 0.016, 0.0070),
+            (0.300, 0.015, 0.0062),
+            (0.330, 0.012, 0.0046),
         ):
             z = z_of(com, frm)
-            y = sign * (0.0024 + half_t)
+            y = sign * (0.0016 + half_t)
+            # Centred on the tang, above the edge line, so the blade's edge is what rests.
+            cx = -0.024
             rings.append([
-                (-half_w, y - sign * half_t, z),
-                (half_w * 0.15, y - sign * half_t, z),
-                (half_w, y - sign * half_t * 0.2, z),
-                (half_w * 0.2, y + sign * half_t * 0.15, z),
-                (-half_w, y, z),
+                (cx - half_w, y - sign * half_t, z),
+                (cx + half_w * 0.2, y - sign * half_t, z),
+                (cx + half_w, y - sign * half_t * 0.15, z),
+                (cx + half_w * 0.15, y + sign * half_t * 0.1, z),
+                (cx - half_w, y, z),
             ])
         scale = loft(f"chef_scale_{tag}", rings)
         assign(scale, wood_mat)
         uv_smart(scale)
         objs.append(scale)
+    # Bolster wraps the spine and stops short of the edge, leaving the choil open.
     bolster = loft("chef_bolster", [
-        wedge_ring(z_of(com, 0.192), -0.008, 0.016, 0.006, edge_full=0.004, grind=0.2, steps=6),
-        wedge_ring(z_of(com, 0.214), -0.010, 0.014, 0.008, edge_full=0.006, grind=0.2, steps=6),
+        flat_grind_ring(z_of(com, 0.190), -0.054, -0.008, 0.007, bevel=0.006, grind_at=0.15, blunt=True),
+        flat_grind_ring(z_of(com, 0.214), -0.050, -0.012, 0.008, bevel=0.006, grind_at=0.15, blunt=True),
     ])
     assign(bolster, brass_mat)
     objs.append(bolster)
-    objs.extend(add_rivets("chef", com, (0.240, 0.278, 0.312), 0.0032, brass_mat))
+    objs.extend(add_rivets("chef", com, (0.242, 0.278, 0.312), 0.0032, brass_mat, x=-0.024))
     report("chef", objs, 0.330)
     return objs
 
 
 def build_throwing(steel_mat, cord_mat):
-    obj = blade("throw_blade", THROW_COM, 0.280, throw_profile, throw_thick, stations=48)
+    com = THROW_COM
+
+    def ring(s):
+        neg, pos, thick = blades.throw_station(s)
+        return diamond_ring(z_of(com, s), pos, thick)
+
+    obj = loft_along("throw_blade", com, stations(64, 0.280), ring)
     assign(obj, steel_mat)
     objs = [obj]
-    # Cord on the handle. The wrap stays inside the 5 mm stock, so the knife's
-    # thickness and THROWING_THICKNESS are the same number.
+    # Cord on the handle, proud of the recessed steel and still inside the 5 mm stock.
     half = THROWING_THICKNESS * 0.5
-    for i, frm in enumerate((0.198, 0.210, 0.222, 0.234, 0.246, 0.258)):
-        z = z_of(THROW_COM, frm)
-        ring = []
+    for i, frm in enumerate((0.168, 0.182, 0.196, 0.210, 0.224, 0.238, 0.252)):
+        z = z_of(com, frm)
+        ring_a = []
         for k in range(16):
             a = 2 * math.pi * k / 16
-            ring.append((math.cos(a) * 0.0062, math.sin(a) * half, z))
-        ring2 = [(x, y, z + 0.0026) for x, y, _ in ring]
-        band = loft(f"cord_{i}", [ring, ring2])
+            ring_a.append((math.cos(a) * 0.0112, math.sin(a) * (half - 0.00025), z))
+        ring_b = [(x, y, z + 0.0034) for x, y, _ in ring_a]
+        band = loft(f"cord_{i}", [ring_a, ring_b])
         assign(band, cord_mat)
         objs.append(band)
     report("throwing", objs, 0.280)
@@ -754,63 +751,53 @@ def build_throwing(steel_mat, cord_mat):
     return objs
 
 
-def folder_ring(z, half_h, y_mid, half_t):
-    """Rounded handle section. half_h is the 14 mm half of the 28 mm handle height."""
-    ring = []
-    for k in range(10):
-        a = 2 * math.pi * k / 10
-        ring.append((math.cos(a) * half_h, y_mid + math.sin(a) * half_t, z))
-    return ring
-
-
 def build_pocket(steel_mat, g10, liner_mat, pin_mat):
     com = POCKET_COM
-    blade_obj = blade("pocket_blade", com, 0.090, pocket_profile, pocket_thick, stations=32)
+
+    def ring(s):
+        spine, edge, thick, blunt = blades.pocket_station(s)
+        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0012, grind_at=0.14, blunt=blunt)
+
+    blade_obj = loft_along("pocket_blade", com, stations(56, 0.085), ring)
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
-    # Thumb stud, just proud of the blade, on the drop-point's shoulder.
-    stud = disc_y("pocket_stud", 0.0045, 0.0016, 0.0048, z_of(com, 0.022), 0.0024, segments=10)
+    # Thumb stud on the blade face, near the spine, just ahead of the ricasso.
+    stud = disc_y("pocket_stud", -0.016, 0.0014, 0.0046, z_of(com, 0.058), 0.0022, segments=10)
     assign(stud, pin_mat)
     objs.append(stud)
-    # Brass bolsters where the blade meets the handle.
-    for sign in (1, -1):
-        rings = []
-        for frm, half in ((0.090, 0.0095), (0.108, 0.0125)):
-            rings.append(folder_ring(z_of(com, frm), half, sign * 0.0032, 0.0022))
-        bolster = loft(f"pocket_bolster_{sign}", rings)
-        assign(bolster, pin_mat)
-        objs.append(bolster)
-    # Liners, then scales. Stations: choil, finger groove, palm swell, butt.
-    # Height stays inside the 28 mm handle. Thickness is a real folder, about 14 mm overall.
+    # Handle, 110 mm, with a gentle curve. Liners inside, scales outside, clip on one scale.
+    def center(frm):
+        u = (frm - 0.090) / 0.110
+        return -0.012 - 0.0035 * math.sin(max(0.0, min(1.0, u)) * math.pi)
+
     handle = (
-        (0.100, 0.0105),
-        (0.118, 0.0128),
-        (0.132, 0.0112),
-        (0.158, 0.0140),
-        (0.182, 0.0132),
+        (0.092, 0.0105),
+        (0.110, 0.0122),
+        (0.132, 0.0114),
+        (0.155, 0.0132),
+        (0.178, 0.0124),
         (0.200, 0.0100),
     )
     for sign, tag, mat, y_mid, half_t in (
-        (1, "lin_a", liner_mat, 0.0015, 0.0009),
-        (-1, "lin_b", liner_mat, -0.0015, 0.0009),
-        (1, "sc_a", g10, 0.0046, 0.0024),
-        (-1, "sc_b", g10, -0.0046, 0.0024),
+        (1, "lin_a", liner_mat, 0.0014, 0.0009),
+        (-1, "lin_b", liner_mat, -0.0014, 0.0009),
+        (1, "sc_a", g10, 0.0044, 0.0023),
+        (-1, "sc_b", g10, -0.0044, 0.0023),
     ):
-        rings = [folder_ring(z_of(com, frm), half, y_mid, half_t) for frm, half in handle]
+        rings = [rounded_ring(z_of(com, frm), center(frm), half, y_mid, half_t) for frm, half in handle]
         part = loft(f"pocket_{tag}", rings)
         assign(part, mat)
         if mat == g10:
             uv_smart(part)
         objs.append(part)
-    pivot = disc_y("pocket_pivot", 0.0, -0.0082, 0.0082, z_of(com, 0.096), 0.0042, segments=14)
+    pivot = disc_y("pocket_pivot", -0.012, -0.0080, 0.0080, z_of(com, 0.090), 0.0044, segments=14)
     assign(pivot, pin_mat)
     objs.append(pivot)
-    # Pocket clip along one scale. A folder reads as a folder with this on it.
     clip = box(
         "pocket_clip",
-        -0.0015, 0.0065,
-        0.0071, 0.0084,
-        z_of(com, 0.128), z_of(com, 0.194),
+        -0.020, -0.014,
+        0.0068, 0.0082,
+        z_of(com, 0.118), z_of(com, 0.188),
     )
     assign(clip, liner_mat)
     objs.append(clip)
@@ -820,38 +807,46 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
 
 def build_butterfly(steel_mat, scale_mat, pin_mat):
     com = FLY_COM
-    blade_obj = blade("fly_blade", com, 0.120, fly_profile, fly_thick, stations=30)
+
+    def ring(s):
+        spine, edge, thick = blades.fly_station(s)
+        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0012, grind_at=0.16)
+
+    blade_obj = loft_along("fly_blade", com, stations(48, 0.100), ring)
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
-    # Tang between the handles.
+    # Kicker on the spine at the pivot, the stop the handles close against.
+    kicker = box("fly_kicker", -0.028, -0.020, -0.0016, 0.0016, z_of(com, 0.094), z_of(com, 0.108))
+    assign(kicker, steel_mat)
+    objs.append(kicker)
+    # Short tang inside the channel.
     tang = loft("fly_tang", [
-        wedge_ring(z_of(com, 0.112), -0.003, 0.006, 0.0022, edge_full=0.0018, grind=0.4, steps=4),
-        wedge_ring(z_of(com, 0.246), -0.003, 0.005, 0.0018, edge_full=0.0016, grind=0.4, steps=4),
+        flat_grind_ring(z_of(com, 0.098), -0.020, -0.004, 0.0020, bevel=0.003, grind_at=0.3, blunt=True),
+        flat_grind_ring(z_of(com, 0.130), -0.016, -0.006, 0.0016, bevel=0.003, grind_at=0.3, blunt=True),
     ])
     assign(tang, steel_mat)
     objs.append(tang)
-    # Two channel handles. The channel is the gap around the tang: each handle is a
-    # slab with its inner face cut by sitting the slabs apart.
+    # Two channel handles, 130 mm, open along the tang.
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = []
-        for frm, half in ((0.128, 0.011), (0.180, 0.0125), (0.230, 0.012), (0.250, 0.010)):
+        for frm, half in ((0.112, 0.012), (0.170, 0.013), (0.220, 0.0125), (0.242, 0.011)):
             z = z_of(com, frm)
-            inner = 0.0032
-            outer = 0.0072
+            inner = 0.0028
+            outer = 0.0066
             y_in = sign * inner
             y_out = sign * outer
+            cx = -0.011
             rings.append([
-                (-half, y_in, z), (half, y_in, z), (half, y_out, z), (-half, y_out, z),
+                (cx - half, y_in, z), (cx + half, y_in, z), (cx + half, y_out, z), (cx - half, y_out, z),
             ])
         handle = loft(f"fly_handle_{tag}", rings)
         assign(handle, scale_mat)
         objs.append(handle)
-        # Latch block near the butt, on one side only once.
-    latch = box("fly_latch", -0.004, 0.010, -0.003, 0.003, z_of(com, 0.232), z_of(com, 0.250))
+    latch = box("fly_latch", -0.018, -0.004, -0.0024, 0.0024, z_of(com, 0.228), z_of(com, 0.248))
     assign(latch, pin_mat)
     objs.append(latch)
-    for frm, rad in ((0.132, 0.0026), (0.210, 0.0018), (0.242, 0.0018)):
-        pin = disc_y(f"fly_pin_{frm}", 0.0, -0.008, 0.008, z_of(com, frm), rad, segments=12)
+    for frm, rad in ((0.104, 0.0028), (0.200, 0.0018), (0.236, 0.0018)):
+        pin = disc_y(f"fly_pin_{frm}", -0.011, -0.0074, 0.0074, z_of(com, frm), rad, segments=12)
         assign(pin, pin_mat)
         objs.append(pin)
     report("butterfly", objs, 0.250)
@@ -860,13 +855,17 @@ def build_butterfly(steel_mat, scale_mat, pin_mat):
 
 def build_cleaver(steel_mat, wood_mat, brass_mat):
     com = CLEAVER_COM
-    blade_obj = blade("cleaver_blade", com, 0.180, cleaver_profile, cleaver_thick, stations=24)
+
+    def ring(s):
+        spine, edge, thick = blades.cleaver_station(s)
+        # Grind starts at 60% of the height: the top 40% stays the full 5 mm spine.
+        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0020, grind_at=0.40)
+
+    blade_obj = loft_along("cleaver_blade", com, stations(40, 0.180), ring)
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
-    # Hanging hole near the top front. A short cylinder punched visually by a ring sitting
-    # in the blade; the opening reads because the ring is brass-dark and the centre is empty
-    # only if we boolean. Boolean in background is reliable enough for one cylinder.
-    cutter = disc_y("cleaver_hole_cut", -0.001, -0.02, 0.02, z_of(com, 0.028), 0.011, segments=16)
+    # Hole near the top front corner. Spine is -X, the tip is the low from-tip end.
+    cutter = disc_y("cleaver_hole_cut", -0.074, -0.02, 0.02, z_of(com, 0.022), 0.008, segments=16)
     mod = blade_obj.modifiers.new("hole", "BOOLEAN")
     mod.operation = "DIFFERENCE"
     mod.object = cutter
@@ -878,29 +877,29 @@ def build_cleaver(steel_mat, wood_mat, brass_mat):
     except RuntimeError as err:
         print("cleaver hole boolean failed:", err)
         bpy.data.objects.remove(cutter, do_unlink=True)
-    # Handle along the spine, behind the heel.
     bolster = loft("cleaver_bolster", [
-        wedge_ring(z_of(com, 0.172), -0.012, 0.018, 0.010, edge_full=0.006, grind=0.15, steps=5),
-        wedge_ring(z_of(com, 0.196), -0.014, 0.012, 0.012, edge_full=0.008, grind=0.15, steps=5),
+        flat_grind_ring(z_of(com, 0.172), -0.066, -0.030, 0.010, bevel=0.006, grind_at=0.2, blunt=True),
+        flat_grind_ring(z_of(com, 0.196), -0.062, -0.034, 0.012, bevel=0.006, grind_at=0.2, blunt=True),
     ])
     assign(bolster, brass_mat)
     objs.append(bolster)
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = []
-        for frm, half in ((0.196, 0.014), (0.240, 0.016), (0.285, 0.014), (0.300, 0.012)):
+        for frm, half_w in ((0.198, 0.015), (0.240, 0.017), (0.275, 0.015), (0.300, 0.012)):
             z = z_of(com, frm)
-            y = sign * 0.0065
+            y = sign * 0.0062
+            cx = -0.048
             rings.append([
-                (-0.016, y - sign * 0.004, z),
-                (0.010, y - sign * 0.004, z),
-                (0.012, y + sign * 0.001, z),
-                (-0.014, y + sign * 0.001, z),
+                (cx - half_w, y - sign * 0.004, z),
+                (cx + half_w, y - sign * 0.004, z),
+                (cx + half_w, y + sign * 0.001, z),
+                (cx - half_w, y + sign * 0.001, z),
             ])
         scale = loft(f"cleaver_scale_{tag}", rings)
         assign(scale, wood_mat)
         uv_smart(scale)
         objs.append(scale)
-    objs.extend(add_rivets("cleaver", com, (0.230, 0.275), 0.0034, brass_mat))
+    objs.extend(add_rivets("cleaver", com, (0.230, 0.270), 0.0034, brass_mat, x=-0.048))
     report("cleaver", objs, 0.300)
     return objs
 
@@ -962,18 +961,43 @@ def build_water_neck(water_mat):
     return [obj]
 
 
+def shadow_disc(name, cx, cy, cz, rx, ry, color, alpha, segments=28):
+    """A flat ellipse on the counter. Alpha reads as a contact shadow."""
+    verts = [(cx, cy, cz)]
+    for i in range(segments):
+        a = 2 * math.pi * i / segments
+        verts.append((cx + math.cos(a) * rx, cy + math.sin(a) * ry, cz))
+    faces = [(0, 1 + i, 1 + (i + 1) % segments) for i in range(segments)]
+    obj = link_mesh(name, verts, faces)
+    mat, bsdf = new_bsdf(name + "Mat")
+    socket(bsdf, "Base Color").default_value = (*color, 1)
+    socket(bsdf, "Roughness").default_value = 1.0
+    socket(bsdf, "Metallic").default_value = 0.0
+    socket(bsdf, "Alpha").default_value = alpha
+    mat.blend_method = "BLEND"
+    mat.use_backface_culling = False
+    mat.show_transparent_back = True
+    assign(obj, mat)
+    return obj
+
+
 def build_block(top_mat, side_mat):
-    # Top face on z = 0, centred on x = 0.29 so it covers physics x = 0..0.58.
-    # Depth is along Y. After export, Blender -Y becomes glTF +Z (the camera side).
-    obj = bevel_box("block", 0.0, 0.58, -0.11, 0.11, -0.10, 0.0, 0.006)
+    # Top face just under z = 0. The bottom is sunk a few millimetres into the
+    # counter so the seam cannot read as a gap. Depth is along Y.
+    obj = bevel_box("block", 0.0, 0.58, -0.11, 0.11, -0.104, -0.004, 0.006)
     obj.data.materials.append(top_mat)
     obj.data.materials.append(side_mat)
     for poly in obj.data.polygons:
         poly.material_index = 0 if poly.normal.z > 0.55 else 1
     # About a 4 cm stave on the 58×22 cm top, so the rings read as a grid of sticks.
     cube_uv(obj, scale=3.6)
+    # Soft contact shadow on the counter, slightly larger than the footprint.
+    # A rim just past the block. A wider disc covers the near counter and reads as a black slab.
+    shade = (0.10, 0.07, 0.04)
+    outer = shadow_disc("block_shadow", 0.29, 0.0, -0.0994, 0.32, 0.13, shade, 0.32)
+    inner = shadow_disc("block_shadow_tight", 0.29, 0.0, -0.0992, 0.30, 0.115, shade, 0.50)
     report("block", [obj])
-    return [obj]
+    return [obj, outer, inner]
 
 
 def build_chip(wood_mat, seed):
@@ -1037,11 +1061,13 @@ def build_room(counter_mat, wall_mat, glass_mat, plaster_mat, frame_mat):
     # Counter top. Physics block sits on z = -0.10. Front (camera) is -Y.
     top = bevel_box("counter", -0.55, 1.25, -0.34, 0.42, -0.142, -0.100, 0.008)
     assign(top, counter_mat)
-    cube_uv(top, scale=1.4)
+    # One Wood051 repeat across most of the counter, so the grain is not a tiled smear.
+    cube_uv(top, scale=0.48)
     objs.append(top)
-    # Cabinet under the counter. The room is a closed box: the HDRI is only the light.
+    # Cabinet under the counter. Gameplay cameras keep this below the frame.
     cabinet = box("cabinet", -0.52, 1.22, -0.30, 0.38, -0.90, -0.142)
-    assign(cabinet, plaster_mat)
+    assign(cabinet, counter_mat)
+    cube_uv(cabinet, scale=0.48)
     objs.append(cabinet)
     kick = box("kick", -0.48, 1.18, -0.28, 0.34, -0.90, -0.84)
     assign(kick, wall_mat)
@@ -1130,7 +1156,8 @@ def main():
     wood_handle = wood(color_s, normal_s, rough_s, "WoodHandle")
     endgrain = image_mat("EndGrain", endgrain_image(), roughness=0.58)
     edgegrain = image_mat("EdgeGrain", edgegrain_image(), roughness=0.62)
-    counter = image_mat("Counter", counter_image(), roughness=0.55)
+    # Full 1K Wood051, not the 512 px handle copy and not the procedural oak.
+    counter = wood(color, normal, rough, "CounterWood")
     cord = paint("Cord", (0.45, 0.16, 0.10), roughness=0.72)
     g10 = paint("G10", (0.72, 0.58, 0.36), roughness=0.48)
     liner = paint("Liner", (0.55, 0.57, 0.60), roughness=0.35, metallic=0.9)

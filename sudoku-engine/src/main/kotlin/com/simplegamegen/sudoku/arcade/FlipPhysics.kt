@@ -650,11 +650,11 @@ object FlipModels {
 
     val chef: FlipBody = knife(
         "chef", "Chef's knife", 0.330f,
-        // 203 × 48 × 2.3 mm blade, brass bolster, wood scales on a steel tang.
+        // 200 × 48 mm blade, 2.5 mm spine, brass bolster, 125 mm wood scales on a full tang.
         listOf(
-            Part(0.090f, 0.108f, 0.203f, across = 0.050f),
-            Part(0.040f, 0.206f, 0.022f, across = 0.044f),
-            Part(0.090f, 0.272f, 0.118f, across = 0.032f),
+            Part(0.085f, 0.108f, 0.200f, across = 0.048f),
+            Part(0.040f, 0.206f, 0.024f, across = 0.042f),
+            Part(0.095f, 0.270f, 0.125f, across = 0.032f),
         ),
         gripFromTip = 0.272f, handleZone = 0.115f,
     )
@@ -666,28 +666,28 @@ object FlipModels {
     )
     val pocket: FlipBody = knife(
         "pocket", "Pocket knife", 0.200f,
-        // 90 mm blade, heavy liners and scales in the handle.
+        // 85 × 24 mm drop-point blade, heavy liners and scales in the 110 mm handle.
         listOf(
-            Part(0.032f, 0.042f, 0.090f, across = 0.018f),
-            Part(0.096f, 0.152f, 0.105f, across = 0.028f),
+            Part(0.030f, 0.040f, 0.085f, across = 0.024f),
+            Part(0.098f, 0.145f, 0.110f, across = 0.026f),
         ),
         gripFromTip = 0.158f, handleZone = 0.10f,
     )
     val butterfly: FlipBody = knife(
         "butterfly", "Butterfly knife", 0.250f,
-        // Open balisong: 120 mm blade plus two steel channel handles.
+        // Open balisong: 100 × 22 mm clip-point blade plus two channel handles.
         listOf(
-            Part(0.055f, 0.055f, 0.120f, across = 0.020f),
-            Part(0.100f, 0.190f, 0.125f, across = 0.024f),
+            Part(0.050f, 0.048f, 0.100f, across = 0.022f),
+            Part(0.105f, 0.180f, 0.140f, across = 0.024f),
         ),
         gripFromTip = 0.195f, handleZone = 0.11f,
     )
     val cleaver: FlipBody = knife(
         "cleaver", "Cleaver", 0.300f,
-        // 180 × 90 × 4 mm blade. The tall blade adds to the in-plane inertia.
+        // 180 × 90 mm blade, 5 mm spine. The tall blade adds to the in-plane inertia.
         listOf(
-            Part(0.330f, 0.086f, 0.180f, across = 0.094f),
-            Part(0.075f, 0.242f, 0.115f, across = 0.032f),
+            Part(0.330f, 0.090f, 0.180f, across = 0.090f),
+            Part(0.075f, 0.240f, 0.120f, across = 0.032f),
         ),
         gripFromTip = 0.245f, tipZone = 0.040f, handleZone = 0.11f,
     )

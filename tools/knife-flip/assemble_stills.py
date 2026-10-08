@@ -46,11 +46,11 @@ KNIVES = {
 }
 # Distance from the tip to the centre of mass. The mesh origin sits there.
 COM = {
-    "chef": (0.090 * 0.108 + 0.040 * 0.206 + 0.090 * 0.272) / 0.220,
+    "chef": (0.085 * 0.108 + 0.040 * 0.206 + 0.095 * 0.270) / 0.220,
     "throwing": 0.140,
-    "pocket": (0.032 * 0.042 + 0.096 * 0.152) / 0.128,
-    "butterfly": (0.055 * 0.055 + 0.100 * 0.190) / 0.155,
-    "cleaver": (0.330 * 0.086 + 0.075 * 0.242) / 0.405,
+    "pocket": (0.030 * 0.040 + 0.098 * 0.145) / 0.128,
+    "butterfly": (0.050 * 0.048 + 0.105 * 0.180) / 0.155,
+    "cleaver": (0.330 * 0.090 + 0.075 * 0.240) / 0.405,
 }
 
 
@@ -217,11 +217,12 @@ def add_water(parent, fill, sigma, mat):
 
 # glTF AABBs (POSITION accessor). Y is length, X is edge-to-spine, Z is thickness.
 MESH = {
-    "chef": ((-0.016, -0.1371, -0.012), (0.0476, 0.1929, 0.012)),
-    "throwing": ((-0.014, -0.14, -0.0025), (0.014, 0.14, 0.0025)),
-    "pocket": ((-0.014, -0.0755, -0.0084), (0.0158, 0.1245, 0.0082)),
-    "butterfly": ((-0.0125, -0.1079, -0.008), (0.018, 0.1421, 0.008)),
-    "cleaver": ((-0.016, -0.1851, -0.012), (0.09, 0.1149, 0.012)),
+    # glTF bounds. Y is tip-to-butt, +X is the edge, -X is the spine.
+    "chef": ((-0.054, -0.134, -0.012), (0.000, 0.196, 0.012)),
+    "throwing": ((-0.014, -0.140, -0.0025), (0.014, 0.140, 0.0025)),
+    "pocket": ((-0.029, -0.080, -0.008), (0.000, 0.120, 0.008)),
+    "butterfly": ((-0.028, -0.111, -0.007), (0.002, 0.137, 0.007)),
+    "cleaver": ((-0.090, -0.182, -0.012), (0.000, 0.118, 0.012)),
     "bottle": ((-0.0315, 0.0, -0.0315), (0.0315, 0.204, 0.0315)),
 }
 # Knife pickers are a wide banner (1280×560), the same shape as the in-app strip.
@@ -235,22 +236,29 @@ PICKER_YAW = math.radians(14.0)
 PICKER_PITCH = math.radians(8.0)
 BOTTLE_YAW = math.radians(28.0)
 BOTTLE_PITCH = math.radians(12.0)
-KNIFE_THETA = -math.pi / 2
+# +X on the mesh is the cutting edge. +pi/2 lays that edge on the shelf and the spine on top.
+KNIFE_THETA = math.pi / 2
 BOTTLE_THETA = 0.22
-# Play cameras are a 9:19.5 phone (720×1560) at 40° vertical. Distance is metres.
-# Fitted so the block, the counter and the toss stay inside, with the subject high
-# in the frame so the wall is a strip. Top views stay centred on the block.
-PLAY_FOV = 40.0
+# Play cameras are a 9:19.5 phone (720×1560). Distance is metres.
+# Lower and closer than the v3 orbit: the counter fills the bottom of the frame,
+# the block sits in the lower middle, and the toss uses the upper part. The
+# cabinet front and the floor fall below the frame.
+PLAY_FOV = 38.0
+# Aimed down onto the counter top, so the vertical front lip and the cabinet
+# fall below the frame. The stuck blade stays about half the frame tall.
 PLAY = {
     "knife": {
-        "side": (52.0, 46.0, 2.0769, (0.4645, -0.1107, 0.1959)),
-        "corner": (68.0, 50.0, 1.7615, (0.4222, -0.0179, 0.1043)),
-        "top": (24.0, 68.0, 2.1822, (0.3000, 0.0724, 0.1092)),
+        "side": (58.0, 24.0, 1.00, (0.18, 0.14, -0.06)),
+        "corner": (70.0, 22.0, 1.05, (0.20, 0.14, -0.04)),
+        # High and from the side of the counter. Portrait's narrow field is the
+        # counter's depth, so the floor and the cabinet stay out while the
+        # whole block and the stuck blade stay inside.
+        "top": (76.0, 72.0, 1.15, (0.26, 0.12, -0.02)),
     },
     "bottle": {
-        "side": (36.0, 24.0, 2.1500, (0.3313, 0.2039, 0.1341)),
-        "corner": (54.0, 28.0, 1.9520, (0.3422, 0.2697, 0.0937)),
-        "top": (18.0, 62.0, 1.9171, (0.2811, 0.3438, 0.0758)),
+        "side": (36.0, 16.0, 1.35, (0.24, 0.40, 0.0)),
+        "corner": (52.0, 20.0, 1.40, (0.26, 0.38, 0.0)),
+        "top": (80.0, 74.0, 1.30, (0.30, 0.16, 0.0)),
     },
 }
 
@@ -337,7 +345,8 @@ def pose_lift(box, theta, clearance):
 def preview_pose(name, bottle):
     """Edge-up knife, or a slightly tipped bottle, clear of the board."""
     theta = BOTTLE_THETA if bottle else KNIFE_THETA
-    clearance = 0.004 if bottle else 0.012
+    # The lowest point of the edge sits on the shelf. Bottles keep a small gap.
+    clearance = 0.004 if bottle else 0.0008
     lift = pose_lift(MESH[name], theta, clearance)
     points = [_xform(c, theta, (0.0, lift, 0.0)) for c in _corners(MESH[name])]
     return theta, lift, points
@@ -408,6 +417,13 @@ def studio(points):
     board_bsdf = board.node_tree.nodes.get("Principled BSDF")
     board_bsdf.inputs["Base Color"].default_value = (0.843, 0.690, 0.478, 1)
     board_bsdf.inputs["Roughness"].default_value = 0.58
+    shadow = bpy.data.materials.new("ContactShadow")
+    shadow.use_nodes = True
+    shadow.blend_method = "BLEND"
+    shadow_bsdf = shadow.node_tree.nodes.get("Principled BSDF")
+    shadow_bsdf.inputs["Base Color"].default_value = (0.12, 0.08, 0.05, 1)
+    shadow_bsdf.inputs["Roughness"].default_value = 1.0
+    shadow_bsdf.inputs["Alpha"].default_value = 0.55
 
     def cube(name, gltf_center, gltf_size, mat):
         bpy.ops.mesh.primitive_cube_add(size=1)
@@ -426,6 +442,14 @@ def studio(points):
     cx = (min(xs) + max(xs)) / 2
     cz = (min(zs) + max(zs)) / 2
     cube("board", (cx, -0.008, cz), (span_x, 0.016, span_z), board)
+    # Ellipse on the shelf, under the blade, so the knife reads as resting.
+    bpy.ops.mesh.primitive_circle_add(vertices=32, radius=1, fill_type="NGON")
+    disc = bpy.context.active_object
+    disc.name = "contact_shadow"
+    disc.scale = (span_x * 0.42, span_z * 0.55, 1.0)
+    disc.location = (cx, -cz, 0.0012)
+    disc.rotation_euler = (0.0, 0.0, 0.0)
+    disc.data.materials.append(shadow)
 
 
 def camera_play(kind, name):
