@@ -49,6 +49,14 @@ private val Credits = listOf(
     Credit("Original Battleship Pieces", "The Battleship hulls and the hit and miss pins", "Creative Commons Attribution",
         "licenses/battleship-pieces-cc-by.txt",
         "By MZimb, Thingiverse thing 5190846, resized from Mattwall, thing 4244260. Adapted to the classic fleet."),
+    Credit("SceneView", "The 3D view in Knife Flip", "Apache License 2.0", "licenses/apache-2.0.txt",
+        "© Thomas Gorisse and SceneView contributors. io.github.sceneview:sceneview 4.18.0."),
+    Credit("Filament", "Physically based rendering in Knife Flip", "Apache License 2.0", "licenses/apache-2.0.txt",
+        "© Google. Filament 1.71.5, used through SceneView."),
+    Credit("Kiara Interior", "Lighting and reflections in Knife Flip. The room is modelled; the photo is not the background.", "CC0 1.0 (public domain dedication)",
+        "licenses/cc0-1.0.txt", "HDRI by Greg Zaal, Poly Haven. The 1K file is used."),
+    Credit("Wood051", "Wood grain on the Knife Flip handles", "CC0 1.0 (public domain dedication)",
+        "licenses/cc0-1.0.txt", "By ambientCG (Lennart Demes). Colour, normal and roughness maps. Handles use a 512 px copy."),
 )
 
 @Composable

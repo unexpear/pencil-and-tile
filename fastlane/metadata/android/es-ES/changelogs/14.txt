@@ -1,0 +1,3 @@
+Nuevo juego en 3D: Lanzamiento de cuchillo. Lanza un cuchillo de chef, uno de lanzar o una navaja para clavar la punta, o voltea una botella de agua. Los niveles van de un cuarto y un tercio a la mitad, tres cuartos y llena.
+
+El lanzamiento usa física real de volteo: masa, equilibrio y giro.
