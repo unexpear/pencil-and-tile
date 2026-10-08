@@ -71,5 +71,6 @@ object Tutorials {
         GameId.TIC_TAC_TOE -> BoardTutorials.ticTacToe
         GameId.TRID -> BoardTutorials.trid
         GameId.RAUMSCHACH -> BoardTutorials.raumschach
+        GameId.LOG_THROW -> ArcadeTutorials.logThrow
     }
 }

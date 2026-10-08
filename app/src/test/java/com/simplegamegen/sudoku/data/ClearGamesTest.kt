@@ -30,6 +30,7 @@ class ClearGamesTest {
         try {
             val store = CollectionStore(data)
             store.save("PLAY_CHESS", "board")
+            store.save("PLAY_LOG_THROW", "run")
             store.save("TABLE_CHECKERS", "match")
             store.save("LOGIC_KENKEN", "puzzle")
             store.save("HANGMAN", "word")
@@ -47,7 +48,7 @@ class ClearGamesTest {
             val seed = store.nextSeed()
             store.clearPlaySaves()
             listOf(
-                "PLAY_CHESS", "TABLE_CHECKERS", "LOGIC_KENKEN", "HANGMAN", "MAHJONG", "PLAY_SUDOKU_GRID",
+                "PLAY_CHESS", "PLAY_LOG_THROW", "TABLE_CHECKERS", "LOGIC_KENKEN", "HANGMAN", "MAHJONG", "PLAY_SUDOKU_GRID",
                 "blotwords:trail", "blotwords:known", "blotwords:daily", "wordsworn:core-unlock:SCRIBE",
             ).forEach { assertNull(store.load(it), it) }
             assertEquals("draft", store.load("GRID_DRAFTS"))

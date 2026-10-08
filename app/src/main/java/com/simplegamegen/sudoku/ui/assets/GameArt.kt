@@ -445,6 +445,26 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 }
                 drawCircle(Color(0xFFFFF8E1), size.width * 0.06f, Offset(size.width * 0.38f, size.height * 0.78f))
             }
+            GameId.LOG_THROW -> Canvas(Modifier.size(56.dp)) {
+                val cx = size.width / 2f
+                val cy = size.height / 2f
+                drawCircle(Color(0xFF3C2618), size.minDimension * 0.48f, Offset(cx, cy + 2f))
+                drawCircle(Color(0xFF5A3418), size.minDimension * 0.46f)
+                drawCircle(Color(0xFFC48448), size.minDimension * 0.40f)
+                drawCircle(Color(0xFFE8C48A), size.minDimension * 0.16f)
+                drawCircle(Color(0xFF8A5A30), size.minDimension * 0.32f, style = Stroke(1.6f))
+                drawCircle(Color(0xFF8A5A30), size.minDimension * 0.24f, style = Stroke(1.2f))
+                val blade = Path().apply {
+                    moveTo(cx, cy + size.height * 0.08f)
+                    lineTo(cx + size.width * 0.07f, cy + size.height * 0.28f)
+                    lineTo(cx - size.width * 0.07f, cy + size.height * 0.28f)
+                    close()
+                }
+                drawPath(blade, Color(0xFFE8EEF2))
+                drawLine(Color(0xFFD4A24A), Offset(cx - 9f, cy + size.height * 0.30f), Offset(cx + 9f, cy + size.height * 0.30f), strokeWidth = 2.4f)
+                drawRoundRect(Color(0xFF6B3A22), Offset(cx - 3f, cy + size.height * 0.31f), Size(6f, 9f), CornerRadius(1.5f))
+                drawCircle(Color(0xFFD4A24A), 3.2f, Offset(cx, cy + size.height * 0.46f))
+            }
             else -> Canvas(Modifier.fillMaxSize()) {
                 val side = minOf(size.width, size.height) * 0.86f
                 val o = Offset((size.width - side) / 2, (size.height - side) / 2)
