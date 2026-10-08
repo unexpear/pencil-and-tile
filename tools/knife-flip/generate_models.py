@@ -132,7 +132,7 @@ def wedge_ring(z, spine_x, edge_x, spine_full, edge_full=0.00018, grind=0.34, st
     return ring
 
 
-def flat_grind_ring(z, spine_x, edge_x, spine_full, bevel=0.0015, grind_at=0.12, blunt=False):
+def flat_grind_ring(z, spine_x, edge_x, spine_full, bevel=0.0015, grind_at=0.12, blunt=False, edge_thick=None):
     """Flat primary grind and a short secondary bevel. Faceted, not a lens.
 
     +X is the edge. grind_at is how far down from the spine the flat face runs
@@ -145,7 +145,10 @@ def flat_grind_ring(z, spine_x, edge_x, spine_full, bevel=0.0015, grind_at=0.12,
     x_bevel = edge_x - min(bevel, height * 0.42)
     if x_bevel <= x_grind + 1.5e-4:
         x_bevel = (x_grind + edge_x) * 0.5
-    if blunt:
+    if edge_thick is not None:
+        t_edge = min(max(edge_thick, 1.2e-4), spine_full * 0.92)
+        t_bevel = min(max(t_edge, spine_full * 0.28), spine_full * 0.96)
+    elif blunt:
         t_bevel = spine_full * 0.72
         t_edge = spine_full * 0.55
     else:
@@ -660,66 +663,211 @@ def rounded_ring(z, cx, half_h, y_mid, half_t, n=12):
     return ring
 
 
-def add_rivets(name, com, stations_m, radius, mat, x=0.0):
+def smoothstep(u):
+    u = 0.0 if u < 0.0 else (1.0 if u > 1.0 else u)
+    return u * u * (3.0 - 2.0 * u)
+
+
+def lerp(a, b, u):
+    return a + (b - a) * u
+
+
+def join_gap(a, b):
+    """Gap between two meshes, in metres. Zero when their triangles intersect."""
+    from mathutils.bvhtree import BVHTree
+
+    def tree(obj):
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bm.transform(obj.matrix_world)
+        out = BVHTree.FromBMesh(bm)
+        bm.free()
+        return out
+
+    ta, tb = tree(a), tree(b)
+    if ta.overlap(tb):
+        return 0.0
+    gap = 1.0
+    for obj, other in ((a, tb), (b, ta)):
+        for vert in obj.data.vertices:
+            co = obj.matrix_world @ vert.co
+            _loc, _normal, _index, dist = other.find_nearest(co)
+            if dist is not None and dist < gap:
+                gap = dist
+    return gap
+
+
+def assert_joins(knife, blade_objs, handle_objs, limit=0.0002):
+    """Blade and handle have to touch. A 0.2 mm crack is a failed join."""
+    worst = 0.0
+    for blade in blade_objs:
+        for handle in handle_objs:
+            gap = join_gap(blade, handle)
+            print(f"  join {knife}: {handle.name} <-> {blade.name}  {gap * 1000:.3f} mm")
+            worst = max(worst, gap)
+    if worst > limit:
+        raise SystemExit(
+            f"{knife} handle is {worst * 1000:.3f} mm off the blade (limit {limit * 1000:.1f} mm)"
+        )
+    print(f"{knife} join ok")
+
+
+def add_rivets(name, com, stations_m, radius, mat, x=0.0, y=0.0066):
+    """Flush with the scale face. The cylinder ends on the wood, it does not stand proud."""
     objs = []
     for i, frm in enumerate(stations_m):
-        obj = disc_y(f"{name}_rivet_{i}", x, -0.012, 0.012, z_of(com, frm), radius, segments=12)
+        yy = y[i] if isinstance(y, (list, tuple)) else y
+        obj = disc_y(f"{name}_rivet_{i}", x, -yy, yy, z_of(com, frm), radius, segments=12)
         assign(obj, mat)
         objs.append(obj)
     return objs
 
 
+def slab(z, cx, half_h, y_in, y_out):
+    """A handle scale. y_in is the face against the tang, y_out the outer face."""
+    return [
+        (cx - half_h, y_in, z),
+        (cx + half_h, y_in, z),
+        (cx + half_h, y_out, z),
+        (cx - half_h, y_out, z),
+    ]
+
+
 def build_chef(steel_mat, wood_mat, brass_mat):
+    """One steel solid: blade, bolster and full tang. Wood scales sandwich the tang."""
     com = CHEF_COM
-    objs = []
+    # Scales sit on this centre. The tang is the same centre, a little taller,
+    # so the steel shows as a stripe on the top and bottom edges.
+    cx = -0.024
+    margin = 0.00135
+    # (from the tip, half-height of the wood, outer face). The first station is
+    # thin so it tucks into the bolster instead of butting against it.
+    handle = (
+        (0.214, 0.0124, 0.00155),
+        (0.250, 0.0146, 0.0066),
+        (0.300, 0.0138, 0.0062),
+        (0.326, 0.0112, 0.0046),
+    )
 
-    def ring(s):
-        spine, edge, thick = blades.chef_station(s)
-        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0015, grind_at=0.10)
+    def scale_half(frm):
+        if frm <= handle[0][0]:
+            return handle[0][1]
+        if frm >= handle[-1][0]:
+            return handle[-1][1]
+        for (f0, h0, _), (f1, h1, _) in zip(handle, handle[1:]):
+            if frm <= f1:
+                u = 0.0 if f1 == f0 else (frm - f0) / (f1 - f0)
+                return lerp(h0, h1, u)
+        return handle[-1][1]
 
-    blade_obj = loft_along("chef_blade", com, stations(72, 0.200), ring)
+    def ring(frm):
+        z = z_of(com, frm)
+        spine, edge, thick = blades.chef_station(min(frm, 0.200))
+        if frm <= 0.200:
+            return flat_grind_ring(z, spine, edge, thick, bevel=0.0015, grind_at=0.10)
+        # The heel swells into the bolster without moving the outline, so the
+        # edge meets that swell instead of dropping past a separate collar.
+        if frm <= 0.208:
+            u = smoothstep((frm - 0.200) / 0.008)
+            th = lerp(thick, 0.0064, u)
+            return flat_grind_ring(
+                z, spine, edge, th, bevel=0.0015, grind_at=0.08,
+                edge_thick=lerp(0.00012, th * 0.42, u),
+            )
+        # Then the outline eases up into the tang: a finger guard, not a hook.
+        tang_half = scale_half(0.222) + margin
+        tang_spine = cx - tang_half
+        tang_edge = cx + tang_half
+        if frm <= 0.222:
+            u = smoothstep((frm - 0.208) / 0.014)
+            return flat_grind_ring(
+                z,
+                lerp(spine, tang_spine, u),
+                lerp(edge, tang_edge, u),
+                lerp(0.0064, 0.0018, u),
+                bevel=0.0025,
+                grind_at=0.15,
+                edge_thick=lerp(0.0026, 0.0010, u),
+            )
+        half = scale_half(frm) + margin
+        return flat_grind_ring(
+            z, cx - half, cx + half, 0.0018, bevel=0.003, grind_at=0.2, blunt=True,
+        )
+
+    frs = [0.200 * i / 46 for i in range(47)]
+    frs += [0.203, 0.206, 0.208, 0.211, 0.214, 0.217, 0.220, 0.222, 0.250, 0.300, 0.330]
+    blade_obj = loft("chef_blade", [ring(frm) for frm in frs])
     assign(blade_obj, steel_mat)
-    objs.append(blade_obj)
-    # Full tang between the scales. Narrower than the blade, stopping at the butt.
-    tang = loft("chef_tang", [
-        flat_grind_ring(z_of(com, 0.198), -0.042, -0.010, 0.0020, bevel=0.004, grind_at=0.2, blunt=True),
-        flat_grind_ring(z_of(com, 0.330), -0.034, -0.012, 0.0016, bevel=0.004, grind_at=0.2, blunt=True),
-    ])
-    assign(tang, steel_mat)
-    objs.append(tang)
+    objs = [blade_obj]
+    scales = []
     for sign, tag in ((1, "a"), (-1, "b")):
-        rings = []
-        for frm, half_w, half_t in (
-            (0.208, 0.014, 0.0052),
-            (0.250, 0.016, 0.0070),
-            (0.300, 0.015, 0.0062),
-            (0.330, 0.012, 0.0046),
-        ):
-            z = z_of(com, frm)
-            y = sign * (0.0016 + half_t)
-            # Centred on the tang, above the edge line, so the blade's edge is what rests.
-            cx = -0.024
-            rings.append([
-                (cx - half_w, y - sign * half_t, z),
-                (cx + half_w * 0.2, y - sign * half_t, z),
-                (cx + half_w, y - sign * half_t * 0.15, z),
-                (cx + half_w * 0.15, y + sign * half_t * 0.1, z),
-                (cx - half_w, y, z),
-            ])
+        rings = [
+            slab(z_of(com, frm), cx, half, sign * 0.00042, sign * outer)
+            for frm, half, outer in handle
+        ]
         scale = loft(f"chef_scale_{tag}", rings)
         assign(scale, wood_mat)
         uv_smart(scale)
         objs.append(scale)
-    # Bolster wraps the spine and stops short of the edge, leaving the choil open.
-    bolster = loft("chef_bolster", [
-        flat_grind_ring(z_of(com, 0.190), -0.054, -0.008, 0.007, bevel=0.006, grind_at=0.15, blunt=True),
-        flat_grind_ring(z_of(com, 0.214), -0.050, -0.012, 0.008, bevel=0.006, grind_at=0.15, blunt=True),
-    ])
-    assign(bolster, brass_mat)
-    objs.append(bolster)
-    objs.extend(add_rivets("chef", com, (0.242, 0.278, 0.312), 0.0032, brass_mat, x=-0.024))
+        scales.append(scale)
+    # Rivets through the wood and the tang, flush with the outer face at each station.
+    def scale_outer(frm):
+        if frm <= handle[0][0]:
+            return handle[0][2]
+        if frm >= handle[-1][0]:
+            return handle[-1][2]
+        for (f0, _, o0), (f1, _, o1) in zip(handle, handle[1:]):
+            if frm <= f1:
+                u = 0.0 if f1 == f0 else (frm - f0) / (f1 - f0)
+                return lerp(o0, o1, u)
+        return handle[-1][2]
+
+    rivet_at = (0.242, 0.278, 0.312)
+    objs.extend(add_rivets(
+        "chef", com, rivet_at, 0.0032, brass_mat, x=cx, y=[scale_outer(f) for f in rivet_at],
+    ))
+    assert_joins("chef", [blade_obj], scales)
     report("chef", objs, 0.330)
     return objs
+
+
+def cord_turn(name, z, half_w, half_t, strand=0.00105, bury=0.00022, around=28, seg=8):
+    """One round of cord. The strand straddles the diamond so it touches the steel."""
+    h = max(half_w, 1.5e-4)
+    t = max(half_t, 1.5e-4)
+    corners = [(0.0, t), (h, 0.0), (0.0, -t), (-h, 0.0)]
+    per = max(4, around // 4)
+    samples = []
+    for i in range(4):
+        ax, ay = corners[i]
+        bx, by = corners[(i + 1) % 4]
+        ex, ey = bx - ax, by - ay
+        # Clockwise diamond: the outward normal is the counter-clockwise turn of the edge.
+        nx, ny = -ey, ex
+        nlen = math.hypot(nx, ny) or 1.0
+        nx, ny = nx / nlen, ny / nlen
+        for k in range(per):
+            u = k / per
+            samples.append((ax + ex * u - nx * bury, ay + ey * u - ny * bury, nx, ny))
+    verts = []
+    for cx, cy, nx, ny in samples:
+        for s in range(seg):
+            a = 2 * math.pi * s / seg
+            verts.append((
+                cx + math.cos(a) * strand * nx,
+                cy + math.cos(a) * strand * ny,
+                z + math.sin(a) * strand,
+            ))
+    n = len(samples)
+    faces = []
+    for i in range(n):
+        for s in range(seg):
+            a = i * seg + s
+            b = i * seg + (s + 1) % seg
+            c = ((i + 1) % n) * seg + (s + 1) % seg
+            d = ((i + 1) % n) * seg + s
+            faces.append((a, b, c, d))
+    return link_mesh(name, verts, faces)
 
 
 def build_throwing(steel_mat, cord_mat):
@@ -732,19 +880,18 @@ def build_throwing(steel_mat, cord_mat):
     obj = loft_along("throw_blade", com, stations(64, 0.280), ring)
     assign(obj, steel_mat)
     objs = [obj]
-    # Cord on the handle, proud of the recessed steel and still inside the 5 mm stock.
-    half = THROWING_THICKNESS * 0.5
-    for i, frm in enumerate((0.168, 0.182, 0.196, 0.210, 0.224, 0.238, 0.252)):
-        z = z_of(com, frm)
-        ring_a = []
-        for k in range(16):
-            a = 2 * math.pi * k / 16
-            ring_a.append((math.cos(a) * 0.0112, math.sin(a) * (half - 0.00025), z))
-        ring_b = [(x, y, z + 0.0034) for x, y, _ in ring_a]
-        band = loft(f"cord_{i}", [ring_a, ring_b])
+    # Each turn is a round strand whose centreline sits on the steel, so the
+    # wrap crosses the surface (no gap) and stays inside the 5 mm stock.
+    cords = []
+    for i, frm in enumerate((0.152, 0.166, 0.180, 0.194, 0.208, 0.222, 0.236, 0.250)):
+        neg, pos, thick = blades.throw_station(frm)
+        band = cord_turn(f"cord_{i}", z_of(com, frm), max(abs(neg), pos), thick * 0.5)
         assign(band, cord_mat)
         objs.append(band)
+        cords.append(band)
+    assert_joins("throwing", [obj], cords)
     report("throwing", objs, 0.280)
+    half = THROWING_THICKNESS * 0.5
     peak = max(abs(co) for o in objs for co in (v.co.y for v in o.data.vertices))
     if peak > half + 1e-4:
         raise SystemExit(f"throwing thickness {peak * 2:.4f} m exceeds {THROWING_THICKNESS:.4f} m")
@@ -754,33 +901,49 @@ def build_throwing(steel_mat, cord_mat):
 def build_pocket(steel_mat, g10, liner_mat, pin_mat):
     com = POCKET_COM
 
-    def ring(s):
-        spine, edge, thick, blunt = blades.pocket_station(s)
-        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0012, grind_at=0.14, blunt=blunt)
+    def ring(frm):
+        z = z_of(com, frm)
+        if frm <= 0.085:
+            spine, edge, thick, blunt = blades.pocket_station(frm)
+            return flat_grind_ring(z, spine, edge, thick, bevel=0.0012, grind_at=0.14, blunt=blunt)
+        # Tang continues through the pivot and into the channel. Same axis as the blade.
+        u = smoothstep((frm - 0.085) / 0.022)
+        spine0, edge0, thick0, _blunt = blades.pocket_station(0.085)
+        return flat_grind_ring(
+            z,
+            lerp(spine0, -0.0205, u),
+            lerp(edge0, -0.0050, u),
+            lerp(thick0, 0.0018, u),
+            bevel=0.002,
+            grind_at=0.2,
+            blunt=True,
+        )
 
-    blade_obj = loft_along("pocket_blade", com, stations(56, 0.085), ring)
+    blade_obj = loft("pocket_blade", [ring(frm) for frm in stations(48, 0.085) + [0.092, 0.100, 0.112]])
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
     # Thumb stud on the blade face, near the spine, just ahead of the ricasso.
     stud = disc_y("pocket_stud", -0.016, 0.0014, 0.0046, z_of(com, 0.058), 0.0022, segments=10)
     assign(stud, pin_mat)
     objs.append(stud)
-    # Handle, 110 mm, with a gentle curve. Liners inside, scales outside, clip on one scale.
+    # Handle, 110 mm, with a gentle curve. Liners pinch the tang; scales sit outside.
     def center(frm):
-        u = (frm - 0.090) / 0.110
+        u = (frm - 0.084) / 0.116
         return -0.012 - 0.0035 * math.sin(max(0.0, min(1.0, u)) * math.pi)
 
     handle = (
-        (0.092, 0.0105),
-        (0.110, 0.0122),
-        (0.132, 0.0114),
-        (0.155, 0.0132),
-        (0.178, 0.0124),
+        (0.084, 0.0105),
+        (0.100, 0.0114),
+        (0.122, 0.0120),
+        (0.148, 0.0130),
+        (0.176, 0.0122),
         (0.200, 0.0100),
     )
+    liners = []
     for sign, tag, mat, y_mid, half_t in (
-        (1, "lin_a", liner_mat, 0.0014, 0.0009),
-        (-1, "lin_b", liner_mat, -0.0014, 0.0009),
+        # Inner face at ±0.40 mm, so it cuts into the 1.8 mm tang.
+        (1, "lin_a", liner_mat, 0.00130, 0.00090),
+        (-1, "lin_b", liner_mat, -0.00130, 0.00090),
         (1, "sc_a", g10, 0.0044, 0.0023),
         (-1, "sc_b", g10, -0.0044, 0.0023),
     ):
@@ -790,9 +953,13 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
         if mat == g10:
             uv_smart(part)
         objs.append(part)
+        if tag.startswith("lin"):
+            liners.append(part)
+    # Pivot pin through the tang and both liners.
     pivot = disc_y("pocket_pivot", -0.012, -0.0080, 0.0080, z_of(com, 0.090), 0.0044, segments=14)
     assign(pivot, pin_mat)
     objs.append(pivot)
+    assert_joins("pocket", [blade_obj], liners + [pivot])
     clip = box(
         "pocket_clip",
         -0.020, -0.014,
@@ -807,61 +974,90 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
 
 def build_butterfly(steel_mat, scale_mat, pin_mat):
     com = FLY_COM
+    cx = -0.011
 
-    def ring(s):
-        spine, edge, thick = blades.fly_station(s)
-        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0012, grind_at=0.16)
+    def ring(frm):
+        z = z_of(com, frm)
+        if frm <= 0.100:
+            spine, edge, thick = blades.fly_station(frm)
+            return flat_grind_ring(z, spine, edge, thick, bevel=0.0012, grind_at=0.16)
+        # Tang thickens immediately so it fills the channel at the pivot pin.
+        u = smoothstep((frm - 0.100) / 0.016)
+        thick_u = smoothstep((frm - 0.100) / 0.005)
+        spine0, edge0, thick0 = blades.fly_station(0.100)
+        return flat_grind_ring(
+            z,
+            lerp(spine0, -0.020, u),
+            lerp(edge0, -0.002, u),
+            lerp(thick0, 0.0066, thick_u),
+            bevel=0.002,
+            grind_at=0.2,
+            blunt=True,
+        )
 
-    blade_obj = loft_along("fly_blade", com, stations(48, 0.100), ring)
+    blade_obj = loft("fly_blade", [ring(frm) for frm in stations(40, 0.100) + [0.104, 0.112, 0.122]])
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
-    # Kicker on the spine at the pivot, the stop the handles close against.
-    kicker = box("fly_kicker", -0.028, -0.020, -0.0016, 0.0016, z_of(com, 0.094), z_of(com, 0.108))
+    # Kicker on the spine, overlapping the handle fronts. It is the close-stop.
+    kicker = box("fly_kicker", -0.027, -0.018, -0.0034, 0.0034, z_of(com, 0.096), z_of(com, 0.112))
     assign(kicker, steel_mat)
     objs.append(kicker)
-    # Short tang inside the channel.
-    tang = loft("fly_tang", [
-        flat_grind_ring(z_of(com, 0.098), -0.020, -0.004, 0.0020, bevel=0.003, grind_at=0.3, blunt=True),
-        flat_grind_ring(z_of(com, 0.130), -0.016, -0.006, 0.0016, bevel=0.003, grind_at=0.3, blunt=True),
-    ])
-    assign(tang, steel_mat)
-    objs.append(tang)
-    # Two channel handles, 130 mm, open along the tang.
+    handles = []
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = []
-        for frm, half in ((0.112, 0.012), (0.170, 0.013), (0.220, 0.0125), (0.242, 0.011)):
+        for frm, half in ((0.100, 0.012), (0.160, 0.013), (0.210, 0.0125), (0.242, 0.011)):
             z = z_of(com, frm)
-            inner = 0.0028
-            outer = 0.0066
-            y_in = sign * inner
-            y_out = sign * outer
-            cx = -0.011
             rings.append([
-                (cx - half, y_in, z), (cx + half, y_in, z), (cx + half, y_out, z), (cx - half, y_out, z),
+                (cx - half, sign * 0.0028, z),
+                (cx + half, sign * 0.0028, z),
+                (cx + half, sign * 0.0066, z),
+                (cx - half, sign * 0.0066, z),
             ])
         handle = loft(f"fly_handle_{tag}", rings)
         assign(handle, scale_mat)
         objs.append(handle)
+        handles.append(handle)
     latch = box("fly_latch", -0.018, -0.004, -0.0024, 0.0024, z_of(com, 0.228), z_of(com, 0.248))
     assign(latch, pin_mat)
     objs.append(latch)
+    pins = []
     for frm, rad in ((0.104, 0.0028), (0.200, 0.0018), (0.236, 0.0018)):
-        pin = disc_y(f"fly_pin_{frm}", -0.011, -0.0074, 0.0074, z_of(com, frm), rad, segments=12)
+        pin = disc_y(f"fly_pin_{frm}", cx, -0.0074, 0.0074, z_of(com, frm), rad, segments=12)
         assign(pin, pin_mat)
         objs.append(pin)
+        pins.append(pin)
+    assert_joins("butterfly", [blade_obj], handles)
+    assert_joins("butterfly kicker", [kicker], handles)
+    assert_joins("butterfly pin", [blade_obj], [pins[0]])
     report("butterfly", objs, 0.250)
     return objs
 
 
 def build_cleaver(steel_mat, wood_mat, brass_mat):
     com = CLEAVER_COM
+    cx = -0.048
 
-    def ring(s):
-        spine, edge, thick = blades.cleaver_station(s)
-        # Grind starts at 60% of the height: the top 40% stays the full 5 mm spine.
-        return flat_grind_ring(z_of(com, s), spine, edge, thick, bevel=0.0020, grind_at=0.40)
+    def ring(frm):
+        z = z_of(com, frm)
+        if frm <= 0.180:
+            spine, edge, thick = blades.cleaver_station(frm)
+            # Grind starts at 60% of the height: the top 40% stays the full 5 mm spine.
+            return flat_grind_ring(z, spine, edge, thick, bevel=0.0020, grind_at=0.40)
+        # Past the heel the steel narrows into the tang on the handle's axis.
+        u = smoothstep((frm - 0.180) / 0.016)
+        spine0, edge0, thick0 = blades.cleaver_station(0.180)
+        return flat_grind_ring(
+            z,
+            lerp(spine0, cx - 0.018, u),
+            lerp(edge0, cx + 0.018, u),
+            lerp(thick0, 0.0022, u),
+            bevel=0.003,
+            grind_at=0.25,
+            blunt=True,
+        )
 
-    blade_obj = loft_along("cleaver_blade", com, stations(40, 0.180), ring)
+    frs = [0.180 * i / 36 for i in range(37)] + [0.186, 0.194, 0.210, 0.250, 0.300]
+    blade_obj = loft("cleaver_blade", [ring(frm) for frm in frs])
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
     # Hole near the top front corner. Spine is -X, the tip is the low from-tip end.
@@ -877,29 +1073,32 @@ def build_cleaver(steel_mat, wood_mat, brass_mat):
     except RuntimeError as err:
         print("cleaver hole boolean failed:", err)
         bpy.data.objects.remove(cutter, do_unlink=True)
-    bolster = loft("cleaver_bolster", [
-        flat_grind_ring(z_of(com, 0.172), -0.066, -0.030, 0.010, bevel=0.006, grind_at=0.2, blunt=True),
-        flat_grind_ring(z_of(com, 0.196), -0.062, -0.034, 0.012, bevel=0.006, grind_at=0.2, blunt=True),
+    # Ferrule overlaps the blade heel and the front of the scales. Same axis as the tang.
+    ferrule = loft("cleaver_ferrule", [
+        flat_grind_ring(z_of(com, 0.174), cx - 0.021, cx + 0.021, 0.009, bevel=0.004, grind_at=0.2, blunt=True),
+        flat_grind_ring(z_of(com, 0.198), cx - 0.020, cx + 0.020, 0.008, bevel=0.004, grind_at=0.2, blunt=True),
     ])
-    assign(bolster, brass_mat)
-    objs.append(bolster)
+    assign(ferrule, brass_mat)
+    objs.append(ferrule)
+    scales = []
     for sign, tag in ((1, "a"), (-1, "b")):
         rings = []
-        for frm, half_w in ((0.198, 0.015), (0.240, 0.017), (0.275, 0.015), (0.300, 0.012)):
-            z = z_of(com, frm)
-            y = sign * 0.0062
-            cx = -0.048
-            rings.append([
-                (cx - half_w, y - sign * 0.004, z),
-                (cx + half_w, y - sign * 0.004, z),
-                (cx + half_w, y + sign * 0.001, z),
-                (cx - half_w, y + sign * 0.001, z),
-            ])
+        for frm, half_w, outer in (
+            (0.190, 0.0155, 0.0022),
+            (0.230, 0.0165, 0.0064),
+            (0.270, 0.0150, 0.0060),
+            (0.300, 0.0120, 0.0048),
+        ):
+            rings.append(slab(z_of(com, frm), cx, half_w, sign * 0.00055, sign * outer))
         scale = loft(f"cleaver_scale_{tag}", rings)
         assign(scale, wood_mat)
         uv_smart(scale)
         objs.append(scale)
-    objs.extend(add_rivets("cleaver", com, (0.230, 0.270), 0.0034, brass_mat, x=-0.048))
+        scales.append(scale)
+    objs.extend(add_rivets("cleaver", com, (0.230, 0.270), 0.0034, brass_mat, x=cx, y=(0.0064, 0.0060)))
+    assert_joins("cleaver", [blade_obj], scales)
+    assert_joins("cleaver ferrule", [blade_obj], [ferrule])
+    assert_joins("cleaver ferrule-handle", [ferrule], scales)
     report("cleaver", objs, 0.300)
     return objs
 
