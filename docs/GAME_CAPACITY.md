@@ -56,7 +56,7 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Mastermind | 1 | 4 | 4 pegs from 6 colors, 10 guesses × 4 code styles |
 | Battleship | 1 | 4 | Classic 10×10 fleet × 4 computer strengths |
 | Tetras | 1 | 4 | Seeded 7-piece bags; no final level |
-| Knife Flip | 1 | 10 | Five knives plus a bottle at 1/4, 1/3, 1/2, 3/4 and full. Point sticks, or the bottle lands upright. No final level |
+| Knife Flip | 1 | 8 | Three knives (chef's, throwing, pocket) plus a bottle at 1/4, 1/3, 1/2, 3/4 and full. Point sticks, or the bottle lands upright. No final level |
 | Letterfall | 1 | 4 | 7×7 boards; orthogonal words of 3+ letters, gravity, combos, and a move-limited target score |
 | Mancala | 1 | 4 | Six pits a side, four stones; sow, extra turns, and captures |
 | Five in a row | 1 | 4 | 11×11 board; five or more in a line |

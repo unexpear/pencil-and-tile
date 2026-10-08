@@ -192,8 +192,8 @@ older boards show **Original** rather than acquiring a misleading rating.
 - **2048:** 3×3 to 6×6 boards with goals from 512 to 8192. Swipe or use the arrows.
 - **Tetras:** falling blocks with seeded 7-piece bags, wall kicks, a ghost piece,
   three next pieces and four starting speeds. It pauses when you leave the screen.
-- **Knife Flip:** toss a chef's knife, throwing knife, pocket knife, butterfly knife,
-  cleaver, or a water bottle. The point sticks, or the bottle lands upright.
+- **Knife Flip:** toss a chef's knife, throwing knife, pocket knife, or a water bottle.
+  The point sticks, or the bottle lands upright.
   Fill runs from one quarter to full. Between a quarter and a third full lands most often.
 
 ## Cards and board games

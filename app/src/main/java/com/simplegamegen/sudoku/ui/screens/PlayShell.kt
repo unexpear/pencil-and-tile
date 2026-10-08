@@ -100,8 +100,10 @@ fun <S : Any> PlayShell(
     var sheet by rememberSaveable { mutableStateOf(false) }
     var rules by rememberSaveable { mutableStateOf(false) }
     var confirm by rememberSaveable { mutableStateOf(false) }
+    val chosen = setting.takeIf { it in setup.settings.indices } ?: 0
+    if (chosen != setting) setting = chosen
     LaunchedEffect(game != null) { game?.let { setting = setup.settingOf(it) } }
-    fun begin() { sheet = false; confirm = false; vm.start(setup.create(setting)) }
+    fun begin() { sheet = false; confirm = false; vm.start(setup.create(chosen)) }
     fun request() { if (game != null && setup.inProgress(game)) confirm = true else begin() }
     ReportPlay(id, key = game?.let(setup.identity), level = game?.let { setup.settings[setup.settingOf(it)] } ?: "",
         levelIndex = game?.let(setup.settingOf) ?: 0, inProgress = game != null && setup.inProgress(game), outcome = game?.let(setup.outcome))
@@ -130,9 +132,9 @@ fun <S : Any> PlayShell(
         when {
             game == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             game == null -> StartCard(id.title, setup.rules, art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
-                OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
-                setup.preview?.invoke(setting)
-                Text(setup.describe(setting), style = MaterialTheme.typography.bodySmall, color = look.colors.muted)
+                OptionGroup(setup.settingTitle, setup.settings.indices.toList(), chosen, { setup.settings[it] }) { setting = it }
+                setup.preview?.invoke(chosen)
+                Text(setup.describe(chosen), style = MaterialTheme.typography.bodySmall, color = look.colors.muted)
                 MessageLine(s.message)
                 Button(onClick = ::begin, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start") }
             }
@@ -144,9 +146,9 @@ fun <S : Any> PlayShell(
     }
     if (sheet) NewGameSheet("New game", startLabel = "Start", game = id, onDismiss = { sheet = false }, onStart = ::request) {
         GameFamilyPicker(nav, id)
-        OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
-        setup.preview?.invoke(setting)
-        Text(setup.describe(setting), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
+        OptionGroup(setup.settingTitle, setup.settings.indices.toList(), chosen, { setup.settings[it] }) { setting = it }
+        setup.preview?.invoke(chosen)
+        Text(setup.describe(chosen), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
     }
     if (rules) AlertDialog(onDismissRequest = { rules = false }, title = { Text("How to play ${id.title}") },
         text = { Text(setup.rules) }, confirmButton = { TextButton(onClick = { rules = false }) { Text("Got it") } },

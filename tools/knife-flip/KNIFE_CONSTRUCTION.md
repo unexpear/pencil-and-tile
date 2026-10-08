@@ -51,6 +51,8 @@ Source: Alistair Phillips' slipjoint layout says to align the spine of the open 
 
 ## Butterfly knife
 
+Shelved for the 1.1.12 picker. The mesh builder stays in `generate_models.py` and exports only when `KNIFE_SHELVED=1`. The APK does not include `butterfly.glb`.
+
 Open balisong. The 100 × 22 mm clip-point blade is centred between the two channel handles, in thickness and in the side view. The tang sits in the channel at the pivot, the kicker meets the handle, and the latch is at the butt.
 
 | | Built | Accepted range |
@@ -61,6 +63,8 @@ Open balisong. The 100 × 22 mm clip-point blade is centred between the two chan
 Sources: a closed balisong is centred when the blade sits evenly between the handles rather than against one of them ([tuning](https://balisongbutterfly.com/how-to-tune-a-balisong)). The tang is the part between the handles at the pivot, and the kicker is the stop on that tang ([anatomy](https://balisongbutterfly.com/balisong-anatomy-parts-explained), [Benchmade](https://support.benchmade.com/hc/en-us/articles/24423264139035-Balisong-Anatomy)).
 
 ## Cleaver
+
+Shelved for the 1.1.12 picker, same as the butterfly knife. `cleaver.glb` is not in the app assets.
 
 180 × 90 mm rectangle, 5 mm at the heel tapering to about 3.6 mm at the tip. The handle is at the top of the heel, about 33 mm tall and 112 mm along the wood, with its top on the spine. A long handle on a tall blade is the usual cai dao proportion: the grip does not sit in the middle of the blade. The eye is near the top front corner. The ferrule covers the top of the heel and the front of the scales.
 

@@ -41,9 +41,10 @@ KNIVES = {
     "chef": 0.330,
     "throwing": 0.280,
     "pocket": 0.200,
-    "butterfly": 0.250,
-    "cleaver": 0.300,
 }
+if os.environ.get("KNIFE_SHELVED") == "1":
+    KNIVES["butterfly"] = 0.250
+    KNIVES["cleaver"] = 0.300
 # Distance from the tip to the centre of mass. The mesh origin sits there.
 COM = {
     "chef": (0.085 * 0.108 + 0.040 * 0.206 + 0.095 * 0.270) / 0.220,
@@ -597,7 +598,7 @@ def main():
         shot("mid-flip", room_knife("throwing", mid_throw), camera_play("knife", "side"))
     if want("stuck-chef"):
         shot("stuck-chef", room_knife("chef", stuck_chef, chips=True), camera_play("knife", "side"))
-    if want("stuck-cleaver"):
+    if os.environ.get("KNIFE_SHELVED") == "1" and want("stuck-cleaver"):
         shot("stuck-cleaver", room_knife("cleaver", stuck_cleaver, chips=True), camera_play("knife", "side"))
     if want("corner"):
         shot("corner", room_knife("throwing", held), camera_play("knife", "corner"))

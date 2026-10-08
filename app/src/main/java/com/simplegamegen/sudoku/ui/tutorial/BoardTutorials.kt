@@ -1007,7 +1007,7 @@ internal object ArcadeTutorials {
                 "Each clean landing adds one to the streak. A miss ends the round. The best streak is kept for each knife and each water level.",
             ),
             tips = listOf(
-                "A throwing knife is balanced. A cleaver is heavy in the blade and a pocket knife is heavy in the handle, so the same flick spins them differently.",
+                "A throwing knife is balanced. A chef's knife and a pocket knife are heavy in the handle, so the same flick spins them differently.",
                 "A bottle between a quarter and a third full is the easiest. A full bottle cannot slosh, so it keeps spinning and tips.",
             ),
             steps = listOf(

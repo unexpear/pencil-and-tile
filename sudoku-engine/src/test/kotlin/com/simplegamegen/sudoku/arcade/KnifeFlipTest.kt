@@ -40,15 +40,11 @@ class KnifeFlipTest {
 
         val throwing = FlipPhysics.flick(FlipModels.throwing, 1.2f, speed, aim, 0.1f, 0.24f)
         val pocket = FlipPhysics.flick(FlipModels.pocket, 1.2f, speed, aim, 0.1f, 0.24f)
-        val cleaver = FlipPhysics.flick(FlipModels.cleaver, 1.2f, speed, aim, 0.1f, 0.24f)
         assertTrue(abs(throwing.omega - pocket.omega) > 1f, "throwing ${throwing.omega} pocket ${pocket.omega}")
-        val throwSpeed = hypot(throwing.vx, throwing.vz)
-        val cleaverSpeed = hypot(cleaver.vx, cleaver.vz)
-        assertTrue(throwSpeed > cleaverSpeed * 1.15f, "a heavier cleaver leaves more slowly: $throwSpeed vs $cleaverSpeed")
-        assertTrue(FlipModels.cleaver.balance < 0.45f, "a cleaver is blade-heavy")
         assertTrue(FlipModels.throwing.balance in 0.47f..0.53f, "a throwing knife is balanced")
         assertTrue(FlipModels.pocket.balance > 0.58f, "a pocket knife is handle-heavy")
         assertTrue(FlipModels.chef.balance > FlipModels.throwing.balance)
+        assertEquals(listOf("chef", "throwing", "pocket"), FlipModels.knives.map { it.id })
     }
 
     @Test fun `the point sticks and the handle does not`() {
@@ -190,6 +186,22 @@ class KnifeFlipTest {
         assertEquals(g.copy(phase = KnifeFlip.Phase.FLYING, release = bad.release, throwNum = bad.throwNum, verdict = ""), bad)
         assertEquals(missed, KnifeFlipCodec.decode(KnifeFlipCodec.encode(missed)))
         assertEquals(null, KnifeFlipCodec.decode("nope"))
+    }
+
+    @Test fun `a saved butterfly or cleaver falls back to the chef knife`() {
+        fun k1(option: Int) = "K1\n$option\n3\n0\n0\nREADY\n0\n-\n-"
+        assertEquals(0, KnifeFlipCodec.decode(k1(3))!!.option)
+        assertEquals(0, KnifeFlipCodec.decode(k1(4))!!.option)
+        assertEquals(1, KnifeFlipCodec.decode(k1(1))!!.option)
+        assertEquals(2, KnifeFlipCodec.decode(k1(2))!!.option)
+        val quarter = FlipModels.options.indexOfFirst { it.body.bottle && it.body.fill == 0.25f }
+        val full = FlipModels.options.indexOfFirst { it.body.bottle && it.body.fill == 1f }
+        assertEquals(3, quarter)
+        assertEquals(quarter, KnifeFlipCodec.decode(k1(5))!!.option)
+        assertEquals(full, KnifeFlipCodec.decode(k1(9))!!.option)
+        val bottle = KnifeFlip.start(3L, quarter)
+        assertEquals(bottle, KnifeFlipCodec.decode(KnifeFlipCodec.encode(bottle)))
+        assertEquals(null, KnifeFlipCodec.decode(k1(10)))
     }
 
     private fun justAbove(body: FlipBody, theta: Float, along: Float): Release {

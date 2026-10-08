@@ -9,8 +9,8 @@ import com.simplegamegen.sudoku.arcade.FlipModels
  * [SQUARES_PER_METRE] is the scale used when the mesh is placed on the board.
  *
  * Silhouettes follow ordinary published cutlery sizes (an 8-inch chef's knife, a centre-balanced
- * throwing knife, an open folder, an open balisong, and an 18 by 9 cm cleaver). They are not traced
- * from a product drawing, and no downloaded model is used.
+ * throwing knife, and an open folder). They are not traced from a product drawing, and no
+ * downloaded model is used. An unknown knife id uses the chef's mesh.
  */
 internal object KnifeMeshes {
     const val SQUARES_PER_METRE = 8f
@@ -34,8 +34,6 @@ internal object KnifeMeshes {
     val chef: List<KnifePart> = chefParts()
     val throwing: List<KnifePart> = throwingParts()
     val pocket: List<KnifePart> = pocketParts()
-    val butterfly: List<KnifePart> = butterflyParts()
-    val cleaver: List<KnifePart> = cleaverParts()
 
     val bottle: Mesh = latheMesh(bottleBody, segments = 24)
     val cap: Mesh = latheMesh(bottleCap, segments = 20)
@@ -45,12 +43,9 @@ internal object KnifeMeshes {
     }
 
     fun parts(body: FlipBody): List<KnifePart> = when (body.id) {
-        "chef" -> chef
         "throwing" -> throwing
         "pocket" -> pocket
-        "butterfly" -> butterfly
-        "cleaver" -> cleaver
-        else -> throwing
+        else -> chef
     }
 
     fun water(fillIndex: Int, sigma: Float): Mesh {
@@ -178,82 +173,6 @@ private fun pocketParts(): List<KnifePart> {
         KnifePart(pivot, KnifeSurface.BOLSTER),
         KnifePart(stud, KnifeSurface.BOLSTER),
         KnifePart(screw, KnifeSurface.BOLSTER),
-    )
-}
-
-// --- Butterfly knife, shown open: blade between two slotted channel handles. ---
-
-private val flySpine = listOf(0f to 0f, 0.025f to 0.005f, 0.07f to 0.007f, 0.120f to 0.004f)
-private val flyEdge = listOf(0f to 0f, 0.025f to -0.008f, 0.07f to -0.011f, 0.105f to -0.007f, 0.120f to -0.002f)
-
-private fun butterflyParts(): List<KnifePart> {
-    val body = FlipModels.butterfly
-    val blade = groundBlade(bladeSamples(body, 0.120f, 30, flySpine, flyEdge, spineHeel = 0.0014f, spineTip = 0.00035f, edgeHalf = 0.00012f, grind = 0.18f))
-    val tang = loft(body, listOf(
-        floatArrayOf(0.150f, 0.001f, 0.006f, 0.0016f),
-        floatArrayOf(0.118f, 0.001f, 0.008f, 0.0016f),
-    ))
-    fun channel(y: Float): List<KnifePart> {
-        val railY = 0.0034f
-        val top = shiftY(loft(body, listOf(
-            floatArrayOf(0.230f, 0.013f, 0.0042f, railY),
-            floatArrayOf(0.158f, 0.014f, 0.0042f, railY),
-        ), segments = 12), y)
-        val bottom = shiftY(loft(body, listOf(
-            floatArrayOf(0.230f, -0.013f, 0.0042f, railY),
-            floatArrayOf(0.158f, -0.013f, 0.0042f, railY),
-        ), segments = 12), y)
-        val pivotBlock = shiftY(loft(body, listOf(
-            floatArrayOf(0.158f, 0.000f, 0.014f, 0.0032f),
-            floatArrayOf(0.128f, 0.001f, 0.013f, 0.0032f),
-        ), segments = 14), y)
-        val latchBlock = shiftY(loft(body, listOf(
-            floatArrayOf(0.250f, 0.000f, 0.012f, 0.0032f),
-            floatArrayOf(0.228f, 0.000f, 0.014f, 0.0032f),
-        ), segments = 14), y)
-        return listOf(top, bottom, pivotBlock, latchBlock).map { KnifePart(it, KnifeSurface.SCALES) }
-    }
-    val latch = shiftY(loft(body, listOf(
-        floatArrayOf(0.254f, 0.000f, 0.005f, 0.0024f),
-        floatArrayOf(0.234f, 0.000f, 0.005f, 0.0024f),
-    ), segments = 10), 0.003f)
-    val pinA = yRod(0.001f, z(body, 0.136f), -0.014f, 0.014f, 0.0042f)
-    val pinB = yRod(0.000f, z(body, 0.242f), -0.012f, 0.012f, 0.0032f)
-    return listOf(KnifePart(tang, KnifeSurface.TANG), KnifePart(blade.body, KnifeSurface.BLADE), KnifePart(blade.edge, KnifeSurface.EDGE)) +
-        channel(0.0085f) + channel(-0.0085f) +
-        listOf(KnifePart(latch, KnifeSurface.BOLSTER), KnifePart(pinA, KnifeSurface.BOLSTER), KnifePart(pinB, KnifeSurface.BOLSTER))
-}
-
-// --- Cleaver: 180 by about 90 mm, slight belly, handle on the heel, hole near the top front. ---
-
-private val cleaverSpine = listOf(0f to -0.004f, 0.09f to -0.006f, 0.18f to -0.004f)
-private val cleaverEdge = listOf(0f to 0.080f, 0.05f to 0.086f, 0.09f to 0.088f, 0.15f to 0.084f, 0.18f to 0.076f)
-
-private fun cleaverParts(): List<KnifePart> {
-    val body = FlipModels.cleaver
-    val samples = bladeSamples(body, 0.180f, 42, cleaverSpine, cleaverEdge, spineHeel = 0.0022f, spineTip = 0.0013f, edgeHalf = 0.00018f, grind = 0.14f)
-    val holeFrom = 0.028f
-    val blade = groundBlade(samples, holeX = 0.012f, holeZ = z(body, holeFrom), holeR = 0.011f)
-    val bolster = loft(body, listOf(
-        floatArrayOf(0.196f, 0.038f, 0.044f, 0.007f),
-        floatArrayOf(0.178f, 0.040f, 0.046f, 0.008f),
-        floatArrayOf(0.164f, 0.038f, 0.042f, 0.0065f),
-    ), segments = 18)
-    val grip = loft(body, listOf(
-        floatArrayOf(0.298f, 0.006f, 0.014f, 0.012f),
-        floatArrayOf(0.255f, 0.008f, 0.016f, 0.013f),
-        floatArrayOf(0.218f, 0.006f, 0.015f, 0.012f),
-        floatArrayOf(0.192f, 0.010f, 0.016f, 0.009f),
-    ))
-    val rivetA = yRod(0.008f, z(body, 0.230f), -0.015f, 0.015f, 0.0036f)
-    val rivetB = yRod(0.007f, z(body, 0.268f), -0.015f, 0.015f, 0.0036f)
-    return listOf(
-        KnifePart(blade.body, KnifeSurface.BLADE),
-        KnifePart(blade.edge, KnifeSurface.EDGE),
-        KnifePart(bolster, KnifeSurface.BOLSTER),
-        KnifePart(grip, KnifeSurface.HANDLE),
-        KnifePart(rivetA, KnifeSurface.BOLSTER),
-        KnifePart(rivetB, KnifeSurface.BOLSTER),
     )
 }
 

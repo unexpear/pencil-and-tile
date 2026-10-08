@@ -9,8 +9,10 @@ Knives are authored in metres with the centre of mass at the origin and the tip
 along Blender +Z. The glTF exporter turns that into glTF +Y, which is "tip up"
 at theta = 0 in FlipPhysics. The bottle's origin is the centre of its base.
 Nothing here changes FlipPhysics; the proportions are the ones that file already
-uses (an 8-inch chef's knife, a centre-balanced thrower, an open folder, an open
-balisong, an 18 by 9 cm cleaver, Dekker's 204 mm bottle).
+uses (an 8-inch chef's knife, a centre-balanced thrower, an open folder,
+Dekker's 204 mm bottle). The butterfly knife and the cleaver are still built
+here, but a normal run does not write their GLBs. Set KNIFE_SHELVED=1 to export
+butterfly.glb and cleaver.glb.
 
 The only image files read from disk are the CC0 wood maps in ./textures and they
 are embedded in the GLBs. Steel roughness is drawn in this script.
@@ -1481,8 +1483,6 @@ def main():
         "chef.glb": build_chef(steel_mat, wood_handle, brass_mat),
         "throwing.glb": build_throwing(steel_mat, cord),
         "pocket.glb": build_pocket(steel_mat, g10, liner, pin),
-        "butterfly.glb": build_butterfly(steel_mat, fly_scale, pin),
-        "cleaver.glb": build_cleaver(steel_mat, wood_handle, brass_mat),
         "bottle.glb": build_bottle(plastic, cap_mat),
         "water_body.glb": build_water_body(water_mat),
         "water_neck.glb": build_water_neck(water_mat),
@@ -1492,6 +1492,9 @@ def main():
         "chip3.glb": build_chip(edgegrain, 4),
         "room.glb": build_room(counter, wall, window_glass, plaster, frame) + build_block(endgrain, edgegrain),
     }
+    if os.environ.get("KNIFE_SHELVED") == "1":
+        groups["butterfly.glb"] = build_butterfly(steel_mat, fly_scale, pin)
+        groups["cleaver.glb"] = build_cleaver(steel_mat, wood_handle, brass_mat)
     # chip loft uses wedge_ring which has a fixed point count; report length separately.
     for filename, objs in groups.items():
         export(objs, filename)

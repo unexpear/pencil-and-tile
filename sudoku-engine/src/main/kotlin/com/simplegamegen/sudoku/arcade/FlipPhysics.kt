@@ -673,6 +673,10 @@ object FlipModels {
         ),
         gripFromTip = 0.158f, handleZone = 0.10f,
     )
+    /**
+     * Kept for the generator (`KNIFE_SHELVED=1`). Not in [knives] or [options],
+     * so a player cannot select it. A K1 save of this slot falls back to [chef].
+     */
     val butterfly: FlipBody = knife(
         "butterfly", "Butterfly knife", 0.250f,
         // Open balisong: 100 × 22 mm clip-point blade plus two channel handles.
@@ -682,6 +686,8 @@ object FlipModels {
         ),
         gripFromTip = 0.195f, handleZone = 0.11f,
     )
+
+    /** Same as [butterfly]: generator only, not a picker choice. */
     val cleaver: FlipBody = knife(
         "cleaver", "Cleaver", 0.300f,
         // 180 × 90 mm blade, 5 mm spine. The tall blade adds to the in-plane inertia.
@@ -696,7 +702,7 @@ object FlipModels {
     val fillLabels: List<String> = listOf("1/4", "1/3", "1/2", "3/4", "full")
     val bottles: List<FlipBody> = fills.map { waterBottle(it) }
 
-    val knives: List<FlipBody> = listOf(chef, throwing, pocket, butterfly, cleaver)
+    val knives: List<FlipBody> = listOf(chef, throwing, pocket)
 
     data class Option(val label: String, val body: FlipBody, val blurb: String)
 
@@ -764,22 +770,33 @@ object KnifeFlipCodec {
     fun encode(g: KnifeFlip): String {
         val r = g.release
         val release = if (r == null) "-" else listOf(r.x, r.z, r.vx, r.vz, r.theta, r.omega, r.sigma).joinToString(",") { num(it) }
-        return listOf("K1", g.option, g.seed, g.score, g.streak, g.phase.name, g.throwNum, g.verdict.ifEmpty { "-" }, release).joinToString("\n")
+        return listOf("K2", g.option, g.seed, g.score, g.streak, g.phase.name, g.throwNum, g.verdict.ifEmpty { "-" }, release).joinToString("\n")
     }
 
     fun decode(text: String): KnifeFlip? = try {
         val lines = text.split('\n')
-        if (lines[0] != "K1" || lines.size < 9) null
+        if ((lines[0] != "K1" && lines[0] != "K2") || lines.size < 9) null
         else {
             val release = if (lines[8] == "-") null else lines[8].split(',').map { it.toFloat() }.let {
                 Release(it[0], it[1], it[2], it[3], it[4], it[5], it.getOrElse(6) { 0f })
             }
-            val option = lines[1].toInt()
+            val option = if (lines[0] == "K1") legacyOption(lines[1].toInt()) else lines[1].toInt()
             require(option in FlipModels.options.indices)
             KnifeFlip(option, lines[2].toLong(), lines[3].toInt(), lines[4].toInt(),
                 KnifeFlip.Phase.valueOf(lines[5]), release, lines[6].toInt(), lines[7].let { if (it == "-") "" else it })
         }
     } catch (_: RuntimeException) { null }
+
+    /**
+     * K1 listed chef, throwing, pocket, butterfly, cleaver, then the five bottles.
+     * Butterfly (3) and cleaver (4) are no longer selectable, so both become chef's.
+     * Bottles shift down by two so a saved fill stays the same fill.
+     */
+    internal fun legacyOption(saved: Int): Int = when (saved) {
+        3, 4 -> 0
+        in 5..9 -> saved - 2
+        else -> saved
+    }
 
     private fun num(v: Float) = java.lang.Float.toString(v)
 }

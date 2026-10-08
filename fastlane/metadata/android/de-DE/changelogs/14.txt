@@ -1,0 +1,3 @@
+Neu: Messerwurf in 3D. Wirf ein Kochmesser, ein Wurfmesser oder ein Taschenmesser, sodass die Spitze stecken bleibt, oder wirf eine Wasserflasche. Die Füllstände gehen von einem Viertel und einem Drittel über halb und drei Viertel bis voll.
+
+Der Wurf nutzt echte Flip-Physik: Masse, Balance und Drehung.

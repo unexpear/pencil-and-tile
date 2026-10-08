@@ -287,9 +287,8 @@ private fun meshBounds(body: FlipBody): FloatArray = when {
     body.bottle -> floatArrayOf(-0.0315f, 0f, -0.0315f, 0.0315f, 0.204f, 0.0315f)
     body.id == "chef" -> floatArrayOf(-0.04800f, -0.13423f, -0.01010f, 0.00001f, 0.19577f, 0.01010f)
     body.id == "pocket" -> floatArrayOf(-0.02440f, -0.07961f, -0.00820f, 0.00200f, 0.12039f, 0.00800f)
-    body.id == "butterfly" -> floatArrayOf(-0.02700f, -0.11058f, -0.00740f, 0.00200f, 0.13742f, 0.00740f)
-    body.id == "cleaver" -> floatArrayOf(-0.09000f, -0.18222f, -0.00956f, 0.00000f, 0.11778f, 0.00956f)
-    else -> floatArrayOf(-0.01378f, -0.14f, -0.0025f, 0.01378f, 0.14f, 0.0025f)
+    body.id == "throwing" -> floatArrayOf(-0.01378f, -0.14f, -0.0025f, 0.01378f, 0.14f, 0.0025f)
+    else -> floatArrayOf(-0.04800f, -0.13423f, -0.01010f, 0.00001f, 0.19577f, 0.01010f)
 }
 
 internal class PreviewPose(
@@ -546,12 +545,9 @@ private fun cameraBasis(eye: DoubleArray, look: DoubleArray): DoubleArray {
 }
 
 private fun knifeAsset(id: String): String = when (id) {
-    "chef" -> "knife-flip/chef.glb"
     "throwing" -> "knife-flip/throwing.glb"
     "pocket" -> "knife-flip/pocket.glb"
-    "butterfly" -> "knife-flip/butterfly.glb"
-    "cleaver" -> "knife-flip/cleaver.glb"
-    else -> "knife-flip/throwing.glb"
+    else -> "knife-flip/chef.glb"
 }
 
 private fun tipDegrees(theta: Float) = Math.toDegrees((-theta).toDouble()).toFloat()

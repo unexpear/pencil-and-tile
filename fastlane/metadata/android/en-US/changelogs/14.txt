@@ -1,0 +1,3 @@
+Knife Flip is a new 3D game. Toss a chef's knife, a throwing knife, or a pocket knife so the point sticks, or flip a water bottle. Fill levels run from a quarter and a third through a half and three quarters to full.
+
+The toss uses real flip physics: mass, balance, and spin.
