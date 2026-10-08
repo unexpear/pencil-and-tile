@@ -18,7 +18,7 @@ class ClassicsCatalogTest {
         assertEquals(GameId.entries.size, GAME_COUNT)
         assertEquals(66, CollectionGuide.entries.size)
         assertEquals(76, CollectionGuide.entries.sumOf { it.variants })
-        assertEquals(484, CollectionGuide.entries.sumOf { it.setups })
+        assertEquals(482, CollectionGuide.entries.sumOf { it.setups })
         assertEquals(1, CollectionGuide.entries.count { it.title == "Battleship" })
         val entry = CollectionGuide.entries.single { it.title == "Battleship" }
         assertEquals(1, entry.variants)

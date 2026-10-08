@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **66 games, 76 rule variants, 484 selectable setting
+Current implementation: **66 games, 76 rule variants, 482 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
