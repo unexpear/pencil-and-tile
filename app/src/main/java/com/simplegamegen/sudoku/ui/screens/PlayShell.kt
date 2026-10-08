@@ -72,6 +72,8 @@ class PlaySetup<S>(
     val identity: (S) -> String,
     /** How the game ended, or null while it's still going. */
     val outcome: (S) -> Outcome?,
+    /** A large picture of the selected setting, when the name alone is not enough to tell the models apart. */
+    val preview: (@Composable (Int) -> Unit)? = null,
 )
 
 /**
@@ -129,6 +131,7 @@ fun <S : Any> PlayShell(
             game == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             game == null -> StartCard(id.title, setup.rules, art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
                 OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
+                setup.preview?.invoke(setting)
                 Text(setup.describe(setting), style = MaterialTheme.typography.bodySmall, color = look.colors.muted)
                 MessageLine(s.message)
                 Button(onClick = ::begin, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start") }
@@ -142,6 +145,7 @@ fun <S : Any> PlayShell(
     if (sheet) NewGameSheet("New game", startLabel = "Start", game = id, onDismiss = { sheet = false }, onStart = ::request) {
         GameFamilyPicker(nav, id)
         OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
+        setup.preview?.invoke(setting)
         Text(setup.describe(setting), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
     }
     if (rules) AlertDialog(onDismissRequest = { rules = false }, title = { Text("How to play ${id.title}") },

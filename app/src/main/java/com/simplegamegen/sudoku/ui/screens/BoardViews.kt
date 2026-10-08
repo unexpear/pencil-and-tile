@@ -195,6 +195,8 @@ internal fun BoardWithViews(
     margin: Float = 0.72f,
     /** How deep the table is, front to back, when it isn't square. */
     rows: Float = n.toFloat(),
+    /** Fit each saved camera on its own, so a turned view still fills the frame. */
+    fitToView: Boolean = false,
     /** A fixed height for the board, for screens that scroll; otherwise it takes the space that's left. */
     height: androidx.compose.ui.unit.Dp? = null,
     /** Camera chips. A second board that shares [camera] can hide them. */
@@ -206,7 +208,7 @@ internal fun BoardWithViews(
     val actionScroll = rememberScrollState()
     // The board first, then the camera controls under it, where a thumb reaches them on a phone.
     Column(if (height == null) Modifier.fillMaxSize() else Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Box((if (height == null) Modifier.weight(1f) else Modifier.height(height)).fillMaxWidth()) { BoardFrame(camera, n, peakZ, margin, rows, content) }
+        Box((if (height == null) Modifier.weight(1f) else Modifier.height(height)).fillMaxWidth()) { BoardFrame(camera, n, peakZ, margin, rows, fitToView, content) }
         if (!controls) return@Column
         Row(
             Modifier.fillMaxWidth().horizontalScroll(chipScroll),
@@ -268,6 +270,7 @@ private fun BoardFrame(
     peakZ: Float,
     margin: Float,
     rows: Float,
+    fitToView: Boolean,
     content: @Composable BoxScope.(TableFrame) -> Unit,
 ) {
     val current = rememberUpdatedState(camera)
@@ -317,6 +320,7 @@ private fun BoardFrame(
             maxHeightPx = with(display) { maxHeight.toPx() },
             margin = margin,
             rows = rows,
+            fitToView = fitToView,
         )
         Box(Modifier.size(with(display) { frame.width.toDp() }, with(display) { frame.height.toDp() })) { content(frame) }
     }
