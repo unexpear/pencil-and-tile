@@ -35,6 +35,36 @@ class BattleshipBoardTest {
         assertTrue(span(hit, 0).second < 0.2f && span(miss, 0).second < 0.2f)
     }
 
+    @Test fun `coordinate labels stay on the canvas in every camera`() {
+        val views = listOf(
+            BoardView("Behind", yaw = 0f, pitch = 68f, distance = 1.38f),
+            BoardView("Corner", yaw = 28f, pitch = 60f, distance = 1.5f),
+            BoardView("Top", yaw = 0f, pitch = 90f, distance = 1.68f),
+        )
+        val problems = ArrayList<String>()
+        for (view in views) {
+            val frame = tableFrame(
+                n = 10, maxWidthPx = 1080f, peakZ = 1.15f, maxHeightPx = 1080f,
+                view = view, margin = 0.62f, fitToView = true,
+            )
+            val px = (frame.cell * 0.34f).coerceIn(8f, 20f)
+            fun check(text: String, x: Float, y: Float) {
+                val at = frame.at(x, y, 0.22f)
+                val halfW = text.length * px * 0.55f
+                val halfH = px * 0.7f
+                if (at.x - halfW < 1f || at.x + halfW > frame.width - 1f || at.y - halfH < 1f || at.y + halfH > frame.height - 1f) {
+                    problems += "${view.name} '$text' at ${at.x.toInt()},${at.y.toInt()} ±${halfW.toInt()}x${halfH.toInt()} in ${frame.width.toInt()}x${frame.height.toInt()}"
+                }
+            }
+            for (col in 0 until 10) check("${'A' + col}", col + 0.5f, -0.38f)
+            for (row in 0 until 10) {
+                val label = "${row + 1}"
+                check(label, if (label.length > 1) -0.12f else -0.4f, row + 0.5f)
+            }
+        }
+        assertTrue(problems.isEmpty(), problems.joinToString("\n"))
+    }
+
     @Test fun `a phone-width sea keeps a near square large enough to tap`() {
         val frame = tableFrame(
             n = 10, maxWidthPx = 1080f, peakZ = 1.15f, maxHeightPx = 1080f,
