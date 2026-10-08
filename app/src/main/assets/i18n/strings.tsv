@@ -2828,3 +2828,53 @@ Knight	马	ナイト	Caballo	Springer
 Unicorn	独角兽	ユニコーン	Unicornio	Einhorn
 Promote the pawn	升变这枚兵	ポーンを昇格	Corona el peón	Bauer umwandeln
 Choose the piece.	选择棋子。	駒を選びます。	Elige la pieza.	Wähle die Figur.
+Knife Flip	飞刀	ナイフフリップ	Lanzamiento de cuchillo	Messerwurf
+Toss and stick	投出并扎住	投げて刺す	Lanza y clava	Werfen und stecken
+Best streak	最佳连续	最高連続	Mejor racha	Beste Serie
+Chef's knife	厨师刀	牛刀	Cuchillo de chef	Kochmesser
+Throwing knife	飞刀	投げナイフ	Cuchillo de lanzar	Wurfmesser
+Pocket knife	折刀	ポケットナイフ	Navaja	Taschenmesser
+Butterfly knife	蝴蝶刀	バタフライナイフ	Mariposa	Butterflymesser
+Cleaver	砍刀	中華包丁	Cuchillo de carnicero	Hackmesser
+Water bottle	水瓶	水筒	Botella de agua	Wasserflasche
+Bottle 1/4	水瓶 1/4	ボトル 1/4	Botella 1/4	Flasche 1/4
+Bottle 1/3	水瓶 1/3	ボトル 1/3	Botella 1/3	Flasche 1/3
+Bottle 1/2	水瓶 1/2	ボトル 1/2	Botella 1/2	Flasche 1/2
+Bottle 3/4	水瓶 3/4	ボトル 3/4	Botella 3/4	Flasche 3/4
+Bottle full	水瓶满	ボトル満水	Botella llena	Flasche voll
+Knife	刀	ナイフ	Cuchillo	Messer
+Toss	投掷	投げる	Lanzar	Werfen
+Streak {0}	连续 {0}	連続 {0}	Racha {0}	Serie {0}
+Stuck. Streak {0}.	扎住了。连续 {0}。	刺さった。連続 {0}。	Clavado. Racha {0}.	Stecken geblieben. Serie {0}.
+Landed upright. Streak {0}.	直立落地。连续 {0}。	まっすぐ着地。連続 {0}。	Cayó de pie. Racha {0}.	Aufrecht gelandet. Serie {0}.
+The handle hit first.	刀柄先碰到了。	柄が先に当たりました。	El mango golpeó primero.	Der Griff traf zuerst.
+The flat of the blade hit.	刀面拍到了。	刃の腹が当たりました。	Golpeó el plano de la hoja.	Die flache Seite der Klinge traf.
+Too soft to stick.	太轻，扎不住。	弱すぎて刺さりません。	Demasiado suave para clavarse.	Zu weich, um stecken zu bleiben.
+Too hard. It bounced out.	太猛，弹出去了。	強すぎて跳ね返りました。	Demasiado fuerte. Rebotó.	Zu hart. Es sprang heraus.
+The bottle tipped over.	瓶子倒了。	ボトルが倒れました。	La botella se volcó.	Die Flasche kippte um.
+It missed the block.	没打到木块。	台を外しました。	Falló el bloque.	Es verfehlte den Block.
+It bounced off.	弹开了。	跳ね返りました。	Rebotó.	Es prallte ab.
+Swipe up, or tap Toss.	向上滑动，或点投掷。	上にスワイプするか、投げるをタップ。	Desliza hacia arriba o toca Lanzar.	Wische nach oben oder tippe auf Werfen.
+In the air.	在空中。	空中です。	En el aire.	In der Luft.
+Knife flip block. Swipe up to toss.	飞刀木块。向上滑动来投掷。	ナイフフリップの台。上にスワイプして投げます。	Bloque de lanzamiento. Desliza hacia arriba para lanzar.	Wurfblock. Wische nach oben, um zu werfen.
+{0} g, {1} cm, balance {2}% from the tip.	{0} 克，{1} 厘米，重心在距刀尖 {2}% 处。	{0} g、{1} cm、重心は先端から {2}%。	{0} g, {1} cm, equilibrio al {2}% desde la punta.	{0} g, {1} cm, Balance {2}% von der Spitze.
+{0} g. {1} full, and the water can slosh.	{0} 克。装了 {1}，水会晃动。	{0} g。{1} まで入り、水が揺れます。	{0} g. A {1}, y el agua puede chapotear.	{0} g. {1} voll, und das Wasser kann schwappen.
+{0} g. Full, so the water cannot slosh.	{0} 克。装满了，水不能晃。	{0} g。満水なので水は揺れません。	{0} g. Llena, así que el agua no puede chapotear.	{0} g. Voll, also kann das Wasser nicht schwappen.
+Swipe up to toss a knife or a water bottle, or tap Toss. A knife scores when the point sticks in the block. A bottle scores when it lands upright on its base. Each clean landing raises the streak, and a miss ends the round. The model changes the weight, the balance and the spin. A bottle about one third full is the easiest to land.	向上滑动投出刀或水瓶，或点投掷。刀尖扎进木块就得分。瓶子底座朝下直立落地也得分。每次干净落地增加连续次数，失误则本局结束。模型会改变重量、重心和旋转。大约三分之一满的瓶子最容易落地。	上にスワイプするか、投げるをタップしてナイフか水筒を投げます。切っ先が台に刺されば得点です。ボトルは底でまっすぐ立てば得点です。きれいな着地で連続が増え、失敗でその回は終わります。モデルで重さ、重心、回転が変わります。約3分の1まで入れたボトルが一番立ちやすいです。	Desliza hacia arriba para lanzar un cuchillo o una botella de agua, o toca Lanzar. Un cuchillo puntúa cuando la punta se clava en el bloque. Una botella puntúa cuando cae de pie sobre su base. Cada aterrizaje limpio sube la racha, y un fallo termina la ronda. El modelo cambia el peso, el equilibrio y el giro. Una botella llena a un tercio es la más fácil de dejar de pie.	Wische nach oben, um ein Messer oder eine Wasserflasche zu werfen, oder tippe auf Werfen. Ein Messer zählt, wenn die Spitze im Block stecken bleibt. Eine Flasche zählt, wenn sie aufrecht auf dem Boden landet. Jede saubere Landung erhöht die Serie, ein Fehlwurf beendet die Runde. Das Modell ändert Gewicht, Balance und Drehung. Eine etwa zu einem Drittel gefüllte Flasche landet am leichtesten.
+Five knives and a water bottle at five fills, from one quarter to full. A knife scores when the point sticks. A bottle scores when it lands upright.	五把刀，加上从四分之一到满的五种水量。刀尖扎住得分。瓶子直立落地得分。	ナイフ5種と、4分の1から満水までの5段階の水筒。切っ先が刺されば得点。ボトルは直立で得点。	Cinco cuchillos y una botella de agua en cinco niveles, de un cuarto a llena. Un cuchillo puntúa si la punta se clava. Una botella puntúa si cae de pie.	Fünf Messer und eine Wasserflasche in fünf Füllständen, von einem Viertel bis voll. Ein Messer zählt, wenn die Spitze stecken bleibt. Eine Flasche zählt, wenn sie aufrecht landet.
+Each toss follows that model's mass, balance and spin. There is no final level.	每次投掷都按该模型的质量、重心和旋转来算。没有最终关卡。	投げるたびに、そのモデルの質量、重心、回転で決まります。最終レベルはありません。	Cada lanzamiento sigue la masa, el equilibrio y el giro de ese modelo. No hay un nivel final.	Jeder Wurf folgt Masse, Balance und Drehung dieses Modells. Es gibt keine letzte Stufe.
+Flick a knife so the point sticks, or land a water bottle upright.	把刀甩出去，让刀尖扎住，或让水瓶直立落地。	ナイフをはじいて切っ先を刺すか、水筒を直立させます。	Lanza un cuchillo para clavar la punta, o deja una botella de agua de pie.	Schnippe ein Messer, sodass die Spitze stecken bleibt, oder lande eine Wasserflasche aufrecht.
+Swipe up to toss, or tap Toss. A faster swipe throws harder and spins more.	向上滑动来投掷，或点投掷。滑得更快，投得更猛，转得更多。	上にスワイプするか、投げるをタップ。速くスワイプすると強く飛び、よく回ります。	Desliza hacia arriba para lanzar, o toca Lanzar. Un deslizamiento más rápido lanza más fuerte y gira más.	Wische nach oben oder tippe auf Werfen. Ein schnelleres Wischen wirft härter und dreht mehr.
+A knife scores when the point hits the block first, aimed down, neither too soft nor too hard. The handle or the flat does not stick.	刀尖朝下先碰到木块，力度不太轻也不太猛，才算得分。刀柄或刀面先碰到不会扎住。	切っ先が下を向き、先に台へ当たり、弱すぎず強すぎないときに得点です。柄や刃の腹は刺さりません。	Un cuchillo puntúa cuando la punta golpea el bloque primero, hacia abajo, ni demasiado suave ni demasiado fuerte. El mango o el plano no se clavan.	Ein Messer zählt, wenn die Spitze zuerst den Block trifft, nach unten gerichtet, weder zu weich noch zu hart. Griff oder Flachseite bleiben nicht stecken.
+A bottle scores when it lands on its base after about one flip and stays upright. The fill changes the weight, the balance and how the water sloshes.	瓶子大约翻转一圈后底座着地并保持直立，才算得分。水量会改变重量、重心和水的晃动。	ボトルは約1回転して底で着地し、直立したままなら得点です。水量で重さ、重心、水の揺れが変わります。	Una botella puntúa cuando cae sobre su base tras cerca de un giro y se queda de pie. El nivel cambia el peso, el equilibrio y cómo chapotea el agua.	Eine Flasche zählt, wenn sie nach etwa einer Drehung auf dem Boden landet und aufrecht bleibt. Der Füllstand ändert Gewicht, Balance und das Schwappen.
+Each clean landing adds one to the streak. A miss ends the round. The best streak is kept for each knife and each water level.	每次干净落地，连续次数加一。一次失误就结束本局。每把刀和每种水量各自记录最佳连续。	きれいな着地で連続が1増えます。失敗でその回は終わります。ナイフごと、水量ごとに最高連続が残ります。	Cada aterrizaje limpio suma uno a la racha. Un fallo termina la ronda. La mejor racha se guarda para cada cuchillo y cada nivel de agua.	Jede saubere Landung erhöht die Serie um eins. Ein Fehlwurf beendet die Runde. Die beste Serie bleibt für jedes Messer und jeden Wasserstand erhalten.
+A throwing knife is balanced. A cleaver is heavy in the blade and a pocket knife is heavy in the handle, so the same flick spins them differently.	飞刀是平衡的。砍刀刃重，折刀柄重，所以同样一甩，旋转不一样。	投げナイフは重心が真ん中です。中華包丁は刃が重く、ポケットナイフは柄が重いので、同じはじきでも回転が違います。	Un cuchillo de lanzar está equilibrado. El de carnicero pesa en la hoja y la navaja en el mango, así que el mismo golpe los gira distinto.	Ein Wurfmesser ist ausbalanciert. Ein Hackmesser ist schwer in der Klinge, ein Taschenmesser schwer im Griff, also dreht derselbe Schnips sie unterschiedlich.
+About one third full is the easiest bottle. A full bottle cannot slosh, so it keeps spinning and tips.	大约三分之一满的瓶子最容易。装满的瓶子不能晃水，所以会一直转然后倒下。	約3分の1が一番立ちやすいです。満水は水が揺れないので回転が残り、倒れます。	Una botella a un tercio es la más fácil. Una llena no puede chapotear, así que sigue girando y se vuelca.	Etwa ein Drittel voll ist am leichtesten. Eine volle Flasche kann nicht schwappen, dreht also weiter und kippt.
+The block is the target. This throwing knife starts in your hand.	木块是目标。这把飞刀从你手里出发。	台が的です。この投げナイフは手の中から始まります。	El bloque es el blanco. Este cuchillo de lanzar empieza en tu mano.	Der Block ist das Ziel. Dieses Wurfmesser startet in deiner Hand.
+Toss it so the point sticks.	投出去，让刀尖扎住。	切っ先が刺さるように投げます。	Lánzalo para que la punta se clave.	Wirf es, sodass die Spitze stecken bleibt.
+The point stuck. The streak is 1.	刀尖扎住了。连续是 1。	切っ先が刺さった。連続は 1。	La punta se clavó. La racha es 1.	Die Spitze blieb stecken. Die Serie ist 1.
+A bottle about one third full can flip and sit on its base. Toss it.	大约三分之一满的瓶子可以翻转后立在底座上。投出去。	約3分の1のボトルは回転して底で立てます。投げます。	Una botella a un tercio puede girar y quedar sobre su base. Lánzala.	Eine etwa zu einem Drittel gefüllte Flasche kann sich drehen und auf dem Boden stehen. Wirf sie.
+Upright. The streak is 2. A miss would end the round.	直立了。连续是 2。一次失误就会结束本局。	直立。連続は 2。失敗するとその回は終わります。	De pie. La racha es 2. Un fallo terminaría la ronda.	Aufrecht. Die Serie ist 2. Ein Fehlwurf würde die Runde beenden.
+Upright	直立	直立	De pie	Aufrecht
+Stuck	扎住	刺さった	Clavado	Stecken
+Bottle	瓶子	ボトル	Botella	Flasche

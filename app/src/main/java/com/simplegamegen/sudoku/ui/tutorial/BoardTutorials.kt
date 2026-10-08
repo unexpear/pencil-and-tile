@@ -986,4 +986,37 @@ internal object ArcadeTutorials {
             ),
         )
     }
+
+    val knifeFlip: Tutorial get() {
+        fun scene(bottle: Boolean, landed: Boolean, choices: List<String> = emptyList()): Scene {
+            val block = (1..4).map { c -> Item("block$c", c.toFloat(), 3.1f, look = Cell(fill = Fill.BLOCK)) }
+            val piece = if (landed) {
+                Item("piece", 2.1f, 1.5f, 1.6f, 1.4f, Label(if (bottle) "Upright" else "Stuck", 0.36f, bold = true), Tone.GOOD)
+            } else {
+                Item("piece", 0.3f, 0.5f, 1.5f, 1.8f, Label(if (bottle) "Bottle" else "Knife", 0.34f, bold = true))
+            }
+            return Scene(6f, 4.2f, block + piece, Backdrop.TABLE, choices = choices, maxUnit = 56)
+        }
+        return Tutorial(
+            GameId.KNIFE_FLIP,
+            "Flick a knife so the point sticks, or land a water bottle upright.",
+            rules = listOf(
+                "Swipe up to toss, or tap Toss. A faster swipe throws harder and spins more.",
+                "A knife scores when the point hits the block first, aimed down, neither too soft nor too hard. The handle or the flat does not stick.",
+                "A bottle scores when it lands on its base after about one flip and stays upright. The fill changes the weight, the balance and how the water sloshes.",
+                "Each clean landing adds one to the streak. A miss ends the round. The best streak is kept for each knife and each water level.",
+            ),
+            tips = listOf(
+                "A throwing knife is balanced. A cleaver is heavy in the blade and a pocket knife is heavy in the handle, so the same flick spins them differently.",
+                "About one third full is the easiest bottle. A full bottle cannot slosh, so it keeps spinning and tips.",
+            ),
+            steps = listOf(
+                Step("The block is the target. This throwing knife starts in your hand.", scene(bottle = false, landed = false)),
+                Step("Toss it so the point sticks.", scene(bottle = false, landed = false, choices = listOf("Toss")), pick = "Toss",
+                    after = scene(bottle = false, landed = true), then = "The point stuck. The streak is 1."),
+                Step("A bottle about one third full can flip and sit on its base. Toss it.", scene(bottle = true, landed = false, choices = listOf("Toss")),
+                    pick = "Toss", after = scene(bottle = true, landed = true), then = "Upright. The streak is 2. A miss would end the round."),
+            ),
+        )
+    }
 }
