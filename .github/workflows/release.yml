@@ -1,7 +1,8 @@
 name: Release to Google Play
 
 # Every push to main builds a signed bundle and sends it to the Play closed-testing track.
-# Google reviews it, then it rolls out to testers. Pull requests only run the tests.
+# Google reviews it, then it rolls out to testers. Pull requests run the tests and upload a
+# debug APK so it can be sideloaded. They do not build or change the signed release APK.
 # A version tag (v*) builds the same signed artifacts and the github-release job attaches the APK
 # to the GitHub Release. Tags do not upload to Play; the main push of that commit already did.
 # Play rejects a repeated version code, so the main-branch build uses 100 + the workflow run number.
@@ -133,6 +134,19 @@ jobs:
         with:
           name: app-release-apk
           path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+
+      # Sideload build for pull requests. The signed universal release APK (tags / main) is unchanged.
+      - name: Build the debug APK
+        if: github.event_name == 'pull_request'
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Keep the debug APK
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       - name: Explain why no bundle was built

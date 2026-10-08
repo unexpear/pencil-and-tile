@@ -19,6 +19,11 @@ class KnifeFlipTest {
         assertEquals(expected, risen, 0.0015f)
     }
 
+    @Test fun `the throwing knife stock is 5 mm thick`() {
+        // Width stays 28 mm on the part. The inertia equation does not read this thickness.
+        assertEquals(0.005f, FlipModels.THROWING_THICKNESS)
+    }
+
     @Test fun `a different centre of mass changes the spin`() {
         val mass = 0.22f
         val length = 0.30f

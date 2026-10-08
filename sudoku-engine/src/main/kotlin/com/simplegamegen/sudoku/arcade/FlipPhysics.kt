@@ -640,6 +640,14 @@ fun waterBottle(fill: Float): FlipBody {
 }
 
 object FlipModels {
+    /**
+     * Stock thickness of the throwing knife, 5 mm. The 28 mm figure on the part is the
+     * width (`across`) and is what the thin-plate inertia uses. Thickness is not in that
+     * equation. `tools/knife-flip/generate_models.py` parses this declaration so the mesh
+     * stays the same thickness.
+     */
+    const val THROWING_THICKNESS = 0.005f
+
     val chef: FlipBody = knife(
         "chef", "Chef's knife", 0.330f,
         // 203 × 48 × 2.3 mm blade, brass bolster, wood scales on a steel tang.
@@ -652,7 +660,7 @@ object FlipModels {
     )
     val throwing: FlipBody = knife(
         "throwing", "Throwing knife", 0.280f,
-        // One piece of steel, about 28 × 5 mm, balanced at the middle.
+        // One piece of steel, 28 mm across and THROWING_THICKNESS thick, balanced at the middle.
         listOf(Part(0.240f, 0.140f, 0.280f, across = 0.028f)),
         gripFromTip = 0.246f, handleZone = 0.07f,
     )

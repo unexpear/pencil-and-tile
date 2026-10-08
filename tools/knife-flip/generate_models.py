@@ -19,6 +19,7 @@ are embedded in the GLBs. Steel roughness is drawn in this script.
 import math
 import os
 import random
+import re
 import sys
 
 import bpy
@@ -35,6 +36,22 @@ THROW_COM = 0.140
 POCKET_COM = (0.032 * 0.042 + 0.096 * 0.152) / 0.128
 FLY_COM = (0.055 * 0.055 + 0.100 * 0.190) / 0.155
 CLEAVER_COM = (0.330 * 0.086 + 0.075 * 0.242) / 0.405
+
+
+def throwing_thickness():
+    """The same 5 mm stock FlipPhysics names THROWING_THICKNESS. Not the 28 mm width."""
+    path = os.path.join(
+        REPO, "sudoku-engine", "src", "main", "kotlin",
+        "com", "simplegamegen", "sudoku", "arcade", "FlipPhysics.kt",
+    )
+    text = open(path, encoding="utf-8").read()
+    match = re.search(r"const val THROWING_THICKNESS = ([0-9.]+)f", text)
+    if not match:
+        raise SystemExit("THROWING_THICKNESS is missing from FlipPhysics.kt")
+    return float(match.group(1))
+
+
+THROWING_THICKNESS = throwing_thickness()
 
 
 def z_of(com, from_tip):
@@ -447,15 +464,27 @@ def throw_profile(t):
 
 
 def throw_thick(t):
-    return 0.0012 + 0.0038 * math.sin(t * math.pi)
+    # Full thickness. The peak is the physics stock; the tip and the butt taper down.
+    return THROWING_THICKNESS * (0.24 + 0.76 * math.sin(t * math.pi))
 
 
 def pocket_profile(t):
-    spine = -0.001
-    # Drop point: edge rises toward the tip, belly modest, 18 mm tall.
-    edge = 0.004 + 0.014 * math.sin(t * math.pi * 0.9) ** 0.9
-    if t < 0.18:
-        edge = spine + (edge - spine) * (t / 0.18)
+    # Open drop-point folder. The blade is 18 mm tall (the physics `across`).
+    spine = -0.0022
+    if t > 0.55:
+        # The point drops off the spine, instead of running out in a spear.
+        k = (t - 0.55) / 0.45
+        spine = -0.0022 + 0.0090 * (k ** 1.35)
+    belly = math.sin(min(t, 1.0) * math.pi) ** 0.72
+    edge = 0.0012 + 0.0148 * belly
+    if t < 0.14:
+        edge = spine + (edge - spine) * ((t / 0.14) ** 0.8)
+    if t > 0.88:
+        # Short ricasso into the handle.
+        k = (t - 0.88) / 0.12
+        edge = edge * (1 - k) + (spine + 0.0055) * k
+    if edge - spine > 0.018:
+        edge = spine + 0.018
     return spine, edge
 
 
@@ -548,56 +577,86 @@ def build_throwing(steel_mat, cord_mat):
     obj = blade("throw_blade", THROW_COM, 0.280, throw_profile, throw_thick, stations=48)
     assign(obj, steel_mat)
     objs = [obj]
-    # Cord turns on the handle half. Each turn is a thin torus approximated by a lofted ring.
+    # Cord on the handle. The wrap stays inside the 5 mm stock, so the knife's
+    # thickness and THROWING_THICKNESS are the same number.
+    half = THROWING_THICKNESS * 0.5
     for i, frm in enumerate((0.198, 0.210, 0.222, 0.234, 0.246, 0.258)):
         z = z_of(THROW_COM, frm)
         ring = []
-        for k in range(18):
-            a = 2 * math.pi * k / 18
-            ring.append((math.cos(a) * 0.0072, math.sin(a) * 0.0042, z))
-        # A second ring makes a band rather than a collapsed loop.
-        ring2 = [(x, y, z + 0.0034) for x, y, _ in ring]
+        for k in range(16):
+            a = 2 * math.pi * k / 16
+            ring.append((math.cos(a) * 0.0062, math.sin(a) * half, z))
+        ring2 = [(x, y, z + 0.0026) for x, y, _ in ring]
         band = loft(f"cord_{i}", [ring, ring2])
         assign(band, cord_mat)
         objs.append(band)
     report("throwing", objs, 0.280)
+    peak = max(abs(co) for o in objs for co in (v.co.y for v in o.data.vertices))
+    if peak > half + 1e-4:
+        raise SystemExit(f"throwing thickness {peak * 2:.4f} m exceeds {THROWING_THICKNESS:.4f} m")
     return objs
+
+
+def folder_ring(z, half_h, y_mid, half_t):
+    """Rounded handle section. half_h is the 14 mm half of the 28 mm handle height."""
+    ring = []
+    for k in range(10):
+        a = 2 * math.pi * k / 10
+        ring.append((math.cos(a) * half_h, y_mid + math.sin(a) * half_t, z))
+    return ring
 
 
 def build_pocket(steel_mat, g10, liner_mat, pin_mat):
     com = POCKET_COM
-    blade_obj = blade("pocket_blade", com, 0.090, pocket_profile, pocket_thick, stations=28)
+    blade_obj = blade("pocket_blade", com, 0.090, pocket_profile, pocket_thick, stations=32)
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
-    # Thumb stud on the blade.
-    stud = disc_y("pocket_stud", 0.006, 0.003, 0.008, z_of(com, 0.028), 0.0022, segments=10)
+    # Thumb stud, just proud of the blade, on the drop-point's shoulder.
+    stud = disc_y("pocket_stud", 0.0045, 0.0016, 0.0048, z_of(com, 0.022), 0.0024, segments=10)
     assign(stud, pin_mat)
     objs.append(stud)
-    # Liners, then tan scales outside them.
-    for sign, tag, mat, y0, thick in (
-        (1, "lin_a", liner_mat, 0.0016, 0.0013),
-        (-1, "lin_b", liner_mat, -0.0016, 0.0013),
-        (1, "sc_a", g10, 0.0046, 0.0034),
-        (-1, "sc_b", g10, -0.0046, 0.0034),
-    ):
+    # Brass bolsters where the blade meets the handle.
+    for sign in (1, -1):
         rings = []
-        for frm, half in ((0.098, 0.012), (0.140, 0.0145), (0.175, 0.0135), (0.200, 0.011)):
-            z = z_of(com, frm)
-            y = y0 + sign * thick * 0.5
-            rings.append([
-                (-half, y - thick * 0.5, z),
-                (half, y - thick * 0.5, z),
-                (half, y + thick * 0.5, z),
-                (-half, y + thick * 0.5, z),
-            ])
+        for frm, half in ((0.090, 0.0095), (0.108, 0.0125)):
+            rings.append(folder_ring(z_of(com, frm), half, sign * 0.0032, 0.0022))
+        bolster = loft(f"pocket_bolster_{sign}", rings)
+        assign(bolster, pin_mat)
+        objs.append(bolster)
+    # Liners, then scales. Stations: choil, finger groove, palm swell, butt.
+    # Height stays inside the 28 mm handle. Thickness is a real folder, about 14 mm overall.
+    handle = (
+        (0.100, 0.0105),
+        (0.118, 0.0128),
+        (0.132, 0.0112),
+        (0.158, 0.0140),
+        (0.182, 0.0132),
+        (0.200, 0.0100),
+    )
+    for sign, tag, mat, y_mid, half_t in (
+        (1, "lin_a", liner_mat, 0.0015, 0.0009),
+        (-1, "lin_b", liner_mat, -0.0015, 0.0009),
+        (1, "sc_a", g10, 0.0046, 0.0024),
+        (-1, "sc_b", g10, -0.0046, 0.0024),
+    ):
+        rings = [folder_ring(z_of(com, frm), half, y_mid, half_t) for frm, half in handle]
         part = loft(f"pocket_{tag}", rings)
         assign(part, mat)
         if mat == g10:
             uv_smart(part)
         objs.append(part)
-    pivot = disc_y("pocket_pivot", 0.0, -0.009, 0.009, z_of(com, 0.096), 0.0034, segments=14)
+    pivot = disc_y("pocket_pivot", 0.0, -0.0082, 0.0082, z_of(com, 0.096), 0.0042, segments=14)
     assign(pivot, pin_mat)
     objs.append(pivot)
+    # Pocket clip along one scale. A folder reads as a folder with this on it.
+    clip = box(
+        "pocket_clip",
+        -0.0015, 0.0065,
+        0.0071, 0.0084,
+        z_of(com, 0.128), z_of(com, 0.194),
+    )
+    assign(clip, liner_mat)
+    objs.append(clip)
     report("pocket", objs, 0.200)
     return objs
 
@@ -722,8 +781,9 @@ def build_bottle(plastic, cap_mat):
 
 
 def build_water_body(water_mat):
-    # Unit height so the app can scale Y to the fill in metres. Radius sits inside the bottle.
-    obj = lathe_solid("water_body", [(0.0, 0.0004), (0.0, 0.0262), (1.0, 0.0262)], segments=28)
+    # Unit height so a loader can scale Y. Radius is inside the bottle wall (inner ~30.9 mm).
+    # The app does not scale this mesh: it builds a plane-cut column at the same radius.
+    obj = lathe_solid("water_body", [(0.0, 0.0004), (0.0, 0.0292), (1.0, 0.0292)], segments=28)
     assign(obj, water_mat)
     report("water_body", [obj], 1.0)
     return [obj]
@@ -731,17 +791,17 @@ def build_water_body(water_mat):
 
 def build_water_neck(water_mat):
     # Interior of the shoulder and neck, base of this mesh at the shoulder (local z = 0).
-    # World placement is y = 0.148. Height is 0.056 so scale can stop the water in the neck.
+    # Stops at 40 mm, under the cap. The app builds its own plane-cut surface at these radii.
     profile = [
         (0.000, 0.0004),
-        (0.000, 0.0255),
-        (0.018, 0.0165),
-        (0.034, 0.0115),
-        (0.056, 0.0105),
+        (0.000, 0.0292),
+        (0.018, 0.0162),
+        (0.034, 0.0112),
+        (0.040, 0.0106),
     ]
     obj = lathe_solid("water_neck", profile, segments=24)
     assign(obj, water_mat)
-    report("water_neck", [obj], 0.056)
+    report("water_neck", [obj], 0.040)
     return [obj]
 
 
@@ -755,14 +815,26 @@ def build_block(wood_mat):
     return [obj]
 
 
-def build_chip(wood_mat):
-    # A splinter about 2.4 cm long, origin at its centre.
-    obj = loft("chip", [
-        wedge_ring(-0.012, -0.004, 0.004, 0.0030, edge_full=0.0012, grind=0.4, steps=4),
-        wedge_ring(0.012, -0.001, 0.001, 0.0008, edge_full=0.0003, grind=0.4, steps=4),
-    ])
+def build_chip(wood_mat, seed):
+    """One small irregular splinter, a bit over a centimetre, origin at its centre."""
+    rng = random.Random(seed)
+    length = 0.008 + rng.random() * 0.005
+    rings = []
+    for i in range(5):
+        t = i / 4
+        z = -length * 0.5 + length * t
+        taper = math.sin(t * math.pi) ** 0.55
+        ring = []
+        for k in range(6):
+            a = 2 * math.pi * k / 6 + rng.random() * 0.25
+            rx = (0.00045 + 0.0015 * taper) * (0.65 + 0.7 * rng.random())
+            ry = (0.00035 + 0.0011 * taper) * (0.6 + 0.8 * rng.random())
+            ring.append((math.cos(a) * rx, math.sin(a) * ry, z))
+        rings.append(ring)
+    obj = loft(f"chip_{seed}", rings)
     assign(obj, wood_mat)
     uv_smart(obj)
+    report(f"chip{seed}", [obj])
     return [obj]
 
 
@@ -773,16 +845,15 @@ def build_room(wood_mat, wall_mat, glass_mat, plaster_mat):
     assign(top, wood_mat)
     cube_uv(top, scale=1.6)
     objs.append(top)
-    # Cabinet face and a side panel. Kept blocky on purpose: the HDRI is the room,
-    # this is the counter the block stands on.
+    # Cabinet under the counter. The room is a closed box: the HDRI is only the light.
     cabinet = box("cabinet", -0.52, 1.22, -0.30, 0.38, -0.90, -0.142)
     assign(cabinet, plaster_mat)
     objs.append(cabinet)
     kick = box("kick", -0.48, 1.18, -0.28, 0.34, -0.90, -0.84)
     assign(kick, wall_mat)
     objs.append(kick)
-    # Back wall and a return wall. Window is a hole via boolean.
-    wall = box("back_wall", -0.90, 1.55, 0.46, 0.52, -0.90, 1.45)
+    # Back wall, tall enough to meet the ceiling. The window is a hole via boolean.
+    wall = box("back_wall", -1.20, 2.40, 0.46, 0.52, -0.90, 2.55)
     cutter = box("window_cut", 0.55, 1.15, 0.40, 0.60, 0.35, 0.95)
     mod = wall.modifiers.new("window", "BOOLEAN")
     mod.operation = "DIFFERENCE"
@@ -797,12 +868,27 @@ def build_room(wood_mat, wall_mat, glass_mat, plaster_mat):
         bpy.data.objects.remove(cutter, do_unlink=True)
     assign(wall, wall_mat)
     objs.append(wall)
-    side = box("side_wall", -0.90, -0.84, -0.40, 0.52, -0.90, 1.45)
+    side = box("side_wall", -1.20, -1.14, -2.20, 0.52, -0.90, 2.55)
     assign(side, wall_mat)
     objs.append(side)
-    floor = box("floor", -1.3, 1.8, -0.9, 0.9, -0.94, -0.90)
+    # Right wall and a front wall behind every gameplay camera, plus a ceiling.
+    # Together with the floor they hide the photograph that used to be the skybox.
+    right = box("right_wall", 2.34, 2.40, -2.20, 0.52, -0.90, 2.55)
+    assign(right, wall_mat)
+    objs.append(right)
+    front = box("front_wall", -1.20, 2.40, -2.26, -2.20, -0.90, 2.55)
+    assign(front, wall_mat)
+    objs.append(front)
+    ceiling = box("ceiling", -1.20, 2.40, -2.26, 0.52, 2.50, 2.58)
+    assign(ceiling, plaster_mat)
+    objs.append(ceiling)
+    floor = box("floor", -1.30, 2.50, -2.30, 0.70, -0.94, -0.90)
     assign(floor, plaster_mat)
     objs.append(floor)
+    # Opaque panel just outside the window, so the glass does not open onto the IBL photo.
+    outside = box("window_backing", 0.52, 1.18, 0.56, 0.64, 0.32, 0.98)
+    assign(outside, paint("Exterior", (0.62, 0.74, 0.82), roughness=0.9))
+    objs.append(outside)
     # Window frame and a pane of glass, slightly proud of the wall (smaller Y).
     frame_parts = [
         box("frame_l", 0.55, 0.58, 0.44, 0.50, 0.35, 0.95),
@@ -875,7 +961,10 @@ def main():
         "bottle.glb": build_bottle(plastic, cap_mat),
         "water_body.glb": build_water_body(water_mat),
         "water_neck.glb": build_water_neck(water_mat),
-        "chip.glb": build_chip(wood_handle),
+        "chip0.glb": build_chip(wood_handle, 1),
+        "chip1.glb": build_chip(wood_handle, 2),
+        "chip2.glb": build_chip(wood_handle, 3),
+        "chip3.glb": build_chip(wood_handle, 4),
         # The block shares the room file so the 1K wood maps are stored once.
         "room.glb": build_room(wood_big, wall, window_glass, plaster) + build_block(wood_big),
     }
