@@ -222,6 +222,10 @@ private fun DrawScope.draw(op: DrawOp, measurer: androidx.compose.ui.text.TextMe
             Brush.verticalGradient(listOf(Color(op.top.toInt()), Color(op.bottom.toInt())), startY = op.y, endY = op.y + op.h),
             Offset(op.x, op.y), Size(op.w, op.h),
         )
+        is DrawOp.Radial -> drawRect(
+            Brush.radialGradient(listOf(Color(op.inner.toInt()), Color(op.outer.toInt())), center = Offset(op.cx, op.cy), radius = op.radius.coerceAtLeast(1f)),
+            Offset(op.x, op.y), Size(op.w, op.h),
+        )
         is DrawOp.Circle -> {
             val c = Color(op.color.toInt())
             if (op.stroke > 0f) drawCircle(c, op.r, Offset(op.x, op.y), style = Stroke(op.stroke))
@@ -234,6 +238,9 @@ private fun DrawScope.draw(op: DrawOp, measurer: androidx.compose.ui.text.TextMe
             else drawRoundRect(c, Offset(op.x, op.y), Size(op.w, op.h), CornerRadius(op.radius), style = style)
         }
         is DrawOp.Line -> drawLine(Color(op.color.toInt()), Offset(op.x1, op.y1), Offset(op.x2, op.y2), op.stroke, StrokeCap.Round)
+        is DrawOp.Clip -> pathOf(op.pts)?.let { path ->
+            clipPath(path) { op.inner.forEach { draw(it, measurer) } }
+        }
         is DrawOp.Poly -> pathOf(op.pts)?.let { path ->
             val c = Color(op.color.toInt())
             if (op.stroke > 0f) drawPath(path, c, style = Stroke(op.stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))

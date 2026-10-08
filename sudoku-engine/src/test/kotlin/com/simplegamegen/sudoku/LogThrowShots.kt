@@ -12,6 +12,7 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.GradientPaint
 import java.awt.Graphics2D
+import java.awt.RadialGradientPaint
 import java.awt.RenderingHints
 import java.awt.geom.Arc2D
 import java.awt.geom.Ellipse2D
@@ -28,7 +29,7 @@ class LogThrowShots {
     @Test fun `render log throw boards`() {
         val root = File("/opt/cursor/artifacts")
         if (!root.isDirectory) return
-        val dir = File(root, "log-throw-v2")
+        val dir = File(root, "log-throw-v3")
         dir.mkdirs()
         val w = 1080
         val h = 1920
@@ -76,6 +77,10 @@ class LogThrowShots {
                 g.paint = GradientPaint(op.x, op.y, color(op.top), op.x, op.y + op.h, color(op.bottom))
                 g.fill(java.awt.geom.Rectangle2D.Float(op.x, op.y, op.w, op.h))
             }
+            is DrawOp.Radial -> {
+                g.paint = RadialGradientPaint(op.cx, op.cy, op.radius.coerceAtLeast(1f), floatArrayOf(0f, 1f), arrayOf(color(op.inner), color(op.outer)))
+                g.fill(java.awt.geom.Rectangle2D.Float(op.x, op.y, op.w, op.h))
+            }
             is DrawOp.Circle -> {
                 g.paint = color(op.color)
                 val e = Ellipse2D.Float(op.x - op.r, op.y - op.r, op.r * 2, op.r * 2)
@@ -90,6 +95,13 @@ class LogThrowShots {
                 g.paint = color(op.color)
                 g.stroke = BasicStroke(op.stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
                 g.draw(Line2D.Float(op.x1, op.y1, op.x2, op.y2))
+            }
+            is DrawOp.Clip -> {
+                val path = polygon(op.pts) ?: return
+                val old = g.clip
+                g.clip(path)
+                op.inner.forEach { draw(g, it) }
+                g.clip = old
             }
             is DrawOp.Poly -> {
                 val path = polygon(op.pts) ?: return

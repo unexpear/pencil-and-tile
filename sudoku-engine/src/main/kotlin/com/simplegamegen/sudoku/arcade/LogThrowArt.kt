@@ -69,10 +69,14 @@ fun LogThrowCopy.fill(template: String, vararg values: Any): String {
 
 sealed interface DrawOp {
     data class VGrad(val x: Float, val y: Float, val w: Float, val h: Float, val top: Long, val bottom: Long) : DrawOp
+    /** Smooth disc. [inner] is the color at ([cx], [cy]); [outer] is the color at [radius], then held. */
+    data class Radial(val x: Float, val y: Float, val w: Float, val h: Float, val cx: Float, val cy: Float, val radius: Float, val inner: Long, val outer: Long) : DrawOp
     data class Circle(val x: Float, val y: Float, val r: Float, val color: Long, val stroke: Float = 0f) : DrawOp
     data class RoundRect(val x: Float, val y: Float, val w: Float, val h: Float, val radius: Float, val color: Long, val stroke: Float = 0f) : DrawOp
     data class Line(val x1: Float, val y1: Float, val x2: Float, val y2: Float, val color: Long, val stroke: Float) : DrawOp
     data class Poly(val pts: List<Float>, val color: Long, val stroke: Float = 0f) : DrawOp
+    /** Draw [inner] only inside the polygon. */
+    data class Clip(val pts: List<Float>, val inner: List<DrawOp>) : DrawOp
     /** Filled polygon. Color runs from [c0] at ([x0], [y0]) to [c1] at ([x1], [y1]). */
     data class Shade(val pts: List<Float>, val x0: Float, val y0: Float, val c0: Long, val x1: Float, val y1: Float, val c1: Long) : DrawOp
     /** [startDeg] follows Android: 0 is 3 o'clock, positive is clockwise. */
@@ -288,14 +292,10 @@ object LogThrowArt {
         }
         wallKnot(ops, w * 0.16f, h * 0.20f, w * 0.035f)
         wallKnot(ops, w * 0.84f, h * 0.63f, w * 0.028f)
-        ops += DrawOp.Circle(cx, cy, radius * 1.45f, 0x18E8C080)
-        val vig = w * 0.72f
-        ops += DrawOp.Circle(-w * 0.08f, -h * 0.02f, vig, 0x66000000)
-        ops += DrawOp.Circle(w * 1.08f, -h * 0.02f, vig, 0x66000000)
-        ops += DrawOp.Circle(-w * 0.04f, h * 1.04f, vig * 1.05f, 0x88000000)
-        ops += DrawOp.Circle(w * 1.04f, h * 1.04f, vig * 1.05f, 0x88000000)
-        ops += DrawOp.VGrad(0f, 0f, w, h * 0.20f, 0xCC120C08, 0x00120C08)
-        ops += DrawOp.VGrad(0f, h * 0.74f, w, h * 0.26f, 0x00120C08, 0xE0120C08)
+        val vx = w / 2f
+        val vy = h / 2f
+        val reach = hypot((w / 2f).toDouble(), (h / 2f).toDouble()).toFloat()
+        ops += DrawOp.Radial(0f, 0f, w, h, vx, vy, reach, 0x00000000, 0xC0120C08)
     }
 
     private fun wallKnot(ops: MutableList<DrawOp>, x: Float, y: Float, s: Float) {
@@ -794,6 +794,13 @@ object LogThrowArt {
             val wood = if (i % 2 == 0) p.heart else p.edge
             ops += DrawOp.Poly(barkLip(pts, cx, cy, scale * 0.22f), p.bark)
             ops += DrawOp.Poly(pts, wood)
+            val grain = ArrayList<DrawOp>(6)
+            for (k in 1..4) {
+                val ringColor = if (k % 2 == 0) p.ring else p.edge
+                grain += DrawOp.Poly(xform(ringLocal(0.18f + k * 0.16f), cx, cy, spin, scale), ringColor, scale * 0.055f)
+            }
+            grain += DrawOp.Circle(cx, cy, scale * 0.10f, p.knot)
+            ops += DrawOp.Clip(pts, grain)
             ops += DrawOp.Poly(pts, 0xFF1A100C, scale * 0.04f)
         }
         val splinter = listOf(0f, -1f, 0.16f, -0.15f, 0f, 1f, -0.16f, -0.15f)
@@ -815,6 +822,17 @@ object LogThrowArt {
             val tumble = a + (if (i % 2 == 0) 1.0 else -1.0) * u * 2.8
             daggerIcon(ops, x, y, b.radius * 0.52f, tumble, knife.player)
         }
+    }
+
+    private fun ringLocal(radius: Float): List<Float> {
+        val n = 28
+        val pts = ArrayList<Float>(n * 2)
+        for (i in 0 until n) {
+            val a = LogThrow.TAU * i / n
+            pts += (cos(a) * radius).toFloat()
+            pts += (sin(a) * radius).toFloat()
+        }
+        return pts
     }
 
     private fun xform(local: List<Float>, cx: Float, cy: Float, spin: Double, scale: Float): List<Float> {
