@@ -2,11 +2,13 @@
 
 package com.simplegamegen.sudoku.ui.screens
 
+import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import com.google.android.filament.MaterialInstance
 import com.google.android.filament.Renderer
@@ -42,6 +44,9 @@ import com.google.android.filament.Camera as FilamentCamera
 internal fun MancalaWorld(
     frame: TableFrame,
     stones: List<StonePose>,
+    playable: Boolean,
+    legal: List<Int>,
+    onSow: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val engine = rememberEngine()
@@ -68,9 +73,13 @@ internal fun MancalaWorld(
     val materialLoader = rememberMaterialLoader(engine)
     val glass = remember(materialLoader) { MARBLE_COLORS.map { marbleGlass(materialLoader, it) } }
     val frameState = rememberUpdatedState(frame)
+    val playableState = rememberUpdatedState(playable)
+    val legalState = rememberUpdatedState(legal)
+    val sowState = rememberUpdatedState(onSow)
     SceneView(
         modifier = modifier,
         surfaceType = SurfaceType.TextureSurface,
+        isOpaque = false,
         engine = engine,
         modelLoader = modelLoader,
         environmentLoader = environmentLoader,
@@ -85,8 +94,26 @@ internal fun MancalaWorld(
         cameraManipulator = null,
         onFrame = {
             environment.indirectLight?.intensity = IBL_LUX
-            renderer.clearColor(0.20, 0.13, 0.09)
+            renderer.clearColor(0.0, 0.0, 0.0, 0.0)
             placeMancalaCamera(camera, frameState.value)
+        },
+        // TextureView takes the touches, so the pit ovals cannot live only on the Compose canvas.
+        onTouchEvent = { event, _ ->
+            if (event.action != MotionEvent.ACTION_UP || !playableState.value) false
+            else {
+                val fr = frameState.value
+                val hit = MancalaBoard.holes.asReversed().firstOrNull { hole ->
+                    hole.index in legalState.value && ovalHit(
+                        fr, Offset(event.x, event.y), hole.x, hole.y, MancalaBoard.top,
+                        hole.rx + 0.08f, hole.ry + 0.08f,
+                    )
+                }
+                if (hit == null) false
+                else {
+                    sowState.value(hit.index)
+                    true
+                }
+            }
         },
     ) {
         board?.let { ModelNode(modelInstance = it, autoAnimate = false) }
@@ -127,6 +154,7 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
     val key = MaterialProvider.MaterialKey().apply {
         hasTransmission = true
         hasIOR = true
+        hasClearCoat = true
     }
     val instance = materialLoader.createUbershaderInstance(key, emptyList(), "marble", "")
     if (instance != null) {
@@ -137,39 +165,41 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
         if ("baseColorFactor" in names) {
             instance.setParameter("baseColorFactor", color.red, color.green, color.blue, 1f)
         }
-        set("roughnessFactor", 0.04f)
+        set("roughnessFactor", 0.05f)
         set("metallicFactor", 0f)
-        set("reflectance", 0.55f)
-        set("transmissionFactor", 0.88f)
+        set("reflectance", 0.5f)
+        set("transmissionFactor", 0.55f)
         set("ior", 1.5f)
-        set("thicknessFactor", 0.12f)
-        set("volumeThicknessFactor", 0.12f)
+        set("thicknessFactor", 0.2f)
+        set("volumeThicknessFactor", 0.2f)
+        set("clearCoatFactor", 1f)
+        set("clearCoatRoughnessFactor", 0.04f)
         return instance
     }
-    return materialLoader.createColorInstance(color, metallic = 0.05f, roughness = 0.08f, reflectance = 0.55f)
+    return materialLoader.createColorInstance(color, metallic = 0.04f, roughness = 0.08f, reflectance = 0.5f)
 }
 
-private fun Renderer.clearColor(r: Double, g: Double, b: Double) {
+private fun Renderer.clearColor(r: Double, g: Double, b: Double, a: Double) {
     clearOptions = Renderer.ClearOptions().apply {
         clear = true
-        clearColor = doubleArrayOf(r, g, b, 1.0)
+        clearColor = doubleArrayOf(r, g, b, a)
     }
 }
 
 private const val HDRI = "knife-flip/kiara_interior_1k.hdr"
-private const val IBL_LUX = 24_000f
-private const val KEY_LUX = 38_000f
-private const val FILL_LUX = 14_000f
-private val KEY_DIR = Direction(x = -0.35f, y = -1f, z = -0.42f)
-private val FILL_DIR = Direction(x = 0.55f, y = -0.35f, z = 0.4f)
+private const val IBL_LUX = 18_000f
+private const val KEY_LUX = 28_000f
+private const val FILL_LUX = 10_000f
+private val KEY_DIR = Direction(x = -0.62f, y = -0.72f, z = -0.38f)
+private val FILL_DIR = Direction(x = 0.55f, y = -0.28f, z = 0.48f)
 private val KEY_COLOR = io.github.sceneview.math.colorOf(r = 1f, g = 0.95f, b = 0.86f)
 private val FILL_COLOR = io.github.sceneview.math.colorOf(r = 0.78f, g = 0.86f, b = 1f)
 
 private val MARBLE_COLORS = listOf(
-    Color(0xFFE7A23A),
-    Color(0xFF3C7FDB),
-    Color(0xFF2EAE6A),
-    Color(0xFFD4536A),
-    Color(0xFF8E57C8),
-    Color(0xFFD7EEF2),
+    Color(0xFFD4891A),
+    Color(0xFF2A6FD0),
+    Color(0xFF1E9A52),
+    Color(0xFFD04458),
+    Color(0xFF7A45C0),
+    Color(0xFFE7F6F8),
 )

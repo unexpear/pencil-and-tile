@@ -30,7 +30,7 @@ BOARD_KT = os.path.join(
     "ui", "screens", "MancalaScreen.kt",
 )
 
-STEP = 0.02
+STEP = 0.016
 CORNER = 0.48
 RIM = 0.07
 
@@ -108,43 +108,56 @@ def wood_material():
     nt = mat.node_tree
     col = nt.nodes.new("ShaderNodeTexImage")
     col.image = color
-    nt.links.new(col.outputs["Color"], socket(bsdf, "Base Color"))
+    # Wood051 is a pale oak. A warm multiply keeps the same CC0 map and lets the bowls read.
+    shade = nt.nodes.new("ShaderNodeVectorMath")
+    shade.operation = "MULTIPLY"
+    shade.inputs[1].default_value = (0.72, 0.52, 0.36)
+    nt.links.new(col.outputs["Color"], shade.inputs[0])
+    nt.links.new(shade.outputs["Vector"], socket(bsdf, "Base Color"))
     rgh = nt.nodes.new("ShaderNodeTexImage")
     rgh.image = rough
     nt.links.new(rgh.outputs["Color"], socket(bsdf, "Roughness"))
     ntex = nt.nodes.new("ShaderNodeTexImage")
     ntex.image = normal
     nmap = nt.nodes.new("ShaderNodeNormalMap")
-    nmap.inputs["Strength"].default_value = 0.7
+    nmap.inputs["Strength"].default_value = 1.15
     nt.links.new(ntex.outputs["Color"], nmap.inputs["Color"])
     nt.links.new(nmap.outputs["Normal"], socket(bsdf, "Normal"))
     return mat
 
 
 def glass_material():
+    """Clear polished glass. The app tints each marble; transmission stays off in the file
+    so a missing refraction variant cannot hide the mesh."""
     mat, bsdf = new_bsdf("Marble")
-    socket(bsdf, "Base Color").default_value = (0.85, 0.93, 0.95, 1)
+    socket(bsdf, "Base Color").default_value = (0.92, 0.94, 0.95, 1)
     socket(bsdf, "Metallic").default_value = 0.0
     socket(bsdf, "Roughness").default_value = 0.04
     socket(bsdf, "IOR").default_value = 1.5
-    socket(bsdf, "Transmission Weight").default_value = 0.92
+    socket(bsdf, "Specular IOR Level").default_value = 0.55
     mat.use_backface_culling = False
     return mat
 
 
 def bowl_drop(x, y, holes):
     drop = 0.0
+    lift = 0.0
     for hx, hy, rx, ry, depth in holes:
         dx = (x - hx) / rx
         dy = (y - hy) / ry
         t2 = dx * dx + dy * dy
-        if t2 >= 1.0:
+        if t2 >= 1.16 * 1.16:
             continue
         t = math.sqrt(t2)
-        # Cosine bowl: flat join at the rim, deepest in the middle.
-        profile = 0.5 * (1.0 + math.cos(math.pi * t))
-        drop = max(drop, depth * profile)
-    return drop
+        if t < 1.0:
+            # Cosine bowl: flat join at the rim, deepest in the middle.
+            profile = 0.5 * (1.0 + math.cos(math.pi * t))
+            drop = max(drop, depth * profile)
+        # A low lip just outside the rim, so each cup reads as carved.
+        if 0.90 < t < 1.14:
+            u = (t - 0.90) / 0.24
+            lift = max(lift, 0.055 * math.sin(math.pi * min(1.0, u)) ** 2)
+    return drop - lift
 
 
 def rim_drop(x, y, width, depth):
@@ -254,7 +267,7 @@ def build_board(width, depth, top, holes, material):
         for loop in face.loops:
             co = loop.vert.co
             # Board X across, board Y (which is -blender Y) along the grain.
-            loop[uv].uv = (co.x / width, (-co.y) / depth)
+            loop[uv].uv = (co.x / width * 2.0, (-co.y) / depth * 1.4)
     mesh = bpy.data.meshes.new("KalahBoard")
     bm.to_mesh(mesh)
     bm.free()

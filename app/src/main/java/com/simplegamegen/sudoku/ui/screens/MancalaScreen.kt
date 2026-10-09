@@ -1,11 +1,12 @@
 package com.simplegamegen.sudoku.ui.screens
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,21 +17,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -53,7 +50,6 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
-import androidx.compose.ui.text.drawText
 
 /**
  * Kalah on a wooden board. Your six pits are the near row and sow to the right, into your store.
@@ -62,18 +58,18 @@ import androidx.compose.ui.text.drawText
 internal object MancalaBoard {
     const val width = 8f
     const val depth = 3.6f
-    const val top = 0.36f
-    const val peakZ = 1.05f
+    const val top = 0.52f
+    const val peakZ = 1.15f
     const val margin = 0.42f
     /** Bowl depth at the centre. The Blender board uses these same numbers. */
-    const val pitDepth = 0.16f
-    const val storeDepth = 0.18f
+    const val pitDepth = 0.26f
+    const val storeDepth = 0.32f
     /** Glass marble radius. The marble glTF is a unit sphere scaled by this. */
-    const val stoneRadius = 0.060f
+    const val stoneRadius = 0.100f
     val views = listOf(
-        BoardView("Behind", yaw = 0f, pitch = 64f, distance = 1.48f),
-        BoardView("Corner", yaw = 32f, pitch = 56f, distance = 1.62f),
-        BoardView("Top", yaw = 0f, pitch = 90f, distance = 1.72f),
+        BoardView("Behind", yaw = 0f, pitch = 42f, distance = 1.32f),
+        BoardView("Corner", yaw = 28f, pitch = 38f, distance = 1.42f),
+        BoardView("Top", yaw = 0f, pitch = 90f, distance = 1.58f),
     )
 
     data class Hole(val index: Int, val x: Float, val y: Float, val rx: Float, val ry: Float) {
@@ -125,7 +121,7 @@ val MancalaSetup: (PuzzleFactory) -> PlaySetup<Mancala> = { factory ->
 
 @Composable
 fun MancalaScreen(nav: NavController, vm: PlayViewModel<Mancala>, factory: PuzzleFactory) {
-    val camera = rememberBoardCamera("mancala_views", MancalaBoard.views, emptyList())
+    val camera = rememberBoardCamera("mancala_views_v2", MancalaBoard.views, emptyList())
     var full by rememberSaveable { mutableStateOf(false) }
     PlayShell(
         nav, vm, GameId.MANCALA, remember(factory) { MancalaSetup(factory) },
@@ -174,10 +170,10 @@ private fun MancalaTable(
     onSow: (Int) -> Unit,
 ) {
     val c = LocalGameLook.current.colors
-    val measurer = rememberTextMeasurer()
     val you = say("You")
     val computer = say("Computer")
     val holes = MancalaBoard.holes
+    val gate = remember { SowGate() }
     var poses by remember { mutableStateOf(restingPoses(g.pits)) }
     val shown = remember { mutableStateOf(g) }
     LaunchedEffect(g) {
@@ -220,84 +216,102 @@ private fun MancalaTable(
                 else -> "Computer's pit ${13 - hole.index}, $count stones"
             }
         }
+        // Labels and rings are small views. A full-size canvas here repaints the Filament
+        // texture and the carved board disappears behind the table colour.
         Box(Modifier.fillMaxSize()) {
-            MancalaWorld(frame, poses, Modifier.fillMaxSize())
+            MancalaWorld(
+                frame, poses, playable, legal,
+                onSow = { pit -> gate.trySow(pit, onSow) },
+                modifier = Modifier.fillMaxSize(),
+            )
             order.forEach { hole ->
                 val at = frame.at(hole.x, hole.y, MancalaBoard.top)
                 val open = playable && hole.index in legal
-                Box(Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
+                Box(Modifier.pinAt(at.x, at.y).size(1.dp).semantics {
                     contentDescription = say(spoken(hole))
                     if (open) onClick { onSow(hole.index); true }
                 })
-            }
-            Canvas(Modifier.matchParentSize().pointerInput(g, playable, legal) {
-                detectTapGestures { pos ->
-                    if (!playable) return@detectTapGestures
-                    val hit = order.asReversed().firstOrNull { hole ->
-                        hole.index in legal && ovalHit(frame, pos, hole.x, hole.y, MancalaBoard.top, hole.rx + 0.08f, hole.ry + 0.08f)
-                    } ?: return@detectTapGestures
-                    onSow(hit.index)
+                if (g.last == hole.index) {
+                    LastOval(frame, hole, c.highlight)
                 }
-            }) {
-                order.forEach { hole ->
-                    val open = hole.index in legal
-                    if (g.last == hole.index) {
-                        drawOval(
-                            frame, hole.x, hole.y, MancalaBoard.top + 0.02f, hole.rx, hole.ry, c.highlight,
-                            strokePx = frame.cell * 0.045f,
-                        )
-                    }
-                    if (playable && open) {
-                        drawRing(frame, hole.x, hole.y, MancalaBoard.top + 0.04f, c.highlight, radiusScale = 0.42f)
-                    }
-                    val countY = when {
-                        hole.store -> 2.72f
-                        hole.y > 1.8f -> hole.y + hole.ry + 0.28f
-                        else -> hole.y - hole.ry - 0.28f
-                    }
-                    val ink = if (playable && open) c.highlight else Seed
-                    countText(measurer, frame, g.pits[hole.index].toString(), hole.x, countY, ink)
+                if (playable && open) {
+                    SowRing(frame, hole, c.highlight)
                 }
-                countText(measurer, frame, you, MancalaBoard.hole(Mancala.YOU).x, 3.28f, Seed, bold = false)
-                countText(measurer, frame, computer, MancalaBoard.hole(Mancala.CPU).x, 3.28f, Seed, bold = false)
+                val countY = when {
+                    hole.store -> 2.72f
+                    hole.y > 1.8f -> hole.y + hole.ry + 0.28f
+                    else -> hole.y - hole.ry - 0.28f
+                }
+                val ink = if (playable && open) c.highlight else Seed
+                CountPill(frame, g.pits[hole.index].toString(), hole.x, countY, ink)
             }
+            CountPill(frame, you, MancalaBoard.hole(Mancala.YOU).x, 3.28f, Seed, bold = false)
+            CountPill(frame, computer, MancalaBoard.hole(Mancala.CPU).x, 3.28f, Seed, bold = false)
         }
     }
 }
 
-private fun DrawScope.drawOval(
-    frame: TableFrame, x: Float, y: Float, z: Float, rx: Float, ry: Float, color: Color, strokePx: Float = 0f,
-) {
-    val path = pathOf(ovalPoints(frame, x, y, z, rx, ry))
-    if (strokePx > 0f) drawPath(path, color, style = Stroke(strokePx)) else drawPath(path, color)
+/** Centre a child on a pixel of the board without covering the rest of the texture view. */
+private fun Modifier.pinAt(x: Float, y: Float): Modifier = layout { measurable, _ ->
+    val placeable = measurable.measure(Constraints())
+    layout(0, 0) {
+        placeable.place(x.roundToInt() - placeable.width / 2, y.roundToInt() - placeable.height / 2)
+    }
 }
 
-private fun DrawScope.countText(
-    measurer: androidx.compose.ui.text.TextMeasurer,
-    frame: TableFrame,
-    text: String,
-    x: Float,
-    y: Float,
-    color: Color,
-    bold: Boolean = true,
-) {
+@Composable
+private fun CountPill(frame: TableFrame, text: String, x: Float, y: Float, color: Color, bold: Boolean = true) {
     val px = (frame.unitAt(x, y, MancalaBoard.top) * if (bold) 0.38f else 0.28f).coerceIn(12f, 28f)
-    val layout = measurer.measure(
-        text,
-        TextStyle(color = color, fontSize = px.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium),
-    )
+    val density = LocalDensity.current
+    val padX = with(density) { (px * 0.38f).toDp() }
+    val padY = with(density) { (px * 0.16f).toDp() }
     val at = frame.at(x, y, MancalaBoard.top + 0.05f)
-    val left = at.x - layout.size.width / 2f
-    val top = at.y - layout.size.height / 2f
-    val padX = px * 0.38f
-    val padY = px * 0.16f
-    drawRoundRect(
-        Color(0xE0120C08),
-        topLeft = Offset(left - padX, top - padY),
-        size = Size(layout.size.width + padX * 2f, layout.size.height + padY * 2f),
-        cornerRadius = CornerRadius(px * 0.35f, px * 0.35f),
+    Text(
+        text,
+        color = color,
+        fontSize = px.sp,
+        fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
+        modifier = Modifier
+            .pinAt(at.x, at.y)
+            .background(Color(0xE0120C08), RoundedCornerShape(with(density) { (px * 0.35f).toDp() }))
+            .padding(horizontal = padX, vertical = padY),
     )
-    drawText(layout, topLeft = Offset(left, top))
+}
+
+@Composable
+private fun SowRing(frame: TableFrame, hole: MancalaBoard.Hole, color: Color) {
+    val z = MancalaBoard.top + 0.04f
+    val at = frame.at(hole.x, hole.y, z)
+    val unit = frame.unitAt(hole.x, hole.y, z)
+    val radius = unit * 0.42f
+    val stroke = (unit * 0.1f).coerceAtLeast(2.8f)
+    val box = (radius + stroke + unit * 0.05f) * 2f
+    val density = LocalDensity.current
+    Canvas(Modifier.pinAt(at.x, at.y).size(with(density) { box.toDp() })) {
+        val center = Offset(size.width / 2f, size.height / 2f)
+        drawCircle(Color.Black.copy(alpha = 0.55f), radius, center, style = Stroke(stroke + unit * 0.05f))
+        drawCircle(color, radius, center, style = Stroke(stroke))
+    }
+}
+
+@Composable
+private fun LastOval(frame: TableFrame, hole: MancalaBoard.Hole, color: Color) {
+    val z = MancalaBoard.top + 0.02f
+    val pts = ovalPoints(frame, hole.x, hole.y, z, hole.rx, hole.ry)
+    val minX = pts.minOf { it.x }
+    val minY = pts.minOf { it.y }
+    val maxX = pts.maxOf { it.x }
+    val maxY = pts.maxOf { it.y }
+    val stroke = frame.cell * 0.045f
+    val density = LocalDensity.current
+    Canvas(
+        Modifier
+            .pinAt((minX + maxX) / 2f, (minY + maxY) / 2f)
+            .size(with(density) { (maxX - minX + stroke).toDp() }, with(density) { (maxY - minY + stroke).toDp() }),
+    ) {
+        val local = pts.map { Offset(it.x - minX + stroke / 2f, it.y - minY + stroke / 2f) }
+        drawPath(pathOf(local), color, style = Stroke(stroke))
+    }
 }
 
 private fun ovalPoints(frame: TableFrame, x: Float, y: Float, z: Float, rx: Float, ry: Float): List<Offset> {
@@ -309,7 +323,7 @@ private fun ovalPoints(frame: TableFrame, x: Float, y: Float, z: Float, rx: Floa
     }
 }
 
-private fun ovalHit(frame: TableFrame, pos: Offset, x: Float, y: Float, z: Float, rx: Float, ry: Float): Boolean {
+internal fun ovalHit(frame: TableFrame, pos: Offset, x: Float, y: Float, z: Float, rx: Float, ry: Float): Boolean {
     val pts = ovalPoints(frame, x, y, z, rx, ry)
     var inside = false
     var j = pts.lastIndex
@@ -337,3 +351,14 @@ private fun pathOf(pts: List<Offset>): Path {
 }
 
 private val Seed = Color(0xFFF6E7C4)
+
+/** One sow per tap. The 3D view and the canvas overlay can both see the same finger. */
+private class SowGate {
+    private var at = 0L
+    fun trySow(pit: Int, onSow: (Int) -> Unit) {
+        val now = android.os.SystemClock.uptimeMillis()
+        if (now - at < 400L) return
+        at = now
+        onSow(pit)
+    }
+}
