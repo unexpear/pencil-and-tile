@@ -101,9 +101,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
-    // SceneView 4.18 imports Compose BOM 2026.05.01. Enforce this app's BOM so
-    // Material3 signatures used by the other games stay on 2024.09.00.
-    implementation(enforcedPlatform(libs.compose.bom))
+    // Must match the BOM SceneView 4.18 was compiled against. An older runtime
+    // is missing Composer.shouldExecute, and Knife Flip crashes on the first frame.
+    implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)

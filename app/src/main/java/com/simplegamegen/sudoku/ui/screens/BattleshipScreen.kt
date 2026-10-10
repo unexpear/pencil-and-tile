@@ -192,6 +192,9 @@ fun BattleshipScreen(nav: NavController, vm: PlayViewModel<Battleship>, factory:
         }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val side = maxWidth.coerceAtMost(560.dp)
+            // BoxWithConstraints is a Box, so these have to sit in a column. As direct children
+            // they stacked in the top left and the sea covered the placement text.
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (g.placing) {
                 Text(PlaceLines[g.you.size], style = MaterialTheme.typography.bodyLarge)
                 Text(if (g.horizontal) "Across. Tap a square or drag." else "Down. Tap a square or drag.",
@@ -239,6 +242,7 @@ fun BattleshipScreen(nav: NavController, vm: PlayViewModel<Battleship>, factory:
                     camera, meshes, ships = g.you, shots = g.incoming, reveal = true, fog = false,
                     fire = false, describe = { ownSquare(g, it) }, height = side * 0.86f, controls = false,
                 )
+            }
             }
         }
         if (full) {
@@ -332,7 +336,7 @@ private fun SeaBoard(
     val placing = rememberUpdatedState(place)
     val firing = rememberUpdatedState(fire)
     val free = rememberUpdatedState(camera.free)
-    BoardWithViews(camera, Battleship.SIZE, peakZ = Peak, margin = 0.62f, height = height, controls = controls) { frame ->
+    BoardWithViews(camera, Battleship.SIZE, peakZ = Peak, margin = 0.62f, height = height, controls = controls, fitToView = true) { frame ->
         val frameNow = rememberUpdatedState(frame)
         Canvas(
             Modifier.fillMaxSize().pointerInput(place != null, fire) {
@@ -408,7 +412,12 @@ private fun DrawScope.drawOcean(
         drawSquareTop(frame, col, row, Top, color)
     }
     for (col in 0 until Battleship.SIZE) drawBoardLabel(labels, frame, "${'A' + col}", col + 0.5f, -0.38f, Top, LabelInk)
-    for (row in 0 until Battleship.SIZE) drawBoardLabel(labels, frame, "${row + 1}", -0.4f, row + 0.5f, Top, LabelInk)
+    for (row in 0 until Battleship.SIZE) {
+        val label = "${row + 1}"
+        // "10" is wider than the frame. Sit it closer to the squares so the near edge does not clip it.
+        val x = if (label.length > 1) -0.12f else -0.4f
+        drawBoardLabel(labels, frame, label, x, row + 0.5f, Top, LabelInk)
+    }
     if (fog) {
         veil(frame, Fog.copy(alpha = 0.78f))
         return

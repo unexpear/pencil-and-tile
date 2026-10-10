@@ -138,6 +138,9 @@ internal class TableFrame(
 ) {
     val orbit: Boolean get() = cam != null
 
+    /** The orbit camera behind [at], when this frame is a turned board rather than the flat oblique. */
+    internal fun orbitCamera(): OrbitCam? = cam
+
     fun at(x: Float, y: Float, z: Float): Offset {
         val o = cam
         if (o == null) {

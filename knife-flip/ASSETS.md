@@ -29,4 +29,4 @@ The throwing knife's steel and cord stay inside `FlipModels.THROWING_THICKNESS` 
 
 Knife Flip uses `io.github.sceneview:sceneview` 4.18.0 (Apache 2.0), which brings Filament 1.71.5 (Apache 2.0). 4.52.0 is newer but it is built with Kotlin 2.4, and no KSP release supports Kotlin 2.4 yet. This app processes Room with KSP, and KSP 2.3.12 also requires Android Gradle Plugin 8.12. SceneView 4.18.0 is the newest release that still compiles here: Kotlin 2.3.20, KSP 2.3.11, AGP 8.10.1, minSdk 26 (the library's minSdk is 24).
 
-SceneView 4.18 imports Compose BOM 2026.05.01. The app module uses `enforcedPlatform` on Compose BOM 2024.09.00 so the rest of the games keep their existing Material3 calls. SceneView's own Compose usage is `AndroidView`, `remember`, and `BasicText` in a debug overlay.
+SceneView 4.18 is compiled against Compose BOM 2026.05.01. The app uses that same BOM. Pinning an older one (2024.09.00) removes `Composer.shouldExecute` and `getCurrentCompositeKeyHashCode`, and Knife Flip crashes on the first composition, before a frame.
