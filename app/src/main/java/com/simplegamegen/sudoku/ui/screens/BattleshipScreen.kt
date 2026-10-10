@@ -2,6 +2,7 @@ package com.simplegamegen.sudoku.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,8 +41,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -50,7 +55,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -87,7 +91,6 @@ import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
 import com.simplegamegen.sudoku.ui.theme.LocalGameLook
 import kotlin.math.hypot
-import kotlin.math.roundToInt
 
 private val Water = Color(0xFF1E88E5)
 private val WaterDeep = Color(0xFF1565C0)
@@ -330,7 +333,8 @@ private fun SeaBoard(
     controls: Boolean = true,
 ) {
     val labels = rememberTextMeasurer()
-    var ghost by remember { mutableIntStateOf(-1) }
+    val ghostState = remember { mutableIntStateOf(-1) }
+    val ghost = ghostState.intValue
     val placeAt = rememberUpdatedState(onPlace)
     val fireAt = rememberUpdatedState(onFire)
     val placing = rememberUpdatedState(place)
@@ -340,52 +344,63 @@ private fun SeaBoard(
         val frameNow = rememberUpdatedState(frame)
         Canvas(
             Modifier.fillMaxSize().pointerInput(place != null, fire) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    val slop = viewConfiguration.touchSlop
-                    var moved = false
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (event.changes.count { it.pressed } > 1 || free.value) {
-                            ghost = -1
-                            break
-                        }
-                        val at = cellAt(frameNow.value, change.position)
-                        if (placing.value != null) ghost = at ?: -1
-                        if (!change.pressed) {
-                            ghost = -1
-                            if (at != null && placing.value != null) placeAt.value(at)
-                            else if (at != null && firing.value && !moved) fireAt.value(at)
-                            break
-                        }
-                        if (hypot(change.position.x - down.position.x, change.position.y - down.position.y) > slop) {
-                            moved = true
-                            change.consume()
-                        }
-                    }
-                }
+                trackSea(frameNow, placing, firing, free, placeAt, fireAt, ghostState)
             },
         ) {
             val preview = placing.value?.let { game -> if (ghost >= 0) previewOf(game, ghost) else null }
             drawOcean(frame, labels, ships, shots, meshes, reveal, fog, preview)
         }
+        val density = LocalDensity.current
         for (row in 0 until Battleship.SIZE) for (col in 0 until Battleship.SIZE) {
             val index = row * Battleship.SIZE + col
             val at = frame.at(col + 0.5f, row + 0.5f, Top)
             val aimed = fire && shots.none { it.cell == index }
-            Box(
-                Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
-                    contentDescription = say(describe(index))
-                    if (place != null || aimed) {
-                        role = Role.Button
-                        onClick(say(if (place != null) "Place" else "Fire")) {
-                            if (place != null) onPlace(index) else onFire(index)
-                            true
-                        }
-                    }
-                },
-            )
+            val description = say(describe(index))
+            var mark = with(density) { Modifier.offset(x = at.x.toDp(), y = at.y.toDp()) }
+                .size(1.dp)
+                .semantics { contentDescription = description }
+            if (place != null || aimed) {
+                mark = mark.clickable(role = Role.Button, onClickLabel = say(if (place != null) "Place" else "Fire")) {
+                    if (place != null) onPlace(index) else onFire(index)
+                }
+            }
+            Box(mark)
+        }
+    }
+}
+
+private suspend fun PointerInputScope.trackSea(
+    frame: State<TableFrame>,
+    placing: State<Battleship?>,
+    firing: State<Boolean>,
+    freeCam: State<Boolean>,
+    placeAt: State<(Int) -> Unit>,
+    fireAt: State<(Int) -> Unit>,
+    ghost: MutableIntState,
+) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        val slop = viewConfiguration.touchSlop
+        var moved = false
+        while (true) {
+            val event = awaitPointerEvent()
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            if (event.changes.count { it.pressed } > 1 || freeCam.value) {
+                ghost.intValue = -1
+                break
+            }
+            val at = cellAt(frame.value, change.position)
+            if (placing.value != null) ghost.intValue = at ?: -1
+            if (!change.pressed) {
+                ghost.intValue = -1
+                if (at != null && placing.value != null) placeAt.value(at)
+                else if (at != null && firing.value && !moved) fireAt.value(at)
+                break
+            }
+            if (hypot(change.position.x - down.position.x, change.position.y - down.position.y) > slop) {
+                moved = true
+                change.consume()
+            }
         }
     }
 }
