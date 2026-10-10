@@ -67,15 +67,15 @@ class PlaySetup<S>(
     /** True while the game can still be played (replacing it asks first). */
     val inProgress: (S) -> Boolean,
     val subtitle: (S) -> String? = { null },
-    /** Record label when one save holds more than one mode. Defaults to the setting name. */
-    val levelLabel: (S) -> String = { settings[settingOf(it)] },
+    /** Record label when one save holds more than one mode. The setting name is used when this is absent. */
+    val levelLabel: ((S) -> String)? = null,
     val create: (Int) -> (suspend () -> S),
     /** Identifies one particular game (its seed) for the player's records. */
     val identity: (S) -> String,
     /** How the game ended, or null while it's still going. */
     val outcome: (S) -> Outcome?,
     /** Copies device records (a best score, unlocked levels) onto a replacement game. */
-    val carry: (S, S) -> S = { _, fresh -> fresh },
+    val carry: ((S, S) -> S)? = null,
     /** A large picture of the selected setting, when the name alone is not enough to tell the models apart. */
     val preview: (@Composable (Int) -> Unit)? = null,
 )
@@ -112,11 +112,12 @@ fun <S : Any> PlayShell(
         sheet = false; confirm = false
         vm.start {
             val fresh = setup.create(chosen)()
-            if (previous != null) setup.carry(previous, fresh) else fresh
+            val keep = setup.carry
+            if (previous != null && keep != null) keep(previous, fresh) else fresh
         }
     }
     fun request() { if (game != null && setup.inProgress(game)) confirm = true else begin() }
-    ReportPlay(id, key = game?.let(setup.identity), level = game?.let(setup.levelLabel) ?: "",
+    ReportPlay(id, key = game?.let(setup.identity), level = game?.let { setup.levelLabel?.invoke(it) ?: setup.settings[setup.settingOf(it)] } ?: "",
         levelIndex = game?.let(setup.settingOf) ?: 0, inProgress = game != null && setup.inProgress(game), outcome = game?.let(setup.outcome))
     GameScaffold(
         title = id.title, game = id, tutorial = id, onBack = { nav.popBackStack() }, busy = s.busy || s.thinking,
