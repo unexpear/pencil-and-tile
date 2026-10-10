@@ -109,6 +109,11 @@ fun Text(
     minLines: Int = 1,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
     style: TextStyle = LocalTextStyle.current,
-) = MaterialText(tr(text), modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign,
+) = MaterialText(
+    tr(text), modifier, color,
+    // Material3 1.4 inserts autoSize (TextAutoSize) before fontSize. Null keeps the old size.
+    autoSize = null,
+    fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign,
     lineHeight, overflow, softWrap, maxLines, minLines, onTextLayout,
-    localized(style))
+    localized(style),
+)

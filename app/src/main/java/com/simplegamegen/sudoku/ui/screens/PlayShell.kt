@@ -76,6 +76,8 @@ class PlaySetup<S>(
     val outcome: (S) -> Outcome?,
     /** Copies device records (a best score, unlocked levels) onto a replacement game. */
     val carry: (S, S) -> S = { _, fresh -> fresh },
+    /** A large picture of the selected setting, when the name alone is not enough to tell the models apart. */
+    val preview: (@Composable (Int) -> Unit)? = null,
 )
 
 /**
@@ -102,12 +104,14 @@ fun <S : Any> PlayShell(
     var sheet by rememberSaveable { mutableStateOf(false) }
     var rules by rememberSaveable { mutableStateOf(false) }
     var confirm by rememberSaveable { mutableStateOf(false) }
+    val chosen = setting.takeIf { it in setup.settings.indices } ?: 0
+    if (chosen != setting) setting = chosen
     LaunchedEffect(game != null) { game?.let { setting = setup.settingOf(it) } }
     fun begin() {
         val previous = game
         sheet = false; confirm = false
         vm.start {
-            val fresh = setup.create(setting)()
+            val fresh = setup.create(chosen)()
             if (previous != null) setup.carry(previous, fresh) else fresh
         }
     }
@@ -139,8 +143,9 @@ fun <S : Any> PlayShell(
         when {
             game == null && s.busy -> Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             game == null -> StartCard(id.title, setup.rules, art = { GameArt(id, Modifier.size(96.dp)) }, tutorial = id) {
-                OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
-                Text(setup.describe(setting), style = MaterialTheme.typography.bodySmall, color = look.colors.muted)
+                OptionGroup(setup.settingTitle, setup.settings.indices.toList(), chosen, { setup.settings[it] }) { setting = it }
+                setup.preview?.invoke(chosen)
+                Text(setup.describe(chosen), style = MaterialTheme.typography.bodySmall, color = look.colors.muted)
                 MessageLine(s.message)
                 Button(onClick = ::begin, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start") }
             }
@@ -152,8 +157,9 @@ fun <S : Any> PlayShell(
     }
     if (sheet) NewGameSheet("New game", startLabel = "Start", game = id, onDismiss = { sheet = false }, onStart = ::request) {
         GameFamilyPicker(nav, id)
-        OptionGroup(setup.settingTitle, setup.settings.indices.toList(), setting, { setup.settings[it] }) { setting = it }
-        Text(setup.describe(setting), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
+        OptionGroup(setup.settingTitle, setup.settings.indices.toList(), chosen, { setup.settings[it] }) { setting = it }
+        setup.preview?.invoke(chosen)
+        Text(setup.describe(chosen), style = MaterialTheme.typography.bodyMedium, color = look.colors.muted)
     }
     if (rules) AlertDialog(onDismissRequest = { rules = false }, title = { Text("How to play ${id.title}") },
         text = { Text(setup.rules) }, confirmButton = { TextButton(onClick = { rules = false }) { Text("Got it") } },

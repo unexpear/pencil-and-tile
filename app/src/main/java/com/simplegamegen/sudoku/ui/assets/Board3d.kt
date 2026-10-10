@@ -138,6 +138,9 @@ internal class TableFrame(
 ) {
     val orbit: Boolean get() = cam != null
 
+    /** The orbit camera behind [at], when this frame is a turned board rather than the flat oblique. */
+    internal fun orbitCamera(): OrbitCam? = cam
+
     fun at(x: Float, y: Float, z: Float): Offset {
         val o = cam
         if (o == null) {
@@ -233,8 +236,14 @@ internal fun tableFrame(
     margin: Float = 0f,
     /** How deep the table is, front to back, when it isn't square. */
     rows: Float = n.toFloat(),
+    /**
+     * Fit the picture to this camera, including its yaw. The usual path fits the head-on view and
+     * keeps that scale while turning, so a board does not resize as it spins. Knife Flip turns
+     * this on so Side and Corner each fill the frame.
+     */
+    fitToView: Boolean = false,
 ): TableFrame {
-    if (view != null) return orbitFrame(n, maxWidthPx, peakZ, maxHeightPx, view, margin, rows)
+    if (view != null) return orbitFrame(n, maxWidthPx, peakZ, maxHeightPx, view, margin, rows, fitToView)
     val shear = if (player) 0f else 0.22f
     val yScale = if (player) 0.9f else 0.52f
     val farScale = if (player) 0.78f else 1f
@@ -394,7 +403,10 @@ private fun frontalFit(
     )
 }
 
-private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Float, view: BoardView, margin: Float, rows: Float = n.toFloat()): TableFrame {
+private fun orbitFrame(
+    n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Float, view: BoardView, margin: Float,
+    rows: Float = n.toFloat(), fitToView: Boolean = false,
+): TableFrame {
     val cx = n / 2f
     val cy = rows / 2f
     val lookZ = peakZ * 0.35f
@@ -403,7 +415,8 @@ private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Flo
     val actual = orbitBasis(cx, cy, lookZ, view.yaw, pitchDeg, dist)
     // Head-on fit (yaw 0) sets the square size and where the board sits. Turning keeps both,
     // so a square does not grow and shrink and the board does not slide off center.
-    val frontal = if (view.yaw == 0f) actual else orbitBasis(cx, cy, lookZ, 0f, pitchDeg, dist)
+    // [fitToView] instead fits the turned camera, so that preset fills the frame.
+    val frontal = if (fitToView || view.yaw == 0f) actual else orbitBasis(cx, cy, lookZ, 0f, pitchDeg, dist)
     val fit = frontalFit(frontal::raw, n, rows, peakZ, margin, maxWidthPx, maxHeightPx)
     val anchor = frontal.raw(cx, cy, 0f)
     val anchorScreen = Offset(anchor.x * fit.scale + fit.ox, anchor.y * fit.scale + fit.oy)
@@ -426,28 +439,42 @@ private fun orbitFrame(n: Int, maxWidthPx: Float, peakZ: Float, maxHeightPx: Flo
     return TableFrame(n, cell, cell * 0.62f, 0f, 1f, 1f, Offset.Zero, fit.frameW, fit.frameH, basis)
 }
 
-internal fun DrawScope.drawBoardSlab(frame: TableFrame, top: Float, wood: Color) {
-    if (frame.orbit) {
-        drawOrbitSides(frame, top, wood)
-        return
+internal fun DrawScope.drawBoardSlab(frame: TableFrame, top: Float, wood: Color, depth: Float = frame.n.toFloat()) {
+    if (frame.orbit) drawOrbitSides(frame, top, wood, depth)
+    else {
+        val n = frame.n.toFloat()
+        val dark = lerp(wood, Color.Black, 0.28f)
+        drawPath(quad(frame.at(0f, depth, top), frame.at(n, depth, top), frame.at(n, depth, 0f), frame.at(0f, depth, 0f)), dark)
+        drawPath(quad(frame.at(n, 0f, top), frame.at(n, depth, top), frame.at(n, depth, 0f), frame.at(n, 0f, 0f)), lerp(wood, Color.Black, 0.12f))
     }
-    val n = frame.n.toFloat()
-    val dark = lerp(wood, Color.Black, 0.28f)
-    drawPath(quad(frame.at(0f, n, top), frame.at(n, n, top), frame.at(n, n, 0f), frame.at(0f, n, 0f)), dark)
-    drawPath(quad(frame.at(n, 0f, top), frame.at(n, n, top), frame.at(n, n, 0f), frame.at(n, 0f, 0f)), lerp(wood, Color.Black, 0.12f))
+    drawSlabTop(frame, top, wood, depth)
 }
 
-private fun DrawScope.drawOrbitSides(frame: TableFrame, top: Float, wood: Color) {
-    if (frame.facing(0f, 0f, 1f, frame.n / 2f, frame.n / 2f, top) && frame.at(0f, 0f, 0f).y - frame.at(0f, 0f, top).y < 2f) return
+/** The playing surface, with a few grain lines so it reads as felt or wood rather than a thin edge. */
+private fun DrawScope.drawSlabTop(frame: TableFrame, top: Float, wood: Color, depth: Float) {
+    val n = frame.n.toFloat()
+    if (frame.orbit && !frame.facing(0f, 0f, 1f, n / 2f, depth / 2f, top)) return
+    drawPath(quad(frame.at(0f, 0f, top), frame.at(n, 0f, top), frame.at(n, depth, top), frame.at(0f, depth, top)), wood)
+    val grain = lerp(wood, Color.Black, 0.28f).copy(alpha = 0.4f)
+    val w = (frame.cell * 0.01f).coerceAtLeast(0.6f)
+    var y = 0.4f
+    while (y < depth - 0.2f) {
+        drawLine(grain, frame.at(0.2f, y, top + 0.004f), frame.at(n - 0.2f, y + 0.06f, top + 0.004f), strokeWidth = w)
+        y += 0.7f
+    }
+}
+
+private fun DrawScope.drawOrbitSides(frame: TableFrame, top: Float, wood: Color, depth: Float) {
+    if (frame.facing(0f, 0f, 1f, frame.n / 2f, depth / 2f, top) && frame.at(0f, 0f, 0f).y - frame.at(0f, 0f, top).y < 2f) return
     val n = frame.n.toFloat()
     val dark = lerp(wood, Color.Black, 0.28f)
     val side = lerp(wood, Color.Black, 0.12f)
     class Face(val nx: Float, val ny: Float, val cx: Float, val cy: Float, val color: Color, val x: FloatArray, val y: FloatArray, val z: FloatArray)
     val faces = listOf(
-        Face(0f, 1f, n / 2f, n, dark, floatArrayOf(0f, n, n, 0f), floatArrayOf(n, n, n, n), floatArrayOf(top, top, 0f, 0f)),
+        Face(0f, 1f, n / 2f, depth, dark, floatArrayOf(0f, n, n, 0f), floatArrayOf(depth, depth, depth, depth), floatArrayOf(top, top, 0f, 0f)),
         Face(0f, -1f, n / 2f, 0f, dark, floatArrayOf(n, 0f, 0f, n), floatArrayOf(0f, 0f, 0f, 0f), floatArrayOf(top, top, 0f, 0f)),
-        Face(1f, 0f, n, n / 2f, side, floatArrayOf(n, n, n, n), floatArrayOf(0f, n, n, 0f), floatArrayOf(top, top, 0f, 0f)),
-        Face(-1f, 0f, 0f, n / 2f, side, floatArrayOf(0f, 0f, 0f, 0f), floatArrayOf(n, 0f, 0f, n), floatArrayOf(top, top, 0f, 0f)),
+        Face(1f, 0f, n, depth / 2f, side, floatArrayOf(n, n, n, n), floatArrayOf(0f, depth, depth, 0f), floatArrayOf(top, top, 0f, 0f)),
+        Face(-1f, 0f, 0f, depth / 2f, side, floatArrayOf(0f, 0f, 0f, 0f), floatArrayOf(depth, 0f, 0f, depth), floatArrayOf(top, top, 0f, 0f)),
     )
     faces.filter { frame.facing(it.nx, it.ny, 0f, it.cx, it.cy, top / 2f) }
         .sortedByDescending { frame.depth(it.cx, it.cy, top / 2f) }

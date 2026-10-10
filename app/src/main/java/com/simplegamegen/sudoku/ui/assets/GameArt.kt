@@ -445,6 +445,21 @@ fun GameArt(id: GameId, modifier: Modifier = Modifier) {
                 }
                 drawCircle(Color(0xFFFFF8E1), size.width * 0.06f, Offset(size.width * 0.38f, size.height * 0.78f))
             }
+            GameId.KNIFE_FLIP -> Canvas(Modifier.size(56.dp)) {
+                drawRoundRect(Color(0xFF8B5A34), cornerRadius = CornerRadius(6f))
+                drawRect(Color(0xFF6E4527), Offset(0f, size.height * 0.72f), Size(size.width, size.height * 0.28f))
+                val blade = Path().apply {
+                    moveTo(size.width * 0.22f, size.height * 0.62f)
+                    lineTo(size.width * 0.78f, size.height * 0.18f)
+                    lineTo(size.width * 0.70f, size.height * 0.12f)
+                    lineTo(size.width * 0.16f, size.height * 0.52f)
+                    close()
+                }
+                drawPath(blade, Color(0xFFE8EAEE))
+                drawLine(Color(0xFF5C3A22), Offset(size.width * 0.18f, size.height * 0.66f), Offset(size.width * 0.08f, size.height * 0.78f), strokeWidth = size.width * 0.08f, cap = StrokeCap.Round)
+                drawRoundRect(Color(0xFFD7E7EE).copy(alpha = 0.9f), Offset(size.width * 0.62f, size.height * 0.42f), Size(size.width * 0.22f, size.height * 0.28f), CornerRadius(size.width * 0.08f))
+                drawRect(Color(0xFF2E86C7), Offset(size.width * 0.655f, size.height * 0.56f), Size(size.width * 0.15f, size.height * 0.12f))
+            }
             GameId.LOG_THROW -> Canvas(Modifier.size(56.dp)) {
                 val cx = size.width / 2f
                 val cy = size.height / 2f

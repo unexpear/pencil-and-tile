@@ -1,6 +1,6 @@
 # Supported games and variation counts
 
-Current implementation: **60 games, 70 rule variants, 424 selectable setting
+Current implementation: **67 games, 78 rule variants, 531 selectable setting
 combinations**. A difficulty, size or theme is a setting, not a distinct ruleset.
 New games are generated on demand without a final level. Finite content can
 eventually repeat; generator coverage has not been exhaustively enumerated.
@@ -56,6 +56,8 @@ eventually repeat; generator coverage has not been exhaustively enumerated.
 | Mastermind | 1 | 4 | 4 pegs from 6 colors, 10 guesses × 4 code styles |
 | Battleship | 1 | 4 | Classic 10×10 fleet × 4 computer strengths |
 | Tetras | 1 | 4 | Seeded 7-piece bags; no final level |
+| Knife Flip | 1 | 8 | Three knives (chef's, throwing, pocket) plus a bottle at 1/4, 1/3, 1/2, 3/4 and full. Point sticks, or the bottle lands upright. No final level |
+| Log Throw | 2 | 49 | Endless high score, plus 48 numbered logs. A boss every fifth log. Stars come from fruit taken on a clear |
 | Letterfall | 1 | 4 | 7×7 boards; orthogonal words of 3+ letters, gravity, combos, and a move-limited target score |
 | Mancala | 1 | 4 | Six pits a side, four stones; sow, extra turns, and captures |
 | Five in a row | 1 | 4 | 11×11 board; five or more in a line |

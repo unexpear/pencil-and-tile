@@ -1,9 +1,16 @@
 [versions]
 gradle = "8.11.1"
 agp = "8.10.1"
-kotlin = "2.0.20"
-ksp = "2.0.20-1.0.24"
-composeBom = "2024.09.00"
+# SceneView 4.18.0 is built with Kotlin 2.3.21. 4.19+ needs Kotlin 2.4, and no KSP
+# release supports 2.4 yet (Room is processed with KSP). 2.3.20 matches KSP 2.3.11,
+# the last 2.3 KSP that still accepts AGP 8.10 (2.3.12 requires AGP 8.12).
+# SceneView 4.18 is compiled against Compose BOM 2026.05.01. Its composables call
+# Composer.shouldExecute and ComposablesKt.getCurrentCompositeKeyHashCode, which
+# Compose 1.7 (BOM 2024.09.00) does not have. Opening Knife Flip was the first
+# call into those composables, so the screen crashed before a frame. Keep this BOM.
+kotlin = "2.3.20"
+ksp = "2.3.11"
+composeBom = "2026.05.01"
 coreKtx = "1.13.1"
 lifecycle = "2.8.6"
 activityCompose = "1.9.2"
@@ -15,6 +22,9 @@ coroutines = "1.8.1"
 junitPlatform = "1.11.0"
 onnxruntime = "1.22.0"
 sqliteJdbc = "3.47.1.0"
+# Newest io.github.sceneview:sceneview that stays on Kotlin 2.3 (see kotlin note above).
+# Filament 1.71.5 comes in with it. minSdk of the library is 24; the app is 26.
+sceneview = "4.18.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +45,7 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 onnxruntime-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-android", version.ref = "onnxruntime" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqliteJdbc" }
+sceneview = { group = "io.github.sceneview", name = "sceneview", version.ref = "sceneview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

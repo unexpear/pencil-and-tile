@@ -75,6 +75,7 @@ private data class ScoreKind(val label: String, val lowerIsBetter: Boolean)
 private val ScoreKinds = mapOf(
     GameId.G2048 to ScoreKind("Best score", false),
     GameId.TETRAS to ScoreKind("Best score", false),
+    GameId.KNIFE_FLIP to ScoreKind("Best streak", false),
     GameId.LOG_THROW to ScoreKind("Best score", false),
     GameId.SCRAMBLE to ScoreKind("Most words solved", false),
     GameId.DOTS to ScoreKind("Most boxes", false),
