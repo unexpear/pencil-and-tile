@@ -111,6 +111,9 @@ internal fun SeaHeading(title: String, full: Boolean, onFull: () -> Unit) {
     }
 }
 
+@Suppress("UNUSED_PARAMETER")
+private fun ignoreCell(cell: Int) = Unit
+
 @Composable
 internal fun SeaBoard(
     camera: BoardCamera,
@@ -121,9 +124,9 @@ internal fun SeaBoard(
     fog: Boolean,
     fire: Boolean,
     describe: (Int) -> String,
-    onFire: (Int) -> Unit = {},
+    onFire: (Int) -> Unit = ::ignoreCell,
     place: Battleship? = null,
-    onPlace: (Int) -> Unit = {},
+    onPlace: (Int) -> Unit = ::ignoreCell,
     height: Dp? = null,
     controls: Boolean = true,
 ) {
