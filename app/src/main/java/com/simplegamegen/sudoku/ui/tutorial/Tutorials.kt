@@ -72,5 +72,6 @@ object Tutorials {
         GameId.TRID -> BoardTutorials.trid
         GameId.RAUMSCHACH -> BoardTutorials.raumschach
         GameId.KNIFE_FLIP -> ArcadeTutorials.knifeFlip
+        GameId.LOG_THROW -> ArcadeTutorials.logThrow
     }
 }

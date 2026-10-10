@@ -23,7 +23,7 @@ https://play.google.com/store/apps/details?id=com.simplegamegen.puzzles
   and Memory.
 - **Board and strategy:** Minesweeper, Checkers, Reversi, Dots and Boxes, Sprouts and Magnetic cluster.
 - **Classics:** Connect Four, Mastermind, Battleship, Mancala, Five in a row, Yacht, Shut the Box, Ten Thousand, and Ship, Captain, Crew.
-- **Arcade:** 2048, Tetras, and Knife Flip.
+- **Arcade:** 2048, Tetras, Knife Flip, and Log Throw.
 
 Every game has a guided tutorial, four levels, hints, themes and dark mode, screen-reader support, and
 English, 简体中文, 日本語, Español and Deutsch.
@@ -195,6 +195,8 @@ older boards show **Original** rather than acquiring a misleading rating.
 - **Knife Flip:** toss a chef's knife, throwing knife, pocket knife, or a water bottle.
   The point sticks, or the bottle lands upright.
   Fill runs from one quarter to full. Between a quarter and a third full lands most often.
+- **Log Throw:** throw daggers into a spinning log. Endless keeps a best score.
+  The level map has 48 logs, a boss every fifth, and stars for fruit.
 
 ## Cards and board games
 
@@ -217,7 +219,7 @@ older boards show **Original** rather than acquiring a misleading rating.
   Save/restore, Undo, Restart and new games work independently in every mode.
 
 The home screen's info button (**Games and possibilities**) explains the counts:
-**66 games, 76 rule variants, 482 setting combinations**. These are not unique
+**67 games, 78 rule variants, 531 setting combinations**. These are not unique
 board counts. See [the capacity table](docs/GAME_CAPACITY.md).
 
 ## Zoom and move
@@ -257,7 +259,7 @@ corner roundness and home layout, and share or import it as a text code. See
   games' rules, generators, computer players and versioned saves.
 - `sudoku-engine/.../logic/` — Samurai Sudoku, Calcudoku, Kakuro and Futoshiki: shared model,
   counting solver, seeded generators, uniqueness verifier and save format.
-- `app/` — Compose UI for all 66 games and Sudoku statistics, backed by the
+- `app/` — Compose UI for all 67 games and Sudoku statistics, backed by the
   engine. `ui/theme/` holds the theme model, storage and Compose theme;
   `ui/assets/` the drawn game pieces and icons; `ui/components/` shared chrome.
 

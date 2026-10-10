@@ -44,7 +44,8 @@ class ThemeModelTest {
         assertEquals(GameId.TIC_TAC_TOE.ordinal + 1, GameId.TRID.ordinal)
         assertEquals(GameId.TRID.ordinal + 1, GameId.RAUMSCHACH.ordinal)
         assertEquals(GameId.RAUMSCHACH.ordinal + 1, GameId.KNIFE_FLIP.ordinal)
-        assertEquals(GameId.KNIFE_FLIP.ordinal, GAME_COUNT - 1)
+        assertEquals(GameId.KNIFE_FLIP.ordinal + 1, GameId.LOG_THROW.ordinal)
+        assertEquals(GameId.LOG_THROW.ordinal, GAME_COUNT - 1)
         assertSame(BuiltInThemes.table, BuiltInThemes.default)
     }
 

@@ -1,6 +1,7 @@
 en	zh	ja	es	de
 + and − only	只有 + 和 −	+と−だけ	solo + y −	nur + und −
 1 answer has a wrong letter.	有 1 个答案里有错字母。	1つの答えにまちがった文字があります。	Hay 1 respuesta con una letra mal.	1 Antwort hat einen falschen Buchstaben.
+1 dagger	1 把短刃	短刀1本	1 daga	1 Dolch
 1 empty ring; matches differ by play.	1 个空圆环；每局因走法而不同。	空のリングが1つ。対局は指し方しだいで変わります。	1 anillo vacío; las partidas cambian según el juego.	1 leerer Ring; die Partien unterscheiden sich durchs Spiel.
 1 empty starting board; matches differ by play.	1 个空的开局棋盘；每局因走法而不同。	開始時は空の盤が1つ。対局は指し方しだいで変わります。	1 tablero inicial vacío; las partidas cambian según el juego.	1 leeres Startbrett; die Partien unterscheiden sich durchs Spiel.
 1 guess left	还能猜错 1 次	残り1回	Te queda 1 intento	Noch 1 Versuch
@@ -12,6 +13,7 @@ en	zh	ja	es	de
 1 rule variant	1 种规则变体	ルール1種類	1 variante de reglas	1 Regelvariante
 1 square is wrong, marked in red.	有 1 格填错了，已用红色标出。	1マスがまちがっています（赤で表示）。	Hay 1 casilla mal, marcada en rojo.	1 Feld ist falsch, rot markiert.
 1 standard starting board. Different move sequences and opponent choices create different matches.	1 种标准开局。不同的走法顺序和对手选择会形成不同的对局。	標準の開始局面が1つ。指し手や相手の選び方で、毎回ちがう対局になります。	1 tablero inicial estándar. Distintas secuencias de jugadas y respuestas del rival crean partidas distintas.	1 Standard-Startstellung. Verschiedene Zugfolgen und Antworten des Gegners ergeben verschiedene Partien.
+1 star	1 颗星	星1	1 estrella	1 Stern
 1 suit	1 种花色	1スート	1 palo	1 Farbe
 1, 2 or 4 suits	1、2 或 4 种花色	1・2・4スート	1, 2 o 4 palos	1, 2 oder 4 Farben
 12 themes	12 个主题	12のテーマ	12 temas	12 Themen
@@ -37,6 +39,7 @@ en	zh	ja	es	de
 4 pegs from 6 colors, duplicates allowed, 10 guesses × 4 code styles. Filled keys are the right color in the right place; open keys are the right color in the wrong place.	6 种颜色中的 4 颗钉，允许重复，10 次猜测 × 4 种密码风格。实心提示钉表示颜色和位置都对；空心提示钉表示颜色对、位置错。	6色から4本、同じ色の重複あり、10回の推測 × コードの出し方4種。塗りつぶしたキーは色も位置も正しく、輪郭だけのキーは色が正しく位置がちがいます。	4 clavijas de 6 colores, se pueden repetir, 10 intentos × 4 estilos de código. Las claves rellenas son color y lugar correctos; las huecas son el color correcto en otro lugar.	4 Stifte aus 6 Farben, Wiederholungen erlaubt, 10 Versuche × 4 Code-Arten. Gefüllte Schlüssel sind Farbe und Platz richtig; offene Schlüssel sind die richtige Farbe am falschen Platz.
 4 spots · avoids losing replies	4 个点 · 会避开导致失败的回应	点4つ · 負ける返し手を避けます	4 puntos · evita respuestas perdedoras	4 Punkte · vermeidet Verliererzüge
 4 suits	4 种花色	4スート	4 palos	4 Farben
+48 logs. A boss every fifth	48 根圆木。每五关一个首领	丸太48本。5本ごとにボス	48 troncos. Un jefe cada cinco	48 Stämme. Jeder fünfte ein Boss
 4×4 to 7×7 grids with arithmetic cages; one size per level.	4×4 到 7×7 的盘面，带算术笼；每个难度一种尺寸。	計算ケージのある4×4〜7×7の盤。レベルごとに1サイズ。	Cuadrículas de 4×4 a 7×7 con jaulas aritméticas; un tamaño por nivel.	4×4- bis 7×7-Gitter mit Rechenkäfigen; eine Größe pro Stufe.
 4×4 to 7×7 grids with greater-than signs; one size per level.	4×4 到 7×7 的盘面，带大于小于号；每个难度一种尺寸。	不等号のある4×4〜7×7の盤。レベルごとに1サイズ。	Cuadrículas de 4×4 a 7×7 con signos de mayor que; un tamaño por nivel.	4×4- bis 7×7-Gitter mit Größer-als-Zeichen; eine Größe pro Stufe.
 5 + 8 = 13. Tap the 5♦.	5 + 8 = 13。点 5♦。	5 + 8 = 13。5♦をタップしましょう。	5 + 8 = 13. Toca el 5♦.	5 + 8 = 13. Tippe auf die 5♦.
@@ -64,6 +67,7 @@ A color repeats, but not all four pegs are the same	有一种颜色重复，但�
 A color that earns no key is not in the code.	一种颜色如果没有任何提示钉，就不在密码里。	キーがつかなかった色は、コードに入っていません。	Un color que no recibe ninguna clave no está en el código.	Eine Farbe ohne Schlüssel kommt im Code nicht vor.
 A complete King-to-Ace run in one suit leaves the table. Clear all eight runs to win.	同一花色从 K 到 A 接满一列就会移出牌桌。清掉全部八列就赢了。	同じマークでキングからエースまでそろうと、場から取りのぞかれます。8列すべてそろえれば勝ちです。	Una escalera completa del rey al as de un palo sale de la mesa. Completa las ocho para ganar.	Eine vollständige Folge vom König bis zum Ass in einer Farbe verlässt den Tisch. Räume alle acht ab, um zu gewinnen.
 A crossword without clues: every letter has been replaced by a number, and the same number always means the same letter. A few letters are given to start. Tap a square, then type the letter you think its number stands for; every square with that number fills in. Every across and down run of letters is a real word.	没有提示的填字游戏：每个字母都换成了数字，同一个数字总是代表同一个字母。开始时会给出几个字母。点一个格子，再输入你认为这个数字代表的字母；所有同一数字的格子都会一起填上。每一个横向和纵向的连续字母都是真实的单词。	カギのないクロスワードです。すべての文字が数字に置きかえられていて、同じ数字はいつも同じ文字を表します。はじめにいくつかの文字が入っています。マスをタップし、その数字が表すと思う文字を入力すると、同じ数字のマスがすべてうまります。たて・よこに続く文字はすべて本当の言葉です。	Un crucigrama sin pistas: cada letra se ha cambiado por un número, y el mismo número siempre es la misma letra. Al empezar se dan algunas letras. Toca una casilla y escribe la letra que crees que representa su número; se rellenan todas las casillas con ese número. Todas las filas y columnas de letras son palabras reales.	Ein Kreuzworträtsel ohne Hinweise: Jeder Buchstabe wurde durch eine Zahl ersetzt, und dieselbe Zahl steht immer für denselben Buchstaben. Zu Beginn sind ein paar Buchstaben vorgegeben. Tippe auf ein Feld und gib den Buchstaben ein, für den seine Zahl deiner Meinung nach steht; alle Felder mit dieser Zahl füllen sich. Jede waagerechte und senkrechte Buchstabenfolge ist ein echtes Wort.
+A dagger that lands in a clear gap sticks and spins with the log. Hitting a dagger already there ends the run.	短刃落进空着的缺口就会扎住，并跟着圆木转。打到已经扎住的短刃，这一局就结束。	空いたすき間に入った短刀は刺さり、丸太と一緒に回ります。すでに刺さっている短刀に当たると、その回は終わりです。	Una daga que cae en un hueco libre se clava y gira con el tronco. Chocar con una daga que ya está acaba la partida.	Ein Dolch, der in eine freie Lücke trifft, bleibt stecken und dreht sich mit. Ein Treffer auf einen Dolch, der schon steckt, beendet den Lauf.
 A digit can't repeat inside a cage.	笼子里的数字不能重复。	ケージの中で数字は重なりません。	Un número no puede repetirse dentro de una jaula.	Eine Ziffer darf sich in einem Käfig nicht wiederholen.
 A digit can't repeat within one run.	同一段里的数字不能重复。	同じ並びの中で数字は重なりません。	Un número no puede repetirse dentro de un tramo.	In einem Block darf sich keine Ziffer wiederholen.
 A digit in this box counts for both grids, so solving one grid helps the next.	这个宫里的数字同时属于两个盘面，所以解开一个就能帮助下一个。	このボックスの数字は両方の盤に数えるので、ひとつの盤を解くと次の盤も進みます。	Un número en esta caja cuenta para las dos cuadrículas, así que resolver una ayuda con la siguiente.	Eine Ziffer in diesem Kasten zählt für beide Gitter, also hilft das Lösen des einen beim nächsten.
@@ -88,6 +92,8 @@ A one-square cage simply gives its digit. Easy puzzles use only + and −.	只�
 A pair! It stays face up. Keep going until every pair is found.	一对！它们会保持正面朝上。继续找，直到找出所有对子。	ペアです！表のまま残ります。すべてのペアが見つかるまで続けましょう。	¡Pareja! Se queda boca arriba. Sigue hasta encontrarlas todas.	Ein Paar! Es bleibt offen. Mach weiter, bis alle Paare gefunden sind.
 A red dragon.	是红中。	「中」です。	Un dragón rojo.	Ein roter Drache.
 A right answer scores 2, or 1 if you used a hint. A close answer gets one more try and scores 1.	答对得 2 分，用了提示得 1 分。接近的答案可以再试一次，得 1 分。	正解は2点、ヒントを使うと1点。おしい答えはもう一度答えられて1点です。	Una respuesta correcta da 2 puntos, o 1 si usaste una pista. Una cercana tiene otro intento y da 1.	Eine richtige Antwort bringt 2 Punkte, mit Tipp 1. Eine knappe bekommt noch einen Versuch und bringt 1.
+A round log spins in the centre. Tap to throw a dagger from the stack straight up into the rim. It sticks and spins with the log. If it hits a dagger already there, it bounces off and the run ends. Stick every dagger and the log bursts. Apples and coins on the rim score extra. Some logs start with daggers already stuck. Endless stages speed up, reverse, and change pattern. The level map has 48 logs, a boss every fifth, and stars for the fruit you take.	一根圆木在中央旋转。点按，把刀堆上的短刃笔直投进边缘。短刃会扎住，并跟着圆木一起转。如果打到已经扎住的短刃，它会弹开，这一局就结束。把短刃全部扎上，圆木就会裂开。边缘上的苹果和金币额外加分。有的圆木一开始就扎着短刃。无尽关卡会加速、反向，并改变转法。关卡图有 48 根圆木，每五关一个首领，摘到的果子记为星星。	丸い丸太が中央で回ります。タップすると、束の短刀が縁へまっすぐ飛びます。刺さって丸太と一緒に回ります。すでに刺さっている短刀に当たると跳ね返り、その回は終わりです。短刀をすべて刺すと丸太が割れます。縁のリンゴとコインは追加点です。最初から短刀が刺さっている丸太もあります。エンドレスは速くなり、逆回転し、回り方も変わります。レベル選択には丸太が48本あり、5本ごとにボス、取った果実が星になります。	Un tronco redondo gira en el centro. Toca para lanzar una daga de la pila en línea recta al borde. Se clava y gira con el tronco. Si choca con una daga ya clavada, rebota y la partida termina. Clava todas las dagas y el tronco estalla. Las manzanas y las monedas del borde suman puntos. Algunos troncos empiezan con dagas ya clavadas. Las fases sin fin se aceleran, invierten el giro y cambian de patrón. El mapa tiene 48 troncos, un jefe cada cinco, y estrellas por la fruta que tomas.	Ein runder Stamm dreht sich in der Mitte. Tippe, um einen Dolch aus dem Stapel gerade nach oben in den Rand zu werfen. Er bleibt stecken und dreht sich mit. Trifft er einen Dolch, der schon steckt, prallt er ab und der Lauf ist vorbei. Stecken alle Dolche, birst der Stamm. Äpfel und Münzen am Rand geben Extra-Punkte. Manche Stämme starten mit schon steckenden Dolchen. Endlos-Runden werden schneller, drehen um und wechseln das Muster. Die Levelkarte hat 48 Stämme, jeden fünften einen Boss, und Sterne für das Obst.
+A round log spins in the centre. Tap to throw the next dagger from the stack straight up into its rim.	一根圆木在中央旋转。点按，把刀堆里的下一把短刃笔直投进边缘。	丸い丸太が中央で回ります。タップすると、束の次の短刀が縁へまっすぐ飛びます。	Un tronco redondo gira en el centro. Toca para lanzar la siguiente daga de la pila en línea recta a su borde.	Ein runder Stamm dreht sich in der Mitte. Tippe, um den nächsten Dolch aus dem Stapel gerade nach oben in den Rand zu werfen.
 A row filled from edge to edge disappears and scores; clearing several rows at once scores more.	从一边填满到另一边的行会消失并得分；一次消除多行得分更多。	端から端までうまった列は消えて得点になります。一度に何列も消すと、さらに高得点です。	Una fila llena de lado a lado desaparece y puntúa; eliminar varias a la vez da más puntos.	Eine Reihe, die von Rand zu Rand gefüllt ist, verschwindet und bringt Punkte; mehrere Reihen auf einmal bringen mehr.
 A rule variant changes how you play. A setting changes the difficulty, size or theme. Neither counts unique boards. You can keep starting games without reaching a final level; finite content can eventually repeat.	规则变体改变玩法；设置改变难度、尺寸或主题。两者都不等于不同盘面的数量。你可以一直开始新游戏，没有最终关卡；不过有限的内容终究可能重复。	ルールの種類は遊び方を、設定は難易度・サイズ・テーマを変えます。どちらも異なる盤の数ではありません。最終レベルはなく、いくらでも新しいゲームを始められますが、限られた内容はいずれ繰り返すこともあります。	Una variante de reglas cambia cómo se juega. Un ajuste cambia la dificultad, el tamaño o el tema. Ninguno cuenta tableros distintos. Puedes seguir empezando partidas sin llegar a un nivel final; el contenido limitado puede acabar repitiéndose.	Eine Regelvariante ändert, wie du spielst. Eine Einstellung ändert Schwierigkeit, Größe oder Thema. Beides zählt keine einzigartigen Bretter. Du kannst immer neue Spiele starten, ohne ein letztes Level zu erreichen; begrenzte Inhalte können sich irgendwann wiederholen.
 A saying is hidden in the grid. The letters above each column belong somewhere in that column, in a different order. Tap a square, then tap one of its column's letters to drop it in. Black squares separate words, and words never break across lines. Sayings are proverbs or public-domain quotations.	盘面里藏着一句话。每一列上方的字母都属于这一列，但顺序被打乱了。点一个格子，再点这一列上方的一个字母，把它放进去。黑格用来分隔词语，词语不会跨行断开。这些话都是谚语或公有领域的名言。	盤の中にことわざが隠れています。各列の上にある文字は、その列のどこかに入りますが、順番はばらばらです。マスをタップしてから、その列の文字をタップして落とし入れます。黒いマスは言葉の区切りで、言葉が行をまたいで切れることはありません。ことわざや、著作権の切れた名言を使っています。	En la cuadrícula se esconde una frase. Las letras sobre cada columna van en esa columna, pero en otro orden. Toca una casilla y luego una letra de su columna para dejarla caer. Las casillas negras separan palabras, y ninguna palabra se corta entre líneas. Las frases son refranes o citas de dominio público.	Im Gitter versteckt sich ein Spruch. Die Buchstaben über jeder Spalte gehören irgendwo in diese Spalte, nur in anderer Reihenfolge. Tippe auf ein Feld und dann auf einen Buchstaben seiner Spalte, um ihn hineinfallen zu lassen. Schwarze Felder trennen Wörter, und Wörter werden nie über Zeilen getrennt. Die Sprüche sind Sprichwörter oder gemeinfreie Zitate.
@@ -144,6 +150,7 @@ Any card may be placed on a card one rank higher, whatever its suit.	任何牌�
 Any code, including repeats	任何密码，可以有重复颜色	繰り返しを含む、どんなコードでも	Cualquier código, repeticiones incluidas	Jeder Code, auch mit Wiederholungen
 any five letters	任意五个字母	どんな5文字でもOK	cualquier combinación de cinco letras	beliebige fünf Buchstaben
 Appearance	外观	外観	Apariencia	Aussehen
+Applewood	苹果木	リンゴの木	Madera de manzano	Apfelholz
 Arcade	街机	アーケード	Arcade	Arcade
 Arithmetic cages	算术笼	計算ケージ	Jaulas aritméticas	Rechenkäfige
 Arrow	箭头	アロー	Flecha	Pfeil
@@ -160,6 +167,7 @@ Best score	最高分	ハイスコア	Mejor puntuación	Höchste Punktzahl
 Best tile {0}	最大方块 {0}	最高タイル {0}	Mejor ficha {0}	Beste Kachel {0}
 Best times	最佳用时	ベストタイム	Mejores tiempos	Bestzeiten
 Best {0}	最佳 {0}	ベスト {0}	Mejor {0}	Beste {0}
+Birch	桦木	白樺	Abedul	Birke
 Birds	鸟	鳥	Aves	Vögel
 black	黑	黒	negra	schwarz
 black disc	黑棋	黒い石	ficha negra	schwarzer Stein
@@ -167,6 +175,7 @@ Black square	黑格	黒マス	Casilla negra	Schwarzes Feld
 blank	空白	空白	en blanco	leer
 Block	方块	ブロック	Bloque	Block
 blocked	被挡住	取れない	bloqueada	blockiert
+blocked gap	被挡住的缺口	ふさがったすき間	hueco tapado	verdeckte Lücke
 Blocked tiles are drawn darker.	被挡住的牌颜色较暗。	取れない牌は暗く表示されます。	Las fichas bloqueadas se ven más oscuras.	Blockierte Steine sind dunkler dargestellt.
 Blocks fall one at a time. Move and rotate them to fill whole rows; full rows disappear and score. Tap the board to rotate, drag sideways to move, swipe down to drop, or use the buttons. The game speeds up every 10 rows.	方块一个接一个落下。移动和旋转它们来填满整行；填满的行会消除并得分。点棋盘旋转，左右拖动移动，向下滑动落下，也可以用按钮。每消除 10 行速度会加快。	ブロックがひとつずつ落ちてきます。動かしたり回したりして横一列をうめましょう。うまった列は消えて点になります。盤をタップで回転、横にドラッグで移動、下にスワイプで落下。ボタンでも操作できます。10列消すごとにスピードが上がります。	Los bloques caen de uno en uno. Muévelos y gíralos para completar filas enteras; las filas llenas desaparecen y suman puntos. Toca el tablero para girar, arrastra a los lados para mover, desliza hacia abajo para soltar o usa los botones. Cada 10 filas, el juego se acelera.	Die Blöcke fallen einzeln herunter. Verschiebe und drehe sie, um ganze Reihen zu füllen; volle Reihen verschwinden und bringen Punkte. Tippe aufs Brett zum Drehen, zieh seitlich zum Verschieben, wische nach unten zum Fallenlassen oder nutze die Knöpfe. Alle 10 Reihen wird es schneller.
 Blue	蓝色	青	Azul	Blau
@@ -181,6 +190,7 @@ Board size	棋盘大小	盤の大きさ	Tamaño del tablero	Brettgröße
 Bold cages show a target and an operation (+ − × ÷). The digits in the cage must make the target with it.	粗线笼子标有目标数和运算（+ − × ÷）。笼子里的数字要用这个运算得到目标数。	太線のケージには目標の数と計算（+ − × ÷）が書かれています。ケージの数字でその計算をすると、目標の数になります。	Las jaulas gruesas muestran un objetivo y una operación (+ − × ÷). Los números de la jaula deben dar el objetivo con ella.	Fett umrandete Käfige zeigen ein Ziel und eine Rechenart (+ − × ÷). Die Ziffern im Käfig müssen damit das Ziel ergeben.
 Boneyard {0}	牌堆 {0}	山 {0}	Pozo {0}	Talon {0}
 Boom — you hit a mine	轰——踩到雷了	ドカン！地雷をふみました	¡Bum! Has pisado una mina	Bumm – du hast eine Mine erwischt
+Boss	首领	ボス	Jefe	Boss
 Both diagonals	两条对角线	両対角線	Ambas diagonales	Beide Diagonalen
 Both full rows vanished and everything above moved down.	两行满行都消失了，上面的全部往下移。	うまった2列が消え、その上がすべて下に落ちました。	Las dos filas llenas han desaparecido y todo lo de encima ha bajado.	Beide vollen Reihen sind verschwunden, und alles darüber ist nach unten gerutscht.
 Both long diagonals also hold each digit once.	两条长对角线上也不能有重复的数字。	2本の長い対角線にも、それぞれの数字が1回ずつ入ります。	Las dos diagonales largas también contienen cada número una vez.	Auch die beiden langen Diagonalen enthalten jede Ziffer einmal.
@@ -228,16 +238,19 @@ Center	中间	中央	Centro	Mitte
 Chains of signs (a < b < c) pin digits quickly.	一连串的符号（a < b < c）能很快确定数字。	記号が続く所（a < b < c）では、数字がすぐに決まります。	Las cadenas de signos (a < b < c) fijan números rápidamente.	Ketten von Zeichen (a < b < c) legen Ziffern schnell fest.
 Change	更改	変更	Cambiar	Ändern
 change color	更改颜色	色を変更	cambiar color	Farbe ändern
+Charred	焦木	焦げ	Carbonizado	Verkohlt
 Cheap describes prices; frugal describes a person's habits.	“便宜”形容价格；frugal 形容人的习惯。	「安い」は値段のこと。frugal は人の習慣のことです。	Barato describe precios; frugal describe los hábitos de una persona.	Billig beschreibt Preise; frugal beschreibt die Gewohnheiten eines Menschen.
 Check	检查	チェック	Comprobar	Prüfen
 Check for mistakes	检查错误	まちがいをチェック	Buscar errores	Auf Fehler prüfen
 Checkers	西洋跳棋	チェッカー	Damas	Dame
 Checking…	检查中…	確認中…	Comprobando…	Wird geprüft …
 Chess pieces	国际象棋棋子	チェスの駒	Piezas de ajedrez	Schachfiguren
+Choose a log	选一根圆木	丸太を選ぶ	Elige un tronco	Wähle einen Stamm
 Choose any opening square; it and its neighbors will be safe.	任选一个格子开局，它和周围的格子都是安全的。	最初のマスはどこでも選べます。そのマスと周りは安全です。	Elige cualquier casilla para empezar: ella y sus vecinas serán seguras.	Wähle ein beliebiges Startfeld: Es und seine Nachbarn sind sicher.
 Choose two matching free tiles.	选择两张相同的空闲牌。	同じ絵柄の空いている牌を2つ選んでください。	Elige dos fichas libres iguales.	Wähle zwei gleiche freie Steine.
 circled	已画圈	丸	rodeada	eingekreist
 Circles hold odd digits.	圆圈里填奇数。	丸には奇数が入ります。	Los círculos llevan números impares.	Kreise enthalten ungerade Ziffern.
+Clang	当啷	カキン	Clang	Klirr
 Classic	经典	クラシック	Clásico	Klassisch
 Classics	经典	クラシック	Clásicos	Klassiker
 Clear	清除	クリア	Borrar	Leeren
@@ -339,6 +352,7 @@ Countries	国家	国	Países	Länder
 covered	被压住	重なっている	tapada	verdeckt
 Covered square	未翻开的格子	閉じたマス	Casilla cubierta	Verdecktes Feld
 Crack the code	破解密码	暗号を解こう	Descifra el código	Knacke den Code
+Cracked	裂木	ひび割れ	Agrietado	Rissig
 Create	创建	作成	Crear	Erstellen
 Create theme	创建主题	テーマを作成	Crear tema	Design erstellen
 Credits and licenses	致谢与许可	クレジットとライセンス	Créditos y licencias	Danksagungen und Lizenzen
@@ -355,6 +369,7 @@ Currencies	货币	通貨	Monedas	Währungen
 Custom grid editor	自定义盘面编辑器	盤エディター	Editor de cuadrículas	Gitter-Editor
 Custom grids	自定义盘面	自作の盤	Cuadrículas propias	Eigene Gitter
 Custom themes start from a built-in theme. Pick your own table, card back, tile, board and accent colors, then share the code.	自定义主题从内置主题开始。挑选你自己的桌面、牌背、麻将牌、棋盘和强调色，然后分享代码。	オリジナルテーマは組み込みテーマから作ります。テーブル、カードの裏、牌、盤、アクセントの色を選んで、コードを共有しましょう。	Los temas propios parten de uno integrado. Elige los colores de la mesa, el dorso de las cartas, las fichas, el tablero y el acento, y comparte el código.	Eigene Designs beginnen mit einem eingebauten Design. Wähle Farben für Tisch, Kartenrücken, Steine, Brett und Akzent und teile dann den Code.
+dagger to throw	待投的短刃	投げる短刀	daga para lanzar	Dolch zum Werfen
 Dances	舞蹈	ダンス	Bailes	Tänze
 Dark	深色	ダーク	Oscuro	Dunkel
 Dark mode	深色模式	ダークモード	Modo oscuro	Dunkler Modus
@@ -427,7 +442,13 @@ Each game's start screen also lets you choose. Only timed wins count towards bes
 Each grid follows normal Sudoku rules: every row, column and 3×3 box holds 1–9 once.	每个盘面都遵循普通数独规则：每行、每列、每个 3×3 宫都包含 1–9 各一次。	どの盤もふつうのナンプレのルールです。どの行・列・3×3のボックスにも1〜9が1回ずつ入ります。	Cada cuadrícula sigue las reglas normales: cada fila, columna y caja de 3×3 contiene del 1 al 9 una vez.	Jedes Gitter folgt den normalen Sudoku-Regeln: Jede Zeile, Spalte und jeder 3×3-Kasten enthält 1–9 einmal.
 Each hint uses one from your wallet. You have {0}. Win a game to earn more: 1 on the easiest level up to 4 on the hardest, plus 1 for each tutorial you finish.	每次提示会用掉 1 次。你现在有 {0} 次。赢得游戏可以获得更多：最简单难度 1 次，最难的 4 次；每完成一个教程再得 1 次。	ヒントを使うたびに1回分へります。今は{0}回分あります。勝つと増えます（いちばんやさしいレベルで1回、いちばん難しいレベルで4回）。チュートリアルを終えるたびにさらに1回もらえます。	Cada pista gasta una de tu reserva. Tienes {0}. Gana partidas para conseguir más: 1 en el nivel más fácil y hasta 4 en el más difícil, y 1 más por cada tutorial que termines.	Jeder Tipp kostet einen aus deinem Vorrat. Du hast {0}. Gewinne Spiele, um mehr zu verdienen: 1 auf der leichtesten bis 4 auf der schwersten Stufe, dazu 1 für jedes beendete Tutorial.
 Each letter of a saying has been swapped for another letter. Tap a coded letter, then type the letter you think it stands for; every copy of that coded letter updates. No letter stands for itself.	一句话里的每个字母都被换成了另一个字母。点一个密码字母，再输入你认为它代表的字母；同一个密码字母会全部一起更新。没有哪个字母代表它自己。	ことわざの文字が、それぞれ別の文字に置きかえられています。暗号の文字をタップし、それが表すと思う文字を入力すると、同じ暗号文字がすべて変わります。自分自身を表す文字はありません。	Cada letra de una frase se ha cambiado por otra. Toca una letra cifrada y escribe la que crees que representa; se actualizan todas sus copias. Ninguna letra se representa a sí misma.	Jeder Buchstabe eines Spruchs wurde gegen einen anderen getauscht. Tippe auf einen verschlüsselten Buchstaben und gib den ein, für den er deiner Meinung nach steht; alle gleichen verschlüsselten Buchstaben ändern sich mit. Kein Buchstabe steht für sich selbst.
+Each log's spin is a fixed timed program, so the same log always turns the same way. Endless logs are numbered and keep getting tighter. There is no final endless log.	每根圆木的旋转都是固定的计时程序，所以同一根总是同样地转。无尽圆木有编号，并且越来越紧。无尽没有最后一根。	各丸太の回転は決まった時間の程序なので、同じ丸太はいつも同じ回り方です。エンドレスの丸太には番号があり、どんどん厳しくなります。最後の1本はありません。	El giro de cada tronco es un programa de tiempo fijo, así que el mismo tronco gira siempre igual. Los troncos sin fin van numerados y se vuelven más justos. No hay un último tronco sin fin.	Die Drehung jedes Stamms ist ein festes Zeitprogramm, darum dreht sich derselbe Stamm immer gleich. Endlos-Stämme sind nummeriert und werden immer enger. Es gibt keinen letzten Endlos-Stamm.
 Each number is how many squares that region has; every region needs {0}.	每个数字表示该区域有几格；每个区域都需要 {0} 格。	数字はそのブロックのマス数です。どのブロックも{0}マス必要です。	Cada número indica cuántas casillas tiene la región; todas necesitan {0}.	Jede Zahl zeigt, wie viele Felder die Region hat; jede Region braucht {0}.
+Endless	无尽	エンドレス	Sin fin	Endlos
+Endless high score, or 48 logs	无尽高分，或 48 根圆木	エンドレスのハイスコア、または丸太48本	Puntuación sin fin, o 48 troncos	Endlos-Bestwert, oder 48 Stämme
+Endless keeps going as the spin reverses, speeds up, slows, stops, or wobbles. The level map has 48 logs, a boss every fifth, and stars for fruit.	无尽会一直继续：旋转会反向、加速、减速、停住或来回摆。关卡图有 48 根圆木，每五关一个首领，果子记为星星。	エンドレスは続きます。回転は反転、加速、減速、停止、ゆらぎをします。レベル選択には丸太が48本、5本ごとにボス、果実が星です。	Sin fin sigue: el giro se invierte, acelera, frena, se detiene o bambolea. El mapa tiene 48 troncos, un jefe cada cinco, y estrellas por la fruta.	Endlos geht weiter, während die Drehung umkehrt, schneller oder langsamer wird, anhält oder wackelt. Die Levelkarte hat 48 Stämme, jeden fünften einen Boss, und Sterne für Obst.
+Exact gaps	正好的空隙	ぴったりすき間	Huecos exactos	Passgenaue Lücken
+Fast reversal	快速换向	速い反転	Cambio rápido	Schneller Richtungswechsel
 Four colors, each used once. The colors in play are marked.	四种颜色，每种用一次。本局用到的颜色会标出来。	4色を1回ずつ。この対局で使う色は印がつきます。	Cuatro colores, cada uno una vez. Los colores de la partida están marcados.	Vier Farben, jede einmal. Die Farben dieser Runde sind markiert.
 Each outlined cage sums to its corner number, with no repeats.	每个框出的笼子里数字之和等于角上的数，且不能重复。	囲まれたケージの数字は、角の数の合計になり、重なりません。	Cada jaula marcada suma el número de su esquina, sin repetir.	Jeder umrandete Käfig ergibt seine Eckzahl, ohne Wiederholung.
 Each round has eight words, each shown in a sentence that uses it.	每轮有八个单词，每个都放在使用它的句子里。	1ラウンドは8語で、それぞれその言葉を使った文といっしょに出てきます。	Cada ronda tiene ocho palabras, cada una en una frase que la usa.	Jede Runde hat acht Wörter, jedes in einem Satz, der es verwendet.
@@ -571,6 +592,7 @@ Gives away as little as possible; plays the ending perfectly	尽量少送方格�
 Goal reached!	达成目标！	目標達成！	¡Objetivo conseguido!	Ziel erreicht!
 Goal tile {0}	目标方块 {0}	目標タイル {0}	Ficha objetivo {0}	Zielkachel {0}
 Goal: move all 52 cards to the four foundations, each built up by suit from Ace to King.	目标：把 52 张牌全部移到四个基础堆上，每堆按同一花色从 A 叠到 K。	目標は52枚すべてを4つの組札に移すことです。組札はマークごとにエースからキングまで重ねます。	Objetivo: pasar las 52 cartas a las cuatro bases, cada una de un palo, del as al rey.	Ziel: Alle 52 Karten auf die vier Ablagestapel legen, jeder nach Farbe vom Ass bis zum König.
+Golden	金纹	黄金	Dorado	Goldholz
 Good.	很好。	いいですね。	Bien.	Gut.
 Good: that leaves 1 for the other square of the cage.	很好：那么笼子的另一格就是 1。	いいですね。するとケージのもう1マスは1です。	Bien: eso deja el 1 para la otra casilla de la jaula.	Gut: Damit bleibt die 1 für das andere Feld des Käfigs.
 Got it	知道了	わかった	Entendido	Verstanden
@@ -606,6 +628,7 @@ Hard drop	直接落下	ハードドロップ	Soltar	Fallen lassen
 harder words	较难的词	むずかしい言葉	palabras más difíciles	schwierigere Wörter
 Having more moves available matters more than having more discs early on.	开局阶段，能下的地方多比棋子多更重要。	序盤は、石の数より置ける場所の多さが大切です。	Al principio, tener más movimientos disponibles importa más que tener más fichas.	Am Anfang zählt es mehr, viele Zugmöglichkeiten zu haben, als viele Steine.
 Header	标题栏	ヘッダー	Cabecera	Kopfzeile
+Heartwood	心材	心材	Duramen	Kernholz
 Herbs and spices	香草和香料	ハーブとスパイス	Hierbas y especias	Kräuter und Gewürze
 Here is the finished grid. Bigger boards work the same way with 3×3 or 2×3 boxes, and every square has exactly one answer.	这就是完成的盘面。更大的盘面用 3×3 或 2×3 的宫，玩法一样，每一格都只有一个答案。	これが完成した盤です。大きな盤も3×3や2×3のボックスで同じように遊べ、どのマスも答えはひとつです。	Aquí está la cuadrícula terminada. Los tableros más grandes funcionan igual con cajas de 3×3 o 2×3, y cada casilla tiene una única respuesta.	Hier ist das fertige Gitter. Größere Bretter funktionieren genauso mit 3×3- oder 2×3-Kästen, und jedes Feld hat genau eine Antwort.
 Here it is	答案在这里	答えはこちら	Aquí está	Hier ist sie
@@ -635,6 +658,7 @@ Hints	提示	ヒント	Pistas	Tipps
 Hints are earned by winning	提示需通过获胜赚取	ヒントは勝って獲得	Las pistas se ganan jugando	Tipps verdienst du durch Siege
 Hints are free	提示免费使用	ヒントは使い放題	Las pistas son gratis	Tipps sind frei
 Hints are free and unlimited. Switch this on to earn hints by winning games instead.	提示免费且不限次数。打开此项后，需要通过获胜来赚取提示。	ヒントは無料で何回でも使えます。オンにすると、勝ってヒントを獲得する方式になります。	Las pistas son gratis e ilimitadas. Actívalo para ganarlas jugando.	Tipps sind frei und unbegrenzt. Schalte das ein, um sie stattdessen durch Siege zu verdienen.
+Hit every fruit	打中每颗果子	果実を全部当てる	Da en cada fruta	Triff jede Frucht
 Hitori	数壹	ひとりにしてくれ	Hitori	Hitori
 Home	主页	ホーム	Inicio	Start
 Home screen	主页	ホーム画面	Pantalla de inicio	Startbildschirm
@@ -671,8 +695,10 @@ Insects	昆虫	昆虫	Insectos	Insekten
 Inside each grid it's normal Sudoku. This row of the centre grid is missing one digit. Tap its empty square.	每个盘面内部就是普通数独。中间盘面的这一行缺一个数字。点它的空格。	それぞれの盤の中はふつうのナンプレです。真ん中の盤のこの行には、数字がひとつ足りません。空いているマスをタップしましょう。	Dentro de cada cuadrícula es un sudoku normal. A esta fila de la cuadrícula central le falta un número. Toca su casilla vacía.	Innerhalb jedes Gitters ist es normales Sudoku. Dieser Zeile des mittleren Gitters fehlt eine Ziffer. Tippe auf ihr leeres Feld.
 Instruments	乐器	楽器	Instrumentos	Instrumente
 Invalid grid layout	盘面布局无效	盤のレイアウトが無効です	Diseño de cuadrícula no válido	Ungültiges Gitter-Layout
+Ironwood	铁木	鉄木	Madera de hierro	Eisenholz
 It has more than one answer. Add starting digits.	它有不止一个答案。请加入初始数字。	答えが2つ以上あります。最初の数字を足してください。	Tiene más de una solución. Añade números iniciales.	Es hat mehr als eine Lösung. Füge Startziffern hinzu.
 In this sentence: {0}	在这个句子中：{0}	この文での意味：{0}	En esta frase: {0}	In diesem Satz: {0}
+It sticks in the wood and turns with the log.	它扎进木头里，跟着圆木一起转。	木に刺さり、丸太と一緒に回ります。	Se clava en la madera y gira con el tronco.	Er steckt im Holz und dreht sich mit dem Stamm.
 It will be removed from this device.	它将从此设备中删除。	この端末から削除されます。	Se eliminará de este dispositivo.	Es wird von diesem Gerät entfernt.
 It's a draw	平局	引き分け	Es un empate	Unentschieden
 It's a draw.	平局。	引き分けです。	Es un empate.	Unentschieden.
@@ -728,8 +754,10 @@ letter {0}	字母 {0}	文字{0}	letra {0}	Buchstabe {0}
 Letter {0} must be {1}.	第 {0} 个字母必须是 {1}。	{0}文字目は {1} にしてください。	La letra {0} debe ser {1}.	Buchstabe {0} muss {1} sein.
 Letter {0}: {1}	第 {0} 个字母：{1}	{0}文字目：{1}	Letra {0}: {1}	Buchstabe {0}: {1}
 Level	等级	レベル	Nivel	Stufe
+Level map	关卡图	レベル選択	Mapa de niveles	Levelkarte
 Level {0}	第 {0} 级	レベル {0}	Nivel {0}	Stufe {0}
 Level {0} · {1} lines	第 {0} 级 · {1} 行	レベル{0} · {1}列	Nivel {0} · {1} filas	Stufe {0} · {1} Reihen
+Levels	关卡	レベル	Niveles	Level
 Light	浅色	ライト	Claro	Hell
 LIME is a fruit too. Tap it.	LIME 也是水果。点它。	LIME も果物です。タップしましょう。	LIME también es una fruta. Tócala.	LIME ist auch Obst. Tippe darauf.
 Line not drawn	未画的线	未記入の線	Línea sin trazar	Nicht gezogene Linie
@@ -737,6 +765,8 @@ Line up four of your discs across, down or diagonally to win.	把自己的四枚
 Lines may not cross each other or pass through a spot.	线不能互相交叉，也不能穿过点。	線どうしが交わったり、点を通りぬけたりしてはいけません。	Las líneas no pueden cruzarse ni atravesar un punto.	Linien dürfen sich nicht kreuzen und durch keinen Punkt gehen.
 Lines {0}	行数 {0}	列 {0}	Filas {0}	Reihen {0}
 List	列表	リスト	Lista	Liste
+Locked	未解锁	ロック中	Bloqueado	Gesperrt
+Log Throw	圆木投刃	丸太投げ	Tiro al tronco	Stammwurf
 Longer saying, no letters given	较长的句子，不给字母	長めのことわざ、ヒント文字なし	Frase larga, sin letras dadas	Längerer Spruch, keine Buchstaben vorgegeben
 Longest sayings, no letters given	最长的句子，不给字母	いちばん長いことわざ、ヒント文字なし	Las frases más largas, sin letras dadas	Längste Sprüche, keine Buchstaben vorgegeben
 Look at the cage in the bottom-left corner.	看左下角的笼子。	左下の角のケージを見ましょう。	Mira la jaula de la esquina inferior izquierda.	Schau dir den Käfig in der Ecke unten links an.
@@ -775,6 +805,7 @@ Minefield cleared!	雷区清除了！	地雷原をクリア！	¡Campo despejado
 Minesweeper	扫雷	マインスイーパ	Buscaminas	Minesweeper
 Minimal	简约	ミニマル	Minimalista	Minimal
 Missed	未答对	不正解	Fallada	Verpasst
+Modes	模式	モード	Modos	Modi
 More options	更多选项	その他のオプション	Más opciones	Weitere Optionen
 More than one answer	不止一个答案	答えが複数	Más de una solución	Mehr als eine Lösung
 more word play and decoys	更多文字游戏和干扰项	言葉遊びとひっかけが増える	más juegos de palabras y señuelos	mehr Wortspiele und Köder
@@ -836,6 +867,7 @@ No recycling · hardest	不能重新使用 · 最难	戻せない · いちば�
 No room for that line. Try a different waypoint or spots.	那条线画不下，换个经过点或别的点试试。	その線を引くすき間がありません。別の経由点か点を選んでください。	No hay sitio para esa línea. Prueba otro punto de paso u otros puntos.	Für diese Linie ist kein Platz. Versuch einen anderen Wegpunkt oder andere Punkte.
 No saved game. Start a new puzzle from the Sudoku screen.	没有存档。请从数独界面开始新谜题。	セーブデータがありません。ナンプレの画面から新しいパズルを始めてください。	No hay ninguna partida guardada. Empieza un puzzle nuevo desde la pantalla de Sudoku.	Kein Spielstand. Starte im Sudoku-Bildschirm ein neues Rätsel.
 No saved grids yet.	还没有保存的盘面。	保存した盤はまだありません。	Aún no hay cuadrículas guardadas.	Noch keine gespeicherten Gitter.
+No stars	没有星星	星なし	Sin estrellas	Keine Sterne
 No useful move. Deal from the stock.	没有有用的走法，从牌堆发牌吧。	有効な手がありません。山札から配りましょう。	No hay ningún movimiento útil. Reparte del mazo.	Kein sinnvoller Zug. Gib vom Stapel aus.
 No valid saved game found.	没有找到有效的存档。	有効なセーブデータが見つかりません。	No hay ninguna partida guardada válida.	Kein gültiger Spielstand gefunden.
 No way to fill this grid follows every rule. Remove a digit or a rule.	没有任何填法能满足所有规则。请移除一个数字或一条规则。	すべてのルールを守って埋める方法がありません。数字かルールをひとつ外してください。	No hay forma de rellenar esta cuadrícula cumpliendo todas las reglas. Quita un número o una regla.	Es gibt keine Füllung, die alle Regeln erfüllt. Entferne eine Ziffer oder eine Regel.
@@ -877,11 +909,13 @@ Numbers and shading vary per puzzle; each is proven to have one solution.	每道
 Numbers count the mines touching a square, including diagonally. Your first tap is always safe.	数字表示与该格相邻（包括斜向）的地雷数。第一次点击一定安全。	数字は、ななめも含めてそのマスに接する地雷の数です。最初のタップは必ず安全です。	Los números cuentan las minas que tocan una casilla, también en diagonal. Tu primer toque siempre es seguro.	Die Zahlen zählen die Minen, die ein Feld berühren, auch diagonal. Dein erster Tipp ist immer sicher.
 Numbers into letters	把数字变成文字	数字を文字に	Números en letras	Aus Zahlen werden Buchstaben
 Numbers show how many more line ends each spot can take (3 at the start).	数字表示每个点还能连几个线头（一开始是 3）。	数字は、それぞれの点にあといくつ線の端をつなげるかを表します（最初は3）。	Los números indican cuántos extremos de línea más admite cada punto (3 al principio).	Die Zahlen zeigen, wie viele Linienenden jeder Punkt noch aufnehmen kann (anfangs 3).
+Oak	橡木	オーク	Roble	Eiche
 Ocean	海洋	海	Océano	Meer
 Odd/even	奇/偶	奇数/偶数	Par/impar	Gerade/ungerade
 Offer tutorials on start screens	在开始界面推荐教程	開始画面でチュートリアルを案内	Ofrecer tutoriales en las pantallas de inicio	Tutorials im Startbildschirm anbieten
 OK	好	OK	Vale	OK
 On	开	オン	Activado	An
+On a challenge log, the gap may be tiny or you may have to hit every apple.	挑战圆木的缺口可能极小，或者必须打中每一个苹果。	挑戦の丸太では、すき間がごく小さいか、リンゴを全部当てる必要があります。	En un tronco de reto, el hueco puede ser diminuto o hay que dar en cada manzana.	Bei einem Herausforderungs-Stamm kann die Lücke winzig sein, oder du musst jeden Apfel treffen.
 On Easy, the code uses red, orange, yellow and green once each.	简单难度里，密码会把红、橙、黄、绿各用一次。	かんたんでは、コードは赤・オレンジ・黄・緑を1回ずつ使います。	En Fácil, el código usa rojo, naranja, amarillo y verde una vez cada uno.	Auf Leicht benutzt der Code Rot, Orange, Gelb und Grün je einmal.
 On your turn, play a tile whose number matches either open end of the chain.	轮到你时，打出一张点数和长龙任一开放端相同的骨牌。	自分の番では、列のどちらかのはしと同じ数字の牌を出します。	En tu turno, juega una ficha cuyo número coincida con uno de los extremos abiertos de la cadena.	Wenn du dran bist, legst du einen Stein, dessen Zahl zu einem offenen Ende der Kette passt.
 Once more to reach the gap.	再移一次就到空隙了。	もう1回で、すき間に届きます。	Una vez más para llegar al hueco.	Noch einmal, dann bist du an der Lücke.
@@ -897,6 +931,7 @@ Only a King (with its run) may fill an empty column.	只有 K（连同接在它�
 Only runs of the same suit can be moved together.	只有同一花色的连续牌才能一起移动。	まとめて動かせるのは、同じマークの続きだけです。	Solo se pueden mover juntas las escaleras del mismo palo.	Nur Folgen derselben Farbe können zusammen verschoben werden.
 open	已翻开	開いた	abierta	offen
 Open every safe square using the number clues.	根据数字线索，翻开所有安全的格子。	数字を手がかりに、安全なマスをすべて開けましょう。	Descubre todas las casillas seguras con ayuda de los números.	Decke mithilfe der Zahlen jedes sichere Feld auf.
+open gap	空着的缺口	空いたすき間	hueco libre	freie Lücke
 open key peg	空心提示钉	輪郭だけのキーピン	clavija clave hueca	offener Schlüsselstift
 Open Sudoku	打开数独	ナンプレを開く	Abrir Sudoku	Sudoku öffnen
 open, blank	已翻开，空白	開いた、空白	descubierta, vacía	offen, leer
@@ -949,6 +984,7 @@ Plans for the endgame space	为残局留足空间	終盤の空きまで考えま
 PLANT, found in three guesses!	PLANT，三次就猜中了！	PLANT、3回で正解！	¡PLANT, en tres intentos!	PLANT, in drei Versuchen gefunden!
 Play	开始玩	遊ぶ	Jugar	Spielen
 Play 5|5 anyway	硬出 5|5	かまわず5|5を出す	Jugar 5|5 de todos modos	Trotzdem 5|5 legen
+Play again	再玩一次	もう一度	Jugar otra vez	Nochmal spielen
 Play again with the same settings?	用同样的设置再玩一局？	同じ設定でもう一度遊びますか？	¿Jugar otra vez con los mismos ajustes?	Mit denselben Einstellungen noch einmal spielen?
 Play left ({0})	打在左端（{0}）	左に出す（{0}）	Jugar a la izquierda ({0})	Links anlegen ({0})
 Play mode	游戏模式	プレイモード	Modo de juego	Spielmodus
@@ -1025,6 +1061,8 @@ Reveal	翻开	開く	Descubrir	Aufdecken
 Reveal every safe square. Numbers count mines in the eight surrounding squares. Use Flag mode to mark suspects; tap an open number in Reveal mode to open its unflagged neighbors when the flag count matches. Wrong flags can make this dangerous. The opening and its neighbors are safe. Hints use visible clues only; later guesses may be necessary.	翻开所有安全的格子。数字表示周围八格里有几个雷。用插旗模式标记可疑的格子；在翻开模式下点一个已翻开的数字，旗数对上时会翻开它周围没插旗的格子。插错旗会很危险。第一格和它周围一定是安全的。提示只根据看得见的线索；之后可能需要猜。	安全なマスをすべて開きましょう。数字は、周りの8マスにある地雷の数です。旗モードであやしいマスに印をつけます。開くモードで開いた数字をタップすると、旗の数が合っていれば、旗のない周りのマスが開きます。旗がまちがっていると危険です。最初のマスとその周りは安全です。ヒントは見えている手がかりだけを使うので、あとで推測が必要になることもあります。	Descubre todas las casillas seguras. Los números cuentan las minas de las ocho casillas de alrededor. Usa el modo bandera para marcar sospechosas; en modo descubrir, toca un número abierto para abrir sus vecinas sin bandera cuando coincida el número de banderas. Las banderas equivocadas pueden ser peligrosas. La primera casilla y sus vecinas son seguras. Las pistas solo usan lo visible; más adelante quizá haya que adivinar.	Deck alle sicheren Felder auf. Zahlen zählen die Minen in den acht Feldern ringsum. Markiere Verdächtiges im Flaggen-Modus; tippst du im Aufdeck-Modus auf eine offene Zahl, öffnen sich ihre Nachbarn ohne Flagge, wenn die Anzahl der Flaggen stimmt. Falsche Flaggen machen das gefährlich. Das erste Feld und seine Nachbarn sind sicher. Tipps nutzen nur sichtbare Hinweise; später musst du vielleicht raten.
 Reveal letter	揭示字母	文字を表示	Revelar letra	Buchstabe zeigen
 Reveal mode: tap to open. Tap a number to open its unflagged neighbors.	翻开模式：点一下翻开。点一个数字可以翻开它周围没插旗的格子。	開くモード：タップで開きます。数字をタップすると、旗のない周りのマスが開きます。	Modo descubrir: toca para abrir. Toca un número para abrir sus vecinas sin bandera.	Aufdeck-Modus: Tippe zum Öffnen. Tippe auf eine Zahl, um ihre Nachbarn ohne Flagge zu öffnen.
+Reversal	忽然换向	急反転	Cambio de giro	Richtungswechsel
+Reverse	反向	逆回転	Inverso	Rückwärts
 Reversi	黑白棋	リバーシ	Reversi	Reversi
 right	右端	右端	derecha	rechts
 Right	右	右	Derecha	Rechts
@@ -1043,9 +1081,11 @@ Right: 1 here and 3 below it makes 4.	对：这里填 1，下面填 3，加起�
 Right: 2 + 2 would repeat a digit, and 1 + 4 makes 5. Both squares get notes 1 and 3.	对：2 + 2 数字重复了，1 + 4 等于 5。两个格子都记上笔记 1 和 3。	正解。2＋2は数字が重なり、1＋4は5になります。2つのマスにメモ1と3を書きます。	Correcto: 2 + 2 repetiría un número y 1 + 4 suma 5. Las dos casillas reciben las notas 1 y 3.	Richtig: 2 + 2 würde eine Ziffer wiederholen, und 1 + 4 ergibt 5. Beide Felder bekommen die Notizen 1 und 3.
 Right: 4 completes the row.	对了：4 让这一行完整了。	正解！4でこの行がそろいました。	Correcto: el 4 completa la fila.	Richtig: Die 4 vervollständigt die Zeile.
 Right: you draw until a tile fits (or pass when the boneyard is empty). The game does this for you.	对：你要一直摸，直到有能接的牌（牌堆摸完就过）。游戏会自动帮你做。	正解。出せる牌が来るまで引きます（山がなくなったらパス）。ゲームが自動でやってくれます。	Correcto: robas hasta que encaje una ficha (o pasas si el pozo está vacío). El juego lo hace por ti.	Richtig: Du ziehst, bis ein Stein passt (oder setzt aus, wenn der Vorrat leer ist). Das Spiel erledigt das für dich.
+Ringed	密纹	年輪	Anillado	Jahresringe
 Rotate	旋转	回転	Girar	Drehen
 Round complete: {0} of {1} points.	本轮结束：{0}/{1} 分。	ラウンド終了：{1}点中{0}点。	Ronda terminada: {0} de {1} puntos.	Runde vorbei: {0} von {1} Punkten.
 Round complete: {0} of {1} solved.	本轮结束：解出 {0}/{1}。	ラウンド終了：{1}語中{0}語正解。	Ronda terminada: {0} de {1} resueltas.	Runde vorbei: {0} von {1} gelöst.
+round log	圆木	丸い丸太	tronco redondo	runder Stamm
 Rounds of 8 jumbled words; word length grows by level.	每轮 8 个打乱的单词；难度越高单词越长。	1ラウンド8語。レベルが上がると言葉が長くなります。	Rondas de 8 palabras revueltas; la longitud crece con el nivel.	Runden mit 8 Buchstabensalaten; mit der Stufe werden die Wörter länger.
 Row 2 says 5, so every square in it is filled. Tap it to paint the row (in the game you can drag across it).	第 2 行是 5，所以整行都要涂色。点它来涂这一行（在游戏里可以直接拖过去）。	2行目は「5」なので、すべてのマスを塗ります。タップして行を塗りましょう（ゲームではなぞっても塗れます）。	La fila 2 dice 5, así que todas sus casillas están pintadas. Tócala para pintar la fila (en el juego puedes arrastrar).	Zeile 2 sagt 5, also ist jedes Feld darin gefüllt. Tippe darauf, um die Zeile zu malen (im Spiel kannst du darüber wischen).
 Row 3 is also 5. Paint it too.	第 3 行也是 5。也把它涂满。	3行目も「5」です。これも塗りましょう。	La fila 3 también es 5. Píntala también.	Zeile 3 ist ebenfalls 5. Mal sie auch.
@@ -1150,6 +1190,7 @@ Slide left	向左滑	左へ	Deslizar a la izquierda	Nach links schieben
 Slide right	向右滑	右へ	Deslizar a la derecha	Nach rechts schieben
 Slide tiles to merge equal numbers and build big tiles.	滑动方块，合并相同的数字，拼出大数字。	タイルをスライドして同じ数字を合わせ、大きなタイルを作りましょう。	Desliza fichas para unir números iguales y formar fichas grandes.	Schiebe Kacheln, um gleiche Zahlen zu verschmelzen und große Kacheln zu bauen.
 Slide up	向上滑	上へ	Deslizar arriba	Nach oben schieben
+Slowing down	越转越慢	減速	Frenando	Langsamer werdend
 Small board; the computer sometimes misses boxes	小棋盘；电脑有时会漏掉方格	小さな盤。コンピューターはときどき箱を見逃します	Tablero pequeño; el ordenador a veces se deja cajas	Kleines Brett; der Computer übersieht manchmal Kästchen
 Snap! Both stones jumped into your hand, so you now have more to place. Keep your distance.	啪！两块都跳回了你手里，你要放的更多了。保持距离吧。	カチッ！2つとも手持ちに戻り、置く石が増えました。距離をとりましょう。	¡Clac! Las dos piedras han saltado a tu mano, así que ahora tienes más por colocar. Guarda las distancias.	Schnapp! Beide Steine sind auf deiner Hand gelandet, jetzt hast du mehr zu legen. Halt Abstand.
 Snap! {0} stones went back into your hand.	啪！{0} 块磁石回到了你手里。	カチッ！{0}個の磁石があなたの手もとに戻りました。	¡Clac! {0} imanes vuelven a tu mano.	Schnapp! {0} Steine gehen zurück in deine Hand.
@@ -1176,8 +1217,10 @@ Space runs out quickly; leave awkward gaps for your opponent.	空间很快就不
 Spades and hearts	黑桃和红心	スペードとハート	Picas y corazones	Pik und Herz
 Spades only · the gentlest start	只有黑桃 · 最轻松的开始	スペードのみ · いちばんやさしい	Solo picas · el comienzo más suave	Nur Pik · der sanfteste Einstieg
 sparse signs	符号稀少	記号がまばら	pocos signos	spärliche Zeichen
+Speeding up	越转越快	加速	Acelerando	Schneller werdend
 Spider	蜘蛛纸牌	スパイダー	Spider	Spider
 Spider Solitaire	蜘蛛纸牌	スパイダーソリティア	Solitario Spider	Spider-Solitär
+Spiral grain	旋纹	渦目	Veta en espiral	Spiralmaserung
 Sports	运动	スポーツ	Deportes	Sportarten
 spot	点	点	punto	Punkt
 spot with {0} left	点，还剩 {0}	点、残り{0}	punto, le quedan {0}	Punkt, noch {0}
@@ -1188,6 +1231,8 @@ square {0}	第 {0} 格	{0}番のマス	casilla {0}	Feld {0}
 Squares a chess knight's move apart can't share a digit.	相隔一个国际象棋马步的两个格子不能填相同的数字。	チェスのナイトの動きで届くマスどうしには、同じ数字が入りません。	Dos casillas separadas por un salto de caballo no pueden tener el mismo número.	Felder, die einen Springerzug auseinanderliegen, dürfen nicht dieselbe Ziffer haben.
 Squares hold even digits.	方框里填偶数。	四角には偶数が入ります。	Los cuadrados llevan números pares.	Quadrate enthalten gerade Ziffern.
 Squares next to an empty corner often give it away.	下在空角旁边的格子，往往会把角送给对手。	空いている角のとなりに置くと、角を取られやすくなります。	Las casillas junto a una esquina vacía suelen regalarla.	Felder neben einer leeren Ecke verschenken sie oft.
+Stage {0}	第 {0} 关	ステージ {0}	Fase {0}	Runde {0}
+Stages speed up, reverse, and tighten	关卡会加速、反向，空隙也会变窄	ステージは速くなり、逆回転し、すき間が狭くなる	Las fases se aceleran, invierten el giro y aprietan	Die Runden werden schneller, drehen um und werden enger
 Stand the piece upright: tap Rotate.	把方块竖起来：点“旋转”。	ピースを縦にしましょう。「回転」をタップします。	Pon la pieza de pie: toca Girar.	Stell das Teil aufrecht: Tippe auf Drehen.
 Standard 7×6 gravity board × 4 computer strengths. Four in a row wins; a full board draws.	标准 7×6 重力棋盘 × 4 档电脑强度。四子相连即获胜；棋盘放满则为平局。	標準の7×6重力盤 × コンピューターの強さ4段階。4つ並べれば勝ち、盤が埋まれば引き分け。	Tablero de gravedad 7×6 estándar × 4 niveles del ordenador. Cuatro en línea gana; un tablero lleno es empate.	Standard-Schwerkraftbrett 7×6 × 4 Computerstärken. Vier in einer Reihe gewinnt; ein volles Brett ist unentschieden.
 Standard 8×8 rules × 4 computer strengths.	标准 8×8 规则 × 4 种电脑强度。	標準の8×8ルール × コンピューターの強さ4段階。	Reglas estándar de 8×8 × 4 niveles del ordenador.	Standardregeln auf 8×8 × 4 Computerstärken.
@@ -1207,14 +1252,18 @@ Starting speed	起始速度	スタート時の速さ	Velocidad inicial	Startgesc
 Starting spots are placed per game; curve routes differ by play.	每局重新摆放起始点；曲线路线因走法而不同。	はじめの点は毎回置き直され、線の通り道は指し方しだいで変わります。	Los puntos iniciales se colocan en cada partida; los trazados cambian según el juego.	Die Startpunkte werden je Spiel gesetzt; die Linienwege unterscheiden sich durchs Spiel.
 Starts at level {0}	从第 {0} 级开始	レベル{0}から開始	Empieza en el nivel {0}	Beginnt auf Stufe {0}
 Statistics	统计	統計	Estadísticas	Statistik
+Steady	匀速	一定	Constante	Gleichmäßig
 Step {0} of {1}	第 {0} 步，共 {1} 步	ステップ {0}/{1}	Paso {0} de {1}	Schritt {0} von {1}
+Stick every dagger for that log and it bursts. Apples and coins on the rim add to the score. Some logs start with daggers already stuck.	把那根圆木的短刃全部扎上，它就会裂开。边缘上的苹果和金币加分。有的圆木一开始就扎着短刃。	その丸太の短刀をすべて刺すと割れます。縁のリンゴとコインは得点になります。最初から短刀が刺さっている丸太もあります。	Clava todas las dagas de ese tronco y estalla. Las manzanas y las monedas del borde suman puntos. Algunos troncos empiezan con dagas ya clavadas.	Stecken alle Dolche dieses Stamms, birst er. Äpfel und Münzen am Rand geben Punkte. Manche Stämme starten mit schon steckenden Dolchen.
 Stock	牌堆	山札	Mazo	Stapel
 Stock, {0} cards	牌堆，{0} 张	山札、{0}枚	Mazo, {0} cartas	Stapel, {0} Karten
 Stock, {0} cards. Draw {1}	牌堆，{0} 张。每次翻 {1} 张	山札、{0}枚。{1}枚ずつめくる	Mazo, {0} cartas. Robar {1}	Stapel, {0} Karten. {1} ziehen
 Stock, {0} deals left	牌堆，还能发 {0} 次	山札、残り{0}回	Mazo, quedan {0} repartos	Stapel, noch {0}-mal geben
 Stones must be placed inside the ring.	磁石必须放在圈内。	石はリングの中に置かなければなりません。	Las piedras deben colocarse dentro del anillo.	Steine müssen in den Ring gelegt werden.
 Stones near the edge of the ring have fewer neighbours to worry about.	靠近圈边的磁石，需要担心的邻居更少。	リングのふち近くの石は、気にするとなりが少なくてすみます。	Las piedras cerca del borde del anillo tienen menos vecinas de las que preocuparse.	Steine am Rand des Rings haben weniger Nachbarn, auf die du achten musst.
+Stop and go	停停走走	止まって進む	Para y sigue	Stopp und los
 Stronger players sometimes decline the last two boxes of a chain to keep control.	高手有时会故意不拿一串中的最后两格，以保持主动。	上級者は、主導権を保つために連なりの最後の2箱をあえて取らないことがあります。	Los jugadores fuertes a veces renuncian a las dos últimas cajas de una cadena para mantener el control.	Starke Spieler lassen manchmal die letzten zwei Kästchen einer Kette liegen, um die Kontrolle zu behalten.
+stuck dagger	已扎住的短刃	刺さった短刀	daga clavada	steckender Dolch
 Submit	提交	決定	Enviar	Senden
 Success	成功	成功	Acierto	Erfolg
 Sudoku	数独	ナンプレ	Sudoku	Sudoku
@@ -1286,8 +1335,10 @@ tap the stock	点牌堆	山札をタップ	toca el mazo	tippe auf den Stapel
 Tap the stock to draw 1 or 3 cards (your choice when starting); the waste can be redealt without limit.	点牌堆抽 1 张或 3 张（开局时自选）；弃牌堆可以无限次重发。	山札をタップして1枚か3枚めくります（始めるときに選べます）。捨て札は何度でも山札に戻せます。	Toca el mazo para robar 1 o 3 cartas (lo eliges al empezar); el descarte puede repartirse de nuevo sin límite.	Tippe auf den Stapel, um 1 oder 3 Karten zu ziehen (wählst du beim Start); der Ablagestapel kann beliebig oft neu verteilt werden.
 Tap the tile that matches it.	点和它配对的那张。	ペアになる牌をタップしましょう。	Toca la ficha que hace pareja con ella.	Tippe auf den passenden Stein.
 Tap the top-left square to cross off column 1.	点左上角的格子，把第 1 列打叉。	左上のマスをタップして、1列目にバツをつけましょう。	Toca la casilla de arriba a la izquierda para tachar la columna 1.	Tippe auf das Feld oben links, um Spalte 1 abzukreuzen.
+Tap to throw	点按投掷	タップして投げる	Toca para lanzar	Tippen zum Werfen
 Tap two cards that make 13.\nKings go on their own.	点两张加起来是 13 的牌。\nK 可以单独拿走。	足して13になる2枚をタップします。\nKは1枚で取れます。	Toca dos cartas que sumen 13.\nLos reyes se quitan solos.	Tippe auf zwei Karten, die 13 ergeben.\nKönige gehen allein.
 Tap two identical free tiles. Free tiles have nothing on top and an open left or right side.	点两张相同的空闲牌。空闲牌上面没有牌压着，左边或右边是空的。	同じ絵柄の空いている牌を2つタップします。空いている牌とは、上に何も乗っておらず、左か右があいている牌です。	Toca dos fichas libres iguales. Una ficha está libre si no tiene nada encima y su lado izquierdo o derecho está despejado.	Tippe auf zwei gleiche freie Steine. Frei ist ein Stein, wenn nichts auf ihm liegt und seine linke oder rechte Seite offen ist.
+Tap your dagger to throw it into the open gap.	点按你的短刃，把它投进空着的缺口。	短刀をタップして、空いたすき間に投げます。	Toca tu daga para lanzarla al hueco libre.	Tippe deinen Dolch, um ihn in die freie Lücke zu werfen.
 Tap your piece.	点你的棋子。	自分の駒をタップしましょう。	Toca tu pieza.	Tippe auf deinen Stein.
 Tap: shade · tap again: circle (keep) · third tap: clear.	点一下：涂黑 · 再点：画圈（保留）· 第三下：清除。	タップ：黒 · もう一度：丸（残す）· 3回目：消す。	Toca: sombrear · otra vez: rodear (se queda) · tercera: borrar.	Tippen: schwärzen · nochmal: einkreisen (bleibt) · drittes Mal: leeren.
 Tastes of fruit	有水果味	果物の味がする	Sabe a fruta	Schmeckt nach Obst
@@ -1339,6 +1390,7 @@ The empty column between your discs.	你的棋子之间空着的那一列。	自
 The first player to place all their stones wins.	先放完所有磁石的一方获胜。	先に石をすべて置き終えた人の勝ちです。	Gana el primero en colocar todas sus piedras.	Wer zuerst alle Steine gelegt hat, gewinnt.
 The game is over.	游戏已结束。	ゲームは終わりました。	La partida ha terminado.	Das Spiel ist vorbei.
 The game speeds up every 10 rows. It ends when a new piece can't enter the well.	每消除 10 行速度就会加快。新方块进不了场地时游戏结束。	10列消すごとにスピードが上がります。新しいピースが入れなくなると終わりです。	El juego se acelera cada 10 filas. Termina cuando una pieza nueva no puede entrar.	Alle 10 Reihen wird das Spiel schneller. Es endet, wenn ein neues Teil nicht mehr hineinpasst.
+The gap is blocked. Wait, don't throw into the dagger that's already there.	缺口被挡住了。等一等，不要投向已经扎在那里的短刃。	すき間はふさがっています。待って、すでに刺さっている短刀には投げないでください。	El hueco está tapado. Espera, no lances contra la daga que ya está ahí.	Die Lücke ist zu. Warte und wirf nicht in den Dolch, der schon steckt.
 The guess must use {0}.	猜测里必须有 {0}。	{0} を使う必要があります。	El intento debe incluir la {0}.	Der Versuch muss {0} enthalten.
 The hidden word here is a secret. Our first guess is STAIN. A is in the right spot, T and N are in the word but elsewhere, and S and I aren't in it.	这里的答案是个秘密。第一次猜 STAIN：A 位置正确，T 和 N 在单词里但位置不对，S 和 I 不在单词里。	ここでの答えはまだ秘密です。最初の予想は STAIN。A は位置も正解、T と N は単語にあるが位置がちがい、S と I は単語にありません。	La palabra oculta es un secreto. Primer intento: STAIN. La A está en su sitio, la T y la N están en la palabra pero en otro lugar, y la S y la I no están.	Das versteckte Wort ist geheim. Erster Versuch: STAIN. A steht richtig, T und N sind im Wort, aber woanders, S und I kommen nicht vor.
 The highlighted cards make 13.	高亮的牌加起来是 13。	光っているカードで13になります。	Las cartas resaltadas suman 13.	Die markierten Karten ergeben 13.
@@ -1346,6 +1398,8 @@ The judge also understands "not" and "doesn't", so "doesn't spend much" counts t
 The keys are only those two counts. They do not show which peg earned which key.	提示钉只给出这两个数量。它们不告诉你哪颗钉对应哪颗提示。	キーが伝えるのは、その2つの数だけです。どのピンのキーかはわかりません。	Las claves solo dan esas dos cantidades. No dicen qué clavija obtuvo cada clave.	Die Schlüssel nennen nur diese beiden Zahlen. Sie sagen nicht, welcher Stift welchen Schlüssel bekommen hat.
 The last column has two 4s. The top one touches a shaded square, so it stays white. Shade the lower 4.	最后一列有两个 4。上面那个挨着涂黑的格子，所以保持白色。把下面的 4 涂黑。	いちばん右の列には4が2つあります。上の4は黒マスのとなりなので白のまま。下の4を黒くしましょう。	La última columna tiene dos 4. El de arriba toca una casilla sombreada, así que queda blanco. Sombrea el 4 de abajo.	Die letzte Spalte hat zwei 4en. Die obere berührt ein schwarzes Feld und bleibt weiß. Schwärze die untere 4.
 The layout isn't finished: check the region sizes and cages.	布局还没完成：请检查区域大小和笼子。	レイアウトが未完成です。ブロックの大きさとケージを確認してください。	El diseño no está terminado: revisa el tamaño de las regiones y las jaulas.	Das Layout ist noch nicht fertig: Prüf die Regionsgrößen und Käfige.
+The log bursts	圆木裂开了	丸太が割れた	El tronco estalla	Der Stamm birst
+The log spins with one dagger already stuck. Your stack waits at the bottom. The open gap is where a throw can land.	圆木转着，上面已经扎着一把短刃。刀堆在下方等着。空着的缺口才是能扎进去的地方。	丸太は回り、短刀が1本すでに刺さっています。束は下で待っています。投げて刺さるのは空いたすき間です。	El tronco gira con una daga ya clavada. Tu pila espera abajo. El hueco libre es donde puede clavarse un lanzamiento.	Der Stamm dreht sich, ein Dolch steckt schon. Dein Stapel wartet unten. Die freie Lücke ist die Stelle, wo ein Wurf stecken bleibt.
 The loop used two of the right spot's ends: it's full and greys out.	这个圈用掉了右边点的两个线头：它满了，变成灰色。	ループで右の点の端を2つ使ったので、いっぱいになって灰色になりました。	El bucle ha usado dos extremos del punto de la derecha: está lleno y se vuelve gris.	Die Schleife hat zwei Enden des rechten Punktes verbraucht: Er ist voll und wird grau.
 The middle column, where the circle is.	中间那一列，有圆圈的地方。	真ん中の列、丸のあるところです。	La columna del centro, donde está el círculo.	Die mittlere Spalte, dort wo der Kreis ist.
 The middle columns are part of more lines of four, so they're useful early.	中间的几列能参与更多四连，所以开局很有用。	中央の列は4つの線に多く関わるので、序盤に有利です。	Las columnas centrales forman parte de más líneas de cuatro, así que sirven al principio.	Die mittleren Spalten gehören zu mehr Viererreihen und sind am Anfang nützlich.
@@ -1409,6 +1463,10 @@ This round	本轮	このラウンド	Esta ronda	Diese Runde
 Threads can be categories (Fruits), words that join another word (___BALL, SUN___), hidden words or anagrams.	共同点可以是类别（水果）、能和另一个词组成新词的词（___BALL、SUN___）、藏着的词或字母重排词。	共通点は、カテゴリー（果物）、別の語とくっつく語（___BALL、SUN___）、隠れた語、アナグラムなどです。	Los hilos pueden ser categorías (Frutas), palabras que se unen a otra (___BALL, SUN___), palabras ocultas o anagramas.	Fäden können Kategorien sein (Obst), Wörter, die sich mit einem anderen verbinden (___BALL, SUN___), versteckte Wörter oder Anagramme.
 Three of those four belong together.	这四个里有三个是一组的。	その4語のうち3語は同じグループです。	Tres de esas cuatro van juntas.	Drei dieser vier gehören zusammen.
 Three of yours sit on the bottom, with one gap. Drop there to make four across.	你有三枚棋子在最下面，中间空了一格。落在那里就能横向连成四子。	一番下に自分のコマが3つあり、1つ空いています。そこに落として横に4つ揃えましょう。	Tres fichas tuyas están abajo, con un hueco. Suéltala ahí para hacer cuatro en horizontal.	Drei deiner Scheiben liegen unten, mit einer Lücke. Wirf dort hinein, um vier waagerecht zu bekommen.
+Throw	投掷	投げる	Lanzar	Werfen
+Throw daggers into a spinning log and stick every one.	把短刃投进旋转的圆木，并全部扎上。	回る丸太に短刀を投げ、全部刺します。	Lanza dagas a un tronco que gira y clávalas todas.	Wirf Dolche in einen drehenden Stamm und steck jeden fest.
+Throw into the spinning log	投进旋转的圆木	回る丸太に投げ込む	Lanza al tronco que gira	Wirf in den drehenden Stamm
+Throw when the gap is at the bottom, where the dagger arrives.	等缺口转到下方、短刃到达的地方再投。	短刀が届く下側にすき間が来たときに投げます。	Lanza cuando el hueco esté abajo, donde llega la daga.	Wirf, wenn die Lücke unten ist, dort, wo der Dolch ankommt.
 Tile and domino face	牌面与骨牌面	牌とドミノの表面	Cara de fichas y dominó	Oberfläche von Steinen und Domino
 Tile edge	牌边	牌の側面	Borde de las fichas	Steinkante
 Tile spawns are seeded per game; there is no final level.	每局方块的出现由种子决定；没有最终关卡。	タイルの出方は毎回決まったシードで作られます。最終レベルはありません。	La aparición de fichas depende de la semilla de cada partida; no hay nivel final.	Das Erscheinen der Kacheln hängt vom Startwert des Spiels ab; es gibt kein letztes Level.
@@ -1417,6 +1475,7 @@ Tiles	方块	タイル	Mosaico	Kacheln
 Time {0}	用时 {0}	タイム {0}	Tiempo {0}	Zeit {0}
 Timed	计时	タイムあり	Con tiempo	Mit Zeit
 Timed {0}	计时 {0}	タイム {0}	Con tiempo {0}	Mit Zeit {0}
+Tiny target	极小目标	ごく小さい的	Blanco diminuto	Winziges Ziel
 Tips	小技巧	コツ	Consejos	Tipps
 Too open to check. Add a few starting digits.	太空了，无法检查。请加几个初始数字。	空きが多すぎて確認できません。最初の数字をいくつか足してください。	Demasiado abierta para comprobarla. Añade algunos números iniciales.	Zu offen zum Prüfen. Füge ein paar Startziffern hinzu.
 Tools	工具	道具	Herramientas	Werkzeuge
@@ -1445,6 +1504,8 @@ Two decks; build King-to-Ace runs in one suit.	两副牌；按同一花色从 K 
 Two lines flipped at once, and a corner disc can never be flipped back.	一次翻了两条线，而且角上的棋子永远不会被翻回去。	一度に2列ひっくり返り、しかも角の石はもう返されません。	Se han volteado dos líneas a la vez, y una ficha en la esquina nunca se puede voltear.	Zwei Linien auf einmal umgedreht, und ein Eckstein kann nie zurückgedreht werden.
 Two starting digits break a rule.	有两个初始数字违反了规则。	最初の数字の2つがルールに反しています。	Dos números iniciales incumplen una regla.	Zwei Startziffern verstoßen gegen eine Regel.
 Two tiles with the same number that collide merge into one tile with their sum. A tile merges once per move.	两个数字相同的方块相撞，会合并成一个数字是它们之和的方块。每个方块每步只合并一次。	同じ数字のタイルがぶつかると、合計の数字のタイル1枚になります。1手で合体できるのは1回だけです。	Dos fichas con el mismo número que chocan se unen en una con su suma. Cada ficha se une una vez por movimiento.	Zwei Kacheln mit gleicher Zahl, die zusammenstoßen, verschmelzen zu einer mit ihrer Summe. Pro Zug verschmilzt eine Kachel nur einmal.
+Two ways to play	两种玩法	遊び方は2つ	Dos formas de jugar	Zwei Spielarten
+Two ways to play: an endless high score, and 48 numbered logs. A boss every fifth log, challenge logs, and stars for fruit taken.	两种玩法：无尽高分，以及 48 根编号圆木。每五根一个首领，另有挑战圆木，摘到的果子记为星星。	遊び方は2つ。エンドレスのハイスコアと、番号つきの丸太48本。5本ごとにボス、挑戦の丸太、取った果実の星。	Dos formas de jugar: una puntuación sin fin y 48 troncos numerados. Un jefe cada cinco, troncos de reto y estrellas por la fruta.	Zwei Spielarten: ein Endlos-Bestwert und 48 nummerierte Stämme. Jeder fünfte ein Boss, Herausforderungs-Stämme und Sterne für genommenes Obst.
 Type a five-letter word and press Enter. Each letter is then marked.	输入一个五字母单词并按 Enter，每个字母都会被标记。	5文字の単語を入力して Enter を押すと、各文字に印がつきます。	Escribe una palabra de cinco letras y pulsa Enter. Cada letra queda marcada.	Gib ein Wort mit fünf Buchstaben ein und drücke Enter. Dann wird jeder Buchstabe markiert.
 Type the answer	输入答案	答えを入力	Escribe la respuesta	Antwort eingeben
 Type what you think the word means. Your own words are fine; you don't need a dictionary definition.	输入你认为这个词的意思。用自己的话就行，不需要字典里的定义。	その言葉の意味だと思うことを入力します。自分の言葉でOK。辞書の定義でなくてかまいません。	Escribe lo que crees que significa. Vale con tus propias palabras; no hace falta una definición de diccionario.	Schreib, was das Wort deiner Meinung nach bedeutet. Eigene Worte reichen, eine Wörterbuchdefinition brauchst du nicht.
@@ -1474,6 +1535,7 @@ verb	动词	動詞	verbo	Verb
 Verified clearable deals with shuffled tile faces. Exact unique-deal count not measured.	每局都已验证能清空，牌面随机排列。未统计不同牌局的确切数量。	全部取れることを確認済みの配牌で、牌の絵はシャッフルされます。異なる配牌の正確な数は測っていません。	Repartos comprobados que se pueden vaciar, con las fichas barajadas. No se ha medido el número exacto de repartos distintos.	Geprüft lösbare Runden mit gemischten Steinbildern. Die genaue Zahl verschiedener Runden ist nicht gemessen.
 Version {0}	版本 {0}	バージョン {0}	Versión {0}	Version {0}
 Very rich	非常有钱	とてもお金持ち	Muy rico	Sehr reich
+Wait	等待	待つ	Esperar	Warten
 Waste	弃牌堆	捨て札	Descarte	Ablage
 Waste, {0}	弃牌，{0}	捨て札、{0}	Descarte, {0}	Ablage, {0}
 Watch the next pieces to plan ahead.	看看接下来的方块，提前计划。	次のピースを見て、先を読みましょう。	Fíjate en las siguientes piezas para planificar.	Behalte die nächsten Teile im Blick, um vorauszuplanen.
@@ -1488,6 +1550,7 @@ What goes in a one-square cage with total 2?	总和为 2 的一格笼子里填�
 What goes there?	那里填什么？	そこに入る数字は？	¿Qué va ahí?	Was kommt dort hin?
 When a line's clue is complete, cross off its remaining squares.	一行（列）的提示完成后，把剩下的格子都打叉。	ヒントどおりに塗り終えた列は、残りのマスにバツをつけましょう。	Cuando una línea cumple su pista, tacha las casillas que le quedan.	Ist der Hinweis einer Linie erfüllt, kreuze ihre übrigen Felder ab.
 When every line is drawn, the player with more boxes wins.	所有线都画完后，方格多的一方获胜。	すべての線を引き終えたとき、箱の多い方の勝ちです。	Cuando todas las líneas estén trazadas, gana quien tenga más cajas.	Sind alle Linien gezogen, gewinnt, wer mehr Kästchen hat.
+When the gap comes around, throw. Stick every dagger and the log bursts.	等缺口转过来再投。短刃全部扎上，圆木就会裂开。	すき間が回ってきたら投げます。短刀をすべて刺すと丸太が割れます。	Cuando el hueco vuelva, lanza. Clava todas las dagas y el tronco estalla.	Wenn die Lücke wiederkommt, wirf. Stecken alle Dolche, birst der Stamm.
 When three copies of a tile are free, think about which pair leaves the fourth reachable.	如果同一种牌有三张是自由的，想想拿哪一对才能让第四张还拿得到。	同じ牌が3枚取れるときは、4枚目が取れるように残すペアを考えましょう。	Cuando haya tres copias libres de una ficha, piensa qué pareja deja accesible la cuarta.	Sind drei gleiche Steine frei, überleg, welches Paar den vierten erreichbar lässt.
 Where an across run and a down run cross, the digit must fit both.	横向和纵向的两段交叉的地方，数字必须同时满足两边。	ヨコとタテの並びが交わるマスの数字は、両方に合わなければなりません。	Donde se cruzan un tramo horizontal y uno vertical, el número debe servir para los dos.	Wo sich ein waagerechter und ein senkrechter Block kreuzen, muss die Ziffer zu beiden passen.
 Which digit completes that column?	哪个数字能让这一列完整？	この列をそろえる数字は？	¿Qué número completa esa columna?	Welche Ziffer vervollständigt die Spalte?
@@ -1507,6 +1570,7 @@ Whoever draws the last possible line wins.	画出最后一条可画的线的人�
 Wild animals	野生动物	野生動物	Animales salvajes	Wildtiere
 Win games to earn hints: 1 on the easiest level, up to 4 on the hardest. Finishing a tutorial earns 1 too. You can also switch off “Earn hints through play” in Settings.	赢得游戏就能获得提示：最简单难度得 1 次，最难的最多得 4 次。完成一个教程也能得 1 次。你也可以在设置中关闭“通过游戏赚取提示”。	ゲームに勝つとヒントがもらえます。いちばんやさしいレベルで1回、いちばん難しいレベルで最大4回です。チュートリアルを終えても1回もらえます。設定で「プレイしてヒントを獲得」をオフにすることもできます。	Gana partidas para conseguir pistas: 1 en el nivel más fácil y hasta 4 en el más difícil. Terminar un tutorial también da 1. También puedes desactivar «Ganar pistas jugando» en Ajustes.	Gewinne Spiele, um Tipps zu verdienen: 1 auf der leichtesten Stufe, bis zu 4 auf der schwersten. Auch jedes abgeschlossene Tutorial bringt 1. Du kannst „Tipps durch Spielen verdienen“ auch in den Einstellungen ausschalten.
 wins	胜场	勝利	victorias	Siege
+Wobble	来回摆	ゆらゆら	Bamboleo	Wackeln
 Won	胜	勝ち	Ganada	Gewonnen
 Word found!	找到了！	見つけました！	¡Palabra encontrada!	Wort gefunden!
 Word games	文字游戏	ことばのゲーム	Juegos de palabras	Wortspiele
@@ -1596,6 +1660,7 @@ Zoom out	缩小	縮小	Alejar	Verkleinern
 {0} computer · standard 8 × 8 opening	{0}电脑 · 标准 8 × 8 开局	{0}のコンピューター · 標準の8 × 8	Ordenador {0} · inicio estándar de 8 × 8	Computer: {0} · Standardstart 8 × 8
 {0} computer · you {1} left, computer {2} left	{0}电脑 · 你剩 {1}，电脑剩 {2}	{0}のコンピューター · あなた残り{1}、コンピューター残り{2}	Ordenador {0} · te quedan {1}, al ordenador {2}	Computer: {0} · du noch {1}, Computer noch {2}
 {0} conflicts	{0} 处冲突	矛盾{0}か所	{0} conflictos	{0} Konflikte
+{0} daggers	{0} 把短刃	短刀{0}本	{0} dagas	{0} Dolche
 {0} deals left	还能发 {0} 次	残り{0}回配れる	Quedan {0} repartos	Noch {0}-mal geben
 {0} distinct answers across eligible word pools. Theme/difficulty choices do not create new words.	所有可用词库中共有 {0} 个不同的答案。选择主题或难度不会产生新单词。	使える語彙全体で{0}種類の答え。テーマや難易度を選んでも、新しい言葉は増えません。	{0} respuestas distintas entre las listas de palabras válidas. Elegir tema o dificultad no crea palabras nuevas.	{0} verschiedene Antworten in allen Wortlisten. Thema oder Schwierigkeit erzeugen keine neuen Wörter.
 {0} face down	{0} 张背面朝上	裏向き{0}枚	{0} boca abajo	{0} verdeckt
@@ -1624,6 +1689,7 @@ Zoom out	缩小	縮小	Alejar	Verkleinern
 {0} of {1} lines drawn	已画 {0}/{1} 条线	{1}本中{0}本の線	{0} de {1} líneas trazadas	{0} von {1} Linien gezogen
 {0} of {1} lives left	剩 {0}/{1} 条命	ライフ残り{0}/{1}	Quedan {0} de {1} vidas	Noch {0} von {1} Leben
 {0} of {1} pairs · {2} turns	{0}/{1} 对 · {2} 回合	{1}ペア中{0} · {2}回	{0} de {1} parejas · {2} turnos	{0} von {1} Paaren · {2} Runden
+{0} of {1} stars	{1} 颗星中的 {0} 颗	星{0}/{1}	{0} de {1} estrellas	{0} von {1} Sternen
 {0} of {1} wrong guesses	猜错 {0}/{1} 次	まちがい {0}/{1}	{0} de {1} fallos	{0} von {1} Fehlversuchen
 {0} open	已翻开 {0}	{0}マス開いた	{0} descubiertas	{0} offen
 {0} pairs of Mahjong pictures	{0} 对麻将图案	麻雀牌の絵が{0}ペア	{0} parejas de dibujos de mahjong	{0} Paare mit Mahjong-Bildern
@@ -1644,6 +1710,7 @@ Zoom out	缩小	縮小	Alejar	Verkleinern
 {0} squares are wrong, marked in red.	有 {0} 格填错了，已用红色标出。	{0}マスがまちがっています（赤で表示）。	Hay {0} casillas mal, marcadas en rojo.	{0} Felder sind falsch, rot markiert.
 {0} squares aren't in a region yet.	还有 {0} 格不属于任何区域。	{0}マスがまだどのブロックにも入っていません。	Hay {0} casillas que aún no están en ninguna región.	{0} Felder gehören noch zu keiner Region.
 {0} squares filled	已填 {0} 格	{0}マス記入済み	{0} casillas rellenas	{0} Felder ausgefüllt
+{0} stars	{0} 颗星	星{0}	{0} estrellas	{0} Sterne
 {0} starting digits	{0} 个初始数字	最初の数字{0}個	{0} números iniciales	{0} Startziffern
 {0} starts at the highlighted square. Tap its last letter.	{0}从高亮的格子开始，点它的最后一个字母。	{0}は光っているマスから始まります。最後の文字をタップしてください。	{0} empieza en la casilla resaltada. Toca su última letra.	{0} beginnt im markierten Feld. Tippe auf seinen letzten Buchstaben.
 {0} steps	{0} 步	{0}ステップ	{0} pasos	{0} Schritte

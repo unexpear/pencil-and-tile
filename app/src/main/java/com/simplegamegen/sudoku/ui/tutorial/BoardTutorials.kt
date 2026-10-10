@@ -1019,4 +1019,37 @@ internal object ArcadeTutorials {
             ),
         )
     }
+
+    val logThrow: Tutorial get() {
+        fun scene(open: Boolean, choices: List<String> = emptyList()): Scene {
+            val items = listOf(
+                Item("log", 1.1f, 0.7f, 2.8f, 2.6f, Cell(fill = Fill.SHADED), describe = "log"),
+                Item("gap", 2f, 0.15f, 1f, 0.7f, Cell(fill = if (open) Fill.OPEN else Fill.BLOCK, text = if (open) "" else "||"), describe = if (open) "open gap" else "blocked gap"),
+                Item("stuck", 0.35f, 1.6f, 0.7f, 0.9f, Cell(fill = Fill.BLOCK, text = "||"), describe = "stuck dagger"),
+                Item("stack", 2f, 3.75f, 1f, 1f, Cell(fill = Fill.PAPER, text = "||"), describe = "dagger to throw"),
+            )
+            return Scene(5f, 5f, items, Backdrop.BOARD, choices = choices, maxUnit = 56)
+        }
+        return Tutorial(
+            GameId.LOG_THROW,
+            "Throw daggers into a spinning log and stick every one.",
+            rules = listOf(
+                "A round log spins in the centre. Tap to throw the next dagger from the stack straight up into its rim.",
+                "A dagger that lands in a clear gap sticks and spins with the log. Hitting a dagger already there ends the run.",
+                "Stick every dagger for that log and it bursts. Apples and coins on the rim add to the score. Some logs start with daggers already stuck.",
+                "Endless keeps going as the spin reverses, speeds up, slows, stops, or wobbles. The level map has 48 logs, a boss every fifth, and stars for fruit.",
+            ),
+            tips = listOf(
+                "Throw when the gap is at the bottom, where the dagger arrives.",
+                "On a challenge log, the gap may be tiny or you may have to hit every apple.",
+            ),
+            steps = listOf(
+                Step("The log spins with one dagger already stuck. Your stack waits at the bottom. The open gap is where a throw can land.", scene(true)),
+                Step("Tap your dagger to throw it into the open gap.", scene(true), tap = setOf("stack"), after = scene(false),
+                    then = "It sticks in the wood and turns with the log."),
+                Step("The gap is blocked. Wait, don't throw into the dagger that's already there.", scene(false, listOf("Throw", "Wait")), pick = "Wait", after = scene(true),
+                    then = "When the gap comes around, throw. Stick every dagger and the log bursts."),
+            ),
+        )
+    }
 }
