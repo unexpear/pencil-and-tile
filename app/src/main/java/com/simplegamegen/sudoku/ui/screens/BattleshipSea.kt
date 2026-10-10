@@ -237,21 +237,26 @@ private fun DrawScope.drawOcean(
     }
     val hit = shots.filter { it.mark != Mark.MISS }.map { it.cell }.toSet()
     val shown = if (reveal) ships else ships.filter { ship -> ship.cells.all { it in hit } }
-    val pieces = ArrayList<Pair<Float, () -> Unit>>()
+    val pieces = ArrayList<SeaMark>()
     shown.forEach { ship ->
         val sunk = ship.cells.all { it in hit }
-        val mesh = meshes.ships.getValue(ship.kind)
-        val depth = frame.depth(shipCenterX(ship), shipCenterY(ship), Top + 0.3f)
-        pieces += depth to {
-            drawMesh(frame, mesh, shipPose(ship), if (sunk) SunkHull else Hull, Polished)
-        }
+        pieces += SeaMark(
+            frame.depth(shipCenterX(ship), shipCenterY(ship), Top + 0.3f),
+            meshes.ships.getValue(ship.kind),
+            shipPose(ship),
+            if (sunk) SunkHull else Hull,
+        )
     }
     preview?.let { ghost ->
         if (ghost.cells.size == ghost.kind.length) {
             val ship = Ship(ghost.kind, ghost.row, ghost.col, ghost.horizontal)
-            pieces += frame.depth(shipCenterX(ship), shipCenterY(ship), Top + 0.3f) to {
-                drawMesh(frame, meshes.ships.getValue(ghost.kind), shipPose(ship), if (ghost.ok) PreviewOk else PreviewBad, Polished, alpha = 0.62f)
-            }
+            pieces += SeaMark(
+                frame.depth(shipCenterX(ship), shipCenterY(ship), Top + 0.3f),
+                meshes.ships.getValue(ghost.kind),
+                shipPose(ship),
+                if (ghost.ok) PreviewOk else PreviewBad,
+                alpha = 0.62f,
+            )
         }
     }
     val covered = shown.flatMap { it.cells }.toSet()
@@ -260,14 +265,19 @@ private fun DrawScope.drawOcean(
         val row = shot.cell / Battleship.SIZE
         val onShip = shot.cell in covered && shot.mark != Mark.MISS
         val z = Top + if (onShip) 0.42f else 0.02f
-        val mesh = if (shot.mark == Mark.MISS) meshes.miss else meshes.hit
-        val color = if (shot.mark == Mark.MISS) MissInk else HitRed
-        pieces += frame.depth(col + 0.5f, row + 0.5f, z) to {
-            drawMesh(frame, mesh, Pose(col + 0.5f, row + 0.5f, z), color, Polished)
-        }
+        pieces += SeaMark(
+            frame.depth(col + 0.5f, row + 0.5f, z),
+            if (shot.mark == Mark.MISS) meshes.miss else meshes.hit,
+            Pose(col + 0.5f, row + 0.5f, z),
+            if (shot.mark == Mark.MISS) MissInk else HitRed,
+        )
     }
-    pieces.sortedByDescending { it.first }.forEach { it.second() }
+    pieces.sortedByDescending { it.depth }.forEach { mark ->
+        drawMesh(frame, mark.mesh, mark.pose, mark.color, Polished, alpha = mark.alpha)
+    }
 }
+
+private class SeaMark(val depth: Float, val mesh: Mesh, val pose: Pose, val color: Color, val alpha: Float = 1f)
 
 private fun shipPose(ship: Ship): Pose {
     val horizontal = ship.horizontal
