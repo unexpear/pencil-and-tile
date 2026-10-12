@@ -111,9 +111,6 @@ internal fun SeaHeading(title: String, full: Boolean, onFull: () -> Unit) {
     }
 }
 
-@Suppress("UNUSED_PARAMETER")
-private fun ignoreCell(cell: Int) = Unit
-
 @Composable
 internal fun SeaBoard(
     camera: BoardCamera,
@@ -124,9 +121,10 @@ internal fun SeaBoard(
     fog: Boolean,
     fire: Boolean,
     describe: (Int) -> String,
-    onFire: (Int) -> Unit = ::ignoreCell,
+    // A function literal here is resolved while SeaBoard is still in the annotation phase, which crashes Android lint.
+    onFire: ((Int) -> Unit)? = null,
     place: Battleship? = null,
-    onPlace: (Int) -> Unit = ::ignoreCell,
+    onPlace: ((Int) -> Unit)? = null,
     height: Dp? = null,
     controls: Boolean = true,
 ) {
@@ -159,7 +157,7 @@ internal fun SeaBoard(
                 .semantics { contentDescription = description }
             if (place != null || aimed) {
                 mark = mark.clickable(role = Role.Button, onClickLabel = say(if (place != null) "Place" else "Fire")) {
-                    if (place != null) onPlace(index) else onFire(index)
+                    if (place != null) onPlace?.invoke(index) else onFire?.invoke(index)
                 }
             }
             Box(mark)
@@ -172,8 +170,8 @@ private suspend fun PointerInputScope.trackSea(
     placing: State<Battleship?>,
     firing: State<Boolean>,
     freeCam: State<Boolean>,
-    placeAt: State<(Int) -> Unit>,
-    fireAt: State<(Int) -> Unit>,
+    placeAt: State<((Int) -> Unit)?>,
+    fireAt: State<((Int) -> Unit)?>,
     ghost: MutableIntState,
 ) {
     awaitEachGesture {
@@ -191,8 +189,8 @@ private suspend fun PointerInputScope.trackSea(
             if (placing.value != null) ghost.intValue = at ?: -1
             if (!change.pressed) {
                 ghost.intValue = -1
-                if (at != null && placing.value != null) placeAt.value(at)
-                else if (at != null && firing.value && !moved) fireAt.value(at)
+                if (at != null && placing.value != null) placeAt.value?.invoke(at)
+                else if (at != null && firing.value && !moved) fireAt.value?.invoke(at)
                 break
             }
             if (hypot(change.position.x - down.position.x, change.position.y - down.position.y) > slop) {
