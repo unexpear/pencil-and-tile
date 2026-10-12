@@ -313,6 +313,11 @@ private fun SeaHeading(title: String, full: Boolean, onFull: () -> Unit) {
     }
 }
 
+// A function type here is invoked while lint is still resolving SeaBoard, which crashes FIR.
+private fun interface SquareText {
+    fun of(cell: Int): String
+}
+
 @Composable
 private fun SeaBoard(
     camera: BoardCamera,
@@ -322,7 +327,7 @@ private fun SeaBoard(
     reveal: Boolean,
     fog: Boolean,
     fire: Boolean,
-    describe: (Int) -> String,
+    describe: SquareText,
     // Null, not {}. A default lambda is resolved while SeaBoard is still in the annotation phase, which crashes Android lint.
     onFire: ((Int) -> Unit)? = null,
     place: Battleship? = null,
@@ -377,7 +382,7 @@ private fun SeaBoard(
             val aimed = fire && shots.none { it.cell == index }
             Box(
                 Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
-                    contentDescription = say(describe(index))
+                    contentDescription = say(describe.of(index))
                     if (place != null || aimed) {
                         role = Role.Button
                         onClick(say(if (place != null) "Place" else "Fire")) {
