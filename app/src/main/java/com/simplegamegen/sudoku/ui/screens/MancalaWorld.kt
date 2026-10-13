@@ -95,7 +95,7 @@ internal fun MancalaWorld(
         onFrame = {
             environment.indirectLight?.intensity = IBL_LUX
             // A transparent TextureView showed nothing on real phones. Clear to the table colour instead.
-            renderer.clearColor(linear(table.red), linear(table.green), linear(table.blue), 1.0)
+            renderer.clearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0)
             placeMancalaCamera(camera, frameState.value)
         },
         // TextureView takes the touches, so the pit ovals cannot live only on the Compose canvas.
@@ -169,7 +169,7 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
         set("roughnessFactor", 0.05f)
         set("metallicFactor", 0f)
         set("reflectance", 0.5f)
-        set("transmissionFactor", 0.55f)
+        set("transmissionFactor", 0.2f)
         set("ior", 1.5f)
         set("thicknessFactor", 0.2f)
         set("volumeThicknessFactor", 0.2f)
@@ -205,5 +205,10 @@ private val MARBLE_COLORS = listOf(
     Color(0xFFE7F6F8),
 )
 
-/** Filament clears in linear light, so an sRGB UI colour has to be decoded first. */
-private fun linear(c: Float): Double = Math.pow(c.toDouble(), 2.2)
+/**
+ * The clear colour goes through the view's tone mapper, so the app beige (0xFFF6F1E7 on screen)
+ * needs these linear values. They were measured on the release build in an emulator.
+ */
+private const val CLEAR_R = 1.72
+private const val CLEAR_G = 1.40
+private const val CLEAR_B = 0.97

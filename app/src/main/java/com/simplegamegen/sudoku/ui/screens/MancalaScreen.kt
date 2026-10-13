@@ -2,7 +2,12 @@ package com.simplegamegen.sudoku.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,6 +46,7 @@ import com.simplegamegen.sudoku.ui.assets.BoardView
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.assets.TableFrame
 import com.simplegamegen.sudoku.ui.assets.drawRing
+import com.simplegamegen.sudoku.ui.assets.tableFrame
 import com.simplegamegen.sudoku.ui.components.ToolButton
 import com.simplegamegen.sudoku.ui.i18n.Text
 import com.simplegamegen.sudoku.ui.i18n.say
@@ -59,13 +65,13 @@ internal object MancalaBoard {
     const val width = 8f
     const val depth = 3.6f
     const val top = 0.52f
-    const val peakZ = 1.15f
-    const val margin = 0.42f
+    const val peakZ = 0.8f
+    const val margin = 0.62f
     /** Bowl depth at the centre. The Blender board uses these same numbers. */
     const val pitDepth = 0.26f
     const val storeDepth = 0.32f
     /** Glass marble radius. The marble glTF is a unit sphere scaled by this. */
-    const val stoneRadius = 0.100f
+    const val stoneRadius = 0.150f
     val views = listOf(
         BoardView("Behind", yaw = 0f, pitch = 42f, distance = 1.32f),
         BoardView("Corner", yaw = 28f, pitch = 38f, distance = 1.42f),
@@ -198,12 +204,32 @@ private fun MancalaTable(
         }
         poses = restingPoses(g.pits)
     }
+    // Store names and counts sit above the 3D view, each over its own store, so they cover nothing.
+    Column(Modifier.fillMaxSize()) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        StoreTag("$computer ${g.pits[Mancala.CPU]}")
+        StoreTag("$you ${g.pits[Mancala.YOU]}")
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f), contentAlignment = androidx.compose.ui.Alignment.Center) {
+    val density = LocalDensity.current
+    val widthPx = with(density) { maxWidth.toPx() }
+    // Only as tall as the board needs in the tallest saved view, so the board fills the width.
+    val fitPx = remember(widthPx) {
+        MancalaBoard.views.maxOf { view ->
+            tableFrame(
+                MancalaBoard.width.toInt(), widthPx, MancalaBoard.peakZ, view = view,
+                margin = MancalaBoard.margin, rows = MancalaBoard.depth,
+            ).height
+        }
+    }
+    val boardHeight = with(density) { fitPx.toDp() }.coerceAtMost((maxHeight - 96.dp).coerceAtLeast(120.dp))
     BoardWithViews(
         camera,
         n = MancalaBoard.width.toInt(),
         peakZ = MancalaBoard.peakZ,
         margin = MancalaBoard.margin,
         rows = MancalaBoard.depth,
+        height = boardHeight,
     ) { frame ->
         val order = holes.sortedByDescending { frame.depth(it.x, it.y, MancalaBoard.top) }
         fun spoken(hole: MancalaBoard.Hole): String {
@@ -238,18 +264,30 @@ private fun MancalaTable(
                 if (playable && open) {
                     SowRing(frame, hole, c.highlight)
                 }
-                val countY = when {
-                    hole.store -> 2.72f
-                    hole.y > 1.8f -> hole.y + hole.ry + 0.28f
-                    else -> hole.y - hole.ry - 0.28f
+                // Pit counts sit just past the board edge on each side, clear of the marbles.
+                if (!hole.store) {
+                    val countY = if (hole.y > 1.8f) MancalaBoard.depth + 0.26f else -0.5f
+                    val ink = if (playable && open) c.highlight else Seed
+                    CountPill(frame, g.pits[hole.index].toString(), hole.x, countY, ink)
                 }
-                val ink = if (playable && open) c.highlight else Seed
-                CountPill(frame, g.pits[hole.index].toString(), hole.x, countY, ink)
             }
-            CountPill(frame, you, MancalaBoard.hole(Mancala.YOU).x, 3.28f, Seed, bold = false)
-            CountPill(frame, computer, MancalaBoard.hole(Mancala.CPU).x, 3.28f, Seed, bold = false)
         }
     }
+    }
+    }
+}
+
+@Composable
+private fun StoreTag(text: String) {
+    androidx.compose.material3.Text(
+        text,
+        color = Seed,
+        fontWeight = FontWeight.Bold,
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier
+            .background(Color(0xE0120C08), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    )
 }
 
 /** Centre a child on a pixel of the board without covering the rest of the texture view. */
@@ -265,7 +303,7 @@ private fun Modifier.pinAt(x: Float, y: Float): Modifier = layout { measurable, 
 
 @Composable
 private fun CountPill(frame: TableFrame, text: String, x: Float, y: Float, color: Color, bold: Boolean = true) {
-    val px = (frame.unitAt(x, y, MancalaBoard.top) * if (bold) 0.38f else 0.28f).coerceIn(12f, 28f)
+    val px = (frame.unitAt(x, y, MancalaBoard.top) * if (bold) 0.32f else 0.28f).coerceIn(12f, 24f)
     val density = LocalDensity.current
     val padX = with(density) { (px * 0.38f).toDp() }
     val padY = with(density) { (px * 0.16f).toDp() }
