@@ -1,0 +1,4 @@
+Correcciones:
+- Lanzamiento de cuchillo ya no se cierra al abrirlo.
+- Batalla naval: al colocar tu flota se ve un solo tablero claro, sin nada encima.
+- Mancala: el tablero de madera en 3D ahora se ve en el móvil, ocupa todo el ancho y tiene canicas de cristal más grandes. Las etiquetas y los números ya no tapan los hoyos.

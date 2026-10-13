@@ -1,0 +1,4 @@
+Fixes:
+- Knife Flip no longer crashes when you open it.
+- Battleship: placing your fleet now shows one clear board, with nothing drawn over it.
+- Mancala: the 3D wooden board now shows on phones, fills the screen width, and has bigger glass marbles. Labels and counts no longer cover the pits.
