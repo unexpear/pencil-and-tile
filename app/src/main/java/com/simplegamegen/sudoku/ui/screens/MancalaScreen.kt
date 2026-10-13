@@ -223,6 +223,7 @@ private fun MancalaTable(
                 frame, poses, playable, legal,
                 onSow = { pit -> gate.trySow(pit, onSow) },
                 modifier = Modifier.fillMaxSize(),
+                table = c.background,
             )
             order.forEach { hole ->
                 val at = frame.at(hole.x, hole.y, MancalaBoard.top)
@@ -252,10 +253,13 @@ private fun MancalaTable(
 }
 
 /** Centre a child on a pixel of the board without covering the rest of the texture view. */
-private fun Modifier.pinAt(x: Float, y: Float): Modifier = layout { measurable, _ ->
+private fun Modifier.pinAt(x: Float, y: Float): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(Constraints())
+    // Keep labels on screen. The store labels sat past the edges on a phone.
+    val maxX = if (constraints.hasBoundedWidth) constraints.maxWidth - placeable.width else Int.MAX_VALUE
+    val left = (x.roundToInt() - placeable.width / 2).coerceIn(0, maxX.coerceAtLeast(0))
     layout(0, 0) {
-        placeable.place(x.roundToInt() - placeable.width / 2, y.roundToInt() - placeable.height / 2)
+        placeable.place(left, y.roundToInt() - placeable.height / 2)
     }
 }
 

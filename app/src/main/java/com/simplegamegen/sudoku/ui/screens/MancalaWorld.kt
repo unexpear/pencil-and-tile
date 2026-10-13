@@ -48,6 +48,7 @@ internal fun MancalaWorld(
     legal: List<Int>,
     onSow: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    table: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color(0xFFF4EFE6),
 ) {
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
@@ -78,8 +79,7 @@ internal fun MancalaWorld(
     val sowState = rememberUpdatedState(onSow)
     SceneView(
         modifier = modifier,
-        surfaceType = SurfaceType.TextureSurface,
-        isOpaque = false,
+        surfaceType = SurfaceType.Surface,
         engine = engine,
         modelLoader = modelLoader,
         environmentLoader = environmentLoader,
@@ -94,7 +94,8 @@ internal fun MancalaWorld(
         cameraManipulator = null,
         onFrame = {
             environment.indirectLight?.intensity = IBL_LUX
-            renderer.clearColor(0.0, 0.0, 0.0, 0.0)
+            // A transparent TextureView showed nothing on real phones. Clear to the table colour instead.
+            renderer.clearColor(linear(table.red), linear(table.green), linear(table.blue), 1.0)
             placeMancalaCamera(camera, frameState.value)
         },
         // TextureView takes the touches, so the pit ovals cannot live only on the Compose canvas.
@@ -203,3 +204,6 @@ private val MARBLE_COLORS = listOf(
     Color(0xFF7A45C0),
     Color(0xFFE7F6F8),
 )
+
+/** Filament clears in linear light, so an sRGB UI colour has to be decoded first. */
+private fun linear(c: Float): Double = Math.pow(c.toDouble(), 2.2)

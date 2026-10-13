@@ -221,12 +221,7 @@ fun BattleshipScreen(nav: NavController, vm: PlayViewModel<Battleship>, factory:
                     },
                     height = side, controls = true,
                 )
-                Text("Enemy waters", style = MaterialTheme.typography.titleMedium)
-                Text("Hidden until your fleet is placed.", style = MaterialTheme.typography.bodyMedium, color = c.muted)
-                SeaBoard(
-                    camera, meshes, ships = emptyList(), shots = emptyList(), reveal = false, fog = true,
-                    fire = false, describe = { located(it, "hidden") }, height = side * 0.72f, controls = false,
-                )
+                // Only your fleet shows while placing. A second sea here drew over the fleet on phones.
             } else {
                 val sunk = g.enemy.filter { ship -> ship.cells.all { cell -> g.salvo.any { it.cell == cell && it.mark != Mark.MISS } } }
                 SeaHeading("Enemy waters", full) { full = !full }
