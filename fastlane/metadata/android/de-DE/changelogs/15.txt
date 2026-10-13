@@ -1,0 +1,4 @@
+Korrekturen:
+- Messerwurf stürzt beim Öffnen nicht mehr ab.
+- Schiffe versenken: Beim Platzieren der Flotte ist nur noch ein klares Spielfeld zu sehen, ohne Überlagerung.
+- Mancala: Das 3D-Holzbrett erscheint jetzt auf dem Handy, füllt die Bildschirmbreite und hat größere Glasmurmeln. Beschriftungen und Zahlen verdecken die Mulden nicht mehr.
