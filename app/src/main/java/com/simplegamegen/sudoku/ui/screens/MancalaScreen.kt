@@ -1,6 +1,5 @@
 package com.simplegamegen.sudoku.ui.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,8 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -45,7 +42,6 @@ import com.simplegamegen.sudoku.ui.PlayViewModel
 import com.simplegamegen.sudoku.ui.assets.BoardView
 import com.simplegamegen.sudoku.ui.assets.GameIcons
 import com.simplegamegen.sudoku.ui.assets.TableFrame
-import com.simplegamegen.sudoku.ui.assets.drawRing
 import com.simplegamegen.sudoku.ui.assets.tableFrame
 import com.simplegamegen.sudoku.ui.components.ToolButton
 import com.simplegamegen.sudoku.ui.i18n.Text
@@ -182,8 +178,10 @@ private fun MancalaTable(
     val gate = remember { SowGate() }
     var poses by remember { mutableStateOf(restingPoses(g.pits)) }
     val shown = remember { mutableStateOf(g) }
+    var sowing by remember { mutableStateOf(false) }
     LaunchedEffect(g) {
         val before = shown.value
+        sowing = false
         if (before == g) {
             poses = restingPoses(g.pits)
             return@LaunchedEffect
@@ -195,6 +193,7 @@ private fun MancalaTable(
             return@LaunchedEffect
         }
         val duration = anim.durationMs * 1_000_000L
+        sowing = true
         val started = withFrameNanos { it }
         while (true) {
             val now = withFrameNanos { it }
@@ -202,6 +201,7 @@ private fun MancalaTable(
             poses = anim.sample(t)
             if (t >= 1f) break
         }
+        sowing = false
         poses = restingPoses(g.pits)
     }
     // Store names and counts sit above the 3D view, each over its own store, so they cover nothing.
@@ -242,14 +242,15 @@ private fun MancalaTable(
                 else -> "Computer's pit ${13 - hole.index}, $count stones"
             }
         }
-        // Labels and rings are small views. A full-size canvas here repaints the Filament
-        // texture and the carved board disappears behind the table colour.
+        // Rings and counts live in the 3D scene. Only invisible accessibility targets sit on top.
         Box(Modifier.fillMaxSize()) {
             MancalaWorld(
                 frame, poses, playable, legal,
                 onSow = { pit -> gate.trySow(pit, onSow) },
                 modifier = Modifier.fillMaxSize(),
-                table = c.background,
+                // While stones fly, each number counts the stones that have landed in its hole.
+                counts = if (sowing) liveCounts(poses) else g.pits.toList(),
+                last = g.last,
             )
             order.forEach { hole ->
                 val at = frame.at(hole.x, hole.y, MancalaBoard.top)
@@ -258,18 +259,6 @@ private fun MancalaTable(
                     contentDescription = say(spoken(hole))
                     if (open) onClick { onSow(hole.index); true }
                 })
-                if (g.last == hole.index) {
-                    LastOval(frame, hole, c.highlight)
-                }
-                if (playable && open) {
-                    SowRing(frame, hole, c.highlight)
-                }
-                // Pit counts sit just past the board edge on each side, clear of the marbles.
-                if (!hole.store) {
-                    val countY = if (hole.y > 1.8f) MancalaBoard.depth + 0.26f else -0.5f
-                    val ink = if (playable && open) c.highlight else Seed
-                    CountPill(frame, g.pits[hole.index].toString(), hole.x, countY, ink)
-                }
             }
         }
     }
@@ -298,61 +287,6 @@ private fun Modifier.pinAt(x: Float, y: Float): Modifier = layout { measurable, 
     val left = (x.roundToInt() - placeable.width / 2).coerceIn(0, maxX.coerceAtLeast(0))
     layout(0, 0) {
         placeable.place(left, y.roundToInt() - placeable.height / 2)
-    }
-}
-
-@Composable
-private fun CountPill(frame: TableFrame, text: String, x: Float, y: Float, color: Color, bold: Boolean = true) {
-    val px = (frame.unitAt(x, y, MancalaBoard.top) * if (bold) 0.32f else 0.28f).coerceIn(12f, 24f)
-    val density = LocalDensity.current
-    val padX = with(density) { (px * 0.38f).toDp() }
-    val padY = with(density) { (px * 0.16f).toDp() }
-    val at = frame.at(x, y, MancalaBoard.top + 0.05f)
-    Text(
-        text,
-        color = color,
-        fontSize = px.sp,
-        fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
-        modifier = Modifier
-            .pinAt(at.x, at.y)
-            .background(Color(0xE0120C08), RoundedCornerShape(with(density) { (px * 0.35f).toDp() }))
-            .padding(horizontal = padX, vertical = padY),
-    )
-}
-
-@Composable
-private fun SowRing(frame: TableFrame, hole: MancalaBoard.Hole, color: Color) {
-    val z = MancalaBoard.top + 0.04f
-    val at = frame.at(hole.x, hole.y, z)
-    val unit = frame.unitAt(hole.x, hole.y, z)
-    val radius = unit * 0.42f
-    val stroke = (unit * 0.1f).coerceAtLeast(2.8f)
-    val box = (radius + stroke + unit * 0.05f) * 2f
-    val density = LocalDensity.current
-    Canvas(Modifier.pinAt(at.x, at.y).size(with(density) { box.toDp() })) {
-        val center = Offset(size.width / 2f, size.height / 2f)
-        drawCircle(Color.Black.copy(alpha = 0.55f), radius, center, style = Stroke(stroke + unit * 0.05f))
-        drawCircle(color, radius, center, style = Stroke(stroke))
-    }
-}
-
-@Composable
-private fun LastOval(frame: TableFrame, hole: MancalaBoard.Hole, color: Color) {
-    val z = MancalaBoard.top + 0.02f
-    val pts = ovalPoints(frame, hole.x, hole.y, z, hole.rx, hole.ry)
-    val minX = pts.minOf { it.x }
-    val minY = pts.minOf { it.y }
-    val maxX = pts.maxOf { it.x }
-    val maxY = pts.maxOf { it.y }
-    val stroke = frame.cell * 0.045f
-    val density = LocalDensity.current
-    Canvas(
-        Modifier
-            .pinAt((minX + maxX) / 2f, (minY + maxY) / 2f)
-            .size(with(density) { (maxX - minX + stroke).toDp() }, with(density) { (maxY - minY + stroke).toDp() }),
-    ) {
-        val local = pts.map { Offset(it.x - minX + stroke / 2f, it.y - minY + stroke / 2f) }
-        drawPath(pathOf(local), color, style = Stroke(stroke))
     }
 }
 
@@ -385,16 +319,21 @@ internal fun ovalHit(frame: TableFrame, pos: Offset, x: Float, y: Float, z: Floa
     return sqrt(dx * dx + dy * dy) <= unit * maxOf(rx, ry) * 0.9f
 }
 
-private fun pathOf(pts: List<Offset>): Path {
-    val path = Path()
-    pts.forEachIndexed { i, p -> if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y) }
-    path.close()
-    return path
-}
-
 private val Seed = Color(0xFFF6E7C4)
 
 /** One sow per tap. The 3D view and the canvas overlay can both see the same finger. */
+private fun liveCounts(poses: List<StonePose>): List<Int> {
+    val counts = MutableList(MancalaBoard.holes.size) { 0 }
+    MancalaBoard.holes.forEach { h ->
+        counts[h.index] = poses.count { p ->
+            val dx = (p.x - h.x) / h.rx
+            val dy = (p.y - h.y) / h.ry
+            dx * dx + dy * dy <= 1f
+        }
+    }
+    return counts
+}
+
 private class SowGate {
     private var at = 0L
     fun trySow(pit: Int, onSow: (Int) -> Unit) {

@@ -1,0 +1,3 @@
+Neu und verbessert:
+- Mancala: Zahlen und goldene Ringe der Mulden und Speicher sind jetzt Teil des 3D-Bretts, und die Steine bleiben in ihren Mulden und Speichern.
+- Messerwurf: realistische, geschicklichkeitsbasierte Würfe für Messer und Flaschen sowie eine Korrektur für die eingefrorene 3D-Ansicht.

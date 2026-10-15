@@ -1,0 +1,3 @@
+Novedades y mejoras:
+- Mancala: los números y los anillos dorados de los hoyos y depósitos ahora forman parte del tablero 3D, y las piedras se quedan dentro de sus hoyos y depósitos.
+- Lanzamiento de cuchillo: giros realistas que dependen de tu habilidad para cuchillos y botellas, y se corrige la vista 3D que se quedaba congelada.

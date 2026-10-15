@@ -6,6 +6,7 @@ import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -62,15 +63,28 @@ object FlipPhysics {
     private const val SLOSH_TAU = 0.32f
 
     /**
-     * Effective radius of the swing that sets the bottle's spin, ω = −V / R.
+     * Fraction of the bottle's spin energy left once the water hits the base. An estimate:
+     * the slosh is the inelastic collapse that makes a part-filled bottle easy to land.
+     */
+    private const val SPIN_KEPT = 0.2f
+
+    /** A bottle landing tilted further back than this falls over whatever its spin. */
+    private val MAX_RESCUE_TILT = (70.0 * PI / 180.0).toFloat()
+
+    /**
+     * Effective radius of the flick that sets the bottle's spin, ω = −V / R at the reference speed.
      * Thiel's formula 2. His measured hammer grip is about 0.32 m (a full turn every ~2 m).
      * A bottle flip is a wrist flick, not that throw: Dekker's flights are one turn in about
      * a second, so ω is of order 10 rad/s while the toss that reaches this block is a couple
-     * of metres per second. R = 0.16 m is that estimate, between the neck-to-balance distance
-     * (~0.14 m) and a forearm. The same R is used at every fill, because Dekker compare fills
+     * of metres per second. R = 0.095 m is that estimate at a 2 m/s flick, about the hand's
+     * length from wrist to fingertip, since the wrist and fingers set the spin. The same R is used at every fill, because Dekker compare fills
      * at a given ω₀ (their Sec. IV: "for a given ω₀ one wishes to reduce ω").
      */
-    private const val BOTTLE_SWING = 0.16f
+    private const val BOTTLE_SWING = 0.095f
+
+    /** Spin ∝ speed^p about a typical 2 m/s flick. p < 1: a wrist flick, not a fixed swing. */
+    private const val BOTTLE_SPIN_EXP = 0.3f
+    private const val BOTTLE_REF_SPEED = 2f
 
     /** Base of the bottle this far above the block when it leaves the hand. A table-height flip. */
     private const val BOTTLE_LIFT = 0.36f
@@ -79,8 +93,26 @@ object FlipPhysics {
     private const val WOOD_PRESSURE = 4.0e6f
     /** A sharp tip, about 1.5 mm by 0.5 mm. An estimate, not a measured knife. */
     private const val TIP_AREA = 1.5e-3f * 0.5e-3f
-    /** How deep the point must sink before it stays. An estimate. */
-    private const val EMBED = 0.006f
+    /**
+     * How deep the point must sink before it holds the knife's weight. An estimate: about the
+     * 15–25 mm a thrown knife sits in a target round, not just a scratch.
+     */
+    private const val EMBED = 0.018f
+
+    /**
+     * Largest angle between the blade (handle to point) and the point's velocity that still
+     * cuts in. A blade arriving sideways to its own motion levers out instead of penetrating.
+     * Knife-throwing guides put a clean stick near straight on. 35° is the game's tolerance for a short flip.
+     */
+    private val MAX_ATTACK = cos(35.0 * PI / 180.0).toFloat()
+
+    /**
+     * The point has to be driven into the wood, not skim it. The blade must point at least this
+     * far (60°) below the block's surface at contact, within 30° of vertical. A knife that arrives
+     * at a shallow angle levers out or glances off. The stuck pose keeps this impact angle.
+     */
+    internal const val MIN_ENTRY_DEG = 60f
+    private val MIN_ENTRY = sin(MIN_ENTRY_DEG * PI / 180.0).toFloat()
 
     /**
      * Centre-of-mass height under the same integrator as a toss, with collisions ignored.
@@ -140,7 +172,8 @@ object FlipPhysics {
      * changes I(h), the balance, and whether the landing is stable.
      */
     private fun looseBottle(body: FlipBody, theta: Float, gripSpeed: Float, aim: Float, x: Float, z: Float): Release {
-        val omega = -gripSpeed / BOTTLE_SWING
+        // The wrist sets most of the spin, so it grows more slowly than the throw speed.
+        val omega = -BOTTLE_REF_SPEED * (gripSpeed / BOTTLE_REF_SPEED).pow(BOTTLE_SPIN_EXP) / BOTTLE_SWING
         return Release(x, z, gripSpeed * cos(aim), gripSpeed * sin(aim), theta, omega)
     }
 
@@ -181,6 +214,9 @@ object FlipPhysics {
         fun take() { samples += s.sample(t) }
         take()
         var since = 0f
+        // Only the first touch can be a success. A knife that bounces, skids or glances,
+        // or a bottle that hops, has already lost its energy and its line.
+        var spoiled = false
         while (t < MAX_TIME && bounces <= MAX_BOUNCES) {
             val next = step(body, s, DT, drag = true)
             val hit = lowest(body, next)
@@ -193,11 +229,12 @@ object FlipPhysics {
                     if (lowest(body, trial).z <= 0f) hi = mid else lo = mid
                 }
                 val at = step(body, s, hi, drag = true)
-                val resolved = resolve(body, at, release.theta)
+                val resolved = resolve(body, at, release.theta, allowWin = !spoiled)
                 t += hi
                 samples += resolved.state.sample(t)
                 if (resolved.end != null) return Flight(resolved.end, t, samples, resolved.state.sample(t))
-                reason = resolved.reason
+                if (!spoiled) reason = resolved.reason
+                spoiled = true
                 s = resolved.state
                 bounces++
                 since = 0f
@@ -218,7 +255,7 @@ object FlipPhysics {
 
     private data class Resolved(val state: State, val end: FlipEnd?, val reason: FlipEnd)
 
-    private fun resolve(body: FlipBody, s0: State, theta0: Float): Resolved {
+    private fun resolve(body: FlipBody, s0: State, theta0: Float, allowWin: Boolean = true): Resolved {
         val hit = lowest(body, s0)
         val onBlock = hit.x in BLOCK_X0..BLOCK_X1
         if (!onBlock) {
@@ -232,7 +269,19 @@ object FlipPhysics {
             // The tip has to arrive first (geometry in knifeContact) and carry enough energy
             // to crush a few millimetres of softwood. There is no upper speed: a harder
             // point-first throw sinks deeper. Adamovich's filmed throws are about 50 km/h.
-            val stick = kind == HitKind.TIP && speed >= embedSpeed(body.mass)
+            // A stick also needs the blade lined up with its own motion (small angle of attack),
+            // the point driven down into the wood rather than skimming, and enough speed along
+            // the surface normal to sink [EMBED]. Spin is in the point's velocity, so a knife
+            // that is still turning fast at contact fails the attack-angle test.
+            val dirX = -sin(s0.theta)
+            val dirZ = -cos(s0.theta)
+            val tipDirX = -dirX
+            val tipDirZ = -dirZ
+            val along = if (speed > 1e-4f) (tipDirX * tipV.x + tipDirZ * tipV.z) / speed else 0f
+            val aligned = along >= MAX_ATTACK
+            val driven = -tipDirZ >= MIN_ENTRY
+            val normal = -tipV.z
+            val stick = allowWin && kind == HitKind.TIP && aligned && driven && normal >= embedSpeed(body.mass)
             if (stick) {
                 val planted = plantKnife(body, s0)
                 return Resolved(planted, FlipEnd.STUCK, FlipEnd.STUCK)
@@ -240,7 +289,9 @@ object FlipPhysics {
             val why = when {
                 kind == HitKind.HANDLE -> FlipEnd.HANDLE
                 kind == HitKind.BLADE -> FlipEnd.FLAT
-                speed < embedSpeed(body.mass) -> FlipEnd.WEAK
+                normal < embedSpeed(body.mass) -> FlipEnd.WEAK
+                !driven -> FlipEnd.FLAT
+                !aligned -> FlipEnd.HARD
                 else -> FlipEnd.FLAT
             }
             return Resolved(bounce(body, s0, hit, 0.42f, 0.32f), null, why)
@@ -249,7 +300,7 @@ object FlipPhysics {
         // Plastic on wood, restitution about 0.2. Dekker et al. leave the landing unmodelled
         // (Sec. V). A base that is already inside the tip-over angle, with too little spin
         // left to climb the rim, stays. Anything else bounces.
-        if (base && upright(body, s0, theta0)) {
+        if (allowWin && base && upright(body, s0, theta0)) {
             val settled = settleBottle(body, s0.copy(sigma = 0f))
             return Resolved(settled, FlipEnd.LANDED, FlipEnd.LANDED)
         }
@@ -286,14 +337,27 @@ object FlipPhysics {
         val tilt = wrap(s.theta)
         val h = body.comFromBase(0f).coerceAtLeast(0.02f)
         val alpha = atan(body.baseRadius / h)
-        if (abs(tilt) >= alpha) return false
         val reach = hypot(body.baseRadius, h)
-        val barrier = body.mass * GRAVITY * reach * (1f - cos((alpha - abs(tilt)).coerceAtLeast(0f)))
-        val spin = 0.5f * body.inertia(0f) * s.omega * s.omega
+        val mgl = body.mass * GRAVITY * reach
         val turned = abs(s.theta - theta0)
         val rebound = 0.22f * abs(s.vz)
         val hop = rebound * rebound / (2f * GRAVITY)
-        return spin <= barrier && turned in FLIP_MIN..FLIP_MAX && hop <= h
+        if (turned !in FLIP_MIN..FLIP_MAX || hop > h) return false
+        // The water slams down on impact and takes part of the spin with it.
+        val spin = SPIN_KEPT * 0.5f * body.inertia(0f) * s.omega * s.omega
+        if (abs(tilt) < alpha) {
+            // Centre of mass over the base: it stays unless the spin rolls it over the far rim.
+            return spin <= mgl * (1f - cos(alpha - abs(tilt)))
+        }
+        // Past the tip-over angle it lands on one rim. Under-rotated, still turning toward
+        // upright, the spin can rock it back over the base, if there is enough to lift the
+        // centre of mass over that rim and not so much that it carries on over the other one.
+        val toward = tilt * s.omega < 0f
+        val excess = abs(tilt) - alpha
+        if (!toward || abs(tilt) > MAX_RESCUE_TILT) return false
+        val lift = mgl * (1f - cos(excess))
+        val over = mgl * (1f - cos(alpha))
+        return spin >= lift && spin <= lift + over
     }
 
     /**
@@ -738,10 +802,11 @@ data class KnifeFlip(
     val body: FlipBody get() = FlipModels.option(option).body
     val ended: Boolean get() = phase == Phase.ENDED
 
-    fun toss(gripSpeed: Float, aim: Float): KnifeFlip? {
+    fun toss(gripSpeed: Float, aim: Float, spin: Float = 1f): KnifeFlip? {
         if (phase != Phase.READY || gripSpeed < 0.65f) return null
         val held = FlipPhysics.hold(body)
-        val release = FlipPhysics.flick(body, held.theta, gripSpeed, aim, held.x, held.z)
+        val flicked = FlipPhysics.flick(body, held.theta, gripSpeed, aim, held.x, held.z)
+        val release = flicked.copy(omega = flicked.omega * spin)
         return copy(phase = Phase.FLYING, release = release, throwNum = throwNum + 1, verdict = "")
     }
 
@@ -757,9 +822,69 @@ data class KnifeFlip(
     companion object {
         fun start(seed: Long, option: Int) = KnifeFlip(option, seed, 0, 0, Phase.READY, null, 0, "")
 
-        /** A practised toss for the object in hand. The same motion is not right for every fill. */
-        fun practised(option: Int): Pair<Float, Float> =
-            if (FlipModels.option(option).body.bottle) BOTTLE_TOSS else KNIFE_TOSS
+        /**
+         * A practised toss for the object in hand: the middle of the band of swipes that work,
+         * found by sweeping the same speed and aim range the screen can produce. It is not the
+         * same for every knife or fill. A body with no working swipe falls back to a fixed toss.
+         */
+        fun practised(option: Int): Pair<Float, Float> = practisedCache.getOrPut(option) {
+            val body = FlipModels.option(option).body
+            bestSwipe(body) ?: if (body.bottle) BOTTLE_TOSS else KNIFE_TOSS
+        }
+
+        /**
+         * The Toss button is a person throwing, not a machine: the practised swipe with a hand's
+         * scatter on top: about 35% in speed, 30% in wrist spin and 0.18 rad in aim, so it fails
+         * often, like a real flip. It goes through the same physics as a swipe. Deterministic per throw.
+         */
+        fun handThrow(option: Int, seed: Long, throwNum: Int): HandThrow {
+            val (speed, aim) = practised(option)
+            val rng = java.util.Random(seed * 1_000_003L + throwNum)
+            val s = (speed * (1f + HAND_SPEED * rng.nextGaussian().toFloat())).coerceIn(SWIPE_SPEEDS.first(), SWIPE_SPEEDS.last())
+            val a = (aim + HAND_AIM * rng.nextGaussian().toFloat()).coerceIn(SWIPE_AIMS.first(), SWIPE_AIMS.last())
+            val w = (1f + HAND_SPIN * rng.nextGaussian().toFloat()).coerceIn(0.5f, 1.5f)
+            return HandThrow(s, a, w)
+        }
+
+        data class HandThrow(val speed: Float, val aim: Float, val spin: Float)
+
+        /** A hand's scatter: speed and wrist spin as fractions, aim in radians. Estimates. */
+        private const val HAND_SPEED = 0.35f
+        private const val HAND_AIM = 0.18f
+        private const val HAND_SPIN = 0.3f
+
+        /** Whether a Toss-button throw works, through the same physics as the game. */
+        fun handSucceeds(option: Int, seed: Long, throwNum: Int): Boolean {
+            val h = handThrow(option, seed, throwNum)
+            val g = start(seed, option).toss(h.speed, h.aim, h.spin) ?: return false
+            return g.settle().phase == Phase.READY
+        }
+
+        /** The swipe range the screen maps a gesture onto. */
+        val SWIPE_SPEEDS: List<Float> = (0..29).map { 0.7f + it * 0.1f }
+        val SWIPE_AIMS: List<Float> = (0..12).map { 0.9f + it * 0.05f }
+
+        fun succeeds(body: FlipBody, speed: Float, aim: Float): Boolean {
+            val held = FlipPhysics.hold(body)
+            val r = FlipPhysics.flick(body, held.theta, speed, aim, held.x, held.z)
+            val end = FlipPhysics.simulate(body, r).end
+            return end == FlipEnd.STUCK || end == FlipEnd.LANDED
+        }
+
+        private val practisedCache = java.util.concurrent.ConcurrentHashMap<Int, Pair<Float, Float>>()
+
+        private fun bestSwipe(body: FlipBody): Pair<Float, Float>? {
+            val grid = SWIPE_SPEEDS.map { v -> SWIPE_AIMS.map { a -> succeeds(body, v, a) } }
+            var best: Pair<Float, Float>? = null
+            var bestScore = -1
+            for (i in grid.indices) for (j in grid[i].indices) {
+                if (!grid[i][j]) continue
+                var score = 0
+                for (di in -1..1) for (dj in -1..1) if (grid.getOrNull(i + di)?.getOrNull(j + dj) == true) score++
+                if (score > bestScore) { bestScore = score; best = SWIPE_SPEEDS[i] to SWIPE_AIMS[j] }
+            }
+            return best
+        }
 
         val KNIFE_TOSS = 1.30f to 1.25f
         val BOTTLE_TOSS = 2.60f to 1.45f

@@ -1,0 +1,3 @@
+New and improved:
+- Mancala: the pit and store counts and gold rings are now built into the 3D board, and stones stay inside their pits and stores.
+- Knife Flip: realistic, skill-based flips for knives and bottles, and a fix for the 3D view freezing.

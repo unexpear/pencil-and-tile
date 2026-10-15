@@ -132,8 +132,8 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
         undoable = false, scroll = false, tight = true,
         tools = { g, s ->
             ToolButton(GameIcons.Play, "Toss", enabled = g.phase == KnifeFlip.Phase.READY && !s.busy) {
-                val (speed, aim) = KnifeFlip.practised(g.option)
-                vm.play { it.toss(speed, aim) }
+                val hand = KnifeFlip.handThrow(g.option, g.seed, g.throwNum)
+                vm.play { it.toss(hand.speed, hand.aim, hand.spin) }
             }
         },
     ) { g, _ ->
@@ -269,7 +269,7 @@ private fun statusLine(g: KnifeFlip): String = when (g.verdict) {
     FlipEnd.HANDLE.name -> "The handle hit first."
     FlipEnd.FLAT.name -> "The flat of the blade hit."
     FlipEnd.WEAK.name -> "Too soft to stick."
-    FlipEnd.HARD.name -> "Too hard. It bounced out."
+    FlipEnd.HARD.name -> "Hit at an angle. It glanced off."
     FlipEnd.TIPPED.name -> "The bottle tipped over."
     FlipEnd.OFF.name -> "It missed the block."
     FlipEnd.MISS.name -> "It bounced off."

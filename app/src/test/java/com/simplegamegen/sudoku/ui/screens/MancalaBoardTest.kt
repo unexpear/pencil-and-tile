@@ -131,4 +131,35 @@ class MancalaBoardTest {
             left.removeAt(match)
         }
     }
+
+    @Test fun `stones in a store sit inside its well, not on the rim`() {
+        for (store in listOf(MancalaBoard.hole(Mancala.YOU), MancalaBoard.hole(Mancala.CPU))) {
+            for (count in 1..Mancala.STONES) {
+                stonesIn(store, count).forEach { s ->
+                    val dx = (s.x - store.x) / store.rx
+                    val dy = (s.y - store.y) / store.ry
+                    assertTrue(dx * dx + dy * dy < STORE_REACH * STORE_REACH, "store ${store.index} count $count stone at (${s.x}, ${s.y}) is near the rim")
+                    assertTrue(bowlDrop(store, s.x, s.y) >= MancalaBoard.stoneRadius, "store ${store.index} count $count stone is not a stone deep in the well")
+                }
+            }
+        }
+    }
+
+    @Test fun `a pit heap stays inside the pit and low`() {
+        for (pit in (0 until Mancala.PITS).map { MancalaBoard.hole(it) }) {
+            for (count in 1..12) {
+                val spots = stonesIn(pit, count)
+                spots.forEach { s ->
+                    val r = hypot(s.x - pit.x, s.y - pit.y)
+                    assertTrue(r + MancalaBoard.stoneRadius * 0.5f < pit.rx, "pit ${pit.index} count $count stone $r from centre")
+                }
+                // Six stones (a common mid-game count) must not tower: at most three layers.
+                if (count <= 7) {
+                    val top = spots.maxOf { it.z }
+                    val floor = MancalaBoard.top - MancalaBoard.pitDepth + MancalaBoard.stoneRadius
+                    assertTrue(top - floor < MancalaBoard.stoneRadius * 2.08f * 0.86f * 2.5f, "pit ${pit.index} count $count stacks too high")
+                }
+            }
+        }
+    }
 }
