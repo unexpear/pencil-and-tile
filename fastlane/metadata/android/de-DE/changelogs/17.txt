@@ -1,0 +1,4 @@
+- Schärferes Mancala-Brett und Glasmurmeln
+- Messer, Tisch und Block in Knife Flip mit klareren Materialien neu gebaut
+- Fehlwürfe bleiben jetzt auf dem Block liegen
+- Eingefrorene 3D-Ansicht behoben und weiche Nachbearbeitung entfernt

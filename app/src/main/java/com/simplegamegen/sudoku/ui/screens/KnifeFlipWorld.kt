@@ -41,6 +41,7 @@ import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelInstance
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberRenderer
+import io.github.sceneview.rememberView
 import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.atan2
@@ -77,6 +78,7 @@ internal fun KnifeFlipWorld(
     val environment = rememberHDREnvironment(environmentLoader, HDRI, createSkybox = false)
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
+    val crisp = rememberView(engine)
     val light = rememberMainLightNode(engine) {
         intensity = KEY_LUX
         lightDirection = KEY_DIR
@@ -110,6 +112,7 @@ internal fun KnifeFlipWorld(
         environmentLoader = environmentLoader,
         environment = environment,
         renderer = renderer,
+        view = crisp,
         renderQuality = RenderQuality.Default,
         autoCenterContent = false,
         autoFitContent = false,
@@ -118,6 +121,7 @@ internal fun KnifeFlipWorld(
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            crisp.keepCrisp()
             environment.indirectLight?.intensity = IBL_LUX
             renderer.clearColor(0.55, 0.51, 0.45)
             placeKnifeCamera(camera, body.bottle, view, shake)
@@ -125,15 +129,26 @@ internal fun KnifeFlipWorld(
         // The TextureView consumes touches, so the swipe cannot live on a Compose pointerInput.
         onTouchEvent = { event, _ -> onToss?.let { toss.onTouch(event, it) } ?: false },
     ) {
-        room?.let { ModelNode(modelInstance = it, autoAnimate = false) }
+        // The shell of the room (ceiling, walls, floor) must not cast shadows: the ceiling put the
+        // whole counter and block in the key light's shadow, so the tops read nearly black.
+        room?.let {
+            ModelNode(
+                modelInstance = it,
+                autoAnimate = false,
+                apply = { renderableNodes.forEach { part -> if (part.name in ROOM_SHELL) part.isShadowCaster = false } },
+            )
+        }
         if (!body.bottle) {
             hero?.let {
+                // One node: SceneView builds the quaternion as Rz * Ry * Rx, so this is the pitch in the
+                // throw plane applied after a roll about the knife's long axis (a dropped knife lies on its side).
                 ModelNode(
                     modelInstance = it,
                     autoAnimate = false,
                     position = Position(x = sample.x, y = sample.z, z = 0f),
-                    rotation = Rotation(z = deg),
+                    rotation = Rotation(y = Math.toDegrees(sample.roll.toDouble()).toFloat(), z = deg),
                 )
+
             }
         } else {
             val base = bottleBase(body, sample)
@@ -181,6 +196,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val environment = rememberHDREnvironment(environmentLoader, HDRI, createSkybox = false)
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
+    val crisp = rememberView(engine)
     val camera = rememberCameraNode(engine)
     val light = rememberMainLightNode(engine) {
         intensity = PICKER_KEY_LUX
@@ -220,6 +236,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
         environmentLoader = environmentLoader,
         environment = environment,
         renderer = renderer,
+        view = crisp,
         renderQuality = RenderQuality.Cinematic,
         autoCenterContent = false,
         autoFitContent = false,
@@ -228,6 +245,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            crisp.keepCrisp()
             environment.indirectLight?.intensity = IBL_LUX
             renderer.clearColor(0.27, 0.26, 0.25)
             val aspect = camera.getViewPortAspect().takeIf { it > 0.2 } ?: (614.0 / 640.0)
@@ -852,3 +870,8 @@ private fun normalizeDir(v: Direction): Direction {
     val len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z).coerceAtLeast(1e-6f)
     return Direction(x = v.x / len, y = v.y / len, z = v.z / len)
 }
+
+private val ROOM_SHELL = setOf(
+    "ceiling", "floor", "back_wall", "side_wall", "right_wall", "front_wall",
+    "window_backing", "pane", "frame_l", "frame_r", "frame_b", "frame_t", "mullion", "cabinet", "kick",
+)

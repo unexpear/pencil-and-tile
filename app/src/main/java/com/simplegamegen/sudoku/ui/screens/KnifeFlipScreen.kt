@@ -131,7 +131,7 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
         nav, vm, GameId.KNIFE_FLIP, remember(factory) { KnifeFlipSetup(factory) },
         undoable = false, scroll = false, tight = true,
         tools = { g, s ->
-            ToolButton(GameIcons.Play, "Toss", enabled = g.phase == KnifeFlip.Phase.READY && !s.busy) {
+            ToolButton(GameIcons.Play, "Toss", enabled = g.phase != KnifeFlip.Phase.FLYING && !s.busy) {
                 val hand = KnifeFlip.handThrow(g.option, g.seed, g.throwNum)
                 vm.play { it.toss(hand.speed, hand.aim, hand.spin) }
             }
@@ -184,7 +184,8 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
             }
             if (burst === started) burst = null
         }
-        val shown = flying ?: rested ?: holdSample(g.body)
+        // A finished round restored from a save has no flight in memory: show the knife lying down.
+        val shown = flying ?: rested ?: if (g.ended) restSample(g.body) else holdSample(g.body)
         val camera = if (g.body.bottle) bottleCamera else knifeCamera
         val age = burst?.let { ((clock - it.at) / 1_000_000_000f).coerceAtLeast(0f) } ?: 0f
         val effect = burst?.let { FlipEffect(it.kind, age) } ?: FlipEffect.None
@@ -208,7 +209,7 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
                     effect,
                     camera.live,
                     shake = kick * 0.0022f,
-                    onToss = if (g.phase == KnifeFlip.Phase.READY) {
+                    onToss = if (g.phase != KnifeFlip.Phase.FLYING) {
                         { speed, aim -> vm.play { it.toss(speed, aim) } }
                     } else {
                         null
@@ -230,6 +231,12 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
             }
         }
     }
+}
+
+internal fun restSample(body: FlipBody): Sample {
+    val x = (FlipPhysics.BLOCK_X0 + FlipPhysics.BLOCK_X1) * 0.5f
+    val roll = if (body.bottle) 0f else (Math.PI / 2).toFloat()
+    return Sample(0f, x, FlipPhysics.restHeight(body, x), (Math.PI / 2).toFloat(), 0f, roll)
 }
 
 internal fun holdSample(body: FlipBody): Sample {

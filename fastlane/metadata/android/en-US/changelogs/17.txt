@@ -1,0 +1,4 @@
+- Sharper Mancala board and glass marbles
+- Knife Flip knives, table and block rebuilt with clearer materials
+- Missed throws now come to rest on the block
+- Fixed a frozen 3D view and removed soft post-processing

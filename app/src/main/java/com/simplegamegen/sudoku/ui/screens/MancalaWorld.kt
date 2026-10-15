@@ -36,6 +36,7 @@ import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelInstance
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberRenderer
+import io.github.sceneview.rememberView
 import com.google.android.filament.Camera as FilamentCamera
 
 /**
@@ -62,6 +63,7 @@ internal fun MancalaWorld(
     val environment = rememberHDREnvironment(environmentLoader, HDRI, createSkybox = false)
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
+    val crisp = rememberView(engine)
     val light = rememberMainLightNode(engine) {
         intensity = KEY_LUX
         lightDirection = KEY_DIR
@@ -77,7 +79,11 @@ internal fun MancalaWorld(
         modelLoader.createInstancedModel("mancala/marble.glb", Mancala.STONES)
     }
     val materialLoader = rememberMaterialLoader(engine)
-    val glass = remember(materialLoader) { MARBLE_COLORS.map { marbleGlass(materialLoader, it) } }
+    // Clear glass shell around a coloured cat's-eye core, so each marble reads as glass.
+    val glass = remember(materialLoader) { marbleGlass(materialLoader) }
+    val cores = remember(materialLoader) {
+        MARBLE_COLORS.map { materialLoader.createColorInstance(it, metallic = 0f, roughness = 0.22f, reflectance = 0.5f) }
+    }
     // Gold inlay for the pits you can sow, and a paler ring for the last landing.
     val goldRing = remember { ringBitmap(0xFFFFE08A.toInt(), 0xFFF2B33A.toInt(), 0xFFA8701A.toInt()) }
     val paleRing = remember { ringBitmap(0xFFFFF6E0.toInt(), 0xFFEBDDBE.toInt(), 0xFFB9A889.toInt()) }
@@ -95,6 +101,7 @@ internal fun MancalaWorld(
         environmentLoader = environmentLoader,
         environment = environment,
         renderer = renderer,
+        view = crisp,
         renderQuality = RenderQuality.Default,
         autoCenterContent = false,
         autoFitContent = false,
@@ -103,6 +110,7 @@ internal fun MancalaWorld(
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            crisp.keepCrisp()
             environment.indirectLight?.intensity = IBL_LUX
             // A transparent TextureView showed nothing on real phones. Clear to the table colour instead.
             renderer.clearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0)
@@ -164,7 +172,9 @@ internal fun MancalaWorld(
                 val y = when {
                     hole.store -> MancalaBoard.depth - 0.3f
                     hole.y > 1.8f -> hole.y + hole.ry + 0.40f
-                    else -> hole.y - hole.ry - 0.40f
+                    // Far row: in the gap between the rows, in front of its pit, so the pile
+                    // cannot stand between the camera and the number.
+                    else -> hole.y + hole.ry + 0.27f
                 }
                 seen.forEach { v ->
                     key(v) {
@@ -189,7 +199,12 @@ internal fun MancalaWorld(
                     autoAnimate = false,
                     position = Position(stone.x, stone.z, stone.y),
                     scale = Scale(MancalaBoard.stoneRadius, MancalaBoard.stoneRadius, MancalaBoard.stoneRadius),
-                    apply = { setMaterialInstance(glass[stone.tint % glass.size]) },
+                    apply = {
+                        val core = cores[stone.tint % cores.size]
+                        renderableNodes.forEach { part ->
+                            part.materialInstance = if (part.name == MARBLE_CORE) core else glass
+                        }
+                    },
                 )
             }
         }
@@ -214,11 +229,14 @@ private fun placeMancalaCamera(camera: CameraNode, frame: TableFrame) {
     )
 }
 
-private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialInstance {
+private const val MARBLE_CORE = "MarbleCore"
+
+/** Clear, nearly colourless glass. No clearcoat: Filament's ubershaders drop transmission with it. */
+private fun marbleGlass(materialLoader: MaterialLoader): MaterialInstance {
+    val color = Color(0xFFF4FAFC)
     val key = MaterialProvider.MaterialKey().apply {
         hasTransmission = true
         hasIOR = true
-        hasClearCoat = true
     }
     val instance = materialLoader.createUbershaderInstance(key, emptyList(), "marble", "")
     if (instance != null) {
@@ -229,15 +247,13 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
         if ("baseColorFactor" in names) {
             instance.setParameter("baseColorFactor", color.red, color.green, color.blue, 1f)
         }
-        set("roughnessFactor", 0.05f)
+        set("roughnessFactor", 0.02f)
         set("metallicFactor", 0f)
         set("reflectance", 0.5f)
-        set("transmissionFactor", 0.2f)
+        set("transmissionFactor", 0.92f)
         set("ior", 1.5f)
-        set("thicknessFactor", 0.2f)
-        set("volumeThicknessFactor", 0.2f)
-        set("clearCoatFactor", 1f)
-        set("clearCoatRoughnessFactor", 0.04f)
+        set("thicknessFactor", 0.3f)
+        set("volumeThicknessFactor", 0.3f)
         return instance
     }
     return materialLoader.createColorInstance(color, metallic = 0.04f, roughness = 0.08f, reflectance = 0.5f)
@@ -260,12 +276,13 @@ private val KEY_COLOR = io.github.sceneview.math.colorOf(r = 1f, g = 0.95f, b = 
 private val FILL_COLOR = io.github.sceneview.math.colorOf(r = 0.78f, g = 0.86f, b = 1f)
 
 private val MARBLE_COLORS = listOf(
-    Color(0xFFD4891A),
-    Color(0xFF2A6FD0),
-    Color(0xFF1E9A52),
-    Color(0xFFD04458),
-    Color(0xFF7A45C0),
-    Color(0xFFE7F6F8),
+    // Saturated cat's-eye cores. The clear shell lightens them, so they start deep.
+    Color(0xFFE07000),
+    Color(0xFF0050E0),
+    Color(0xFF00A040),
+    Color(0xFFE01030),
+    Color(0xFF7020D0),
+    Color(0xFFF0F0F0),
 )
 
 /**

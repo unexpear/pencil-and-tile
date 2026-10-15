@@ -30,9 +30,10 @@ BOARD_KT = os.path.join(
     "ui", "screens", "MancalaScreen.kt",
 )
 
-STEP = 0.016
+STEP = 0.012
 CORNER = 0.48
-RIM = 0.07
+# Round-over on the top edge, board units. A wide radius catches the light so the edge reads as carved.
+RIM = 0.16
 
 
 def const(text, name):
@@ -85,6 +86,26 @@ def socket(bsdf, name):
     return found
 
 
+def no_metal(nt, bsdf, size):
+    """Blender 4.3's glTF exporter packs metallic = 1 into the blue channel of the
+    metallic-roughness map when Metallic is not linked, and Filament then renders the wood
+    as dark metal. Linking a black map keeps that channel at 0."""
+    folder = os.environ.get("KNIFE_IMAGE_BAKE", "/tmp/knife-flip-images")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, f"no_metal_{size}.png")
+    img = bpy.data.images.new(f"no_metal_{size}", width=size, height=size, alpha=False)
+    img.colorspace_settings.name = "Non-Color"
+    img.pixels.foreach_set([0.0, 0.0, 0.0, 1.0] * (size * size))
+    img.filepath_raw = path
+    img.file_format = "PNG"
+    img.save()
+    loaded = bpy.data.images.load(path, check_existing=True)
+    loaded.colorspace_settings.name = "Non-Color"
+    node = nt.nodes.new("ShaderNodeTexImage")
+    node.image = loaded
+    nt.links.new(node.outputs["Color"], socket(bsdf, "Metallic"))
+
+
 def new_bsdf(name):
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
@@ -98,6 +119,26 @@ def load_image(path, name, noncolor=False):
     return img
 
 
+def brightened(img, gain, name):
+    copy = img.copy()
+    copy.name = name
+    px = list(copy.pixels)
+    for i in range(0, len(px), 4):
+        px[i] = min(1.0, px[i] * gain[0])
+        px[i + 1] = min(1.0, px[i + 1] * gain[1])
+        px[i + 2] = min(1.0, px[i + 2] * gain[2])
+    copy.pixels.foreach_set(px)
+    folder = os.environ.get("KNIFE_IMAGE_BAKE", "/tmp/knife-flip-images")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, name + ".png")
+    copy.filepath_raw = path
+    copy.file_format = "PNG"
+    copy.save()
+    loaded = bpy.data.images.load(path)
+    loaded.name = name + "_baked"
+    return loaded
+
+
 def wood_material():
     color = load_image(os.path.join(TEX, "Wood051_1K_Color.jpg"), "Wood051Color")
     normal = load_image(os.path.join(TEX, "Wood051_1K_NormalGL.jpg"), "Wood051Normal", noncolor=True)
@@ -107,16 +148,14 @@ def wood_material():
     socket(bsdf, "Roughness").default_value = 0.55
     nt = mat.node_tree
     col = nt.nodes.new("ShaderNodeTexImage")
-    col.image = color
-    # Wood051 is a pale oak. A warm multiply keeps the same CC0 map and lets the bowls read.
-    shade = nt.nodes.new("ShaderNodeVectorMath")
-    shade.operation = "MULTIPLY"
-    shade.inputs[1].default_value = (0.72, 0.52, 0.36)
-    nt.links.new(col.outputs["Color"], shade.inputs[0])
-    nt.links.new(shade.outputs["Vector"], socket(bsdf, "Base Color"))
+    # The glTF exporter drops the multiply below, so the shipped colour is the map itself.
+    # Bake a lighter, warm copy instead: same grain, a little lighter than before.
+    col.image = brightened(color, (1.55, 1.30, 1.10), "Wood051Light")
+    nt.links.new(col.outputs["Color"], socket(bsdf, "Base Color"))
     rgh = nt.nodes.new("ShaderNodeTexImage")
     rgh.image = rough
     nt.links.new(rgh.outputs["Color"], socket(bsdf, "Roughness"))
+    no_metal(nt, bsdf, rough.size[0])
     ntex = nt.nodes.new("ShaderNodeTexImage")
     ntex.image = normal
     nmap = nt.nodes.new("ShaderNodeNormalMap")
@@ -126,15 +165,23 @@ def wood_material():
     return mat
 
 
+def core_material():
+    mat, bsdf = new_bsdf("MarbleCore")
+    socket(bsdf, "Base Color").default_value = (0.8, 0.3, 0.1, 1)
+    socket(bsdf, "Roughness").default_value = 0.3
+    return mat
+
+
 def glass_material():
-    """Clear polished glass. The app tints each marble; transmission stays off in the file
-    so a missing refraction variant cannot hide the mesh."""
+    """Clear polished glass for the shell. The app swaps in its own transmissive glass
+    (no clearcoat, which Filament's ubershaders cannot combine with transmission)."""
     mat, bsdf = new_bsdf("Marble")
     socket(bsdf, "Base Color").default_value = (0.92, 0.94, 0.95, 1)
     socket(bsdf, "Metallic").default_value = 0.0
     socket(bsdf, "Roughness").default_value = 0.04
     socket(bsdf, "IOR").default_value = 1.5
     socket(bsdf, "Specular IOR Level").default_value = 0.55
+    socket(bsdf, "Transmission Weight").default_value = 1.0
     mat.use_backface_culling = False
     return mat
 
@@ -164,8 +211,9 @@ def rim_drop(x, y, width, depth):
     d = min(x, y, width - x, depth - y)
     if d >= RIM:
         return 0.0
-    t = d / RIM
-    return 0.04 * (1.0 - t) ** 2
+    # Quarter circle of radius RIM: flat on the top, rolling over to the side.
+    u = 1.0 - d / RIM
+    return RIM * (1.0 - math.sqrt(max(0.0, 1.0 - u * u))) * 0.55
 
 
 def clamp_corner(x, y, width, depth):
@@ -271,8 +319,10 @@ def build_board(width, depth, top, holes, material):
     mesh = bpy.data.meshes.new("KalahBoard")
     bm.to_mesh(mesh)
     bm.free()
+    # Smooth only the carved top. The skirt and the base stay flat, so the edge where the
+    # round-over meets the side keeps its own normals instead of averaging into a smear.
     for poly in mesh.polygons:
-        poly.use_smooth = True
+        poly.use_smooth = poly.normal.z > 0.2
     obj = bpy.data.objects.new("KalahBoard", mesh)
     bpy.context.collection.objects.link(obj)
     obj.data.materials.append(material)
@@ -280,14 +330,60 @@ def build_board(width, depth, top, holes, material):
     return obj
 
 
-def build_marble(material):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1.0, location=(0, 0, 0))
-    obj = bpy.context.active_object
-    obj.name = "Marble"
-    for poly in obj.data.polygons:
+def build_marble(material, core_material):
+    """A clear glass shell around a swirl core of two broad twisted ribbons.
+
+    The app names the parts: MarbleShell gets the clear glass, MarbleCore the colour.
+    """
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=64, ring_count=32, radius=1.0, location=(0, 0, 0))
+    shell = bpy.context.active_object
+    shell.name = "MarbleShell"
+    shell.data.name = "MarbleShell"
+    for poly in shell.data.polygons:
         poly.use_smooth = True
-    obj.data.materials.append(material)
-    return obj
+    shell.data.materials.append(material)
+    # Two broad twisted ribbons. Each cross-section is a flat ellipse, so the edges are
+    # rounded and the ends close in smoothly; nothing comes to a point.
+    verts, faces = [], []
+    rings, around, half = 72, 36, 0.80
+    for k in range(2):
+        base = len(verts)
+        for i in range(rings + 1):
+            u = -1.0 + 2.0 * i / rings
+            z = u * half
+            p = math.sqrt(max(0.0, 1.0 - u * u)) ** 0.8
+            wide = 0.66 * p + 1e-4
+            thin = 0.055 * p + 1e-4
+            phi = math.pi * k / 2.0 + 1.6 * u
+            c, s = math.cos(phi), math.sin(phi)
+            for j in range(around):
+                a = 2.0 * math.pi * j / around
+                x, y = wide * math.cos(a), thin * math.sin(a)
+                verts.append((x * c - y * s, x * s + y * c, z))
+        for i in range(rings):
+            for j in range(around):
+                a0 = base + i * around + j
+                a1 = base + i * around + (j + 1) % around
+                faces.append((a0, a1, a1 + around, a0 + around))
+    mesh = bpy.data.meshes.new("MarbleCore")
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    core_obj = bpy.data.objects.new("MarbleCore", mesh)
+    bpy.context.collection.objects.link(core_obj)
+    bpy.ops.object.select_all(action="DESELECT")
+    core_obj.select_set(True)
+    bpy.context.view_layer.objects.active = core_obj
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.remove_doubles(threshold=2e-4)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for poly in core_obj.data.polygons:
+        poly.use_smooth = True
+    core = bpy.context.active_object
+    core.name = "MarbleCore"
+    core.data.name = "MarbleCore"
+    core.data.materials.append(core_material)
+    return [shell, core]
 
 
 def export(objs, filename):
@@ -316,8 +412,8 @@ def main():
     board = build_board(width, depth, top, holes, wood_material())
     export([board], "board.glb")
     fresh_scene()
-    marble = build_marble(glass_material())
-    export([marble], "marble.glb")
+    marble = build_marble(glass_material(), core_material())
+    export(marble, "marble.glb")
 
 
 if __name__ == "__main__":
