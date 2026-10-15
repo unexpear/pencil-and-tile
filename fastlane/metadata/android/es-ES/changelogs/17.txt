@@ -1,0 +1,4 @@
+- Tablero de Mancala más nítido y canicas de cristal
+- Cuchillos, mesa y bloque de Knife Flip rehechos con materiales más claros
+- Los lanzamientos fallidos ahora quedan en reposo sobre el bloque
+- Corregida la vista 3D congelada y eliminado el posprocesado difuso
