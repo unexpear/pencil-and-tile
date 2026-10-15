@@ -30,9 +30,10 @@ BOARD_KT = os.path.join(
     "ui", "screens", "MancalaScreen.kt",
 )
 
-STEP = 0.016
+STEP = 0.012
 CORNER = 0.48
-RIM = 0.07
+# Round-over on the top edge, board units. A wide radius catches the light so the edge reads as carved.
+RIM = 0.16
 
 
 def const(text, name):
@@ -111,7 +112,7 @@ def wood_material():
     # Wood051 is a pale oak. A warm multiply keeps the same CC0 map and lets the bowls read.
     shade = nt.nodes.new("ShaderNodeVectorMath")
     shade.operation = "MULTIPLY"
-    shade.inputs[1].default_value = (0.72, 0.52, 0.36)
+    shade.inputs[1].default_value = (0.86, 0.62, 0.42)
     nt.links.new(col.outputs["Color"], shade.inputs[0])
     nt.links.new(shade.outputs["Vector"], socket(bsdf, "Base Color"))
     rgh = nt.nodes.new("ShaderNodeTexImage")
@@ -126,15 +127,23 @@ def wood_material():
     return mat
 
 
+def core_material():
+    mat, bsdf = new_bsdf("MarbleCore")
+    socket(bsdf, "Base Color").default_value = (0.8, 0.3, 0.1, 1)
+    socket(bsdf, "Roughness").default_value = 0.3
+    return mat
+
+
 def glass_material():
-    """Clear polished glass. The app tints each marble; transmission stays off in the file
-    so a missing refraction variant cannot hide the mesh."""
+    """Clear polished glass for the shell. The app swaps in its own transmissive glass
+    (no clearcoat, which Filament's ubershaders cannot combine with transmission)."""
     mat, bsdf = new_bsdf("Marble")
     socket(bsdf, "Base Color").default_value = (0.92, 0.94, 0.95, 1)
     socket(bsdf, "Metallic").default_value = 0.0
     socket(bsdf, "Roughness").default_value = 0.04
     socket(bsdf, "IOR").default_value = 1.5
     socket(bsdf, "Specular IOR Level").default_value = 0.55
+    socket(bsdf, "Transmission Weight").default_value = 1.0
     mat.use_backface_culling = False
     return mat
 
@@ -164,8 +173,9 @@ def rim_drop(x, y, width, depth):
     d = min(x, y, width - x, depth - y)
     if d >= RIM:
         return 0.0
-    t = d / RIM
-    return 0.04 * (1.0 - t) ** 2
+    # Quarter circle of radius RIM: flat on the top, rolling over to the side.
+    u = 1.0 - d / RIM
+    return RIM * (1.0 - math.sqrt(max(0.0, 1.0 - u * u))) * 0.55
 
 
 def clamp_corner(x, y, width, depth):
@@ -271,8 +281,10 @@ def build_board(width, depth, top, holes, material):
     mesh = bpy.data.meshes.new("KalahBoard")
     bm.to_mesh(mesh)
     bm.free()
+    # Smooth only the carved top. The skirt and the base stay flat, so the edge where the
+    # round-over meets the side keeps its own normals instead of averaging into a smear.
     for poly in mesh.polygons:
-        poly.use_smooth = True
+        poly.use_smooth = poly.normal.z > 0.2
     obj = bpy.data.objects.new("KalahBoard", mesh)
     bpy.context.collection.objects.link(obj)
     obj.data.materials.append(material)
@@ -280,14 +292,44 @@ def build_board(width, depth, top, holes, material):
     return obj
 
 
-def build_marble(material):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1.0, location=(0, 0, 0))
-    obj = bpy.context.active_object
-    obj.name = "Marble"
-    for poly in obj.data.polygons:
+def build_marble(material, core_material):
+    """A clear glass shell around a cat's-eye core of three twisted vanes.
+
+    The app names the parts: MarbleShell gets the clear glass, MarbleCore the colour.
+    """
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=64, ring_count=32, radius=1.0, location=(0, 0, 0))
+    shell = bpy.context.active_object
+    shell.name = "MarbleShell"
+    shell.data.name = "MarbleShell"
+    for poly in shell.data.polygons:
         poly.use_smooth = True
-    obj.data.materials.append(material)
-    return obj
+    shell.data.materials.append(material)
+    vanes = []
+    for k in range(3):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1.0, location=(0, 0, 0))
+        vane = bpy.context.active_object
+        vane.scale = (0.66, 0.11, 0.66)
+        vane.rotation_euler = (0.0, 0.0, math.pi * k / 3.0)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        # A gentle twist along the axis, so the vanes curl like a real cat's eye.
+        for v in vane.data.vertices:
+            a = 0.55 * v.co.z
+            x, y = v.co.x, v.co.y
+            v.co.x = x * math.cos(a) - y * math.sin(a)
+            v.co.y = x * math.sin(a) + y * math.cos(a)
+        for poly in vane.data.polygons:
+            poly.use_smooth = True
+        vanes.append(vane)
+    bpy.ops.object.select_all(action="DESELECT")
+    for vane in vanes:
+        vane.select_set(True)
+    bpy.context.view_layer.objects.active = vanes[0]
+    bpy.ops.object.join()
+    core = bpy.context.active_object
+    core.name = "MarbleCore"
+    core.data.name = "MarbleCore"
+    core.data.materials.append(core_material)
+    return [shell, core]
 
 
 def export(objs, filename):
@@ -316,8 +358,8 @@ def main():
     board = build_board(width, depth, top, holes, wood_material())
     export([board], "board.glb")
     fresh_scene()
-    marble = build_marble(glass_material())
-    export([marble], "marble.glb")
+    marble = build_marble(glass_material(), core_material())
+    export(marble, "marble.glb")
 
 
 if __name__ == "__main__":

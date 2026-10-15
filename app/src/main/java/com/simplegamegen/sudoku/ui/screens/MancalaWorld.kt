@@ -79,7 +79,11 @@ internal fun MancalaWorld(
         modelLoader.createInstancedModel("mancala/marble.glb", Mancala.STONES)
     }
     val materialLoader = rememberMaterialLoader(engine)
-    val glass = remember(materialLoader) { MARBLE_COLORS.map { marbleGlass(materialLoader, it) } }
+    // Clear glass shell around a coloured cat's-eye core, so each marble reads as glass.
+    val glass = remember(materialLoader) { marbleGlass(materialLoader) }
+    val cores = remember(materialLoader) {
+        MARBLE_COLORS.map { materialLoader.createColorInstance(it, metallic = 0f, roughness = 0.28f, reflectance = 0.5f) }
+    }
     // Gold inlay for the pits you can sow, and a paler ring for the last landing.
     val goldRing = remember { ringBitmap(0xFFFFE08A.toInt(), 0xFFF2B33A.toInt(), 0xFFA8701A.toInt()) }
     val paleRing = remember { ringBitmap(0xFFFFF6E0.toInt(), 0xFFEBDDBE.toInt(), 0xFFB9A889.toInt()) }
@@ -193,7 +197,12 @@ internal fun MancalaWorld(
                     autoAnimate = false,
                     position = Position(stone.x, stone.z, stone.y),
                     scale = Scale(MancalaBoard.stoneRadius, MancalaBoard.stoneRadius, MancalaBoard.stoneRadius),
-                    apply = { setMaterialInstance(glass[stone.tint % glass.size]) },
+                    apply = {
+                        val core = cores[stone.tint % cores.size]
+                        renderableNodes.forEach { part ->
+                            part.materialInstance = if (part.name == MARBLE_CORE) core else glass
+                        }
+                    },
                 )
             }
         }
@@ -218,7 +227,11 @@ private fun placeMancalaCamera(camera: CameraNode, frame: TableFrame) {
     )
 }
 
-private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialInstance {
+private const val MARBLE_CORE = "MarbleCore"
+
+/** Clear, nearly colourless glass. No clearcoat: Filament's ubershaders drop transmission with it. */
+private fun marbleGlass(materialLoader: MaterialLoader): MaterialInstance {
+    val color = Color(0xFFF4FAFC)
     val key = MaterialProvider.MaterialKey().apply {
         hasTransmission = true
         hasIOR = true
@@ -232,13 +245,13 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
         if ("baseColorFactor" in names) {
             instance.setParameter("baseColorFactor", color.red, color.green, color.blue, 1f)
         }
-        set("roughnessFactor", 0.05f)
+        set("roughnessFactor", 0.02f)
         set("metallicFactor", 0f)
         set("reflectance", 0.5f)
-        set("transmissionFactor", 0.2f)
+        set("transmissionFactor", 0.92f)
         set("ior", 1.5f)
-        set("thicknessFactor", 0.2f)
-        set("volumeThicknessFactor", 0.2f)
+        set("thicknessFactor", 0.3f)
+        set("volumeThicknessFactor", 0.3f)
         return instance
     }
     return materialLoader.createColorInstance(color, metallic = 0.04f, roughness = 0.08f, reflectance = 0.5f)

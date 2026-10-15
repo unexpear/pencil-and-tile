@@ -64,6 +64,16 @@ def z_of(com, from_tip):
     return com - from_tip
 
 
+# Edges sharper than this keep a crease. Ring steps on round parts stay below it.
+SHARP_DEG = 14
+# Round parts use at least this many segments (about 7.5 degrees a step).
+MIN_SEGMENTS = 48
+
+
+def rounded(segments):
+    return max(segments * 2, MIN_SEGMENTS)
+
+
 def fresh_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
@@ -89,7 +99,9 @@ def link_mesh(name, verts, faces):
             ang = edge.calc_face_angle(0.0)
         except ValueError:
             ang = 0.0
-        edge.smooth = ang < math.radians(48)
+        # Low enough that grind lines and diamond facets stay crisp; round parts
+        # have enough segments that their steps stay under it.
+        edge.smooth = ang < math.radians(SHARP_DEG)
     bm.to_mesh(mesh)
     bm.free()
     for poly in mesh.polygons:
@@ -116,7 +128,7 @@ def loft(name, rings):
     return link_mesh(name, verts, faces)
 
 
-def wedge_ring(z, spine_x, edge_x, spine_full, edge_full=0.00018, grind=0.34, steps=7):
+def wedge_ring(z, spine_x, edge_x, spine_full, edge_full=0.00018, grind=0.34, steps=11):
     """A blade cross-section. +X is the edge, -X the spine, thickness along Y."""
     pts_y = []
     for k in range(steps):
@@ -180,7 +192,7 @@ def diamond_ring(z, half, thick):
     ]
 
 
-def blade(name, com, heel, profile, thick, stations=42):
+def blade(name, com, heel, profile, thick, stations=96):
     rings = []
     for i in range(stations):
         t = i / (stations - 1)
@@ -193,6 +205,7 @@ def blade(name, com, heel, profile, thick, stations=42):
 
 def disc_y(name, x, y0, y1, z, radius, segments=14):
     """A short cylinder along Y, so a rivet or pin sits through the handle."""
+    segments = rounded(segments)
     rings = []
     for y in (y0, y1):
         ring = []
@@ -204,6 +217,7 @@ def disc_y(name, x, y0, y1, z, radius, segments=14):
 
 
 def cylinder(name, z0, z1, radius, segments=24, radius1=None):
+    segments = rounded(segments)
     r1 = radius if radius1 is None else radius1
     rings = []
     steps = 2
@@ -220,6 +234,7 @@ def cylinder(name, z0, z1, radius, segments=24, radius1=None):
 
 def tube(name, profile, segments=28, wall=0.0007):
     """profile is (z, outer radius) from base upward. A thin closed wall."""
+    segments = rounded(segments)
     outer = []
     inner = []
     for i in range(segments):
@@ -256,6 +271,7 @@ def tube(name, profile, segments=28, wall=0.0007):
 
 def lathe_solid(name, profile, segments=32):
     """profile (z, radius), including a 0-radius start or end if it should be closed."""
+    segments = rounded(segments)
     rings = []
     for z, r in profile:
         ring = []
@@ -458,7 +474,8 @@ def scaled_copy(img, size, name):
 
 
 def brush_image():
-    w = h = 128
+    w = h = 512
+    k = 128.0 / w
     img = bpy.data.images.new("steel_brush", width=w, height=h, alpha=False)
     # Set the color space before the pixels. Doing it afterwards clears the buffer.
     img.colorspace_settings.name = "Non-Color"
@@ -466,7 +483,7 @@ def brush_image():
     px = [0.0] * (w * h * 4)
     for y in range(h):
         for x in range(w):
-            band = 0.62 + 0.38 * math.sin(x * 1.35 + 0.2 * math.sin(y * 0.15))
+            band = 0.62 + 0.38 * math.sin(x * k * 1.35 + 0.2 * math.sin(y * k * 0.15))
             grain = rnd.uniform(-0.05, 0.05)
             # Brushed range about 0.27–0.36, so the key light reads as pale steel.
             v = min(1.0, max(0.0, 0.26 + 0.08 * band + grain * 0.35))
@@ -514,7 +531,7 @@ def bake_image(img):
     return loaded
 
 
-def endgrain_image(size=512):
+def endgrain_image(size=1024):
     """Maple end-grain: a grid of rectangular staves, each with partial ring arcs.
 
     A full circle in every cell reads as coins. Real butcher block is square
@@ -567,12 +584,13 @@ def tile_image(size=256):
     return _image("backsplash", size, color_at)
 
 
-def edgegrain_image(size=256):
+def edgegrain_image(size=512):
     """Long grain for the block sides and the chips, lighter than the counter."""
     rnd = random.Random(4)
 
     def color_at(x, y, n):
-        wave = 0.5 + 0.5 * math.sin(y * 0.55 + 2.2 * math.sin(x * 0.04))
+        k = 256.0 / n
+        wave = 0.5 + 0.5 * math.sin(y * k * 0.55 + 2.2 * math.sin(x * k * 0.04))
         speck = rnd.uniform(-0.03, 0.03)
         shade = 0.90 - 0.12 * wave + speck
         return (0.78 * shade, 0.60 * shade, 0.38 * shade)
@@ -603,11 +621,12 @@ def export(objs, filename):
         export_apply=True,
         export_yup=True,
         export_image_format="JPEG",
-        export_jpeg_quality=82,
+        export_jpeg_quality=90,
     )
+    # No Draco: it quantises normals, and the app's assets have always shipped uncompressed.
     try:
-        bpy.ops.export_scene.gltf(**kwargs, export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=7)
-        kind = "draco"
+        bpy.ops.export_scene.gltf(**kwargs, export_draco_mesh_compression_enable=False)
+        kind = "plain"
     except TypeError:
         bpy.ops.export_scene.gltf(**kwargs)
         kind = "plain"
@@ -657,7 +676,7 @@ def loft_along(name, com, from_tips, ring_at):
     return loft(name, [ring_at(s) for s in from_tips])
 
 
-def rounded_ring(z, cx, half_h, y_mid, half_t, n=12):
+def rounded_ring(z, cx, half_h, y_mid, half_t, n=40):
     ring = []
     for k in range(n):
         a = 2 * math.pi * k / n
@@ -736,7 +755,7 @@ def slab(z, cx, half_h, y_in, y_out):
     ]
 
 
-def d_scale(z, top_x, bot_x, y_in, y_out, n=12):
+def d_scale(z, top_x, bot_x, y_in, y_out, n=24):
     """Oval scale with a flat face on the tang. top_x is the spine side."""
     sign = 1.0 if y_out >= 0.0 else -1.0
     inner = abs(y_in) * sign
@@ -873,7 +892,7 @@ def build_chef(steel_mat, wood_mat, brass_mat):
             edge_thick=lerp(0.0044, 0.0011, u),
         )
 
-    frs = [0.200 * i / 48 for i in range(49)]
+    frs = [0.200 * i / 96 for i in range(97)]
     frs += [0.203, 0.206, 0.209, 0.212, 0.215, 0.218, 0.222, 0.228, 0.248, 0.278, 0.308, 0.330]
     blade_obj = loft("chef_blade", [ring(frm) for frm in frs])
     assign(blade_obj, steel_mat)
@@ -905,7 +924,7 @@ def build_chef(steel_mat, wood_mat, brass_mat):
     return objs
 
 
-def cord_turn(name, z, half_w, half_t, strand=0.00105, bury=0.00022, around=28, seg=8):
+def cord_turn(name, z, half_w, half_t, strand=0.00105, bury=0.00022, around=56, seg=12):
     """One round of cord. The strand straddles the diamond so it touches the steel."""
     h = max(half_w, 1.5e-4)
     t = max(half_t, 1.5e-4)
@@ -951,7 +970,7 @@ def build_throwing(steel_mat, cord_mat):
         neg, pos, thick = blades.throw_station(s)
         return diamond_ring(z_of(com, s), pos, thick)
 
-    obj = loft_along("throw_blade", com, stations(64, 0.280), ring)
+    obj = loft_along("throw_blade", com, stations(112, 0.280), ring)
     assign(obj, steel_mat)
     objs = [obj]
     # Each turn is a round strand whose centreline sits on the steel, so the
@@ -999,7 +1018,7 @@ def build_pocket(steel_mat, g10, liner_mat, pin_mat):
             blunt=True,
         )
 
-    blade_obj = loft("pocket_blade", [ring(frm) for frm in stations(48, 0.085) + [0.092, 0.100, 0.112]])
+    blade_obj = loft("pocket_blade", [ring(frm) for frm in stations(80, 0.085) + [0.092, 0.100, 0.112]])
     assign(blade_obj, steel_mat)
     objs = [blade_obj]
     # Thumb stud on the blade face, near the spine, just ahead of the ricasso.
@@ -1463,8 +1482,13 @@ def main():
     wood_handle = wood(color_s, normal_s, rough_s, "WoodHandle")
     endgrain = image_mat("EndGrain", endgrain_image(), roughness=0.58)
     edgegrain = image_mat("EdgeGrain", edgegrain_image(), roughness=0.62)
-    # Full 1K Wood051, not the 512 px handle copy and not the procedural oak.
-    counter = wood(color, normal, rough, "CounterWood")
+    # Wood051 colour at 2K (CC0, ambientCG): the close cameras sit near the counter.
+    counter = wood(
+        load_image(os.path.join(TEX, "Wood051_2K_Color.jpg"), "wood_color_2k"),
+        normal,
+        rough,
+        "CounterWood",
+    )
     cord = paint("Cord", (0.45, 0.16, 0.10), roughness=0.72)
     g10 = paint("G10", (0.72, 0.58, 0.36), roughness=0.48)
     liner = paint("Liner", (0.55, 0.57, 0.60), roughness=0.35, metallic=0.9)
