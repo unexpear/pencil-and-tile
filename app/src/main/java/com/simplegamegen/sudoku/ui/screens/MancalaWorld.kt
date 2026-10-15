@@ -82,7 +82,7 @@ internal fun MancalaWorld(
     // Clear glass shell around a coloured cat's-eye core, so each marble reads as glass.
     val glass = remember(materialLoader) { marbleGlass(materialLoader) }
     val cores = remember(materialLoader) {
-        MARBLE_COLORS.map { materialLoader.createColorInstance(it, metallic = 0f, roughness = 0.28f, reflectance = 0.5f) }
+        MARBLE_COLORS.map { materialLoader.createColorInstance(it, metallic = 0f, roughness = 0.22f, reflectance = 0.5f) }
     }
     // Gold inlay for the pits you can sow, and a paler ring for the last landing.
     val goldRing = remember { ringBitmap(0xFFFFE08A.toInt(), 0xFFF2B33A.toInt(), 0xFFA8701A.toInt()) }
@@ -172,7 +172,9 @@ internal fun MancalaWorld(
                 val y = when {
                     hole.store -> MancalaBoard.depth - 0.3f
                     hole.y > 1.8f -> hole.y + hole.ry + 0.40f
-                    else -> hole.y - hole.ry - 0.40f
+                    // Far row: in the gap between the rows, in front of its pit, so the pile
+                    // cannot stand between the camera and the number.
+                    else -> hole.y + hole.ry + 0.27f
                 }
                 seen.forEach { v ->
                     key(v) {
@@ -274,12 +276,13 @@ private val KEY_COLOR = io.github.sceneview.math.colorOf(r = 1f, g = 0.95f, b = 
 private val FILL_COLOR = io.github.sceneview.math.colorOf(r = 0.78f, g = 0.86f, b = 1f)
 
 private val MARBLE_COLORS = listOf(
-    Color(0xFFD4891A),
-    Color(0xFF2A6FD0),
-    Color(0xFF1E9A52),
-    Color(0xFFD04458),
-    Color(0xFF7A45C0),
-    Color(0xFFE7F6F8),
+    // Saturated cat's-eye cores. The clear shell lightens them, so they start deep.
+    Color(0xFFE07000),
+    Color(0xFF0050E0),
+    Color(0xFF00A040),
+    Color(0xFFE01030),
+    Color(0xFF7020D0),
+    Color(0xFFF0F0F0),
 )
 
 /**

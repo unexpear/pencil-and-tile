@@ -119,6 +119,26 @@ def load_image(path, name, noncolor=False):
     return img
 
 
+def brightened(img, gain, name):
+    copy = img.copy()
+    copy.name = name
+    px = list(copy.pixels)
+    for i in range(0, len(px), 4):
+        px[i] = min(1.0, px[i] * gain[0])
+        px[i + 1] = min(1.0, px[i + 1] * gain[1])
+        px[i + 2] = min(1.0, px[i + 2] * gain[2])
+    copy.pixels.foreach_set(px)
+    folder = os.environ.get("KNIFE_IMAGE_BAKE", "/tmp/knife-flip-images")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, name + ".png")
+    copy.filepath_raw = path
+    copy.file_format = "PNG"
+    copy.save()
+    loaded = bpy.data.images.load(path)
+    loaded.name = name + "_baked"
+    return loaded
+
+
 def wood_material():
     color = load_image(os.path.join(TEX, "Wood051_1K_Color.jpg"), "Wood051Color")
     normal = load_image(os.path.join(TEX, "Wood051_1K_NormalGL.jpg"), "Wood051Normal", noncolor=True)
@@ -128,13 +148,10 @@ def wood_material():
     socket(bsdf, "Roughness").default_value = 0.55
     nt = mat.node_tree
     col = nt.nodes.new("ShaderNodeTexImage")
-    col.image = color
-    # Wood051 is a pale oak. A warm multiply keeps the same CC0 map and lets the bowls read.
-    shade = nt.nodes.new("ShaderNodeVectorMath")
-    shade.operation = "MULTIPLY"
-    shade.inputs[1].default_value = (0.86, 0.62, 0.42)
-    nt.links.new(col.outputs["Color"], shade.inputs[0])
-    nt.links.new(shade.outputs["Vector"], socket(bsdf, "Base Color"))
+    # The glTF exporter drops the multiply below, so the shipped colour is the map itself.
+    # Bake a lighter, warm copy instead: same grain, a little lighter than before.
+    col.image = brightened(color, (1.55, 1.30, 1.10), "Wood051Light")
+    nt.links.new(col.outputs["Color"], socket(bsdf, "Base Color"))
     rgh = nt.nodes.new("ShaderNodeTexImage")
     rgh.image = rough
     nt.links.new(rgh.outputs["Color"], socket(bsdf, "Roughness"))
@@ -329,12 +346,12 @@ def build_marble(material, core_material):
     for k in range(3):
         bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1.0, location=(0, 0, 0))
         vane = bpy.context.active_object
-        vane.scale = (0.66, 0.11, 0.66)
+        vane.scale = (0.84, 0.075, 0.80)
         vane.rotation_euler = (0.0, 0.0, math.pi * k / 3.0)
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         # A gentle twist along the axis, so the vanes curl like a real cat's eye.
         for v in vane.data.vertices:
-            a = 0.55 * v.co.z
+            a = 1.35 * v.co.z
             x, y = v.co.x, v.co.y
             v.co.x = x * math.cos(a) - y * math.sin(a)
             v.co.y = x * math.sin(a) + y * math.cos(a)
