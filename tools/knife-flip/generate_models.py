@@ -346,6 +346,26 @@ def socket(bsdf, name):
     return found
 
 
+def no_metal(nt, bsdf, size):
+    """Blender 4.3's glTF exporter packs metallic = 1 into the blue channel of the
+    metallic-roughness map when Metallic is not linked, and Filament then renders the wood
+    as dark metal. Linking a black map keeps that channel at 0."""
+    folder = os.environ.get("KNIFE_IMAGE_BAKE", "/tmp/knife-flip-images")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, f"no_metal_{size}.png")
+    img = bpy.data.images.new(f"no_metal_{size}", width=size, height=size, alpha=False)
+    img.colorspace_settings.name = "Non-Color"
+    img.pixels.foreach_set([0.0, 0.0, 0.0, 1.0] * (size * size))
+    img.filepath_raw = path
+    img.file_format = "PNG"
+    img.save()
+    loaded = bpy.data.images.load(path, check_existing=True)
+    loaded.colorspace_settings.name = "Non-Color"
+    node = nt.nodes.new("ShaderNodeTexImage")
+    node.image = loaded
+    nt.links.new(node.outputs["Color"], socket(bsdf, "Metallic"))
+
+
 def new_bsdf(name):
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
@@ -397,6 +417,7 @@ def wood(color_img, normal_img, rough_img, name="Wood"):
     rgh = nt.nodes.new("ShaderNodeTexImage")
     rgh.image = rough_img
     nt.links.new(rgh.outputs["Color"], socket(bsdf, "Roughness"))
+    no_metal(nt, bsdf, rough_img.size[0])
     ntex = nt.nodes.new("ShaderNodeTexImage")
     ntex.image = normal_img
     nmap = nt.nodes.new("ShaderNodeNormalMap")
@@ -1482,8 +1503,7 @@ def main():
     wood_handle = wood(color_s, normal_s, rough_s, "WoodHandle")
     endgrain = image_mat("EndGrain", endgrain_image(), roughness=0.58)
     edgegrain = image_mat("EdgeGrain", edgegrain_image(), roughness=0.62)
-    # Full 1K Wood051. Note: Blender 4.3 packs metallic=1 into this map's blue channel and the
-    # counter then renders black in Filament, so the shipped room.glb is still the 4.0 export.
+    # Full 1K Wood051, not the 512 px handle copy and not the procedural oak.
     counter = wood(
         color,
         normal,
