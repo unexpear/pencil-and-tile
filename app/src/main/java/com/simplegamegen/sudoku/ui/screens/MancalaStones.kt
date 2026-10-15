@@ -31,8 +31,10 @@ internal fun stonesIn(hole: MancalaBoard.Hole, count: Int): List<StoneSpot> {
     var layer = 0
     while (out.size < count && layer < 16) {
         val shrink = (1f - layer * 0.04f).coerceAtLeast(0.38f)
-        val limitX = (hole.rx - radius * 0.62f) * shrink
-        val limitY = (hole.ry - radius * 0.62f) * shrink
+        // A store's bowl is shallow near its rim, so stones there sat on the wood. Keep them in the deep middle.
+        val reach = if (hole.store) STORE_REACH else 1f
+        val limitX = (hole.rx * reach - radius * 0.62f) * shrink
+        val limitY = (hole.ry * reach - radius * 0.62f) * shrink
         if (limitX < radius * 0.35f || limitY < radius * 0.35f) break
         val shiftX = if (layer % 2 == 1) gap * 0.5f else 0f
         val shiftY = if (layer % 2 == 1) rowH * 0.28f else 0f
@@ -94,4 +96,7 @@ internal fun restingPoses(pits: List<Int>): List<StonePose> {
 internal fun marbleTint(hole: Int, slot: Int): Int = (hole * 5 + slot) % MARBLE_TINTS
 
 internal const val MARBLE_TINTS = 6
+
+/** Fraction of a store's radius stones may use, so each sits at least a stone deep in the well. */
+internal const val STORE_REACH = 0.62f
 private const val MancalaStonesTotal = 48

@@ -131,4 +131,17 @@ class MancalaBoardTest {
             left.removeAt(match)
         }
     }
+
+    @Test fun `stones in a store sit inside its well, not on the rim`() {
+        for (store in listOf(MancalaBoard.hole(Mancala.YOU), MancalaBoard.hole(Mancala.CPU))) {
+            for (count in 1..Mancala.STONES) {
+                stonesIn(store, count).forEach { s ->
+                    val dx = (s.x - store.x) / store.rx
+                    val dy = (s.y - store.y) / store.ry
+                    assertTrue(dx * dx + dy * dy < STORE_REACH * STORE_REACH, "store ${store.index} count $count stone at (${s.x}, ${s.y}) is near the rim")
+                    assertTrue(bowlDrop(store, s.x, s.y) >= MancalaBoard.stoneRadius, "store ${store.index} count $count stone is not a stone deep in the well")
+                }
+            }
+        }
+    }
 }
