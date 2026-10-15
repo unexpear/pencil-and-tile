@@ -36,8 +36,11 @@ internal fun stonesIn(hole: MancalaBoard.Hole, count: Int): List<StoneSpot> {
         val limitX = (hole.rx * reach - radius * 0.62f) * shrink
         val limitY = (hole.ry * reach - radius * 0.62f) * shrink
         if (limitX < radius * 0.35f || limitY < radius * 0.35f) break
-        val shiftX = if (layer % 2 == 1) gap * 0.5f else 0f
-        val shiftY = if (layer % 2 == 1) rowH * 0.28f else 0f
+        // Each upper layer sits in the hollows of the one below, alternating sides, so a heap
+        // stays low and wide in the bowl instead of stacking single stones into a tower.
+        val side = if (layer == 0) 0f else if (layer % 2 == 1) 1f else -1f
+        val shiftX = side * gap * 0.5f
+        val shiftY = side * rowH * 0.28f
         val rows = (limitY * 2f / rowH).toInt() + 3
         val cols = (limitX * 2f / gap).toInt() + 3
         val found = ArrayList<StoneSpot>()

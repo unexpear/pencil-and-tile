@@ -144,4 +144,22 @@ class MancalaBoardTest {
             }
         }
     }
+
+    @Test fun `a pit heap stays inside the pit and low`() {
+        for (pit in (0 until Mancala.PITS).map { MancalaBoard.hole(it) }) {
+            for (count in 1..12) {
+                val spots = stonesIn(pit, count)
+                spots.forEach { s ->
+                    val r = hypot(s.x - pit.x, s.y - pit.y)
+                    assertTrue(r + MancalaBoard.stoneRadius * 0.5f < pit.rx, "pit ${pit.index} count $count stone $r from centre")
+                }
+                // Six stones (a common mid-game count) must not tower: at most three layers.
+                if (count <= 7) {
+                    val top = spots.maxOf { it.z }
+                    val floor = MancalaBoard.top - MancalaBoard.pitDepth + MancalaBoard.stoneRadius
+                    assertTrue(top - floor < MancalaBoard.stoneRadius * 2.08f * 0.86f * 2.5f, "pit ${pit.index} count $count stacks too high")
+                }
+            }
+        }
+    }
 }
