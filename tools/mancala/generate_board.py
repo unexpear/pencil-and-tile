@@ -331,7 +331,7 @@ def build_board(width, depth, top, holes, material):
 
 
 def build_marble(material, core_material):
-    """A clear glass shell around a cat's-eye core of three twisted vanes.
+    """A clear glass shell around a swirl core of two broad twisted ribbons.
 
     The app names the parts: MarbleShell gets the clear glass, MarbleCore the colour.
     """
@@ -342,27 +342,43 @@ def build_marble(material, core_material):
     for poly in shell.data.polygons:
         poly.use_smooth = True
     shell.data.materials.append(material)
-    vanes = []
-    for k in range(3):
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1.0, location=(0, 0, 0))
-        vane = bpy.context.active_object
-        vane.scale = (0.84, 0.075, 0.80)
-        vane.rotation_euler = (0.0, 0.0, math.pi * k / 3.0)
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-        # A gentle twist along the axis, so the vanes curl like a real cat's eye.
-        for v in vane.data.vertices:
-            a = 1.35 * v.co.z
-            x, y = v.co.x, v.co.y
-            v.co.x = x * math.cos(a) - y * math.sin(a)
-            v.co.y = x * math.sin(a) + y * math.cos(a)
-        for poly in vane.data.polygons:
-            poly.use_smooth = True
-        vanes.append(vane)
+    # Two broad twisted ribbons. Each cross-section is a flat ellipse, so the edges are
+    # rounded and the ends close in smoothly; nothing comes to a point.
+    verts, faces = [], []
+    rings, around, half = 72, 36, 0.80
+    for k in range(2):
+        base = len(verts)
+        for i in range(rings + 1):
+            u = -1.0 + 2.0 * i / rings
+            z = u * half
+            p = math.sqrt(max(0.0, 1.0 - u * u)) ** 0.8
+            wide = 0.66 * p + 1e-4
+            thin = 0.055 * p + 1e-4
+            phi = math.pi * k / 2.0 + 1.6 * u
+            c, s = math.cos(phi), math.sin(phi)
+            for j in range(around):
+                a = 2.0 * math.pi * j / around
+                x, y = wide * math.cos(a), thin * math.sin(a)
+                verts.append((x * c - y * s, x * s + y * c, z))
+        for i in range(rings):
+            for j in range(around):
+                a0 = base + i * around + j
+                a1 = base + i * around + (j + 1) % around
+                faces.append((a0, a1, a1 + around, a0 + around))
+    mesh = bpy.data.meshes.new("MarbleCore")
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    core_obj = bpy.data.objects.new("MarbleCore", mesh)
+    bpy.context.collection.objects.link(core_obj)
     bpy.ops.object.select_all(action="DESELECT")
-    for vane in vanes:
-        vane.select_set(True)
-    bpy.context.view_layer.objects.active = vanes[0]
-    bpy.ops.object.join()
+    core_obj.select_set(True)
+    bpy.context.view_layer.objects.active = core_obj
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.remove_doubles(threshold=2e-4)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for poly in core_obj.data.polygons:
+        poly.use_smooth = True
     core = bpy.context.active_object
     core.name = "MarbleCore"
     core.data.name = "MarbleCore"

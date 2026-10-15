@@ -1554,7 +1554,8 @@ def main():
         "CounterWood",
     )
     # Dark paracord, matte.
-    cord = paint("Cord", (0.20, 0.12, 0.08), roughness=0.9)
+    # Linear values: sRGB #3B2618, a dark brown. (0.20, 0.12, 0.08) linear is sRGB #7C604F, which reads beige.
+    cord = paint("Cord", (0.044, 0.019, 0.009), roughness=0.9)
     g10 = paint("G10", (0.72, 0.58, 0.36), roughness=0.48)
     liner = paint("Liner", (0.55, 0.57, 0.60), roughness=0.35, metallic=0.9)
     pin = paint("Pin", (0.62, 0.48, 0.22), roughness=0.3, metallic=1.0)
