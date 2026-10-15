@@ -1482,9 +1482,10 @@ def main():
     wood_handle = wood(color_s, normal_s, rough_s, "WoodHandle")
     endgrain = image_mat("EndGrain", endgrain_image(), roughness=0.58)
     edgegrain = image_mat("EdgeGrain", edgegrain_image(), roughness=0.62)
-    # Wood051 colour at 2K (CC0, ambientCG): the close cameras sit near the counter.
+    # Full 1K Wood051. Note: Blender 4.3 packs metallic=1 into this map's blue channel and the
+    # counter then renders black in Filament, so the shipped room.glb is still the 4.0 export.
     counter = wood(
-        load_image(os.path.join(TEX, "Wood051_2K_Color.jpg"), "wood_color_2k"),
+        color,
         normal,
         rough,
         "CounterWood",
