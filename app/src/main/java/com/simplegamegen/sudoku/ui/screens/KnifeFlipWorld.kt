@@ -140,14 +140,15 @@ internal fun KnifeFlipWorld(
         }
         if (!body.bottle) {
             hero?.let {
-                // Pitch in the throw plane, then roll about the long axis so a dropped knife lies on its side.
-                Node(position = Position(x = sample.x, y = sample.z, z = 0f), rotation = Rotation(z = deg)) {
-                    ModelNode(
-                        modelInstance = it,
-                        autoAnimate = false,
-                        rotation = Rotation(y = Math.toDegrees(sample.roll.toDouble()).toFloat()),
-                    )
-                }
+                // One node: SceneView builds the quaternion as Rz * Ry * Rx, so this is the pitch in the
+                // throw plane applied after a roll about the knife's long axis (a dropped knife lies on its side).
+                ModelNode(
+                    modelInstance = it,
+                    autoAnimate = false,
+                    position = Position(x = sample.x, y = sample.z, z = 0f),
+                    rotation = Rotation(y = Math.toDegrees(sample.roll.toDouble()).toFloat(), z = deg),
+                )
+
             }
         } else {
             val base = bottleBase(body, sample)
