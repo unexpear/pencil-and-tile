@@ -977,7 +977,7 @@ def build_chef(steel_mat, wood_mat, brass_mat):
     return objs
 
 
-CORD_STRAND = 0.00105
+CORD_STRAND = 0.0016
 
 
 def cord_turn(name, z, half_w, half_t, strand=0.00105, bury=0.00022, around=32, seg=8):
@@ -1037,7 +1037,7 @@ def build_throwing(steel_mat, cord_mat):
     turns = [0.150 + i * CORD_STRAND * 2.05 for i in range(int(0.105 / (CORD_STRAND * 2.05)))]
     for i, frm in enumerate(turns):
         neg, pos, thick = blades.throw_station(frm)
-        band = cord_turn(f"cord_{i}", z_of(com, frm), max(abs(neg), pos), thick * 0.5, strand=CORD_STRAND)
+        band = cord_turn(f"cord_{i}", z_of(com, frm), max(abs(neg), pos), thick * 0.5, strand=CORD_STRAND, bury=0.0008)
         assign(band, cord_mat)
         objs.append(band)
         cords.append(band)
@@ -1554,7 +1554,7 @@ def main():
         "CounterWood",
     )
     # Dark paracord, matte.
-    cord = paint("Cord", (0.10, 0.085, 0.075), roughness=0.86)
+    cord = paint("Cord", (0.20, 0.12, 0.08), roughness=0.9)
     g10 = paint("G10", (0.72, 0.58, 0.36), roughness=0.48)
     liner = paint("Liner", (0.55, 0.57, 0.60), roughness=0.35, metallic=0.9)
     pin = paint("Pin", (0.62, 0.48, 0.22), roughness=0.3, metallic=1.0)

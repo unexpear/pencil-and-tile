@@ -129,7 +129,15 @@ internal fun KnifeFlipWorld(
         // The TextureView consumes touches, so the swipe cannot live on a Compose pointerInput.
         onTouchEvent = { event, _ -> onToss?.let { toss.onTouch(event, it) } ?: false },
     ) {
-        room?.let { ModelNode(modelInstance = it, autoAnimate = false) }
+        // The shell of the room (ceiling, walls, floor) must not cast shadows: the ceiling put the
+        // whole counter and block in the key light's shadow, so the tops read nearly black.
+        room?.let {
+            ModelNode(
+                modelInstance = it,
+                autoAnimate = false,
+                apply = { renderableNodes.forEach { part -> if (part.name in ROOM_SHELL) part.isShadowCaster = false } },
+            )
+        }
         if (!body.bottle) {
             hero?.let {
                 ModelNode(
@@ -859,3 +867,8 @@ private fun normalizeDir(v: Direction): Direction {
     val len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z).coerceAtLeast(1e-6f)
     return Direction(x = v.x / len, y = v.y / len, z = v.z / len)
 }
+
+private val ROOM_SHELL = setOf(
+    "ceiling", "floor", "back_wall", "side_wall", "right_wall", "front_wall",
+    "window_backing", "pane", "frame_l", "frame_r", "frame_b", "frame_t", "mullion", "cabinet", "kick",
+)
