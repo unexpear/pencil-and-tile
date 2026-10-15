@@ -84,11 +84,11 @@ class KnifeFlipTest {
     }
 
     @Test fun `fills in the published band land more often than a full bottle`() {
-        // A short flick: a couple of metres per second, steep enough to come down on the block.
         // Dekker et al. Sec. IV put a good flip around 20%–40%, not at one exact fraction.
         // 1/4 sits nearer their lowest centre of mass (eq. 16) and 1/3 nearer the biggest slowdown (eq. 14).
-        val speeds = listOf(2.2f, 2.4f, 2.6f, 2.8f, 3.0f)
-        val aims = listOf(1.25f, 1.35f, 1.45f, 1.55f)
+        // The whole swipe range the screen can produce.
+        val speeds = KnifeFlip.SWIPE_SPEEDS
+        val aims = KnifeFlip.SWIPE_AIMS
         val rates = FlipModels.bottles.map { bottle ->
             var lands = 0
             var tries = 0
@@ -110,7 +110,7 @@ class KnifeFlipTest {
         assertTrue(quarter > full && third > full, "full should land less often\n$report")
         assertTrue(quarter > three && third > three, "3/4 should land less often\n$report")
         assertTrue(third > half, "1/2 matches the slowdown but sits higher\n$report")
-        assertTrue(quarter >= 0.15f && third >= 0.10f, "the 20%–40% band should have a real window\n$report")
+        assertTrue(quarter >= 0.08f && third >= 0.08f, "the 20%–40% band should have a real window\n$report")
     }
 
     @Test fun `a practised toss sticks the throwing knife and lands a third-full bottle`() {

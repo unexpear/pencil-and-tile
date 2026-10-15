@@ -132,8 +132,8 @@ fun KnifeFlipScreen(nav: NavController, vm: PlayViewModel<KnifeFlip>, factory: P
         undoable = false, scroll = false, tight = true,
         tools = { g, s ->
             ToolButton(GameIcons.Play, "Toss", enabled = g.phase == KnifeFlip.Phase.READY && !s.busy) {
-                val (speed, aim) = KnifeFlip.handThrow(g.option, g.seed, g.throwNum)
-                vm.play { it.toss(speed, aim) }
+                val hand = KnifeFlip.handThrow(g.option, g.seed, g.throwNum)
+                vm.play { it.toss(hand.speed, hand.aim, hand.spin) }
             }
         },
     ) { g, _ ->

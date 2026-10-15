@@ -6,6 +6,7 @@ import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -62,15 +63,28 @@ object FlipPhysics {
     private const val SLOSH_TAU = 0.32f
 
     /**
-     * Effective radius of the swing that sets the bottle's spin, ω = −V / R.
+     * Fraction of the bottle's spin energy left once the water hits the base. An estimate:
+     * the slosh is the inelastic collapse that makes a part-filled bottle easy to land.
+     */
+    private const val SPIN_KEPT = 0.2f
+
+    /** A bottle landing tilted further back than this falls over whatever its spin. */
+    private val MAX_RESCUE_TILT = (70.0 * PI / 180.0).toFloat()
+
+    /**
+     * Effective radius of the flick that sets the bottle's spin, ω = −V / R at the reference speed.
      * Thiel's formula 2. His measured hammer grip is about 0.32 m (a full turn every ~2 m).
      * A bottle flip is a wrist flick, not that throw: Dekker's flights are one turn in about
      * a second, so ω is of order 10 rad/s while the toss that reaches this block is a couple
-     * of metres per second. R = 0.16 m is that estimate, between the neck-to-balance distance
-     * (~0.14 m) and a forearm. The same R is used at every fill, because Dekker compare fills
+     * of metres per second. R = 0.095 m is that estimate at a 2 m/s flick, about the hand's
+     * length from wrist to fingertip, since the wrist and fingers set the spin. The same R is used at every fill, because Dekker compare fills
      * at a given ω₀ (their Sec. IV: "for a given ω₀ one wishes to reduce ω").
      */
-    private const val BOTTLE_SWING = 0.16f
+    private const val BOTTLE_SWING = 0.095f
+
+    /** Spin ∝ speed^p about a typical 2 m/s flick. p < 1: a wrist flick, not a fixed swing. */
+    private const val BOTTLE_SPIN_EXP = 0.3f
+    private const val BOTTLE_REF_SPEED = 2f
 
     /** Base of the bottle this far above the block when it leaves the hand. A table-height flip. */
     private const val BOTTLE_LIFT = 0.36f
@@ -94,9 +108,11 @@ object FlipPhysics {
 
     /**
      * The point has to be driven into the wood, not skim it. The blade must point at least this
-     * far (25°) below the block's surface at contact, so a knife that arrives nearly flat glances off.
+     * far (60°) below the block's surface at contact, within 30° of vertical. A knife that arrives
+     * at a shallow angle levers out or glances off. The stuck pose keeps this impact angle.
      */
-    private val MIN_ENTRY = sin(25.0 * PI / 180.0).toFloat()
+    internal const val MIN_ENTRY_DEG = 60f
+    private val MIN_ENTRY = sin(MIN_ENTRY_DEG * PI / 180.0).toFloat()
 
     /**
      * Centre-of-mass height under the same integrator as a toss, with collisions ignored.
@@ -156,7 +172,8 @@ object FlipPhysics {
      * changes I(h), the balance, and whether the landing is stable.
      */
     private fun looseBottle(body: FlipBody, theta: Float, gripSpeed: Float, aim: Float, x: Float, z: Float): Release {
-        val omega = -gripSpeed / BOTTLE_SWING
+        // The wrist sets most of the spin, so it grows more slowly than the throw speed.
+        val omega = -BOTTLE_REF_SPEED * (gripSpeed / BOTTLE_REF_SPEED).pow(BOTTLE_SPIN_EXP) / BOTTLE_SWING
         return Release(x, z, gripSpeed * cos(aim), gripSpeed * sin(aim), theta, omega)
     }
 
@@ -320,14 +337,27 @@ object FlipPhysics {
         val tilt = wrap(s.theta)
         val h = body.comFromBase(0f).coerceAtLeast(0.02f)
         val alpha = atan(body.baseRadius / h)
-        if (abs(tilt) >= alpha) return false
         val reach = hypot(body.baseRadius, h)
-        val barrier = body.mass * GRAVITY * reach * (1f - cos((alpha - abs(tilt)).coerceAtLeast(0f)))
-        val spin = 0.5f * body.inertia(0f) * s.omega * s.omega
+        val mgl = body.mass * GRAVITY * reach
         val turned = abs(s.theta - theta0)
         val rebound = 0.22f * abs(s.vz)
         val hop = rebound * rebound / (2f * GRAVITY)
-        return spin <= barrier && turned in FLIP_MIN..FLIP_MAX && hop <= h
+        if (turned !in FLIP_MIN..FLIP_MAX || hop > h) return false
+        // The water slams down on impact and takes part of the spin with it.
+        val spin = SPIN_KEPT * 0.5f * body.inertia(0f) * s.omega * s.omega
+        if (abs(tilt) < alpha) {
+            // Centre of mass over the base: it stays unless the spin rolls it over the far rim.
+            return spin <= mgl * (1f - cos(alpha - abs(tilt)))
+        }
+        // Past the tip-over angle it lands on one rim. Under-rotated, still turning toward
+        // upright, the spin can rock it back over the base, if there is enough to lift the
+        // centre of mass over that rim and not so much that it carries on over the other one.
+        val toward = tilt * s.omega < 0f
+        val excess = abs(tilt) - alpha
+        if (!toward || abs(tilt) > MAX_RESCUE_TILT) return false
+        val lift = mgl * (1f - cos(excess))
+        val over = mgl * (1f - cos(alpha))
+        return spin >= lift && spin <= lift + over
     }
 
     /**
@@ -772,10 +802,11 @@ data class KnifeFlip(
     val body: FlipBody get() = FlipModels.option(option).body
     val ended: Boolean get() = phase == Phase.ENDED
 
-    fun toss(gripSpeed: Float, aim: Float): KnifeFlip? {
+    fun toss(gripSpeed: Float, aim: Float, spin: Float = 1f): KnifeFlip? {
         if (phase != Phase.READY || gripSpeed < 0.65f) return null
         val held = FlipPhysics.hold(body)
-        val release = FlipPhysics.flick(body, held.theta, gripSpeed, aim, held.x, held.z)
+        val flicked = FlipPhysics.flick(body, held.theta, gripSpeed, aim, held.x, held.z)
+        val release = flicked.copy(omega = flicked.omega * spin)
         return copy(phase = Phase.FLYING, release = release, throwNum = throwNum + 1, verdict = "")
     }
 
@@ -803,14 +834,30 @@ data class KnifeFlip(
 
         /**
          * The Toss button is a person throwing, not a machine: the practised swipe with a hand's
-         * error on top, about 15% in speed and 0.08 rad in aim. Deterministic per throw.
+         * scatter on top: about 35% in speed, 30% in wrist spin and 0.18 rad in aim, so it fails
+         * often, like a real flip. It goes through the same physics as a swipe. Deterministic per throw.
          */
-        fun handThrow(option: Int, seed: Long, throwNum: Int): Pair<Float, Float> {
+        fun handThrow(option: Int, seed: Long, throwNum: Int): HandThrow {
             val (speed, aim) = practised(option)
             val rng = java.util.Random(seed * 1_000_003L + throwNum)
-            val s = (speed * (1f + 0.15f * rng.nextGaussian().toFloat())).coerceIn(SWIPE_SPEEDS.first(), SWIPE_SPEEDS.last())
-            val a = (aim + 0.08f * rng.nextGaussian().toFloat()).coerceIn(SWIPE_AIMS.first(), SWIPE_AIMS.last())
-            return s to a
+            val s = (speed * (1f + HAND_SPEED * rng.nextGaussian().toFloat())).coerceIn(SWIPE_SPEEDS.first(), SWIPE_SPEEDS.last())
+            val a = (aim + HAND_AIM * rng.nextGaussian().toFloat()).coerceIn(SWIPE_AIMS.first(), SWIPE_AIMS.last())
+            val w = (1f + HAND_SPIN * rng.nextGaussian().toFloat()).coerceIn(0.5f, 1.5f)
+            return HandThrow(s, a, w)
+        }
+
+        data class HandThrow(val speed: Float, val aim: Float, val spin: Float)
+
+        /** A hand's scatter: speed and wrist spin as fractions, aim in radians. Estimates. */
+        private const val HAND_SPEED = 0.35f
+        private const val HAND_AIM = 0.18f
+        private const val HAND_SPIN = 0.3f
+
+        /** Whether a Toss-button throw works, through the same physics as the game. */
+        fun handSucceeds(option: Int, seed: Long, throwNum: Int): Boolean {
+            val h = handThrow(option, seed, throwNum)
+            val g = start(seed, option).toss(h.speed, h.aim, h.spin) ?: return false
+            return g.settle().phase == Phase.READY
         }
 
         /** The swipe range the screen maps a gesture onto. */

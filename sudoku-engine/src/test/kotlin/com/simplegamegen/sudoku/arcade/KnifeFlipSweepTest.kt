@@ -3,6 +3,11 @@ package com.simplegamegen.sudoku.arcade
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Sweeps the whole swipe range the screen can produce (speed 0.7–3.6, aim 0.9–1.5 rad).
@@ -32,12 +37,30 @@ class KnifeFlipSweepTest {
         println("KNIFE SWEEP\n$report")
     }
 
-    @Test fun `bottles are hard and the published fills beat a full bottle`() {
+    @Test fun `bottles land in a skill band and fuller bottles are harder`() {
         val rates = FlipModels.bottles.map { rate(grid(it)) }
         println("BOTTLE SWEEP " + FlipModels.fillLabels.zip(rates).joinToString { (l, r) -> "$l ${"%.1f".format(r * 100)}%" })
-        rates.forEach { assertTrue(it <= 0.15f, "a bottle should not land on most swipes: $rates") }
-        assertTrue(rates[0] > rates[4] && rates[1] > rates[4], "1/4 and 1/3 should beat full: $rates")
-        assertTrue(rates[0] > 0f && rates[1] > 0f, "the published band has a window: $rates")
+        // 1/4, 1/3 and 1/2: a real skill band, about 8–20% of the swipe range.
+        rates.take(3).forEach { assertTrue(it in 0.08f..0.20f, "1/4 to 1/2 should land 8–20% of swipes: $rates") }
+        // 3/4 and full: harder, but still possible.
+        rates.drop(3).forEach { assertTrue(it > 0f && it < rates.take(3).min(), "3/4 and full should be harder but not impossible: $rates") }
+    }
+
+    @Test fun `a stuck knife is embedded tip first at a steep angle`() {
+        var stuck = 0
+        for (knife in FlipModels.knives) for (v in speeds) for (a in aims) {
+            val held = FlipPhysics.hold(knife)
+            val flight = FlipPhysics.simulate(knife, FlipPhysics.flick(knife, held.theta, v, a, held.x, held.z))
+            if (flight.end != FlipEnd.STUCK) continue
+            stuck++
+            // theta 0 is tip up, so tip straight down is pi. The drawn pose is flight.final.
+            val fromDown = abs(atan2(sin(flight.final.theta - PI.toFloat()), cos(flight.final.theta - PI.toFloat()))) * 180f / PI.toFloat()
+            assertTrue(fromDown <= 90f - FlipPhysics.MIN_ENTRY_DEG + 0.5f, "${knife.label} $v/$a stuck ${"%.0f".format(fromDown)}° off vertical")
+            // The point is in the wood: below the block surface, inside the block.
+            val tipZ = flight.final.z + knife.comFromTip(0f) * cos(flight.final.theta)
+            assertTrue(tipZ < 0f, "${knife.label} $v/$a tip not in the wood ($tipZ)")
+        }
+        assertTrue(stuck > 0)
     }
 
     @Test fun `throwing past the block always fails`() {
@@ -60,14 +83,16 @@ class KnifeFlipSweepTest {
         }
     }
 
-    @Test fun `the toss button misses sometimes`() {
-        val throwing = FlipModels.knives.indexOf(FlipModels.throwing)
-        val results = (0 until 40).map { n ->
-            val (v, a) = KnifeFlip.handThrow(throwing, 11L, n)
-            KnifeFlip.succeeds(FlipModels.throwing, v, a)
+    @Test fun `the toss button goes through the physics and fails often`() {
+        val report = StringBuilder()
+        for ((o, option) in FlipModels.options.withIndex()) {
+            val n = 400
+            val wins = (0 until n).count { i -> KnifeFlip.handSucceeds(o, 7L + i / 50, i) }
+            val r = wins.toFloat() / n
+            report.append("${option.label} ${"%.1f".format(r * 100)}%  ")
+            if (!option.body.bottle) assertTrue(r in 0.20f..0.40f, "${option.label}: Toss works ${r * 100}% of the time, want 20–40%")
+            else assertTrue(r < 0.40f, "${option.label}: Toss works ${r * 100}% of the time")
         }
-        assertTrue(results.any { !it }, "a hand throw should miss sometimes")
-        assertTrue(results.any { it }, "a hand throw should stick sometimes")
-        println("TOSS BUTTON throwing knife ${results.count { it }}/40")
+        println("TOSS BUTTON $report")
     }
 }

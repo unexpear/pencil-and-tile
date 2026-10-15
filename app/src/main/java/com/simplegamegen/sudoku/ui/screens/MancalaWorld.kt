@@ -79,8 +79,8 @@ internal fun MancalaWorld(
     val materialLoader = rememberMaterialLoader(engine)
     val glass = remember(materialLoader) { MARBLE_COLORS.map { marbleGlass(materialLoader, it) } }
     // Gold inlay for the pits you can sow, and a paler ring for the last landing.
-    val gold = remember(materialLoader) { materialLoader.createColorInstance(Color(0xFFFFD45A), metallic = 0f, roughness = 0.3f, reflectance = 0.5f) }
-    val pale = remember(materialLoader) { materialLoader.createColorInstance(Color(0xFFF3E6C8), metallic = 0f, roughness = 0.45f, reflectance = 0.4f) }
+    val goldRing = remember { ringBitmap(0xFFFFE08A.toInt(), 0xFFF2B33A.toInt(), 0xFFA8701A.toInt()) }
+    val paleRing = remember { ringBitmap(0xFFFFF6E0.toInt(), 0xFFEBDDBE.toInt(), 0xFFB9A889.toInt()) }
     val numbers = remember { HashMap<Int, android.graphics.Bitmap>() }
     fun number(n: Int) = numbers.getOrPut(n) { countBitmap(n) }
     val frameState = rememberUpdatedState(frame)
@@ -133,20 +133,28 @@ internal fun MancalaWorld(
         // each ring stays and is hidden, and each pit keeps one card per count it has shown.
         MancalaBoard.holes.forEach { hole ->
             key("ring", hole.index) {
+                // A gold band inlaid flush with the wood around each pit you can play, and a pale
+                // one around the last landing. Drawn as a flat textured annulus so it reads clearly
+                // under the board's lighting. Both stay in the scene and are shown or hidden.
                 val open = playable && hole.index in legal
-                val shown = open || hole.index == last
-                val ring = remember { arrayOfNulls<io.github.sceneview.node.Node>(1) }
-                TorusNode(
-                    majorRadius = 1f,
-                    minorRadius = 0.22f,
-                    majorSegments = 48,
-                    minorSegments = 12,
-                    materialInstance = if (open) gold else pale,
-                    position = Position(hole.x, MancalaBoard.top + 0.13f, hole.y),
-                    scale = Scale(hole.rx + 0.1f, 0.6f, hole.ry + 0.1f),
-                    apply = { ring[0] = this; isVisible = shown },
-                )
-                SideEffect { ring[0]?.isVisible = shown }
+                val pale = !open && hole.index == last
+                val nodes = remember { arrayOfNulls<io.github.sceneview.node.Node>(2) }
+                listOf(true, false).forEachIndexed { i, isGold ->
+                    key(isGold) {
+                        val want = if (isGold) open else pale
+                        ImageNode(
+                            bitmap = if (isGold) goldRing else paleRing,
+                            size = io.github.sceneview.math.Size(2f * (hole.rx + RING_OUT), 2f * (hole.ry + RING_OUT)),
+                            position = Position(hole.x, MancalaBoard.top + 0.115f, hole.y),
+                            rotation = Rotation(x = -90f),
+                            apply = { nodes[i] = this; isVisible = want },
+                        )
+                    }
+                }
+                SideEffect {
+                    nodes[0]?.isVisible = open
+                    nodes[1]?.isVisible = pale
+                }
             }
             key("count", hole.index) {
                 val n = counts.getOrNull(hole.index) ?: 0
@@ -155,8 +163,8 @@ internal fun MancalaWorld(
                 val cards = remember { HashMap<Int, io.github.sceneview.node.Node>() }
                 val y = when {
                     hole.store -> MancalaBoard.depth - 0.3f
-                    hole.y > 1.8f -> hole.y + hole.ry + 0.26f
-                    else -> hole.y - hole.ry - 0.26f
+                    hole.y > 1.8f -> hole.y + hole.ry + 0.40f
+                    else -> hole.y - hole.ry - 0.40f
                 }
                 seen.forEach { v ->
                     key(v) {
@@ -272,6 +280,34 @@ private const val CLEAR_B = 0.97
 private const val COUNT_SIZE = 0.44f
 
 /** A number on a dark inlay, the way it is set into the wood. */
+/** Outer edge of the ring past the pit's own radius, in board units. */
+private const val RING_OUT = 0.16f
+
+/** A flat annulus with a light-to-dark gold gradient and a thin dark seam either side, like an inlay. */
+private fun ringBitmap(light: Int, mid: Int, dark: Int): android.graphics.Bitmap {
+    val size = 256
+    val bmp = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bmp)
+    val c = size / 2f
+    val outer = c - 3f
+    val inner = outer * 0.80f
+    val band = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = outer - inner
+        shader = android.graphics.LinearGradient(0f, 0f, size.toFloat(), size.toFloat(),
+            intArrayOf(light, mid, dark, mid), floatArrayOf(0f, 0.4f, 0.75f, 1f), android.graphics.Shader.TileMode.CLAMP)
+    }
+    canvas.drawCircle(c, c, (outer + inner) / 2f, band)
+    val seam = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = 3f
+        color = 0xFF2A1A08.toInt()
+    }
+    canvas.drawCircle(c, c, outer - 1.5f, seam)
+    canvas.drawCircle(c, c, inner + 1.5f, seam)
+    return bmp
+}
+
 private fun countBitmap(n: Int): android.graphics.Bitmap {
     val w = 130
     val h = 100
