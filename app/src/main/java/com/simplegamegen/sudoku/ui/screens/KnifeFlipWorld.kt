@@ -140,12 +140,14 @@ internal fun KnifeFlipWorld(
         }
         if (!body.bottle) {
             hero?.let {
-                ModelNode(
-                    modelInstance = it,
-                    autoAnimate = false,
-                    position = Position(x = sample.x, y = sample.z, z = 0f),
-                    rotation = Rotation(z = deg),
-                )
+                // Pitch in the throw plane, then roll about the long axis so a dropped knife lies on its side.
+                Node(position = Position(x = sample.x, y = sample.z, z = 0f), rotation = Rotation(z = deg)) {
+                    ModelNode(
+                        modelInstance = it,
+                        autoAnimate = false,
+                        rotation = Rotation(y = Math.toDegrees(sample.roll.toDouble()).toFloat()),
+                    )
+                }
             }
         } else {
             val base = bottleBase(body, sample)

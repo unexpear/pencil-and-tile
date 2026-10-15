@@ -232,7 +232,10 @@ object FlipPhysics {
                 val resolved = resolve(body, at, release.theta, allowWin = !spoiled)
                 t += hi
                 samples += resolved.state.sample(t)
-                if (resolved.end != null) return Flight(resolved.end, t, samples, resolved.state.sample(t))
+                if (resolved.end != null) {
+                    val done = Flight(resolved.end, t, samples, resolved.state.sample(t))
+                    return if (resolved.end == FlipEnd.STUCK || resolved.end == FlipEnd.LANDED) done else restOut(body, done)
+                }
                 if (!spoiled) reason = resolved.reason
                 spoiled = true
                 s = resolved.state
@@ -244,10 +247,97 @@ object FlipPhysics {
             t += DT
             since += DT
             if (since >= 1f / 60f) { take(); since = 0f }
-            if (s.z > 12f || s.x < -1.2f || s.x > 2.2f) return Flight(FlipEnd.OFF, t, samples, s.sample(t))
+            if (s.z > 12f || s.x < -1.2f || s.x > 2.2f) return restOut(body, Flight(FlipEnd.OFF, t, samples, s.sample(t)))
         }
         if (samples.isEmpty() || samples.last().t < t) samples += s.sample(t)
-        return Flight(reason, t, samples, s.sample(t))
+        return restOut(body, Flight(reason, t, samples, s.sample(t)))
+    }
+
+    /** Top of the counter the block stands on, in the same frame as the block top (z = 0). */
+    const val COUNTER_Z = -0.10f
+    const val COUNTER_X0 = -0.55f
+    const val COUNTER_X1 = 1.25f
+    const val FLOOR_Z = -0.90f
+
+    /** Half the handle thickness: a knife on its side rests on the scales. */
+    const val KNIFE_REST_LIFT = 0.010f
+
+    /** The surface under a resting centre of mass: block top, then counter, then floor. */
+    fun surfaceAt(x: Float): Float = when (x) {
+        in BLOCK_X0..BLOCK_X1 -> 0f
+        in COUNTER_X0..COUNTER_X1 -> COUNTER_Z
+        else -> FLOOR_Z
+    }
+
+    /** Height of the centre of mass above the surface when the body lies on its side. */
+    fun restLift(body: FlipBody): Float = if (body.bottle) body.baseRadius else KNIFE_REST_LIFT
+
+    /** Height the centre of mass rests at above whatever is under [x]. */
+    fun restHeight(body: FlipBody, x: Float): Float = surfaceAt(x) + restLift(body)
+
+    /**
+     * A failed throw ends lying down. From where the flight stopped, the body falls under
+     * gravity to the surface below, swings level as it goes, gives at most two damped hops,
+     * and rests with its long axis horizontal. Nothing is left in the air.
+     */
+    fun restOut(body: FlipBody, flight: Flight): Flight {
+        val from = flight.final
+        val n = flight.samples.size
+        var drift = if (n < 2) 0f else {
+            val a = flight.samples[n - 2]
+            val b = flight.samples[n - 1]
+            ((b.x - a.x) / (b.t - a.t).coerceAtLeast(1e-3f)).coerceIn(-1.5f, 1.5f) * 0.5f
+        }
+        val out = ArrayList(flight.samples)
+        val dt = 1f / 60f
+        val endTheta = nearestLevel(from.theta)
+        val endRoll = if (body.bottle) 0f else (PI / 2).toFloat()
+        var t = from.t
+        var x = from.x
+        var z = from.z
+        var vz = 0f
+        var hops = 0
+        var guard = 0
+        while (guard++ < 600) {
+            vz += G * dt
+            x += drift * dt
+            z += vz * dt
+            val floor = restHeight(body, x)
+            var stop = false
+            if (z <= floor) {
+                z = floor
+                if (abs(vz) > 0.6f && hops < 2) { vz = -vz * 0.25f; drift *= 0.4f; hops++ } else stop = true
+            }
+            t += dt
+            out += blend(from, t, x, z, endTheta, endRoll, ((t - from.t) / 0.45f).coerceIn(0f, 1f))
+            if (stop) break
+        }
+        val restZ = restHeight(body, x)
+        val last = out.last()
+        for (i in 1..12) {
+            val u = i / 12f
+            out += Sample(
+                last.t + i * dt, x, restZ,
+                last.theta + (endTheta - last.theta) * u,
+                last.sigma * (1 - u),
+                last.roll + (endRoll - last.roll) * u,
+            )
+        }
+        val final = out.last().copy(z = restZ, theta = endTheta, sigma = 0f, roll = endRoll)
+        out[out.lastIndex] = final
+        return Flight(flight.end, final.t, out, final)
+    }
+
+    private fun blend(from: Sample, t: Float, x: Float, z: Float, theta: Float, roll: Float, u: Float): Sample {
+        val e = u * u * (3 - 2 * u)
+        return Sample(t, x, z, from.theta + (theta - from.theta) * e, from.sigma * (1 - e), from.roll + (roll - from.roll) * e)
+    }
+
+    /** The horizontal angle (θ = ±π/2 plus whole turns) closest to [theta]. */
+    fun nearestLevel(theta: Float): Float {
+        val half = (PI / 2).toFloat()
+        val k = Math.round((theta - half) / PI.toFloat())
+        return half + k * PI.toFloat()
     }
 
     private data class Hit(val x: Float, val z: Float, val along: Float, val kind: HitKind)
@@ -533,7 +623,7 @@ data class Release(
 
 data class SpinState(val omega: Float, val sigma: Float)
 
-data class Sample(val t: Float, val x: Float, val z: Float, val theta: Float, val sigma: Float)
+data class Sample(val t: Float, val x: Float, val z: Float, val theta: Float, val sigma: Float, val roll: Float = 0f)
 
 data class Flight(val end: FlipEnd, val time: Float, val samples: List<Sample>, val final: Sample) {
     fun at(seconds: Float): Sample {
@@ -550,7 +640,7 @@ data class Flight(val end: FlipEnd, val time: Float, val samples: List<Sample>, 
         val b = samples[hi]
         val span = (b.t - a.t).coerceAtLeast(1e-5f)
         val u = ((seconds - a.t) / span).coerceIn(0f, 1f)
-        return Sample(seconds, a.x + (b.x - a.x) * u, a.z + (b.z - a.z) * u, a.theta + (b.theta - a.theta) * u, a.sigma + (b.sigma - a.sigma) * u)
+        return Sample(seconds, a.x + (b.x - a.x) * u, a.z + (b.z - a.z) * u, a.theta + (b.theta - a.theta) * u, a.sigma + (b.sigma - a.sigma) * u, a.roll + (b.roll - a.roll) * u)
     }
 }
 
@@ -803,12 +893,16 @@ data class KnifeFlip(
     val ended: Boolean get() = phase == Phase.ENDED
 
     fun toss(gripSpeed: Float, aim: Float, spin: Float = 1f): KnifeFlip? {
+        if (phase == Phase.ENDED) return again().toss(gripSpeed, aim, spin)
         if (phase != Phase.READY || gripSpeed < 0.65f) return null
         val held = FlipPhysics.hold(body)
         val flicked = FlipPhysics.flick(body, held.theta, gripSpeed, aim, held.x, held.z)
         val release = flicked.copy(omega = flicked.omega * spin)
         return copy(phase = Phase.FLYING, release = release, throwNum = throwNum + 1, verdict = "")
     }
+
+    /** A fresh round with the same object; the throw count carries on so hand throws vary. */
+    fun again(): KnifeFlip = copy(score = 0, streak = 0, phase = Phase.READY, release = null, verdict = "")
 
     fun settle(): KnifeFlip {
         val r = release ?: return this
