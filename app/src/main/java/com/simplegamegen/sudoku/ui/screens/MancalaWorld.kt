@@ -36,6 +36,7 @@ import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelInstance
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberRenderer
+import io.github.sceneview.rememberView
 import com.google.android.filament.Camera as FilamentCamera
 
 /**
@@ -62,6 +63,7 @@ internal fun MancalaWorld(
     val environment = rememberHDREnvironment(environmentLoader, HDRI, createSkybox = false)
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
+    val crisp = rememberView(engine)
     val light = rememberMainLightNode(engine) {
         intensity = KEY_LUX
         lightDirection = KEY_DIR
@@ -95,6 +97,7 @@ internal fun MancalaWorld(
         environmentLoader = environmentLoader,
         environment = environment,
         renderer = renderer,
+        view = crisp,
         renderQuality = RenderQuality.Default,
         autoCenterContent = false,
         autoFitContent = false,
@@ -103,6 +106,7 @@ internal fun MancalaWorld(
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            crisp.keepCrisp()
             environment.indirectLight?.intensity = IBL_LUX
             // A transparent TextureView showed nothing on real phones. Clear to the table colour instead.
             renderer.clearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0)
@@ -218,7 +222,6 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
     val key = MaterialProvider.MaterialKey().apply {
         hasTransmission = true
         hasIOR = true
-        hasClearCoat = true
     }
     val instance = materialLoader.createUbershaderInstance(key, emptyList(), "marble", "")
     if (instance != null) {
@@ -236,8 +239,6 @@ private fun marbleGlass(materialLoader: MaterialLoader, color: Color): MaterialI
         set("ior", 1.5f)
         set("thicknessFactor", 0.2f)
         set("volumeThicknessFactor", 0.2f)
-        set("clearCoatFactor", 1f)
-        set("clearCoatRoughnessFactor", 0.04f)
         return instance
     }
     return materialLoader.createColorInstance(color, metallic = 0.04f, roughness = 0.08f, reflectance = 0.5f)

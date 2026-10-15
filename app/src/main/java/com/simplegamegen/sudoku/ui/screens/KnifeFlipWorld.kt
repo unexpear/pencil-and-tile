@@ -41,6 +41,7 @@ import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelInstance
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberRenderer
+import io.github.sceneview.rememberView
 import kotlin.math.abs
 import kotlin.math.atan
 import kotlin.math.atan2
@@ -77,6 +78,7 @@ internal fun KnifeFlipWorld(
     val environment = rememberHDREnvironment(environmentLoader, HDRI, createSkybox = false)
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
+    val crisp = rememberView(engine)
     val light = rememberMainLightNode(engine) {
         intensity = KEY_LUX
         lightDirection = KEY_DIR
@@ -110,6 +112,7 @@ internal fun KnifeFlipWorld(
         environmentLoader = environmentLoader,
         environment = environment,
         renderer = renderer,
+        view = crisp,
         renderQuality = RenderQuality.Default,
         autoCenterContent = false,
         autoFitContent = false,
@@ -118,6 +121,7 @@ internal fun KnifeFlipWorld(
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            crisp.keepCrisp()
             environment.indirectLight?.intensity = IBL_LUX
             renderer.clearColor(0.55, 0.51, 0.45)
             placeKnifeCamera(camera, body.bottle, view, shake)
@@ -181,6 +185,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val environment = rememberHDREnvironment(environmentLoader, HDRI, createSkybox = false)
         ?: rememberEnvironment(environmentLoader)
     val renderer = rememberRenderer(engine)
+    val crisp = rememberView(engine)
     val camera = rememberCameraNode(engine)
     val light = rememberMainLightNode(engine) {
         intensity = PICKER_KEY_LUX
@@ -220,6 +225,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
         environmentLoader = environmentLoader,
         environment = environment,
         renderer = renderer,
+        view = crisp,
         renderQuality = RenderQuality.Cinematic,
         autoCenterContent = false,
         autoFitContent = false,
@@ -228,6 +234,7 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
         cameraNode = camera,
         cameraManipulator = null,
         onFrame = {
+            crisp.keepCrisp()
             environment.indirectLight?.intensity = IBL_LUX
             renderer.clearColor(0.27, 0.26, 0.25)
             val aspect = camera.getViewPortAspect().takeIf { it > 0.2 } ?: (614.0 / 640.0)
