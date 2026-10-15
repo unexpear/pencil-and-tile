@@ -103,7 +103,8 @@ internal fun KnifeFlipWorld(
     val deg = tipDegrees(sample.theta)
     SceneView(
         modifier = modifier,
-        surfaceType = SurfaceType.TextureSurface,
+        // A TextureView fails with EGL_BAD_ALLOC when the view is reopened (same fix as Mancala).
+        surfaceType = SurfaceType.Surface,
         engine = engine,
         modelLoader = modelLoader,
         environmentLoader = environmentLoader,
@@ -212,7 +213,8 @@ internal fun KnifeFlipPreview(body: FlipBody, modifier: Modifier = Modifier) {
     val sample = Sample(0f, pose.lift, 0f, pose.theta, 0f)
     SceneView(
         modifier = modifier,
-        surfaceType = SurfaceType.TextureSurface,
+        // A TextureView fails with EGL_BAD_ALLOC when the view is reopened (same fix as Mancala).
+        surfaceType = SurfaceType.Surface,
         engine = engine,
         modelLoader = modelLoader,
         environmentLoader = environmentLoader,
