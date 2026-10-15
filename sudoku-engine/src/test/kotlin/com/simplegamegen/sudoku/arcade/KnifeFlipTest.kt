@@ -115,14 +115,14 @@ class KnifeFlipTest {
 
     @Test fun `a practised toss sticks the throwing knife and lands a third-full bottle`() {
         val knife = FlipModels.throwing
-        val (ks, ka) = KnifeFlip.KNIFE_TOSS
+        val (ks, ka) = KnifeFlip.practised(FlipModels.knives.indexOf(knife))
         val held = FlipPhysics.hold(knife)
         val toss = FlipPhysics.flick(knife, held.theta, ks, ka, held.x, held.z)
         val flight = FlipPhysics.simulate(knife, toss)
         assertEquals(FlipEnd.STUCK, flight.end, "ω ${toss.omega} vz ${toss.vz} vx ${toss.vx} t ${flight.time} θ ${flight.final.theta}")
 
         val bottle = FlipModels.bottles[1]
-        val (bs, ba) = KnifeFlip.BOTTLE_TOSS
+        val (bs, ba) = KnifeFlip.practised(FlipModels.knives.size + 1)
         val hand = FlipPhysics.hold(bottle)
         val flip = FlipPhysics.flick(bottle, hand.theta, bs, ba, hand.x, hand.z)
         val landed = FlipPhysics.simulate(bottle, flip)
@@ -171,7 +171,7 @@ class KnifeFlipTest {
     @Test fun `a round keeps a streak until a miss and the save round-trips`() {
         val throwing = FlipModels.knives.indexOf(FlipModels.throwing)
         var g = KnifeFlip.start(7L, throwing)
-        val (speed, aim) = KnifeFlip.KNIFE_TOSS
+        val (speed, aim) = KnifeFlip.practised(throwing)
         g = g.toss(speed, aim)!!
         g = g.settle()
         assertEquals(1, g.streak)

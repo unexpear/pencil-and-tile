@@ -5,6 +5,7 @@ package com.simplegamegen.sudoku.ui.screens
 import android.view.MotionEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import io.github.sceneview.environment.rememberHDREnvironment
 import io.github.sceneview.loaders.MaterialLoader
 import io.github.sceneview.math.Direction
 import io.github.sceneview.math.Position
+import io.github.sceneview.math.Rotation
 import io.github.sceneview.math.Scale
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.rememberCameraNode
@@ -48,7 +50,10 @@ internal fun MancalaWorld(
     legal: List<Int>,
     onSow: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    table: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color(0xFFF4EFE6),
+    /** Stones in each of the 14 holes, drawn as numbers set into the board. */
+    counts: List<Int> = emptyList(),
+    /** The hole the last stone landed in, ringed in pale wood. */
+    last: Int? = null,
 ) {
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
@@ -73,6 +78,11 @@ internal fun MancalaWorld(
     }
     val materialLoader = rememberMaterialLoader(engine)
     val glass = remember(materialLoader) { MARBLE_COLORS.map { marbleGlass(materialLoader, it) } }
+    // Gold inlay for the pits you can sow, and a paler ring for the last landing.
+    val gold = remember(materialLoader) { materialLoader.createColorInstance(Color(0xFFFFD45A), metallic = 0f, roughness = 0.3f, reflectance = 0.5f) }
+    val pale = remember(materialLoader) { materialLoader.createColorInstance(Color(0xFFF3E6C8), metallic = 0f, roughness = 0.45f, reflectance = 0.4f) }
+    val numbers = remember { HashMap<Int, android.graphics.Bitmap>() }
+    fun number(n: Int) = numbers.getOrPut(n) { countBitmap(n) }
     val frameState = rememberUpdatedState(frame)
     val playableState = rememberUpdatedState(playable)
     val legalState = rememberUpdatedState(legal)
@@ -118,6 +128,51 @@ internal fun MancalaWorld(
         },
     ) {
         board?.let { ModelNode(modelInstance = it, autoAnimate = false) }
+        // Rings and numbers are part of the scene, so they turn and scale with the board in every view.
+        // Filament panics if a node is torn down mid-frame, so none of these ever leave the scene:
+        // each ring stays and is hidden, and each pit keeps one card per count it has shown.
+        MancalaBoard.holes.forEach { hole ->
+            key("ring", hole.index) {
+                val open = playable && hole.index in legal
+                val shown = open || hole.index == last
+                val ring = remember { arrayOfNulls<io.github.sceneview.node.Node>(1) }
+                TorusNode(
+                    majorRadius = 1f,
+                    minorRadius = 0.22f,
+                    majorSegments = 48,
+                    minorSegments = 12,
+                    materialInstance = if (open) gold else pale,
+                    position = Position(hole.x, MancalaBoard.top + 0.13f, hole.y),
+                    scale = Scale(hole.rx + 0.1f, 0.6f, hole.ry + 0.1f),
+                    apply = { ring[0] = this; isVisible = shown },
+                )
+                SideEffect { ring[0]?.isVisible = shown }
+            }
+            key("count", hole.index) {
+                val n = counts.getOrNull(hole.index) ?: 0
+                val seen = remember { ArrayList<Int>() }
+                if (n !in seen) seen.add(n)
+                val cards = remember { HashMap<Int, io.github.sceneview.node.Node>() }
+                val y = when {
+                    hole.store -> MancalaBoard.depth - 0.3f
+                    hole.y > 1.8f -> hole.y + hole.ry + 0.26f
+                    else -> hole.y - hole.ry - 0.26f
+                }
+                seen.forEach { v ->
+                    key(v) {
+                        ImageNode(
+                            bitmap = number(v),
+                            size = io.github.sceneview.math.Size(COUNT_SIZE * 1.3f, COUNT_SIZE),
+                            position = Position(hole.x, MancalaBoard.top + 0.13f, y),
+                            // Lay the card flat on the wood; the node is upright by default.
+                            rotation = Rotation(x = -90f),
+                            apply = { cards[v] = this; isVisible = v == n },
+                        )
+                    }
+                }
+                SideEffect { cards.forEach { (v, node) -> node.isVisible = v == n } }
+            }
+        }
         stones.forEachIndexed { index, stone ->
             val instance = marbles.getOrNull(index) ?: return@forEachIndexed
             key(index) {
@@ -212,3 +267,25 @@ private val MARBLE_COLORS = listOf(
 private const val CLEAR_R = 1.72
 private const val CLEAR_G = 1.40
 private const val CLEAR_B = 0.97
+
+/** Board units. The numbers are about as tall as a pit is wide, so they read in every view. */
+private const val COUNT_SIZE = 0.44f
+
+/** A number on a dark inlay, the way it is set into the wood. */
+private fun countBitmap(n: Int): android.graphics.Bitmap {
+    val w = 130
+    val h = 100
+    val bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bmp)
+    val bg = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = 0xF0201510.toInt() }
+    canvas.drawRoundRect(android.graphics.RectF(4f, 4f, w - 4f, h - 4f), 26f, 26f, bg)
+    val ink = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFFF6E7C4.toInt()
+        textSize = if (n >= 10) 70f else 80f
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+        textAlign = android.graphics.Paint.Align.CENTER
+    }
+    val baseline = h / 2f - (ink.descent() + ink.ascent()) / 2f
+    canvas.drawText(n.toString(), w / 2f, baseline, ink)
+    return bmp
+}
