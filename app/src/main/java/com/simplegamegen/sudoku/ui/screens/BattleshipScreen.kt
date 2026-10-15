@@ -308,6 +308,11 @@ private fun SeaHeading(title: String, full: Boolean, onFull: () -> Unit) {
     }
 }
 
+// A function type here is invoked while lint is still resolving SeaBoard, which crashes FIR.
+private fun interface SquareText {
+    fun of(cell: Int): String
+}
+
 @Composable
 private fun SeaBoard(
     camera: BoardCamera,
@@ -317,10 +322,11 @@ private fun SeaBoard(
     reveal: Boolean,
     fog: Boolean,
     fire: Boolean,
-    describe: (Int) -> String,
-    onFire: (Int) -> Unit = {},
+    describe: SquareText,
+    // Null, not {}. A default lambda is resolved while SeaBoard is still in the annotation phase, which crashes Android lint.
+    onFire: ((Int) -> Unit)? = null,
     place: Battleship? = null,
-    onPlace: (Int) -> Unit = {},
+    onPlace: ((Int) -> Unit)? = null,
     height: Dp? = null,
     controls: Boolean = true,
 ) {
@@ -350,8 +356,8 @@ private fun SeaBoard(
                         if (placing.value != null) ghost = at ?: -1
                         if (!change.pressed) {
                             ghost = -1
-                            if (at != null && placing.value != null) placeAt.value(at)
-                            else if (at != null && firing.value && !moved) fireAt.value(at)
+                            if (at != null && placing.value != null) placeAt.value?.invoke(at)
+                            else if (at != null && firing.value && !moved) fireAt.value?.invoke(at)
                             break
                         }
                         if (hypot(change.position.x - down.position.x, change.position.y - down.position.y) > slop) {
@@ -371,11 +377,11 @@ private fun SeaBoard(
             val aimed = fire && shots.none { it.cell == index }
             Box(
                 Modifier.offset { IntOffset(at.x.roundToInt(), at.y.roundToInt()) }.size(1.dp).semantics {
-                    contentDescription = say(describe(index))
+                    contentDescription = say(describe.of(index))
                     if (place != null || aimed) {
                         role = Role.Button
                         onClick(say(if (place != null) "Place" else "Fire")) {
-                            if (place != null) onPlace(index) else onFire(index)
+                            if (place != null) onPlace?.invoke(index) else onFire?.invoke(index)
                             true
                         }
                     }

@@ -39,7 +39,7 @@ PLAYABLE_DEFAULT = os.path.join(ROOT, "sudoku-engine", "src", "main", "resources
 BLOCKED_DEFAULT = os.path.join(ROOT, "tools", "words", "blocked.txt")
 
 OEWN_URL = "https://en-word.net/static/english-wordnet-2025.xml.gz"
-ENABLE_URL = "https://norvig.com/ngrams/enable1.txt"
+ENABLE_URL = "https://www.norvig.com/ngrams/enable1.txt"
 TATOEBA_URL = "https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences_CC0.tsv.bz2"
 
 # Same part-of-speech names Word Meaning shows.
@@ -245,19 +245,40 @@ def download(url, dest):
     os.replace(tmp, dest)
 
 
+def plausible(name, path):
+    """Reject an error page that is large enough to look like a finished download."""
+    with open(path, "rb") as handle:
+        head = handle.read(16)
+    if name == "enable1.txt":
+        return head.startswith(b"aa\n") or head.startswith(b"aa\r\n")
+    if name.endswith(".gz"):
+        return head.startswith(b"\x1f\x8b")
+    if name.endswith(".bz2"):
+        return head.startswith(b"BZh")
+    return os.path.getsize(path) >= 1000
+
+
 def cached(name, url, refresh):
     path = os.path.join(CACHE, name)
     if refresh and os.path.exists(path):
+        os.remove(path)
+    if os.path.isfile(path) and not plausible(name, path):
         os.remove(path)
     if not os.path.isfile(path) or os.path.getsize(path) < 1000:
         last = None
         for _ in range(3):
             try:
                 download(url, path)
-                break
+                if plausible(name, path):
+                    break
+                last = RuntimeError(f"{name} does not look like the expected file")
+                print(f"  retry after {last}", flush=True)
+                os.remove(path)
             except Exception as error:  # noqa: BLE001 - retry either network failure
                 last = error
                 print(f"  retry after {error}", flush=True)
+                if os.path.exists(path):
+                    os.remove(path)
         else:
             raise SystemExit(f"could not download {url}: {last}")
     return path

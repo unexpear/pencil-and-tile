@@ -28,8 +28,10 @@ import com.simplegamegen.sudoku.arcade.Game2048
 import com.simplegamegen.sudoku.arcade.Game2048Codec
 import com.simplegamegen.sudoku.arcade.KnifeFlip
 import com.simplegamegen.sudoku.arcade.KnifeFlipCodec
+import com.simplegamegen.sudoku.arcade.LogThrowCodec
 import com.simplegamegen.sudoku.arcade.TetrasCodec
 import com.simplegamegen.sudoku.arcade.TetrasGame
+import com.simplegamegen.sudoku.arcade.ThrowState
 import com.simplegamegen.sudoku.duels.Battleship
 import com.simplegamegen.sudoku.duels.BattleshipAi
 import com.simplegamegen.sudoku.duels.BattleshipCodec
@@ -137,6 +139,7 @@ import com.simplegamegen.sudoku.ui.screens.MagnetScreen
 import com.simplegamegen.sudoku.ui.screens.SproutsScreen
 import com.simplegamegen.sudoku.ui.screens.Game2048Screen
 import com.simplegamegen.sudoku.ui.screens.KnifeFlipScreen
+import com.simplegamegen.sudoku.ui.screens.LogThrowScreen
 import com.simplegamegen.sudoku.ui.screens.TetrasScreen
 import com.simplegamegen.sudoku.ui.screens.MemoryScreen
 import com.simplegamegen.sudoku.ui.screens.PyramidScreen
@@ -488,5 +491,8 @@ fun NavGraphBuilder.playGames(nav: NavController, store: ArcadeStore, factory: P
     }
     composable(GameId.KNIFE_FLIP.route) {
         KnifeFlipScreen(nav, playModel<KnifeFlip>(GameId.KNIFE_FLIP, store, codecOf(KnifeFlipCodec::encode, KnifeFlipCodec::decode)), factory)
+    }
+    composable(GameId.LOG_THROW.route) {
+        LogThrowScreen(nav, playModel<ThrowState>(GameId.LOG_THROW, store, codecOf(LogThrowCodec::encode, LogThrowCodec::decode)), factory)
     }
 }
